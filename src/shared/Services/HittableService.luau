@@ -19,7 +19,7 @@ local hittableRE = ReplicatedStorage.Events.Hittable
 local isServer = RunService:IsServer()
 
 function HittableService.new(): HittableService
-	local self = setmetatable({}, HittableService)
+	local self = setmetatable({}, HittableService) :: HittableService
 
 	if isServer then
 		hittableRE.OnServerEvent:Connect(function(_, hit: HitResult) silentHit(hit) end)

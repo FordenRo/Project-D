@@ -6,14 +6,16 @@ local RoadBump = require(ReplicatedStorage.Shared.Classes.RoadBump)
 local RoadBumpController = {}
 RoadBumpController.__index = RoadBumpController
 
+export type RoadBumpController = typeof(setmetatable({} :: {}, RoadBumpController))
+
 function RoadBumpController.new()
-	local self = setmetatable({}, RoadBumpController)
+	local self = setmetatable({}, RoadBumpController) :: RoadBumpController
 
 	for _, roadBump in CollectionService:GetTagged("RoadBump") do
 		RoadBump.new(roadBump)
 	end
 
-	CollectionService:GetInstanceAddedSignal("RoadBump"):Connect(function(roadBump) RoadBump.new(roadBump) end)
+	CollectionService:GetInstanceAddedSignal("RoadBump"):Connect(RoadBump.new)
 
 	return self
 end
