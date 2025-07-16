@@ -82,6 +82,8 @@ function Speedometer.SlowUpdate(self: Speedometer)
 	self:MileageUpdate()
 	self:FuelUpdate()
 	self:UpdateIcons()
+	self:LightsUpdate()
+	self:TurnSignalsUpdate()
 end
 
 function Speedometer.GearUpdate(self: Speedometer)
@@ -141,6 +143,19 @@ function Speedometer.TachUpdate(self: Speedometer)
 	else
 		setColor(Color3.new(1, 1, 1))
 	end
+end
+
+function Speedometer.LightsUpdate(self: Speedometer)
+	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0) or Color3.new()
+	self.Instance.LowBeam.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+end
+
+function Speedometer.TurnSignalsUpdate(self: Speedometer)
+	self.Instance.RTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.RTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+
+	self.Instance.LTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.LTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
 end
 
 function Speedometer.MileageUpdate(self: Speedometer)

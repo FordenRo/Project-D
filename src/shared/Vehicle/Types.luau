@@ -99,6 +99,8 @@ export type VehicleSpeedometer = {
 	TSCUpdate: (self: VehicleSpeedometer) -> (),
 	Destroy: (self: VehicleSpeedometer) -> (),
 	TachInit: (self: VehicleSpeedometer) -> (),
+	LightsUpdate: (self: VehicleSpeedometer) -> (),
+	TurnSignalsUpdate: (self: VehicleSpeedometer) -> (),
 }
 
 export type VehicleInterface = {
