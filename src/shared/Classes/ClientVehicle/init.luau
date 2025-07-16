@@ -31,6 +31,7 @@ function ClientVehicle.new(instance: Instance)
 			"Tune not found for vehicle: " .. instance.Name
 		)
 	)
+self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 
 	self:Initialize()
 
@@ -1682,6 +1683,69 @@ function ClientVehicle.OnLastInputTypeChanged(self: ClientVehicle, inputType: En
 	self._LastInputWasGamepad = string.find(inputType.Name, "Gamepad") and true or false
 end
 
+function ClientVehicle.ReplicateVariables(self: ClientVehicle)
+	local vars = {
+		"Starting",
+		"Occupant",
+		"Fuel",
+		"Clutch",
+		"Gear",
+		"FinalDrive",
+		"FinalDriveRatio",
+		"TransmissionMode",
+		"CurrentRatio",
+		"RPM",
+		"Shifting",
+		"AutoClutch",
+		"Boost",
+		"BoostTurbo",
+		"BoostSuper",
+		"HpNatural",
+		"HpElectric",
+		"HpTurbo",
+		"HpSuper",
+		"HpBoosted",
+		"Horsepower",
+		"TqNatural",
+		"TqElectric",
+		"TqTurbo",
+		"TqSuper",
+		"TqBoosted",
+		"Torque",
+		"Throttle",
+		"InputThrottle",
+		"Brake",
+		"InputBrake",
+		"SteerC",
+		"SteerT",
+		"MouseSteerOn",
+		"PBrake",
+		"Velocity",
+		"AverageRotSpeed",
+		"Acceleration",
+		"Mileage",
+		"Center",
+		"TCS",
+		"TCSActive",
+		"TCSAmt",
+		"ABS",
+		"ABSActive",
+		"ABSAmt",
+		"ESC",
+		"ESCActive",
+		"ESCAmt",
+		"CS",
+		"CSActive",
+		"CSAmt",
+		"IsOn",
+	}
+	local data = {}
+	for _, var in vars do
+		data[var] = self[var]
+	end
+	self._Remote:FireServer(data)
+end
+
 function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self.Center = getCenter(self)
 	self.Boost = self.BoostTurbo + self.BoostSuper
@@ -1696,6 +1760,7 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self:UpdateTransmission()
 	self:UpdateEngine(deltaTime)
 	self:UpdateFuel(deltaTime)
+	self:ReplicateVariables()
 end
 
 -- TODO
