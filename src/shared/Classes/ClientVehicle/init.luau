@@ -31,10 +31,11 @@ function ClientVehicle.new(instance: Instance)
 			"Tune not found for vehicle: " .. instance.Name
 		)
 	)
-self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
+	self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 
 	self:Initialize()
 
+	self.Interface = VehicleInterface.new(self)
 	self.SoundController = SoundController.new(self)
 
 	return self
@@ -43,12 +44,10 @@ end
 function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitializeVariables()
 	self:InitializeWheels()
-	self:InitializeDriveSeat()
-	self:ShutdownEvent()
 	self:InitControls()
 	self:InitializePlugins()
 
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
+	table.insert(self._conn, RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end))
 	self._task = task.spawn(function()
 		while task.wait(1 / 8) do
 			self:SlowUpdate()
@@ -67,6 +66,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
 	}
 	self.Plugins = {}
+	self._conn = {}
 	self._WheelSpeeds = {}
 	self.WheelCount = { Front = 0, Rear = 0 }
 	self.WheelData = {}
@@ -207,7 +207,10 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle)
 		data.CanSteer = 0
 		if driven then table.insert(self.DriveWheels, v) end
 
-		v:GetPropertyChangedSignal("Size"):Connect(function() self.WheelData[v].Size = v.Size end)
+		table.insert(
+			self._conn,
+			v:GetPropertyChangedSignal("Size"):Connect(function() self.WheelData[v].Size = v.Size end)
+		)
 
 		self.WheelData[v] = data
 
@@ -217,79 +220,6 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle)
 			if not v:GetAttribute("SteerDisabled") then data.CanSteer = 2 end
 		end
 	end
-end
-
-function ClientVehicle.InitializeDriveSeat(self: ClientVehicle)
-	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		if self.Instance.DriveSeat.Occupant then
-			local seated = Players:GetPlayerFromCharacter(self.Instance.DriveSeat.Occupant.Parent)
-			self.Occupant = seated
-			if seated == player then
-				self.Interface = VehicleInterface.new(self)
-				require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = false
-			end
-		else
-			if self.Occupant == player then
-				require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = true
-				self.Occupant = nil
-				if self.Interface then
-					self.Interface:Destroy()
-					self.Interface = nil
-				end
-			end
-		end
-	end)
-end
-
-function ClientVehicle.ShutdownEvent(self: ClientVehicle)
-	self.Instance.DriveSeat.ChildRemoved:Connect(function(child)
-		if child.Name == "SeatWeld" and child:IsA("Weld") then
-			--Remove Flip Force
-			if self.Instance.DriveSeat:FindFirstChild("Flip") then
-				if self.Tune.FlipType == "New" then
-					self.Instance.DriveSeat.Flip.Enabled = false
-				else
-					self.Instance.DriveSeat.Flip.MaxTorque = 0
-				end
-			end
-
-			-- Save PBrake state
-			-- car["A-Chassis Tune"]["A-Chassis Interface"].Values.PBrake.Value = _PBrake
-
-			--Remove Wheel Force
-			for _, data in self.WheelData do
-				if data.AV then
-					data.AV.MotorMaxTorque = 0
-					data.AV.AngularVelocity = 0
-				end
-				if data.BV then
-					if self.ParkingGearEnabled then
-						self.Gear = -2
-					else
-						self.PBrake = true
-					end
-					if data.isFront then
-						data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Front or 0
-					else
-						data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Rear or 0
-					end
-				end
-			end
-
-			-- Reintroduce touch controls
-			if self.Tune.Mobile then GuiService.TouchControlsEnabled = true end
-
-			-- Tell server to remove
-			-- car["A-Chassis Tune"].Shutdown:FireServer()
-		end
-	end)
-
-	-- TODO: Destroy function
-	-- self.Instance.DriveSeat.AncestryChanged:Connect(function()
-	-- 	if self.Instance.DriveSeat.Parent then return end
-	-- 	task.wait(10)
-	-- 	script.Parent:Destroy()
-	-- end)
 end
 
 function ClientVehicle.InitializePlugins(self: ClientVehicle)
@@ -310,10 +240,13 @@ function ClientVehicle.InitControls(self: ClientVehicle)
 	-- 	end
 	-- end
 
-	UserInputService.InputBegan:Connect(function(input) self:OnInput(input) end)
-	UserInputService.InputChanged:Connect(function(input) self:OnInput(input) end)
-	UserInputService.InputEnded:Connect(function(input) self:OnInput(input) end)
-	UserInputService.LastInputTypeChanged:Connect(function(inputType) self:OnLastInputTypeChanged(inputType) end)
+	table.insert(self._conn, UserInputService.InputBegan:Connect(function(input) self:OnInput(input) end))
+	table.insert(self._conn, UserInputService.InputChanged:Connect(function(input) self:OnInput(input) end))
+	table.insert(self._conn, UserInputService.InputEnded:Connect(function(input) self:OnInput(input) end))
+	table.insert(
+		self._conn,
+		UserInputService.LastInputTypeChanged:Connect(function(inputType) self:OnLastInputTypeChanged(inputType) end)
+	)
 	-- if VirtualInputEnabled then VirtualInput.Event:Connect(self.OnInput) end
 
 	-- if self.Tune.Mobile then self:OnMobileInput() end
@@ -698,16 +631,16 @@ function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 			* (
 				1
 				- math.min(
-				self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
-				1 - (self.Tune.MinSteerSpeed / 100)
+					self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
+					1 - (self.Tune.MinSteerSpeed / 100)
 				)
 			)
 		ReturnSpeed = self.Tune.ReturnSpeed
 			* (
 				1
 				- math.min(
-				self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
-				1 - (self.Tune.MinSteerSpeed / 100)
+					self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
+					1 - (self.Tune.MinSteerSpeed / 100)
 				)
 			)
 	end
@@ -1767,8 +1700,50 @@ end
 function ClientVehicle.SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
+	--Remove Flip Force
+	if self.Instance.DriveSeat:FindFirstChild("Flip") then
+		if self.Tune.FlipType == "New" then
+			self.Instance.DriveSeat.Flip.Enabled = false
+		else
+			self.Instance.DriveSeat.Flip.MaxTorque = 0
+		end
+	end
+
+	-- Save PBrake state
+	-- car["A-Chassis Tune"]["A-Chassis Interface"].Values.PBrake.Value = _PBrake
+
+	--Remove Wheel Force
+	for _, data in self.WheelData do
+		if data.AV then
+			data.AV.MotorMaxTorque = 0
+			data.AV.AngularVelocity = 0
+		end
+		if data.BV then
+			if self.ParkingGearEnabled then
+				self.Gear = -2
+			else
+				self.PBrake = true
+			end
+			if data.isFront then
+				data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Front or 0
+			else
+				data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Rear or 0
+			end
+		end
+	end
+
+	-- Reintroduce touch controls
+	if self.Tune.Mobile then GuiService.TouchControlsEnabled = true end
+
+	-- Tell server to remove
+	-- car["A-Chassis Tune"].Shutdown:FireServer()
+
 	self.SoundController:Destroy()
-	self._conn:Disconnect()
+	self.Interface:Destroy()
+
+	for _, conn in self._conn do
+		conn:Disconnect()
+	end
 	task.cancel(self._task)
 end
 

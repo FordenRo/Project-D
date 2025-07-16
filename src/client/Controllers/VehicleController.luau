@@ -35,10 +35,14 @@ function VehicleController.RegisterVehicle(self: VehicleController, vehicle: Ins
 	local seat = vehicle:WaitForChild("DriveSeat") :: VehicleSeat
 
 	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		if seat.Occupant == player then
-			self.DrivenVehicle = ClientVehicle.new(vehicle)
+		if seat.Occupant then
+			local seatedPlayer = Players:GetPlayerFromCharacter(seat.Occupant.Parent)
+			if seatedPlayer == player then self.DrivenVehicle = ClientVehicle.new(vehicle) end
 		else
-			if self.DrivenVehicle then self.DrivenVehicle:Destroy() end
+			if self.DrivenVehicle and (self.DrivenVehicle.Instance :: Instance) == vehicle then
+				self.DrivenVehicle:Destroy()
+				self.DrivenVehicle = nil
+			end
 		end
 	end)
 end

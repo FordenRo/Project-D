@@ -252,7 +252,7 @@ export type BaseVehicle = {
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
-	_conn: RBXScriptConnection,
+	_conn: { RBXScriptConnection },
 	_task: thread,
 	_WheelSpeeds: { [string]: { number } },
 	_LastInputWasGamepad: boolean,
@@ -266,7 +266,7 @@ export type ClientVehicle = {
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: any,
 	Controls: VehicleControls,
-	Interface: VehicleInterface?,
+	Interface: VehicleInterface,
 	SoundController: SoundController,
 	-- Transmission
 	_GoalRPM: number,
@@ -290,8 +290,6 @@ export type ClientVehicle = {
 	Initialize: (self: ClientVehicle) -> (),
 	InitializeVariables: (self: ClientVehicle) -> (),
 	InitializeWheels: (self: ClientVehicle) -> (),
-	InitializeDriveSeat: (self: ClientVehicle) -> (),
-	ShutdownEvent: (self: ClientVehicle) -> (),
 	InitControls: (self: ClientVehicle) -> (),
 	InitializePlugins: (self: ClientVehicle) -> (),
 	Update: (self: ClientVehicle, deltaTime: number) -> (),
