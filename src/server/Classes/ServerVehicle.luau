@@ -34,6 +34,7 @@ function ServerVehicle.new(instance: Model)
 			"Tune not found for vehicle: " .. instance.Name
 		)
 	)
+	self.Plugins = {}
 
 	self:Initialize()
 
@@ -638,8 +639,12 @@ function ServerVehicle.Finalize(self: ServerVehicle)
 	end
 end
 
---TODO: Initialize Plugins
-function ServerVehicle.InitializePlugins(_: ServerVehicle) end
+function ServerVehicle.InitializePlugins(self: ServerVehicle)
+	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
+		local pluginClass = require(plugin)
+		if pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+	end
+end
 
 function ServerVehicle.RemoveCharacterWeight(self: ServerVehicle)
 	--Get Seats

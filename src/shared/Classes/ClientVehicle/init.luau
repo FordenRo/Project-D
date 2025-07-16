@@ -40,6 +40,7 @@ function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitializeWheels()
 	self:ShutdownEvent()
 	self:InitControls()
+	self:InitializePlugins()
 
 	RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
 	task.spawn(function()
@@ -59,6 +60,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 		Front = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * self.Tune.PBrakeBias,
 		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
 	}
+	self.Plugins = {}
 	self._WheelSpeeds = {}
 	self.WheelCount = { Front = 0, Rear = 0 }
 	self.WheelData = {}
@@ -256,6 +258,13 @@ function ClientVehicle.ShutdownEvent(self: ClientVehicle)
 	-- 	task.wait(10)
 	-- 	script.Parent:Destroy()
 	-- end)
+end
+
+function ClientVehicle.InitializePlugins(self: ClientVehicle)
+	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
+		local pluginClass = require(plugin)
+		if pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+	end
 end
 
 -- TODO: Add VirtualInput & Mobile
