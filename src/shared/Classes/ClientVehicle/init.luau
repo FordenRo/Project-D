@@ -48,8 +48,8 @@ function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitControls()
 	self:InitializePlugins()
 
-	RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
-	task.spawn(function()
+	self._conn = RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
+	self._task = task.spawn(function()
 		while task.wait(1 / 8) do
 			self:SlowUpdate()
 		end
@@ -1765,5 +1765,11 @@ end
 
 -- TODO
 function ClientVehicle.SlowUpdate(self: ClientVehicle) end
+
+function ClientVehicle.Destroy(self: ClientVehicle)
+	self.SoundController:Destroy()
+	self._conn:Disconnect()
+	task.cancel(self._task)
+end
 
 return ClientVehicle

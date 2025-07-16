@@ -252,6 +252,8 @@ export type BaseVehicle = {
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
+	_conn: RBXScriptConnection,
+	_task: thread,
 	_WheelSpeeds: { [string]: { number } },
 	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,
@@ -303,6 +305,7 @@ export type ClientVehicle = {
 	OnInput: (self: ClientVehicle, input: InputObject) -> (),
 	OnLastInputTypeChanged: (self: ClientVehicle, inputType: Enum.UserInputType) -> (),
 	ReplicateVariables: (self: ClientVehicle) -> (),
+	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type ServerVehicle = {
