@@ -38,6 +38,7 @@ end
 function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitializeVariables()
 	self:InitializeWheels()
+	self:InitializeDriveSeat()
 	self:ShutdownEvent()
 	self:InitControls()
 	self:InitializePlugins()
@@ -65,6 +66,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.WheelCount = { Front = 0, Rear = 0 }
 	self.WheelData = {}
 	self.DriveWheels = {}
+	self.Occupant = nil
 	self.Clutch = 0
 	self.Gear = self.ParkingGearEnabled and -2 or 0
 	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult
@@ -210,6 +212,28 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle)
 			if not v:GetAttribute("SteerDisabled") then data.CanSteer = 2 end
 		end
 	end
+end
+
+function ClientVehicle.InitializeDriveSeat(self: ClientVehicle)
+	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		if self.Instance.DriveSeat.Occupant then
+			local seated = Players:GetPlayerFromCharacter(self.Instance.DriveSeat.Occupant.Parent)
+			self.Occupant = seated
+			if seated == player then
+				self.Interface = VehicleInterface.new(self)
+				require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = false
+			end
+		else
+			if self.Occupant == player then
+				require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = true
+				self.Occupant = nil
+				if self.Interface then
+					self.Interface:Destroy()
+					self.Interface = nil
+				end
+			end
+		end
+	end)
 end
 
 function ClientVehicle.ShutdownEvent(self: ClientVehicle)
@@ -466,6 +490,13 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 				if input.UserInputState == Enum.UserInputState.Begin then self.IsOn = false end
 			else
 				self.Starting = input.UserInputState == Enum.UserInputState.Begin
+			end
+
+		-- Leaving the vehicle
+		elseif input.KeyCode == self.Controls.Leave then
+			if input.UserInputState == Enum.UserInputState.Begin then
+				local humanoid: Humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+				humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
 
 		--Toggle TCS and ESC

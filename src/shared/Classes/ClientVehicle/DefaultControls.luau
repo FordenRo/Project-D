@@ -17,6 +17,7 @@ return {
 	SteerLeft = Enum.KeyCode.Left,
 	SteerRight = Enum.KeyCode.Right,
 	Ignition = Enum.KeyCode.F,
+	Leave = Enum.KeyCode.Return,
 
 	--Secondary Controls
 	Throttle2 = Enum.KeyCode.W,
