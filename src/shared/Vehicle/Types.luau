@@ -231,6 +231,23 @@ export type ClientVehicle = {
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	OnInput: (self: ClientVehicle, input: InputObject) -> (),
 	OnLastInputTypeChanged: (self: ClientVehicle, inputType: Enum.UserInputType) -> (),
+
+export type ServerVehicle = {
+	__index: ServerVehicle,
+	Plugins: { [string]: any },
+
+	new: (instance: Instance) -> ServerVehicle,
+	Initialize: (self: ServerVehicle) -> (),
+	MakeGravity: (self: ServerVehicle) -> (),
+	GetCenter: (self: ServerVehicle) -> (),
+	RemoveMass: (self: ServerVehicle) -> (),
+	CreateFlip: (self: ServerVehicle) -> (),
+	Finalize: (self: ServerVehicle) -> (),
+	InitializePlugins: (self: ServerVehicle) -> (),
+	CreateChassisAssembly: (self: ServerVehicle) -> (),
+	ApplyWeight: (self: ServerVehicle) -> (),
+	RemoveCharacterWeight: (self: ServerVehicle) -> (),
+	InitializeDriveSeat: (self: ServerVehicle) -> (),
 }
 
 export type Tune = {

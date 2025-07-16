@@ -7,25 +7,10 @@ local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local ServerVehicle = {}
 ServerVehicle.__index = ServerVehicle
 
-export type ServerVehicle = typeof(setmetatable(
-	{} :: {
-		Instance: Model & {
-			Wheels: Model,
-			DriveSeat: VehicleSeat & {
-				Flip: AlignOrientation,
-			},
-			Body: Model & {
-				["#Weight"]: Part,
-			},
-		},
-		Tune: Types.Tune,
-		Plugins: { [string]: any },
-	},
-	ServerVehicle
-))
+type ServerVehicle = Types.ServerVehicle
 
 function ServerVehicle.new(instance: Model)
-	local self = setmetatable({}, ServerVehicle) :: ServerVehicle
+	local self: Types.ServerVehicle = setmetatable({}, ServerVehicle) :: any
 
 	self.Instance = instance :: any
 	self.Tune = require(
@@ -50,7 +35,7 @@ function ServerVehicle.Initialize(self: ServerVehicle)
 	self:Finalize()
 	self:InitializePlugins()
 	self:RemoveCharacterWeight()
-	self:InitalizeDriveSeat()
+	self:InitializeDriveSeat()
 end
 
 function MakeWeld(x: BasePart, y: BasePart, type: string?, s: number?)
@@ -685,7 +670,7 @@ function ServerVehicle.RemoveCharacterWeight(self: ServerVehicle)
 end
 
 -- TODO: Interface
-function ServerVehicle.InitalizeDriveSeat(self: ServerVehicle)
+function ServerVehicle.InitializeDriveSeat(self: ServerVehicle)
 	-- Driver Sit
 	self.Instance.DriveSeat.ChildAdded:Connect(function(child)
 		if child.Name == "SeatWeld" and child:IsA("Weld") then
@@ -709,7 +694,7 @@ function ServerVehicle.InitalizeDriveSeat(self: ServerVehicle)
 				if self.Tune.FlipType == "New" then
 					self.Instance.DriveSeat.Flip.Enabled = false
 				else
-					self.Instance.DriveSeat.Flip.MaxTorque = Vector3.new()
+					self.Instance.DriveSeat.Flip.MaxTorque = 0
 				end
 			end
 
