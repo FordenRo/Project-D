@@ -49,8 +49,8 @@ export type VehicleControls = {
 	PBrake: Enum.KeyCode,
 
 	--Mouse Controls
-	MouseThrottle: Enum.UserInputType,
-	MouseBrake: Enum.UserInputType,
+	MouseThrottle: Enum.UserInputType | Enum.KeyCode,
+	MouseBrake: Enum.UserInputType | Enum.KeyCode,
 	MouseClutch: Enum.KeyCode,
 	MouseShiftUp: Enum.KeyCode,
 	MouseShiftDown: Enum.KeyCode,

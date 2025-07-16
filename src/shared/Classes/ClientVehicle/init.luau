@@ -245,8 +245,7 @@ function ClientVehicle.ShutdownEvent(self: ClientVehicle)
 				if self.Tune.FlipType == "New" then
 					self.Instance.DriveSeat.Flip.Enabled = false
 				else
-					-- TODO: why error? if error then edit to a number
-					self.Instance.DriveSeat.Flip.MaxTorque = Vector3.new()
+					self.Instance.DriveSeat.Flip.MaxTorque = 0
 				end
 			end
 
@@ -408,11 +407,10 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 			or (
 				(
 					(
-						(
-							self.Controls.MouseThrottle == Enum.UserInputType.MouseButton1
-							or self.Controls.MouseThrottle == Enum.UserInputType.MouseButton2
-						) and input.UserInputType == self.Controls.MouseThrottle
-					) or input.KeyCode == self.Controls.MouseThrottle
+						(self.Controls.MouseThrottle:IsA("UserInputType"))
+						and input.UserInputType == self.Controls.MouseThrottle
+					)
+					or (self.Controls.MouseThrottle:IsA("KeyCode") and input.KeyCode == self.Controls.MouseThrottle)
 				) and self.MouseSteerOn
 			)
 		then
@@ -428,11 +426,10 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 			or (
 				(
 					(
-						(
-							self.Controls.MouseBrake == Enum.UserInputType.MouseButton1
-							or self.Controls.MouseBrake == Enum.UserInputType.MouseButton2
-						) and input.UserInputType == self.Controls.MouseBrake
-					) or input.KeyCode == self.Controls.MouseBrake
+						(self.Controls.MouseBrake:IsA("UserInputType"))
+						and input.UserInputType == self.Controls.MouseBrake
+					)
+					or (self.Controls.MouseBrake:IsA("KeyCode") and input.KeyCode == self.Controls.MouseBrake)
 				) and self.MouseSteerOn
 			)
 		then
@@ -687,20 +684,29 @@ end
 function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 	local controller = self._LastInputWasGamepad or (self.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
-	local SteerSpeed = controller
-			and (self.Tune.ContlrSteerSpeed > 0 and self.Tune.ContlrSteerSpeed or self.Tune.SteerSpeed)
-		or self.Tune.SteerSpeed
-			* (1 - math.min(
+	local SteerSpeed
+	local ReturnSpeed
+	if controller then
+		SteerSpeed = self.Tune.ContlrSteerSpeed > 0 and self.Tune.ContlrSteerSpeed or self.Tune.SteerSpeed
+		ReturnSpeed = self.Tune.ContlrReturnSpeed > 0 and self.Tune.ContlrReturnSpeed or self.Tune.ReturnSpeed
+	else
+		SteerSpeed = self.Tune.SteerSpeed
+			* (
+				1
+				- math.min(
 				self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
 				1 - (self.Tune.MinSteerSpeed / 100)
-			))
-	local ReturnSpeed = controller
-			and (self.Tune.ContlrReturnSpeed > 0 and self.Tune.ContlrReturnSpeed or self.Tune.ReturnSpeed)
-		or self.Tune.ReturnSpeed
-			* (1 - math.min(
+				)
+			)
+		ReturnSpeed = self.Tune.ReturnSpeed
+			* (
+				1
+				- math.min(
 				self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
 				1 - (self.Tune.MinSteerSpeed / 100)
-			))
+				)
+			)
+	end
 
 	if self.MouseSteerOn then
 		local msWidth = math.max(1, mouse.ViewSizeX * self.Controls.MSteerWidth / 200)
@@ -938,7 +944,6 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 		)
 	end
 
-	local goalRPM = 0
 	if (self.Tune.Engine or self.Tune.Electric) and not self.Starting then
 		self._GoalRPM = math.clamp(
 			self.RPM
