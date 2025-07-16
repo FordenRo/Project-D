@@ -113,35 +113,23 @@ export type VehicleInterface = {
 	Destroy: (self: VehicleInterface) -> (),
 }
 
-export type ClientVehicle = {
-	__index: ClientVehicle,
-	Instance: Instance & {
+export type BaseVehicle = {
+		Instance: Instance & {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
 			Flip: AlignOrientation,
 		},
 		Body: Model & {
 			["#Weight"]: BasePart,
+Sounds: Model,
 		},
 	},
-	_WheelSpeeds: { [string]: { number } },
-	_LastInputWasGamepad: boolean,
-	_MaxSpin: number,
+	_Remote: UnreliableRemoteEvent,
 	Tune: Tune,
+Starting: boolean,
 	Occupant: Player?,
-	Plugins: { [string]: any },
-	WheelCount: { Front: number, Rear: number },
-	WheelData: { [BasePart]: any },
-	DriveWheels: { BasePart },
-	ParkingGearEnabled: boolean,
-	BrakeForce: { Front: number, Rear: number },
-	PBrakeForce: { Front: number, Rear: number },
-	Starting: boolean,
-	Engine: any,
-	Fuel: number,
-	Controls: VehicleControls,
-	Interface: VehicleInterface?,
-	-- Transmission
+		Fuel: number,
+		-- Transmission
 	Clutch: number,
 	Gear: number,
 	FinalDrive: number,
@@ -151,16 +139,7 @@ export type ClientVehicle = {
 	RPM: number,
 	Shifting: boolean,
 	AutoClutch: boolean,
-	_GoalRPM: number,
-	_ShiftUp: boolean,
-	_ShiftDown: boolean,
-	_ClutchPressing: boolean,
-	_InputClutch: boolean,
-	_DriveWheelSpeed: number,
-	_LastOffTime: number,
-	_CanStall: boolean,
-	_Trackers: { ESC: {}, ABS: {}, TCS: {} },
-	-- Boost
+		-- Boost
 	Boost: number,
 	BoostTurbo: number,
 	BoostSuper: number,
@@ -187,14 +166,9 @@ export type ClientVehicle = {
 	SteerT: number,
 	MouseSteerOn: boolean,
 	PBrake: boolean,
-	_SteerL: boolean,
-	_SteerR: boolean,
-	_InThrot: number,
-	_InBrake: number,
-	-- Velocity
+		-- Velocity
 	Velocity: Vector3,
-	_OldVelocity: Vector3,
-	AverageRotSpeed: number,
+		AverageRotSpeed: number,
 	Acceleration: Vector3,
 	Mileage: number,
 	-- Misc
@@ -212,6 +186,40 @@ export type ClientVehicle = {
 	CSActive: boolean,
 	CSAmt: number,
 	IsOn: boolean,
+}
+
+export type ClientVehicle = {
+	__index: ClientVehicle,
+	_WheelSpeeds: { [string]: { number } },
+	_LastInputWasGamepad: boolean,
+	_MaxSpin: number,
+	Plugins: { [string]: any },
+	WheelCount: { Front: number, Rear: number },
+	WheelData: { [BasePart]: any },
+	DriveWheels: { BasePart },
+	ParkingGearEnabled: boolean,
+	BrakeForce: { Front: number, Rear: number },
+	PBrakeForce: { Front: number, Rear: number },
+	Engine: any,
+	Controls: VehicleControls,
+	Interface: VehicleInterface?,
+	-- Transmission
+	_GoalRPM: number,
+	_ShiftUp: boolean,
+	_ShiftDown: boolean,
+	_ClutchPressing: boolean,
+	_InputClutch: boolean,
+	_DriveWheelSpeed: number,
+	_LastOffTime: number,
+	_CanStall: boolean,
+	_Trackers: { ESC: {}, ABS: {}, TCS: {} },
+	-- Inputs
+	_SteerL: boolean,
+	_SteerR: boolean,
+	_InThrot: number,
+	_InBrake: number,
+	-- Velocity
+	_OldVelocity: Vector3,
 	-- Functions
 	new: (instance: Instance) -> ClientVehicle,
 	Initialize: (self: ClientVehicle) -> (),
@@ -231,6 +239,8 @@ export type ClientVehicle = {
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	OnInput: (self: ClientVehicle, input: InputObject) -> (),
 	OnLastInputTypeChanged: (self: ClientVehicle, inputType: Enum.UserInputType) -> (),
+ReplicateVariables: (self: ClientVehicle) -> (),
+} & BaseVehicle
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
@@ -238,6 +248,7 @@ export type ServerVehicle = {
 
 	new: (instance: Instance) -> ServerVehicle,
 	Initialize: (self: ServerVehicle) -> (),
+	InitializeVariables: (self: ServerVehicle) -> (),
 	MakeGravity: (self: ServerVehicle) -> (),
 	GetCenter: (self: ServerVehicle) -> (),
 	RemoveMass: (self: ServerVehicle) -> (),
@@ -248,7 +259,7 @@ export type ServerVehicle = {
 	ApplyWeight: (self: ServerVehicle) -> (),
 	RemoveCharacterWeight: (self: ServerVehicle) -> (),
 	InitializeDriveSeat: (self: ServerVehicle) -> (),
-}
+} & BaseVehicle
 
 export type Tune = {
 	-- Misc

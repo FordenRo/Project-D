@@ -21,12 +21,22 @@ function ServerVehicle.new(instance: Model)
 	)
 	self.Plugins = {}
 
+	self._Remote = Instance.new("UnreliableRemoteEvent")
+	self._Remote.Name = "_VehicleRemote"
+	self._Remote.Parent = self.Instance
+
 	self:Initialize()
+	self._Remote.OnServerEvent:Connect(function(_, data: { [string]: any })
+		for k, v in data do
+			self[k] = v
+		end
+	end)
 
 	return self
 end
 
 function ServerVehicle.Initialize(self: ServerVehicle)
+	self:InitializeVariables()
 	self:RemoveMass()
 	self:CreateChassisAssembly()
 	self:ApplyWeight()
@@ -58,6 +68,63 @@ function ModelWeld(a, b)
 			ModelWeld(v, b)
 		end
 	end
+end
+
+function ServerVehicle.InitializeVariables(self: ServerVehicle)
+	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
+	self.Starting = false
+	self.Occupant = nil
+	self.Fuel = self.Tune.FuelCapacity
+	self.Clutch = 0
+	self.Gear = ParkingGearEnabled and -2 or 0
+	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult
+	self.FinalDriveRatio = self.FinalDrive * 30 / math.pi
+	self.Shifting = false
+	self.AutoClutch = false
+	self.TransmissionMode = "Manual"
+	self.CurrentRatio = self.Tune.Ratios[self.Gear + 2 + (ParkingGearEnabled and 1 or 0)]
+	self.RPM = 0
+	self.Boost = 0
+	self.BoostTurbo = 0
+	self.BoostSuper = 0
+	self.HpNatural = 0
+	self.HpElectric = 0
+	self.HpTurbo = 0
+	self.HpSuper = 0
+	self.HpBoosted = 0
+	self.Horsepower = 0
+	self.TqNatural = 0
+	self.TqElectric = 0
+	self.TqTurbo = 0
+	self.TqSuper = 0
+	self.TqBoosted = 0
+	self.Torque = 0
+	self.Throttle = 0
+	self.InputThrottle = 0
+	self.Brake = 0
+	self.InputBrake = 0
+	self.SteerC = 0
+	self.SteerT = 0
+	self.MouseSteerOn = false
+	self.PBrake = false
+	self.Velocity = Vector3.new()
+	self.AverageRotSpeed = 0
+	self.Acceleration = Vector3.new()
+	self.Center = CFrame.new()
+	self.TCS = self.Tune.TCSEnabled
+	self.TCSActive = false
+	self.TCSAmt = 0
+	self.ABS = self.Tune.ABSEnabled
+	self.ABSActive = false
+	self.ABSAmt = 0
+	self.ESC = self.Tune.ESCEnabled and self.Tune.TCSEnabled
+	self.ESCActive = false
+	self.ESCAmt = 0
+	self.CS = self.Tune.CSEnabled
+	self.CSActive = false
+	self.CSAmt = 0
+	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
+	self.Mileage = 0
 end
 
 function ServerVehicle.RemoveMass(self: ServerVehicle)
