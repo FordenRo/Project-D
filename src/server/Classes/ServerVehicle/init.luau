@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local SoundHandler = require(script.SoundHandler)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
@@ -31,6 +32,8 @@ function ServerVehicle.new(instance: Model)
 			self[k] = v
 		end
 	end)
+
+	self.SoundHandler = SoundHandler.new(self)
 
 	return self
 end

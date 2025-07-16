@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local DefaultControls = require(script.DefaultControls)
+local SoundController = require(script.SoundController)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -32,6 +33,8 @@ function ClientVehicle.new(instance: Instance)
 	)
 
 	self:Initialize()
+
+	self.SoundController = SoundController.new(self)
 
 	return self
 end

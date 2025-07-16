@@ -11,10 +11,72 @@ type AutoShiftMode = "Speed" | "RPM"
 type AutoShiftType = "Rev" | "DCT"
 type AutoShiftVers = "New" | "Old"
 type ClutchType = "Clutch" | "TorqueConverter" | "CVT"
+type SoundDataType = "Engine" | "Transmission" | "Turbo" | "Super" | "Blowoff" | "Ignition"
 
 export type SoundData = {
-	Sound: Sound,
+	SoundId: string,
+	Type: SoundDataType,
 	Parent: string?,
+	BasePlaybackSpeed: number,
+	BaseVolume: number,
+	RangeEnd: number,
+	RangeStart: number,
+	RedlinePlaybackSpeed: number,
+	RedlineVolume: number,
+	ThrottleVolume: number,
+	TransitionEnd: number,
+	TransitionStart: number,
+	ClutchVolume: number,
+	Gears: { number },
+	OffVolume: number,
+	VariablePlaybackSpeed: number,
+	VariableVolume: number,
+	PlaybackSpeedIncrease: number,
+	VolumeIncrease: number,
+	Sensitivity: number,
+	MaxPitch: number,
+	Pitch: number,
+	Volume: number,
+}
+
+export type ServerSoundData = SoundData & {
+	Instance: Sound,
+}
+
+export type ClientSoundData = ServerSoundData & {
+	ServerInstance: Sound?,
+}
+
+export type SoundTypesHandler = {
+	__index: SoundTypesHandler,
+	Vehicle: BaseVehicle,
+	_UpdateBOV: boolean,
+	_PrevBoostTurbo: number,
+	_LastBOV: number,
+
+	new: (vehicle: BaseVehicle) -> SoundTypesHandler,
+	HandleSounds: (self: SoundTypesHandler, sounds: { ServerSoundData }) -> (),
+}
+
+export type SoundController = {
+	__index: SoundController,
+	Vehicle: ClientVehicle,
+	Sounds: { ClientSoundData },
+	SoundTypesHandler: SoundTypesHandler,
+
+	new: (vehicle: ClientVehicle) -> SoundController,
+	Update: (self: SoundController) -> (),
+	Destroy: (self: SoundController) -> (),
+}
+
+export type SoundHandler = {
+	__index: SoundHandler,
+	Vehicle: ServerVehicle,
+	Sounds: { ServerSoundData },
+	SoundTypesHandler: SoundTypesHandler,
+
+	new: (vehicle: ServerVehicle) -> SoundHandler,
+	Update: (self: SoundHandler) -> (),
 }
 
 export type VehicleControls = {
@@ -114,22 +176,22 @@ export type VehicleInterface = {
 }
 
 export type BaseVehicle = {
-		Instance: Instance & {
+	Instance: Instance & {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
 			Flip: AlignOrientation,
 		},
 		Body: Model & {
 			["#Weight"]: BasePart,
-Sounds: Model,
+			Sounds: Model,
 		},
 	},
 	_Remote: UnreliableRemoteEvent,
 	Tune: Tune,
-Starting: boolean,
+	Starting: boolean,
 	Occupant: Player?,
-		Fuel: number,
-		-- Transmission
+	Fuel: number,
+	-- Transmission
 	Clutch: number,
 	Gear: number,
 	FinalDrive: number,
@@ -139,7 +201,7 @@ Starting: boolean,
 	RPM: number,
 	Shifting: boolean,
 	AutoClutch: boolean,
-		-- Boost
+	-- Boost
 	Boost: number,
 	BoostTurbo: number,
 	BoostSuper: number,
@@ -166,9 +228,9 @@ Starting: boolean,
 	SteerT: number,
 	MouseSteerOn: boolean,
 	PBrake: boolean,
-		-- Velocity
+	-- Velocity
 	Velocity: Vector3,
-		AverageRotSpeed: number,
+	AverageRotSpeed: number,
 	Acceleration: Vector3,
 	Mileage: number,
 	-- Misc
@@ -203,6 +265,7 @@ export type ClientVehicle = {
 	Engine: any,
 	Controls: VehicleControls,
 	Interface: VehicleInterface?,
+	SoundController: SoundController,
 	-- Transmission
 	_GoalRPM: number,
 	_ShiftUp: boolean,
@@ -239,12 +302,13 @@ export type ClientVehicle = {
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	OnInput: (self: ClientVehicle, input: InputObject) -> (),
 	OnLastInputTypeChanged: (self: ClientVehicle, inputType: Enum.UserInputType) -> (),
-ReplicateVariables: (self: ClientVehicle) -> (),
+	ReplicateVariables: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
 	Plugins: { [string]: any },
+	SoundHandler: SoundHandler,
 
 	new: (instance: Instance) -> ServerVehicle,
 	Initialize: (self: ServerVehicle) -> (),

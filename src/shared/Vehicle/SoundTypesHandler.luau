@@ -1,0 +1,104 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Types = require(script.Parent.Types)
+local Units = require(ReplicatedStorage.Shared.Utils.Units)
+
+local SoundTypesHandler = {}
+SoundTypesHandler.__index = SoundTypesHandler
+
+type SoundTypesHandler = Types.SoundTypesHandler
+
+function SoundTypesHandler.new(vehicle: Types.BaseVehicle)
+	local self: SoundTypesHandler = setmetatable({}, SoundTypesHandler) :: any
+
+	self.Vehicle = vehicle
+	self._UpdateBOV = false
+	self._PrevBoostTurbo = 0
+	self._LastBOV = 0
+
+	return self
+end
+
+function SoundTypesHandler.Engine(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+		+ (sound.RedlinePlaybackSpeed - sound.BasePlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)
+
+	sound.Instance.Volume = (self.Vehicle.IsOn and 1 or 0)
+		* (sound.BaseVolume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
+		* math.clamp(1 / sound.TransitionStart * (self.Vehicle.RPM - sound.RangeStart), 0, 1)
+		* math.clamp(-1 / sound.TransitionEnd * (self.Vehicle.RPM - sound.RangeEnd), 0, 1)
+end
+
+function SoundTypesHandler.Transmission(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+
+	sound.Instance.PlaybackSpeed = sound.VariablePlaybackSpeed
+		* (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))
+
+	sound.Instance.Volume = table.find(sound.Gears, self.Vehicle.Gear)
+			and (sound.ClutchVolume + ((sound.BaseVolume + sound.VariableVolume * (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))) - sound.ClutchVolume) * (1 - self.Vehicle.Clutch) + sound.ThrottleVolume * self.Vehicle.Throttle)
+		or sound.OffVolume
+end
+
+function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostTurbo
+
+	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostTurbo
+end
+
+function SoundTypesHandler.Super(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostSuper
+
+	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostSuper
+end
+
+function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if
+		(self.Vehicle.BoostTurbo - sound.Sensitivity < self._PrevBoostTurbo)
+		and (tick() - self._LastBOV > 1)
+		and self.Vehicle.Throttle < 0.8
+	then
+		self._UpdateBOV = true
+		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostTurbo
+
+		sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostTurbo
+		sound.Instance.TimePosition = 0
+		sound.Instance.Playing = true
+	end
+	self._PrevBoostTurbo = self.Vehicle.BoostTurbo
+end
+
+function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if self.Vehicle.Starting then
+		if not sound.Instance:GetAttribute("Played") then
+			sound.Instance.TimePosition = 0
+			sound.Instance.Playing = true
+		end
+		sound.Instance:SetAttribute("Played", true)
+		sound.Instance.Volume = sound.Volume
+		sound.Instance.PlaybackSpeed = sound.Pitch
+			+ (sound.MaxPitch - sound.Pitch) * (self.Vehicle.RPM / self.Vehicle.Tune.IgnitionRPM)
+	else
+		sound.Instance:SetAttribute("Played", false)
+		if sound.Instance.Playing then sound.Instance.Playing = false end
+	end
+end
+
+function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { Types.ServerSoundData })
+	for _, sound in sounds do
+		self[sound.Type](self, sound)
+	end
+
+	if self._UpdateBOV then
+		self._LastBOV = tick()
+		self._UpdateBOV = false
+	end
+end
+
+return SoundTypesHandler
