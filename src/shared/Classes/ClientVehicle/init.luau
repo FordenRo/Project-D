@@ -75,6 +75,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._ShiftDown = false
 	self._ClutchPressing = false
 	self._InputClutch = false
+	self._GoalRPM = 0
 	self._Trackers = { ESC = {}, ABS = {}, TCS = {} }
 	self._DriveWheelSpeed = 0
 	self.CurrentRatio = self.Tune.Ratios[self.Gear + 2 + (self.ParkingGearEnabled and 1 or 0)]
@@ -111,6 +112,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.MouseSteerOn = false
 	self.PBrake = false
 	self.Velocity = Vector3.new()
+	self._OldVelocity = Vector3.new()
 	self.AverageRotSpeed = 0
 	self.Acceleration = Vector3.new()
 	self.Center = CFrame.new()
@@ -646,7 +648,7 @@ function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 	local controller = self._LastInputWasGamepad or (self.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
 	local SteerSpeed = controller
-			and (self.Tune.ContlrSteerSpeed > 0 and self.Tune.ContlrSteerSpeed or self.Tune.Steerspeed)
+			and (self.Tune.ContlrSteerSpeed > 0 and self.Tune.ContlrSteerSpeed or self.Tune.SteerSpeed)
 		or self.Tune.SteerSpeed
 			* (1 - math.min(
 				self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
@@ -898,7 +900,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 
 	local goalRPM = 0
 	if (self.Tune.Engine or self.Tune.Electric) and not self.Starting then
-		goalRPM = math.clamp(
+		self._GoalRPM = math.clamp(
 			self.RPM
 				- (self.Tune.RevDecay * deltaTime)
 				+ (self.Tune.RevAccel * self.Throttle * deltaTime)
@@ -918,14 +920,19 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 
 	--Starting
 	if self.Starting then
-		goalRPM =
-			math.clamp(goalRPM + self.Tune.IgnitionAccel * deltaTime, 0, math.max(self.Tune.IgnitionRPM, wheelRPM))
-		self.IsOn = goalRPM > self.Tune.IgnitionMinRPM
+		self._GoalRPM = math.clamp(
+			self._GoalRPM + self.Tune.IgnitionAccel * deltaTime,
+			0,
+			math.max(self.Tune.IgnitionRPM, wheelRPM)
+		)
+		self.IsOn = self._GoalRPM > self.Tune.IgnitionMinRPM
 	end
 
 	--Set RPM
-	local aRPM =
-		math.max((goalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Clutch) + goalRPM * self.Clutch, revMin)
+	local aRPM = math.max(
+		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Clutch) + self._GoalRPM * self.Clutch,
+		revMin
+	)
 	local clutchP = math.min(math.abs(aRPM - self.RPM) / (self.Tune.Flywheel * deltaTime), 0.9)
 	if self._ClutchPressing then clutchP = 0 end
 	self.RPM = aRPM * (1 - clutchP) + self.RPM * clutchP
@@ -1600,6 +1607,26 @@ function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if self.Fuel <= 0 then self.IsOn = false end
 end
 
+function getCenter(vehicle: ClientVehicle)
+	local centerF = Vector3.new()
+	local centerR = Vector3.new()
+	local countF = 0
+	local countR = 0
+	for wheel, data in vehicle.WheelData do
+		if data.isFront then
+			centerF = centerF + wheel.Position
+			countF = countF + 1
+		else
+			centerR = centerR + wheel.Position
+			countR = countR + 1
+		end
+	end
+	centerF = centerF / countF
+	centerR = centerR / countR
+	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
+	return center
+end
+
 -- TODO: Flip function
 
 -- TODO: Mobile input
@@ -1608,6 +1635,11 @@ function ClientVehicle.OnLastInputTypeChanged(self: ClientVehicle, inputType: En
 end
 
 function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
+	self.Center = getCenter(self)
+	self.Boost = self.BoostTurbo + self.BoostSuper
+	self.Velocity = self.Instance.Body["#Weight"].AssemblyLinearVelocity
+	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
+	self._OldVelocity = self.Velocity
 	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime
 
 	self:UpdateWheels()
