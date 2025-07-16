@@ -103,6 +103,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.InputBrake = 0
 	self._InBrake = 0
 	self.SteerC = 0
+	self.Fuel = self.Tune.FuelCapacity
 	self.SteerT = 0
 	self._LastOffTime = tick()
 	self._SteerL = false
@@ -128,6 +129,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
 	self._MaxSpin = 0
 	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
+	self.Mileage = 0
 end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicle)
@@ -1586,6 +1588,18 @@ function ClientVehicle.UpdateWheels(self: ClientVehicle)
 	self.ESCActive = false
 end
 
+-- TODO: При низком количестве топлива, сбрасывать обороты, имитировать захлебывание двигателя
+-- TODO: Проверить работу
+function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
+	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
+
+	local kW = self.Horsepower * 1.35962
+	local consumption = self.Tune.BSFC * kW / 3600 / 1000 / self.Tune.FuelDensity * deltaTime
+	self.Fuel = math.max(0, self.Fuel - consumption)
+
+	if self.Fuel <= 0 then self.IsOn = false end
+end
+
 -- TODO: Flip function
 
 -- TODO: Mobile input
@@ -1594,11 +1608,14 @@ function ClientVehicle.OnLastInputTypeChanged(self: ClientVehicle, inputType: En
 end
 
 function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
+	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime
+
 	self:UpdateWheels()
 	self:SmoothInputs(deltaTime)
 	self:UpdateSteering(deltaTime)
 	self:UpdateTransmission()
 	self:UpdateEngine(deltaTime)
+	self:UpdateFuel(deltaTime)
 end
 
 -- TODO
