@@ -460,6 +460,14 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 				self.SteerT = 0
 			end
 
+		-- Ignition
+		elseif input.KeyCode == self.Controls.Ignition then
+			if self.IsOn and not self.Starting then
+				if input.UserInputState == Enum.UserInputState.Begin then self.IsOn = false end
+			else
+				self.Starting = input.UserInputState == Enum.UserInputState.Begin
+			end
+
 		--Toggle TCS and ESC
 		elseif
 			self.Tune.TCSEnabled
