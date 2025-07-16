@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
 local ServerVehicle = {}
@@ -13,9 +14,12 @@ export type ServerVehicle = typeof(setmetatable(
 			DriveSeat: VehicleSeat & {
 				Flip: AlignOrientation,
 			},
-			Body: Model,
+			Body: Model & {
+				["#Weight"]: Part,
+			},
 		},
-		Tune: any,
+		Tune: Types.Tune,
+		Plugins: { [string]: any },
 	},
 	ServerVehicle
 ))

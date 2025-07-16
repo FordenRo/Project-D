@@ -1,3 +1,7 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+
 return {
 	--Keyboard Controls
 	--Mode Toggles
@@ -12,6 +16,7 @@ return {
 	Brake = Enum.KeyCode.Down,
 	SteerLeft = Enum.KeyCode.Left,
 	SteerRight = Enum.KeyCode.Right,
+	Ignition = Enum.KeyCode.F,
 
 	--Secondary Controls
 	Throttle2 = Enum.KeyCode.W,
@@ -53,4 +58,4 @@ return {
 
 	ControlLDZone = 5,
 	ControlRDZone = 5,
-}
+} :: Types.VehicleControls

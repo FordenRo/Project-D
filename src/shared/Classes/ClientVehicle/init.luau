@@ -1,4 +1,3 @@
--- local DataStoreService = game:GetService("DataStoreService")
 local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -6,120 +5,22 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local DefaultControls = require(script.DefaultControls)
+local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
--- local ControlsDataStore = DataStoreService:GetDataStore("Controls")
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
 local ClientVehicle = {}
 ClientVehicle.__index = ClientVehicle
 
-type TransmissionMode = "Manual" | "Semi" | "Auto"
-
-type Controls = typeof(DefaultControls)
+type ClientVehicle = Types.ClientVehicle
 
 -- TODO
 local _InControls = false
 
-export type ClientVehicle = typeof(setmetatable(
-	{} :: {
-		Instance: Instance & {
-			Wheels: Model,
-			DriveSeat: VehicleSeat & {
-				Flip: AlignOrientation,
-			},
-			Body: Model & {
-				["#Weight"]: BasePart,
-			},
-		},
-		Tune: any,
-		_WheelSpeeds: { [string]: { number } },
-		WheelCount: { Front: number, Rear: number },
-		WheelData: { [BasePart]: any },
-		DriveWheels: { BasePart },
-		ParkingGearEnabled: boolean,
-		BrakeForce: { Front: number, Rear: number },
-		PBrakeForce: { Front: number, Rear: number },
-		Starting: boolean,
-		Engine: any,
-		_LastInputWasGamepad: boolean,
-		-- Transmission
-		Clutch: number,
-		Gear: number,
-		FinalDrive: number,
-		FinalDriveRatio: number,
-		TransmissionMode: TransmissionMode,
-		CurrentRatio: number,
-		RPM: number,
-		Shifting: boolean,
-		_ShiftUp: boolean,
-		_ShiftDown: boolean,
-		_ClutchPressing: boolean,
-		_InputClutch: boolean,
-		_DriveWheelSpeed: number,
-		_LastOffTime: number,
-		_CanStall: boolean,
-		_Trackers: { ESC: {}, ABS: {}, TCS: {} },
-		AutoClutch: boolean,
-		Controls: Controls,
-		-- Boost
-		Boost: number,
-		BoostTurbo: number,
-		BoostSuper: number,
-		-- Horsepower
-		HpNatural: number,
-		HpElectric: number,
-		HpTurbo: number,
-		HpSuper: number,
-		HpBoosted: number,
-		Horsepower: number,
-		-- Torque
-		TqNatural: number,
-		TqElectric: number,
-		TqTurbo: number,
-		TqSuper: number,
-		TqBoosted: number,
-		Torque: number,
-		-- Inputs
-		Throttle: number,
-		InputThrottle: number,
-		Brake: number,
-		InputBrake: number,
-		SteerC: number,
-		SteerT: number,
-		_SteerL: boolean,
-		_SteerR: boolean,
-		_InThrot: number,
-		_InBrake: number,
-		MouseSteerOn: boolean,
-		PBrake: boolean,
-		-- Velocity
-		Velocity: Vector3,
-		AverageRotSpeed: number,
-		Acceleration: Vector3,
-		-- Misc
-		Center: CFrame,
-		TCS: boolean,
-		TCSActive: boolean,
-		TCSAmt: number,
-		ABS: boolean,
-		ABSActive: boolean,
-		ABSAmt: number,
-		ESC: boolean,
-		ESCActive: boolean,
-		ESCAmt: number,
-		CS: boolean,
-		CSActive: boolean,
-		CSAmt: number,
-		IsOn: boolean,
-		_MaxSpin: number,
-	},
-	ClientVehicle
-))
-
 function ClientVehicle.new(instance: Instance)
-	local self = setmetatable({}, ClientVehicle) :: ClientVehicle
+	local self: Types.ClientVehicle = setmetatable({}, ClientVehicle) :: any
 
 	self.Instance = instance :: any
 	self.Tune = require(
