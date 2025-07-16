@@ -7,6 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local DefaultControls = require(script.DefaultControls)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
