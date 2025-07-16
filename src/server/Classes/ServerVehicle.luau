@@ -255,7 +255,7 @@ function ServerVehicle.CreateChassisAssembly(self: ServerVehicle)
 				sp.Visible = self.Tune.SpringsVisible
 				sp.Radius = self.Tune.SusRadius
 				sp.Thickness = self.Tune.SusThickness
-				sp.Color = BrickColor.new(self.Tune.SusColor)
+				sp.Color = self.Tune.SusColor
 				sp.Coils = self.Tune.SusCoilCount
 
 				local swayBar = SuspensionGeometry:FindFirstChild("SwayBar")
@@ -375,7 +375,7 @@ function ServerVehicle.CreateChassisAssembly(self: ServerVehicle)
 				sp.Visible = self.Tune.SpringsVisible
 				sp.Radius = self.Tune.SusRadius
 				sp.Thickness = self.Tune.SusThickness
-				sp.Color = BrickColor.new(self.Tune.SusColor)
+				sp.Color = self.Tune.SusColor
 				sp.Coils = self.Tune.SusCoilCount
 
 				sp.Parent = v
