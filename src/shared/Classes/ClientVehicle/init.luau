@@ -1511,6 +1511,14 @@ function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if self.Fuel <= 0 then self.IsOn = false end
 end
 
+function ClientVehicle.UpdateTempo(self: ClientVehicle, deltaTime: number)
+	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
+
+	local heatGain = 4
+	local kW = self.Horsepower * 1.35962
+	local heat = kW * heatGain / 60
+end
+
 function getCenter(vehicle: ClientVehicle)
 	local centerF = Vector3.new()
 	local centerR = Vector3.new()

@@ -329,13 +329,15 @@ function Tire.Replicate(
 
 	local wear = (temperature - 40)
 		/ (
-			string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.TireFMaxTemp
-			or self.Vehicle.Tune.TireRMaxTemp - 40
+			(
+				string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.TireFMaxTemp
+				or self.Vehicle.Tune.TireRMaxTemp
+			) - 40
 		)
 	wear = math.clamp(wear, 0, 1)
 
-	self.Instance.Color = Color3.fromHSV(0, 0, wear * 0.4)
-	self.WearInstance.Color = self.Instance.Color
+	self.Instance.Color = Color3.fromHSV(0, 0, wear * 0.2)
+	self.WearInstance.Color = Color3.fromHSV(0, 0, wear * 0.4)
 	self.WearInstance.Transparency = 1 - (wear * 0.5)
 end
 
