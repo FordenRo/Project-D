@@ -240,6 +240,9 @@ function ClientVehicle.InitControls(self: ClientVehicle)
 	-- 	end
 	-- end
 
+	-- Disable jumping
+	require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = false
+
 	table.insert(self._conn, UserInputService.InputBegan:Connect(function(input) self:OnInput(input) end))
 	table.insert(self._conn, UserInputService.InputChanged:Connect(function(input) self:OnInput(input) end))
 	table.insert(self._conn, UserInputService.InputEnded:Connect(function(input) self:OnInput(input) end))
@@ -1700,6 +1703,8 @@ end
 function ClientVehicle.SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
+	require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = true
+
 	--Remove Flip Force
 	if self.Instance.DriveSeat:FindFirstChild("Flip") then
 		if self.Tune.FlipType == "New" then
