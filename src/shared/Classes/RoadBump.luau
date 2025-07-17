@@ -26,7 +26,7 @@ function RoadBump.new(instance: Instance)
 	-- self.legs = instance:WaitForChild("Legs"):GetChildren()
 
 	self.meshes = {
-		bump = CreateEditableMesh(self.bump),
+		bump = CreateEditableMesh(self.bump, true),
 		legs = {},
 	}
 
@@ -36,7 +36,7 @@ function RoadBump.new(instance: Instance)
 	end
 
 	-- for _, leg in self.legs do
-	-- 	table.insert(self.meshes.legs, CreateEditableMesh(leg))
+	-- 	table.insert(self.meshes.legs, CreateEditableMesh(leg, true))
 	-- end
 
 	HittableService:Register({ self.bump }, function(hit: HittableService.HitResult) self:Hit(hit) end)
