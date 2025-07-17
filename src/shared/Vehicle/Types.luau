@@ -205,30 +205,57 @@ export type BaseVehicle = {
 	Center: CFrame,
 	TCS: boolean,
 	TCSActive: boolean,
-	TCSAmt: number,
 	ABS: boolean,
 	ABSActive: boolean,
-	ABSAmt: number,
 	ESC: boolean,
 	ESCActive: boolean,
-	ESCAmt: number,
 	CS: boolean,
 	CSActive: boolean,
-	CSAmt: number,
 	IsOn: boolean,
+}
+
+export type ClientWheelSharedData = {
+	TCSCount: number,
+	ABSCount: number,
+	ESCCount: number,
+	Rotation: number,
+	MaxSpin: number,
+	DriveWheelSpeed: number,
+}
+
+export type ClientWheel = {
+	__index: ClientWheel,
+	Vehicle: ClientVehicle,
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: nil | (Instance & {
+			Steer: Instance?,
+		}),
+		["#AV"]: any,
+		["#BV"]: any,
+	},
+	IsFront: boolean,
+	IsDriven: boolean,
+	CanSteer: number,
+	OppositeWheel: BasePart,
+	Trackers: { ABS: number, TCS: number, ESC: number },
+	_WheelSpeeds: { number },
+
+	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
+	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
+	Destroy: (self: ClientWheel) -> (),
 }
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
 	_conn: { RBXScriptConnection },
 	_task: thread,
-	_WheelSpeeds: { [string]: { number } },
 	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,
 	Plugins: { [string]: any },
 	WheelCount: { Front: number, Rear: number },
-	WheelData: { [BasePart]: any },
-	DriveWheels: { BasePart },
+	Wheels: { ClientWheel },
+	DriveWheels: { ClientWheel },
 	ParkingGearEnabled: boolean,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
@@ -244,7 +271,6 @@ export type ClientVehicle = {
 	_DriveWheelSpeed: number,
 	_LastOffTime: number,
 	_CanStall: boolean,
-	_Trackers: { ESC: {}, ABS: {}, TCS: {} },
 	-- Inputs
 	_SteerL: boolean,
 	_SteerR: boolean,

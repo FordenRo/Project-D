@@ -8,6 +8,7 @@ local DefaultControls = require(script.DefaultControls)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
+local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
@@ -65,9 +66,8 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	}
 	self.Plugins = {}
 	self._conn = {}
-	self._WheelSpeeds = {}
 	self.WheelCount = { Front = 0, Rear = 0 }
-	self.WheelData = {}
+	self.Wheels = {}
 	self.DriveWheels = {}
 	self.Occupant = nil
 	self.Clutch = 0
@@ -81,7 +81,6 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._ClutchPressing = false
 	self._InputClutch = false
 	self._GoalRPM = 0
-	self._Trackers = { ESC = {}, ABS = {}, TCS = {} }
 	self._DriveWheelSpeed = 0
 	self.CurrentRatio = self.Tune.Ratios[self.Gear + 2 + (self.ParkingGearEnabled and 1 or 0)]
 	self._CanStall = false
@@ -123,16 +122,12 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.Center = CFrame.new()
 	self.TCS = self.Tune.TCSEnabled
 	self.TCSActive = false
-	self.TCSAmt = 0
 	self.ABS = self.Tune.ABSEnabled
 	self.ABSActive = false
-	self.ABSAmt = 0
 	self.ESC = self.Tune.ESCEnabled and self.Tune.TCSEnabled
 	self.ESCActive = false
-	self.ESCAmt = 0
 	self.CS = self.Tune.CSEnabled
 	self.CSActive = false
-	self.CSAmt = 0
 	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
 	self._MaxSpin = 0
 	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
@@ -154,69 +149,13 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle)
 		then
 			continue
 		end
-		local size = v.Size
 
-		local base = v:FindFirstChild("Base")
-		local arm = v:FindFirstChild("Arm")
+		local wheel = Wheel.new(self, v)
+		self.WheelCount.Front += wheel.IsFront and 1 or 0
+		self.WheelCount.Rear += not wheel.IsFront and 1 or 0
 
-		local steer = arm and arm:FindFirstChild("Steer") or nil
-		-- local steerAttach0 = self.Tune.PowerSteeringType == "New" and steer and steer.Attachment0 or nil
-
-		local av = v:FindFirstChild("#AV")
-		local bv = v:FindFirstChild("#BV")
-
-		self.WheelCount.Front += string.find(v.Name, "F") and 1 or 0
-		self.WheelCount.Rear += (not string.find(v.Name, "F")) and 1 or 0
-
-		local isFront = string.find(v.Name, "F") ~= nil
-		local driven = ((self.Tune.Config == "FWD" or self.Tune.Config == "AWD") and isFront)
-			or ((self.Tune.Config == "RWD" or self.Tune.Config == "AWD") and not isFront)
-
-		-- local WheelSpeedValue = Instance.new("NumberValue", WheelSpeedsFolder)
-		-- WheelSpeedValue.Name = v.Name
-		-- local TCSTrackerValue = Instance.new("NumberValue", TCSTrackerFolder)
-		-- TCSTrackerValue.Name = v.Name
-		-- local ABSTrackerValue = Instance.new("NumberValue", ABSTrackerFolder)
-		-- ABSTrackerValue.Name = v.Name
-		-- local ESCTrackerValue = Instance.new("NumberValue", ESCTrackerFolder)
-		-- ESCTrackerValue.Name = v.Name
-
-		local data = {}
-		data.Name = v.Name
-		data.OppositeWheel = (v.Name == "FL" and self.Instance.Wheels:FindFirstChild("FR"))
-			or (v.Name == "FR" and self.Instance.Wheels:FindFirstChild("FL"))
-			or (v.Name == "RL" and self.Instance.Wheels:FindFirstChild("RR"))
-			or (v.Name == "RR" and self.Instance.Wheels:FindFirstChild("RL"))
-		data.Size = size
-		data.Base = base
-		-- data.Arm = arm
-		data.Steer = steer
-		-- data.SteerAttach0 = steerAttach0
-		data.AV = av
-		data.BV = bv
-		data.isFront = isFront
-		data.driven = driven
-		-- data.WheelSpeedValue = WheelSpeedValue
-		-- data.TCSTrackerValue = TCSTrackerValue
-		-- data.ABSTrackerValue = ABSTrackerValue
-		-- data.ESCTrackerValue = ESCTrackerValue
-		data.RotVelocityMagnitude = 0
-		data.WheelVelocityMagnitude = 0
-		data.CanSteer = 0
-		if driven then table.insert(self.DriveWheels, v) end
-
-		table.insert(
-			self._conn,
-			v:GetPropertyChangedSignal("Size"):Connect(function() self.WheelData[v].Size = v.Size end)
-		)
-
-		self.WheelData[v] = data
-
-		-- Check if can steer
-		if arm and steer then
-			data.CanSteer = 1
-			if not v:GetAttribute("SteerDisabled") then data.CanSteer = 2 end
-		end
+		table.insert(self.Wheels, wheel)
+		if wheel.IsDriven then table.insert(self.DriveWheels, wheel) end
 	end
 end
 
@@ -431,7 +370,7 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 		-- Leaving the vehicle
 		elseif input.KeyCode == self.Controls.Leave then
 			if input.UserInputState == Enum.UserInputState.Begin then
-				local humanoid: Humanoid = player.Character:FindFirstChildWhichIsA("Humanoid")
+				local humanoid = (player.Character :: Model):FindFirstChildWhichIsA("Humanoid") :: Humanoid
 				humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
 
@@ -660,24 +599,25 @@ function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 	end
 
 	--Interpolate Steering
+	local CSAmt = 0
 	if
 		math.abs(self.SteerT) < self.Tune.CSSteerThresh / 100
 		and self.CS
 		and self.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6 > self.Tune.CSSpeedThresh
 	then
-		self.CSAmt = (
+		CSAmt = (
 			self.Center:VectorToObjectSpace(self.Velocity):Dot(Vector3.new(1, 0, 0))
 			/ math.max(self.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6, self.Tune.CSSpeedThresh)
 		) * (self.Tune.CSAmt / 100)
 	else
-		self.CSAmt = 0
+		CSAmt = 0
 	end
-	if math.abs(self.CSAmt) > (self.Tune.CSAmt / 100) * 0.01 then
+	if math.abs(CSAmt) > (self.Tune.CSAmt / 100) * 0.01 then
 		self.CSActive = true
 	else
 		self.CSActive = false
 	end
-	local SteerWithCounter = math.clamp(self.SteerT + self.CSAmt, -1, 1)
+	local SteerWithCounter = math.clamp(self.SteerT + CSAmt, -1, 1)
 	local SteerSmoothing =
 		math.clamp(math.abs(SteerWithCounter - self.SteerC) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
 	if self.SteerC < SteerWithCounter then
@@ -715,27 +655,27 @@ function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 	)
 
 	--Apply Steering
-	for _, data in self.WheelData do
-		if data.CanSteer == 0 then continue end
+	for _, wheel in self.Wheels do
+		if wheel.CanSteer == 0 then continue end
 
 		local angle = 0
 		local rsteerVariableAngle = 1
-		if data.CanSteer == 2 then
-			if data.Name == "FL" then
+		if wheel.CanSteer == 2 then
+			if wheel.Instance.Name == "FL" then
 				-- self.SteerInner and self.SteerOuter
 				angle = (self.SteerC < 0 and self.Tune.SteerInner or self.Tune.SteerOuter) * sDecay
-			elseif data.Name == "FR" then
+			elseif wheel.Instance.Name == "FR" then
 				angle = (self.SteerC < 0 and self.Tune.SteerOuter or self.Tune.SteerInner) * sDecay
-			elseif data.Name == "F" then
+			elseif wheel.Instance.Name == "F" then
 				angle = self.Tune.SteerInner * sDecay
-			elseif data.Name == "RL" then
+			elseif wheel.Instance.Name == "RL" then
 				angle = (self.SteerC < 0 and self.Tune.RSteerInner or self.Tune.RSteerOuter) * rsDecay
-			elseif data.Name == "RR" then
+			elseif wheel.Instance.Name == "RR" then
 				angle = (self.SteerC < 0 and self.Tune.RSteerOuter or self.Tune.RSteerInner) * rsDecay
-			elseif data.Name == "R" then
+			elseif wheel.Instance.Name == "R" then
 				angle = self.Tune.RSteerInner * rsDecay
 			end
-			if not data.isFront then
+			if not wheel.IsFront then
 				if self.Tune.FWSteer == "Static" then
 					rsteerVariableAngle = -math.max(0, 1 - (self.Velocity.Magnitude / self.Tune.RSteerSpeed))
 				elseif self.Tune.FWSteer == "Speed" then
@@ -747,12 +687,12 @@ function ClientVehicle.UpdateSteering(self: ClientVehicle, deltaTime: number)
 		end
 
 		if self.Tune.PowerSteeringType == "New" then
-			data.SteerAttach0.Orientation =
-				Vector3.new(0, data.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
+			-- data.SteerAttach0.Orientation =
+			-- 	Vector3.new(0, data.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
 		else
-			data.Steer.CFrame = data.Base.CFrame
+			(wheel.Instance.Arm :: any).Steer.CFrame = wheel.Instance.Base.CFrame
 				* (
-					data.CanSteer == 1 and CFrame.new(0, 0, 0)
+					wheel.CanSteer == 1 and CFrame.new(0, 0, 0)
 					or (CFrame.Angles(0, -math.rad(self.SteerC * angle * rsteerVariableAngle), 0))
 				)
 		end
@@ -1182,7 +1122,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 	outTorque = outTorque * math.max(1, (1 + iComp))
 
 	--Update Wheels
-	for _, data in self.WheelData do
+	for _, wheel in self.Wheels do
 		-- local wheelPosition = wheel.Position
 		--Apply Power
 		local on = 1
@@ -1211,7 +1151,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 		--Apply ESC
 		local tqESC = 0
 		if
-			not (data.Name == "F" or data.Name == "R")
+			not (wheel.Instance.Name == "F" or wheel.Instance.Name == "R")
 			and self.ESC
 			and (self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6)) > self.Tune.ESCSpeed
 		then
@@ -1227,20 +1167,22 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 				local diff = self.SteerC - (g.X * -math.sign(self.Center:VectorToObjectSpace(self.Velocity).Z))
 				if math.abs(diff) > self.Tune.ESCThreshold then
 					local escVector, escBias = 1, (self.Tune.ESCVector + 1)
-					if data.isFront then
+					if wheel.IsFront then
 						escVector = escVector * (2 - escBias)
 					else
 						escVector = escVector * escBias
 					end
 
-					tqESC = ((data.Name == "FL" or data.Name == "RL") and 1 or -1) * math.sign(diff) * escVector
+					tqESC = ((wheel.Instance.Name == "FL" or wheel.Instance.Name == "RL") and 1 or -1)
+						* math.sign(diff)
+						* escVector
 					throt = throt + (math.max(tqESC, 0) - throt) * (self.Tune.ESCThrottle / 100)
 					brake = brake + (-math.min(tqESC, 0) - brake) * (self.Tune.ESCBrake / 100)
 				end
 			end
 		end
 		self.ESCActive = tqESC ~= 0 or self.ESCActive
-		self._Trackers.ESC[data.Name] = tqESC
+		wheel.Trackers.ESC = tqESC
 
 		--Apply ABS
 		local tqABS = 1
@@ -1251,8 +1193,10 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 						math.max(
 							0,
 							math.abs(
-								data.RotVelocityMagnitude * (data.Size.Y / 2) / (Units.Velocity_mdivs / 3.6)
-									- data.WheelVelocityMagnitude / (Units.Velocity_mdivs / 3.6)
+								wheel.Instance.AssemblyAngularVelocity.Magnitude
+										* (wheel.Instance.Size.Y / 2)
+										/ (Units.Velocity_mdivs / 3.6)
+									- wheel.Instance.AssemblyLinearVelocity.Magnitude / (Units.Velocity_mdivs / 3.6)
 							) - self.Tune.ABSThreshold
 						) / self.Tune.ABSGradient,
 						1
@@ -1260,7 +1204,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 				)
 		end
 		self.ABSActive = tqABS < 1 or self.ABSActive
-		self._Trackers.ABS[data.Name] = 1 - tqABS
+		wheel.Trackers.ABS = 1 - tqABS
 
 		local PBrakeV = 0
 		if self.PBrake == true or self.Gear == -2 then
@@ -1270,16 +1214,20 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 		end
 
 		-- Apply Power
-		if data.driven then
+		if wheel.IsDriven then
 			--Differential/Torque-Vectoring
 			local RRdiffMult = 1
 			local RLdiffMult = 1
 			local FRdiffMult = 1
 			local FLdiffMult = 1
 
-			if data.Name == "FR" then
-				local avg = ((data.RotVelocityMagnitude / data.OppositeWheel.RotVelocity.Magnitude) - 1)
-					* (self.Tune.FDiffPreload / 10)
+			if wheel.Instance.Name == "FR" then
+				local avg = (
+					(
+						wheel.Instance.AssemblyAngularVelocity.Magnitude
+						/ wheel.OppositeWheel.AssemblyAngularVelocity.Magnitude
+					) - 1
+				) * (self.Tune.FDiffPreload / 10)
 				FRdiffMult = math.ceil(
 					math.max(
 						0,
@@ -1294,9 +1242,13 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 					) * 100
 				) / 100
 				FLdiffMult = 2 - FRdiffMult
-			elseif data.Name == "FL" then
-				local avg = ((data.RotVelocityMagnitude / data.OppositeWheel.RotVelocity.Magnitude) - 1)
-					* (self.Tune.FDiffPreload / 10)
+			elseif wheel.Instance.Name == "FL" then
+				local avg = (
+					(
+						wheel.Instance.AssemblyAngularVelocity.Magnitude
+						/ wheel.OppositeWheel.AssemblyAngularVelocity.Magnitude
+					) - 1
+				) * (self.Tune.FDiffPreload / 10)
 				FLdiffMult = math.ceil(
 					math.max(
 						0,
@@ -1311,9 +1263,13 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 					) * 100
 				) / 100
 				FRdiffMult = 2 - FLdiffMult
-			elseif data.Name == "RR" then
-				local avg = ((data.RotVelocityMagnitude / data.OppositeWheel.RotVelocity.Magnitude) - 1)
-					* (self.Tune.RDiffPreload / 10)
+			elseif wheel.Instance.Name == "RR" then
+				local avg = (
+					(
+						wheel.Instance.AssemblyAngularVelocity.Magnitude
+						/ wheel.OppositeWheel.AssemblyAngularVelocity.Magnitude
+					) - 1
+				) * (self.Tune.RDiffPreload / 10)
 				RRdiffMult = math.ceil(
 					math.max(
 						0,
@@ -1328,9 +1284,13 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 					) * 100
 				) / 100
 				RLdiffMult = 2 - RRdiffMult
-			elseif data.Name == "RL" then
-				local avg = ((data.RotVelocityMagnitude / data.OppositeWheel.RotVelocity.Magnitude) - 1)
-					* (self.Tune.RDiffPreload / 10)
+			elseif wheel.Instance.Name == "RL" then
+				local avg = (
+					(
+						wheel.Instance.AssemblyAngularVelocity.Magnitude
+						/ wheel.OppositeWheel.AssemblyAngularVelocity.Magnitude
+					) - 1
+				) * (self.Tune.RDiffPreload / 10)
 				RLdiffMult = math.ceil(
 					math.max(
 						0,
@@ -1352,7 +1312,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 			local bias = (self.Tune.Config == "AWD" and (self.Tune.TorqueVector + 1) / 2)
 				or (self.Tune.Config == "FWD" and 0)
 				or 1
-			tq = data.isFront and (tq * (1 - bias)) / self.WheelCount.Front or (tq * bias) / self.WheelCount.Rear
+			tq = wheel.IsFront and (tq * (1 - bias)) / self.WheelCount.Front or (tq * bias) / self.WheelCount.Rear
 
 			--Apply TCS
 			local tqTCS = 1
@@ -1363,8 +1323,11 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 							math.max(
 								0,
 								math.abs(
-									data.RotVelocityMagnitude * (data.Size.Y / 2) / (Units.Velocity_mdivs / 3.6)
-										- data.WheelVelocityMagnitude / (Units.Velocity_mdivs / 3.6)
+									wheel.Instance.AssemblyAngularVelocity.Magnitude
+											* (wheel.Instance.Size.Y / 2)
+											/ (Units.Velocity_mdivs / 3.6)
+										- wheel.Instance.AssemblyLinearVelocity.Magnitude
+											/ (Units.Velocity_mdivs / 3.6)
 								) - self.Tune.TCSThreshold
 							) / self.Tune.TCSGradient,
 							1
@@ -1372,7 +1335,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 					)
 			end
 			self.TCSActive = tqTCS < 1 or self.TCSActive
-			self._Trackers.TCS[data.Name] = 1 - tqTCS
+			wheel.Trackers.TCS = 1 - tqTCS
 
 			--Update Forces
 			local tqOUT = (tq * 1.356 * Units.Torque_nm * throt * tqTCS * on * clutch)
@@ -1380,34 +1343,36 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 			-- convert lb-ft to nm to roblox stuff
 			-- if it reaches an absurdly high number, set it to 0 to try and prevent physics death
 
-			if data.Name == "RR" then
-				data.AV.MotorMaxTorque = tqOUT * RRdiffMult
-			elseif data.Name == "RL" then
-				data.AV.MotorMaxTorque = tqOUT * RLdiffMult
-			elseif data.Name == "FR" then
-				data.AV.MotorMaxTorque = tqOUT * FRdiffMult
-			elseif data.Name == "FL" then
-				data.AV.MotorMaxTorque = tqOUT * FLdiffMult
+			if wheel.Instance.Name == "RR" then
+				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * RRdiffMult
+			elseif wheel.Instance.Name == "RL" then
+				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * RLdiffMult
+			elseif wheel.Instance.Name == "FR" then
+				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * FRdiffMult
+			elseif wheel.Instance.Name == "FL" then
+				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * FLdiffMult
 			else
-				data.AV.MotorMaxTorque = tqOUT
+				wheel.Instance["#AV"].MotorMaxTorque = tqOUT
 			end
-			data.AV.AngularVelocity = spLimit * math.sign(self.Gear)
-			if data.isFront then
-				data.BV.MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS)
+			wheel.Instance["#AV"].AngularVelocity = spLimit * math.sign(self.Gear)
+			if wheel.IsFront then
+				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS)
 					+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
 					+ (self.PBrakeForce.Front * PBrakeV)
 			else
-				data.BV.MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS)
+				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS)
 					+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
 					+ (self.PBrakeForce.Rear * PBrakeV)
 			end
 		else --luaint edit
-			data.AV.MotorMaxTorque = 0
-			data.AV.AngularVelocity = 0
-			if data.isFront then
-				data.BV.MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS) + (self.PBrakeForce.Front * PBrakeV)
+			wheel.Instance["#AV"].MotorMaxTorque = 0
+			wheel.Instance["#AV"].AngularVelocity = 0
+			if wheel.IsFront then
+				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS)
+					+ (self.PBrakeForce.Front * PBrakeV)
 			else
-				data.BV.MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS) + (self.PBrakeForce.Rear * PBrakeV)
+				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS)
+					+ (self.PBrakeForce.Rear * PBrakeV)
 			end
 		end
 	end
@@ -1503,78 +1468,34 @@ function ClientVehicle.UpdateTransmission(self: ClientVehicle)
 end
 
 function ClientVehicle.UpdateWheels(self: ClientVehicle)
-	self.TCSAmt = 0
-	self.ABSAmt = 0
-	self.ESCAmt = 0
-	local tcsCount = 0
-	local absCount = 0
-	local escCount = 0
-	local rot = 0
-	local count = 0
+	local count = #self.Wheels
 	local driveCount = 0
-	self._MaxSpin = 0
-	self._DriveWheelSpeed = 0
-	for wheel, data in self.WheelData do
-		count += 1
 
-		-- Wheel speeds
-		if not self._WheelSpeeds[data.Name] then self._WheelSpeeds[data.Name] = {} end
-		data.RotVelocityMagnitude = wheel.AssemblyAngularVelocity.Magnitude
-		data.WheelVelocityMagnitude = wheel.AssemblyLinearVelocity.Magnitude
-		table.insert(self._WheelSpeeds[data.Name], data.RotVelocityMagnitude)
-		if #self._WheelSpeeds[data.Name] > 8 then table.remove(self._WheelSpeeds[data.Name], 1) end
-		local avg = 0
-		local avgCount = 0
-		for _, a in self._WheelSpeeds[data.Name] do
-			avg += a
-			avgCount += 1
-		end
-		avg = avg / avgCount
-		-- _WheelSpeeds[data.Name] = avg
-		if data.driven then
-			self._DriveWheelSpeed = self._DriveWheelSpeed + avg
-			driveCount = driveCount + 1
-			if avg > self._MaxSpin then self._MaxSpin = avg end
-		end
+	local data: Types.ClientWheelSharedData = {
+		TCSAmt = 0,
+		ABSAmt = 0,
+		ESCAmt = 0,
+		TCSCount = 0,
+		ABSCount = 0,
+		ESCCount = 0,
+		Rotation = 0,
+		MaxSpin = 0,
+		DriveWheelSpeed = 0,
+	}
+	for _, wheel in self.Wheels do
+		wheel:Update(data)
 
-		-- Output wheel speeds
-		-- (Forden) Changed to avg
-		-- data.WheelSpeedValue.Value = avg -- I'm not using the avg variable here for future-proofing if we change the calculation later and stuff
-		rot += avg * (data.Size.Y / 2)
-
-		-- TCS
-		if self._Trackers.TCS[data.Name] then
-			-- data.TCSTrackerValue.Value = self._Trackers.TCS[data.Name]
-			self.TCSAmt += self._Trackers.TCS[data.Name]
-			tcsCount += 1
-		end
-
-		-- ABS
-		if self._Trackers.ABS[data.Name] then
-			-- data.ABSTrackerValue.Value = self._Trackers.ABS[data.Name]
-			self.ABSAmt += self._Trackers.ABS[data.Name]
-			absCount += 1
-		end
-
-		-- ESC
-		if self._Trackers.ESC[data.Name] then
-			-- data.ESCTrackerValue.Value = self._Trackers.ESC[data.Name]
-			self.ESCAmt += math.abs(self._Trackers.ESC[data.Name])
-			escCount += 1
+		if wheel.IsDriven then
+			driveCount += 1
 		end
 	end
-	self._DriveWheelSpeed = self._DriveWheelSpeed / driveCount
+	self._DriveWheelSpeed = data.DriveWheelSpeed / driveCount
 
 	-- Wheel speeds
-	self.AverageRotSpeed = rot / count
-	-- TCS
-	self.TCSAmt = self.TCSAmt / tcsCount
+	self._MaxSpin = data.MaxSpin
+	self.AverageRotSpeed = data.Rotation / count
 	self.TCSActive = false
-	-- ABS
-	self.ABSAmt = self.ABSAmt / absCount
 	self.ABSActive = false
-	-- ESC
-	self.ESCAmt = self.ESCAmt / escCount
 	self.ESCActive = false
 end
 
@@ -1595,12 +1516,12 @@ function getCenter(vehicle: ClientVehicle)
 	local centerR = Vector3.new()
 	local countF = 0
 	local countR = 0
-	for wheel, data in vehicle.WheelData do
-		if data.isFront then
-			centerF = centerF + wheel.Position
+	for _, wheel in vehicle.Wheels do
+		if wheel.IsFront then
+			centerF = centerF + wheel.Instance.Position
 			countF = countF + 1
 		else
-			centerR = centerR + wheel.Position
+			centerR = centerR + wheel.Instance.Position
 			countR = countR + 1
 		end
 	end
@@ -1715,24 +1636,8 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	-- Save PBrake state
 	-- car["A-Chassis Tune"]["A-Chassis Interface"].Values.PBrake.Value = _PBrake
 
-	--Remove Wheel Force
-	for _, data in self.WheelData do
-		if data.AV then
-			data.AV.MotorMaxTorque = 0
-			data.AV.AngularVelocity = 0
-		end
-		if data.BV then
-			if self.ParkingGearEnabled then
-				self.Gear = -2
-			else
-				self.PBrake = true
-			end
-			if data.isFront then
-				data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Front or 0
-			else
-				data.BV.MotorMaxTorque = self.Tune.ExitBrake and self.PBrakeForce.Rear or 0
-			end
-		end
+	for _, wheel in self.Wheels do
+		wheel:Destroy()
 	end
 
 	-- Reintroduce touch controls
