@@ -31,9 +31,9 @@ function ClientVehicle.new(instance: Instance)
 			"Tune not found for vehicle: " .. instance.Name
 		)
 	)
-	self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 
 	self:Initialize()
+	self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 
 	self.Interface = VehicleInterface.new(self)
 

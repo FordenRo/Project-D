@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Speedometer = require(script.Speedometer)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
@@ -22,7 +23,29 @@ function VehicleInterface.new(vehicle: Types.ClientVehicle)
 
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
 
+	RunService.Heartbeat:Connect(function() self:UpdateTires() end)
+
 	return self
+end
+
+function VehicleInterface.UpdateTires(self: VehicleInterface)
+	for _, wheel in self.Vehicle.Wheels do
+		local tireUI = self.Instance.Tires[wheel.Instance.Name]
+		tireUI.First.Second.Size = UDim2.new(
+			1,
+			0,
+			math.clamp(
+				1
+					- (wheel.Tire.Temperature - 40)
+						/ ((wheel.IsFront and wheel.Vehicle.Tune.TireFMaxTemp or wheel.Vehicle.Tune.TireRMaxTemp) - 40),
+				0,
+				1
+			),
+			0
+		)
+		tireUI.BackgroundColor3 = Color3.fromHSV(0, wheel.Tire.Stress, 1)
+		tireUI.BackgroundTransparency = 0.8 - 0.3 * wheel.Tire.Stress
+	end
 end
 
 function VehicleInterface.Destroy(self: VehicleInterface)

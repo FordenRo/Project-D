@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Tire = require(script.Tire)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
 local Wheel = {}
@@ -7,11 +8,11 @@ Wheel.__index = Wheel
 
 type Wheel = Types.ClientWheel
 
-function Wheel.new(vehicle: Types.ClientVehicle, wheel: BasePart)
+function Wheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
 	local self: Wheel = setmetatable({}, Wheel) :: any
 
 	self.Vehicle = vehicle
-	self.Instance = wheel :: any
+	self.Instance = instance :: any
 	self.Trackers = {
 		ABS = 0,
 		TCS = 0,
@@ -37,6 +38,8 @@ function Wheel.new(vehicle: Types.ClientVehicle, wheel: BasePart)
 		self.CanSteer = 1
 		if not ((self.Instance.Arm :: any).Steer :: Instance):GetAttribute("SteerDisabled") then self.CanSteer = 2 end
 	end
+
+	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
 
 	return self
 end
@@ -97,6 +100,8 @@ function Wheel.Destroy(self: Wheel)
 			self.Instance["#BV"].MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
 		end
 	end
+
+	self.Tire:Destroy()
 end
 
 return Wheel

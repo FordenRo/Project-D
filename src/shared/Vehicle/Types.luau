@@ -7,6 +7,8 @@ type PowerSteeringType = "Old" | "New"
 type DrivetrainConfig = "FWD" | "RWD" | "AWD"
 type TransmissionMode = "Auto" | "Semi" | "Manual"
 type ClutchMode = "New" | "Old"
+type HapticsType = "Controller" | "Mobile" | "Both" | "None"
+type TireSmokeEffectsType = "Local" | "All" | "None"
 type AutoShiftMode = "Speed" | "RPM"
 type AutoShiftType = "Rev" | "DCT"
 type AutoShiftVers = "New" | "Old"
@@ -140,6 +142,7 @@ export type VehicleInterface = {
 	Speedometer: VehicleSpeedometer,
 
 	new: (vehicle: ClientVehicle) -> VehicleInterface,
+	UpdateTires: (self: VehicleInterface) -> (),
 	Destroy: (self: VehicleInterface) -> (),
 }
 
@@ -223,6 +226,68 @@ export type ClientWheelSharedData = {
 	DriveWheelSpeed: number,
 }
 
+export type ClientWheelTire = {
+	__index: ClientWheelTire,
+	Instance: BasePart,
+	Wheel: ClientWheel,
+	Vehicle: ClientVehicle,
+	Temperature: number,
+	_Remote: UnreliableRemoteEvent,
+	_deltaTime: number,
+	Stress: number,
+	Dirt: number,
+	Ray: RaycastResult?,
+	RayParams: RaycastParams,
+	Material: string,
+	SmokePart: BasePart,
+	Collision: BasePart,
+	CollisionModel: Model,
+	FlexCollision: BasePart,
+	FlexCollisionGravComp: any,
+	ObjectGravComp: any,
+	TrailAttachmentPart: BasePart,
+	FlexCollisionAlignPosition: AlignPosition,
+	CurrentSound: Sound?,
+	CurrentSmoke: Smoke?,
+	CurrentTrail: { Trail }?,
+	Sounds: { [string]: Sound },
+	Smokes: { [string]: Smoke },
+	Trails: { [string]: { Trail } },
+	TrailStress: number,
+
+	new: (wheel: ClientWheel, instance: BasePart) -> ClientWheelTire,
+	Initialize: (self: ClientWheelTire) -> (),
+	InitializeVariables: (self: ClientWheelTire) -> (),
+	Update: (self: ClientWheelTire, deltaTime: number) -> (),
+	FlexPhysicsUpdate: (self: ClientWheelTire, deltaTime: number) -> (),
+	SmokeUpdate: (self: ClientWheelTire) -> (),
+	Destroy: (self: ClientWheelTire) -> (),
+}
+
+export type ServerWheelTire = {
+	__index: ServerWheelTire,
+	Instance: BasePart,
+	Wheel: ServerWheel,
+	Vehicle: ServerVehicle,
+	WearInstance: BasePart,
+	PreviousMaterialData: { [BasePart]: string },
+	PreviousSoundsData: { [BasePart]: Sound },
+	PreviousSmokesData: { [BasePart]: Smoke },
+	PreviousTrailsData: { [BasePart]: { Trail } },
+	_Remote: UnreliableRemoteEvent,
+
+	new: (wheel: ServerWheel, instance: BasePart) -> ServerWheelTire,
+	Initialize: (self: ServerWheelTire) -> (),
+	Replicate: (
+		self: ServerWheelTire,
+		materialType: string,
+		smokeStress: number,
+		rayNormal: Vector3,
+		temperature: number,
+		deltaTime: number
+	) -> (),
+}
+
 export type ClientWheel = {
 	__index: ClientWheel,
 	Vehicle: ClientVehicle,
@@ -231,9 +296,15 @@ export type ClientWheel = {
 		Arm: nil | (Instance & {
 			Steer: Instance?,
 		}),
+		Parts: Model & {
+			Tire: BasePart,
+		},
+		WheelFixed: Model,
 		["#AV"]: any,
 		["#BV"]: any,
+		SuspensionFixed: Model,
 	},
+	Tire: ClientWheelTire,
 	IsFront: boolean,
 	IsDriven: boolean,
 	CanSteer: number,
@@ -244,6 +315,27 @@ export type ClientWheel = {
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
 	Destroy: (self: ClientWheel) -> (),
+}
+
+export type ServerWheel = {
+	__index: ServerWheel,
+	Vehicle: ServerVehicle,
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: nil | (Instance & {
+			Steer: Instance?,
+		}),
+		Parts: Model & {
+			Tire: BasePart,
+		},
+		Fixed: Model,
+		WheelFixed: Model,
+		SuspensionFixed: Model,
+	} & any,
+	Tire: ServerWheelTire,
+
+	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
+	Initialize: (self: ServerWheel) -> (),
 }
 
 export type ClientVehicle = {
@@ -324,6 +416,7 @@ export type Tune = {
 	AutoStart: boolean,
 	AutoFlip: boolean,
 	Mobile: boolean,
+	Haptics: HapticsType,
 	FlipType: FlipType,
 	-- Wheel Alignment
 	FCamber: number,
@@ -375,6 +468,38 @@ export type Tune = {
 	RWsBoneAngle: number,
 	RAnchorOffset: { number },
 	RSpringOffset: { number },
+	-- Tires
+	TireFThickness: number,
+	TireRThickness: number,
+	TireFPressureForce: number,
+	TireRPressureForce: number,
+	TireFSpeedStress: number,
+	TireRSpeedStress: number,
+	TireDirtBumps: number,
+	TireFDirtFadeRate: number,
+	TireRDirtFadeRate: number,
+	TireFHeating: number,
+	TireFCooling: number,
+	TireFMaxTemp: number,
+	TireRHeating: number,
+	TireRCooling: number,
+	TireRMaxTemp: number,
+	TireFColdStats: { number },
+	TireRColdStats: { number },
+	TireFHotStats: { number },
+	TireRHotStats: { number },
+	TireFWeight: number,
+	TireRWeight: number,
+	TireFMaxFriction: number,
+	TireRMaxFriction: number,
+	TireFDirtLoss: number,
+	TireRDirtLoss: number,
+	TireSandForce: number,
+	TireSmokeStressOffset: number,
+	TireSmokeEffects: TireSmokeEffectsType,
+	TireMarkTransparencyLevels: number,
+	TireMarkTransparency: number,
+	TireFlexDebug: boolean,
 	-- Aesthetics
 	SusVisible: boolean,
 	SpringsVisible: boolean,
