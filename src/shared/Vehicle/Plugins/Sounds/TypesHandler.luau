@@ -1,12 +1,20 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(script.Parent.Types)
+local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
 local SoundTypesHandler = {}
 SoundTypesHandler.__index = SoundTypesHandler
 
-type SoundTypesHandler = Types.SoundTypesHandler
+export type SoundTypesHandler = typeof(setmetatable(
+	{} :: {
+		Vehicle: Types.BaseVehicle,
+		_UpdateBOV: boolean,
+		_PrevBoostTurbo: number,
+		_LastBOV: number,
+	},
+	SoundTypesHandler
+))
 
 function SoundTypesHandler.new(vehicle: Types.BaseVehicle)
 	local self: SoundTypesHandler = setmetatable({}, SoundTypesHandler) :: any

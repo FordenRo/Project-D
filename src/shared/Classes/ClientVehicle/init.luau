@@ -5,7 +5,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local DefaultControls = require(script.DefaultControls)
-local SoundController = require(script.SoundController)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -36,7 +35,6 @@ function ClientVehicle.new(instance: Instance)
 	self:Initialize()
 
 	self.Interface = VehicleInterface.new(self)
-	self.SoundController = SoundController.new(self)
 
 	return self
 end
@@ -225,7 +223,7 @@ end
 function ClientVehicle.InitializePlugins(self: ClientVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin)
-		if pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
 	end
 end
 
@@ -1743,8 +1741,11 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	-- Tell server to remove
 	-- car["A-Chassis Tune"].Shutdown:FireServer()
 
-	self.SoundController:Destroy()
 	self.Interface:Destroy()
+
+	for _, plugin in self.Plugins do
+		plugin:Destroy()
+	end
 
 	for _, conn in self._conn do
 		conn:Disconnect()

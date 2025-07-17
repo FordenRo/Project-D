@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local SoundHandler = require(script.SoundHandler)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
@@ -32,8 +31,6 @@ function ServerVehicle.new(instance: Model)
 			self[k] = v
 		end
 	end)
-
-	self.SoundHandler = SoundHandler.new(self)
 
 	return self
 end
@@ -697,7 +694,7 @@ end
 function ServerVehicle.InitializePlugins(self: ServerVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin)
-		if pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
 	end
 end
 

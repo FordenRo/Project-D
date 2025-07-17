@@ -47,38 +47,6 @@ export type ClientSoundData = ServerSoundData & {
 	ServerInstance: Sound?,
 }
 
-export type SoundTypesHandler = {
-	__index: SoundTypesHandler,
-	Vehicle: BaseVehicle,
-	_UpdateBOV: boolean,
-	_PrevBoostTurbo: number,
-	_LastBOV: number,
-
-	new: (vehicle: BaseVehicle) -> SoundTypesHandler,
-	HandleSounds: (self: SoundTypesHandler, sounds: { ServerSoundData }) -> (),
-}
-
-export type SoundController = {
-	__index: SoundController,
-	Vehicle: ClientVehicle,
-	Sounds: { ClientSoundData },
-	SoundTypesHandler: SoundTypesHandler,
-
-	new: (vehicle: ClientVehicle) -> SoundController,
-	Update: (self: SoundController) -> (),
-	Destroy: (self: SoundController) -> (),
-}
-
-export type SoundHandler = {
-	__index: SoundHandler,
-	Vehicle: ServerVehicle,
-	Sounds: { ServerSoundData },
-	SoundTypesHandler: SoundTypesHandler,
-
-	new: (vehicle: ServerVehicle) -> SoundHandler,
-	Update: (self: SoundHandler) -> (),
-}
-
 export type VehicleControls = {
 	--Keyboard Controls
 	--Mode Toggles
@@ -267,7 +235,6 @@ export type ClientVehicle = {
 	Engine: any,
 	Controls: VehicleControls,
 	Interface: VehicleInterface,
-	SoundController: SoundController,
 	-- Transmission
 	_GoalRPM: number,
 	_ShiftUp: boolean,
@@ -285,7 +252,7 @@ export type ClientVehicle = {
 	_InBrake: number,
 	-- Velocity
 	_OldVelocity: Vector3,
-	-- Functions
+
 	new: (instance: Instance) -> ClientVehicle,
 	Initialize: (self: ClientVehicle) -> (),
 	InitializeVariables: (self: ClientVehicle) -> (),
@@ -309,7 +276,6 @@ export type ClientVehicle = {
 export type ServerVehicle = {
 	__index: ServerVehicle,
 	Plugins: { [string]: any },
-	SoundHandler: SoundHandler,
 
 	new: (instance: Instance) -> ServerVehicle,
 	Initialize: (self: ServerVehicle) -> (),
