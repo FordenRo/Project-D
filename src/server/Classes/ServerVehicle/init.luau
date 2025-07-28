@@ -55,6 +55,8 @@ function ServerVehicle.InitializeVariables(self: ServerVehicle)
 	self.Starting = false
 	self.Occupant = nil
 	self.Fuel = self.Tune.FuelCapacity
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number or 22
+	self.FanSpeed = 0
 	self.Clutch = 0
 	self.Gear = ParkingGearEnabled and -2 or 0
 	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult

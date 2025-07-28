@@ -253,6 +253,17 @@ Tune.FuelCapacity = 70 -- Fuel capacity in liters
 Tune.FuelDensity = 0.71 -- Fuel density in kg/l (0.71 for petrol 0.83 for diesel)
 Tune.BSFC = 250 -- Brake Specific Fuel Consumption in g/kW*h
 
+-- Temperatune
+Tune.OperatingEngineTemp = 100 -- The temperature at which the engine operating normally
+Tune.EngineBurnTemp = 120 -- The temperature at which the engine will explode
+Tune.EngineMaterialFactor = 2.5 -- The factor
+Tune.HeatGain = 4 -- Raw heat gain per kW per second (unaffected by engine material) at 50% of redline
+Tune.RedlineHeatRejection = 1.25 -- Heat gain multiplier at redline (excluding rpm effect). Think of this as "inefficiency" of cumbustion
+Tune.IdleHeatRejection = 1.5 -- Heat gain multiplier at idle (excluding rpm effect). Think of this as "inefficiency" of cumbustion
+Tune.FanAirSpeed = 15 -- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
+Tune.CoolingFactor = 0.02 -- Think of this as a size of radiator + efficiency variable
+Tune.EfficientCombustionRPM = 2000 -- RPM at which the engine is most efficient
+
 -- Electric Engine
 Tune.Electric = false
 
@@ -526,6 +537,13 @@ Tune.Sounds = {
 		ThrottleVolume = 0.1,
 		VariablePlaybackSpeed = 1.3,
 		VariableVolume = 0.5,
+	},
+	Fan = {
+		Type = "Fan",
+		SoundId = "rbxassetid://11773719101",
+		Parent = "Engine",
+		BaseVolume = 1,
+		BasePlaybackSpeed = 1,
 	},
 }
 

@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local DefaultControls = require(script.DefaultControls)
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -109,6 +110,8 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._InBrake = 0
 	self.SteerC = 0
 	self.Fuel = self.Tune.FuelCapacity
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number or 22
+	self.FanSpeed = 0
 	self.SteerT = 0
 	self._LastOffTime = tick()
 	self._SteerL = false
@@ -1511,12 +1514,16 @@ function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if self.Fuel <= 0 then self.IsOn = false end
 end
 
-function ClientVehicle.UpdateTempo(self: ClientVehicle, deltaTime: number)
-	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
+-- TODO: Взрыв двигателя, дым из под капота
+function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
+	if not self.Tune.Engine then return end
 
-	local heatGain = 4
-	local kW = self.Horsepower * 1.35962
-	local heat = kW * heatGain / 60
+	local kW = self.Horsepower / 1.35962
+	local heat = kW * Lerp(2, 1, self.RPM / self.Tune.Redline) / 120
+	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") or 22)
+	local cooling = tDelta * 0.015
+	cooling += (self.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
+	self.Temperature += (heat - cooling) * deltaTime
 end
 
 function getCenter(vehicle: ClientVehicle)
@@ -1590,17 +1597,15 @@ function ClientVehicle.ReplicateVariables(self: ClientVehicle)
 		"Center",
 		"TCS",
 		"TCSActive",
-		"TCSAmt",
 		"ABS",
 		"ABSActive",
-		"ABSAmt",
 		"ESC",
 		"ESCActive",
-		"ESCAmt",
 		"CS",
 		"CSActive",
-		"CSAmt",
 		"IsOn",
+		"Temperature",
+		"FanSpeed",
 	}
 	local data = {}
 	for _, var in vars do
@@ -1623,6 +1628,7 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self:UpdateTransmission()
 	self:UpdateEngine(deltaTime)
 	self:UpdateFuel(deltaTime)
+	self:UpdateTemp(deltaTime)
 	self:ReplicateVariables()
 end
 

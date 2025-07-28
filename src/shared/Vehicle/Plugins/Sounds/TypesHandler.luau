@@ -98,6 +98,17 @@ function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: Types.Server
 	end
 end
 
+function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	if self.Vehicle.FanSpeed > 0 then
+		if not sound.Instance.Playing then sound.Instance.Playing = true end
+
+		sound.Instance.Volume = self.Vehicle.RPM / self.Vehicle.Tune.Redline ^ 0.5 * sound.BaseVolume
+		sound.Instance.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed / 10 * sound.BasePlaybackSpeed
+	else
+		if sound.Instance.Playing then sound.Instance.Playing = false end
+	end
+end
+
 function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { Types.ServerSoundData })
 	for _, sound in sounds do
 		self[sound.Type](self, sound)
