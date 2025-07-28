@@ -50,15 +50,17 @@ function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
 		delta = -self.Vehicle.Center.LookVector * DISTANCE
 	end
 
-	local offset = -self.Vehicle.Acceleration / 30
+	local assel = math.min(self.Vehicle.Acceleration.Magnitude / 20, 3)
+	local offset
+	if assel > 0 then offset = -assel * self.Vehicle.Acceleration.Unit end
 
-	self.Offset = self.Offset:Lerp(offset, deltaTime * 4)
+	self.Offset = self.Offset:Lerp(offset, deltaTime * 2)
 	self.Delta = self.Delta:Lerp(delta, deltaTime * 2)
 
-	local offsetMagnitude = math.clamp(self.Offset.Magnitude, -5, 5)
+	local offsetMagnitude = math.clamp(self.Offset.Magnitude, -3, 3)
 	Camera.CFrame = CFrame.new(
 		position + self.Delta + self.Offset.Unit * offsetMagnitude,
-		self.Vehicle.Center.Position + Vector3.new(0, 7, 0) + self.Offset.Unit * offsetMagnitude
+		self.Vehicle.Center.Position + Vector3.new(0, 7, 0) + self.Offset
 	)
 end
 
