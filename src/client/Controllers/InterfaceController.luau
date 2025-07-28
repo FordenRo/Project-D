@@ -1,15 +1,14 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ScreenGui = ReplicatedStorage.UI:WaitForChild("Interface")
-local player = Players.LocalPlayer
+local Interface = require(ReplicatedStorage.Shared.UI.Interface)
 
 local InterfaceController = {}
 InterfaceController.__index = InterfaceController
 
 export type InterfaceController = typeof(setmetatable(
 	{} :: {
-		Interface: ScreenGui,
+		Interface: Interface.Interface,
 	},
 	InterfaceController
 ))
@@ -17,14 +16,13 @@ export type InterfaceController = typeof(setmetatable(
 function InterfaceController.new()
 	local self = setmetatable({}, InterfaceController) :: InterfaceController
 
-	self.Interface = ScreenGui:Clone()
-	self.Interface.Parent = player.PlayerGui
+	self.Interface = Interface.new()
 
 	return self
 end
 
-function InterfaceController.Show(self: InterfaceController) self.Interface.Enabled = true end
+function InterfaceController.Show(self: InterfaceController) self.Interface:Show() end
 
-function InterfaceController.Hide(self: InterfaceController) self.Interface.Enabled = false end
+function InterfaceController.Hide(self: InterfaceController) self.Interface:Hide() end
 
 return InterfaceController.new()
