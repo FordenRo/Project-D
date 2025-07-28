@@ -115,10 +115,10 @@ Tune.TireSandForce = 20 -- Sand force, more means going over sand slows down the
 
 --[[Aesthetics]]
 Tune.TireSmokeEffects = "All" -- Turns smoke effects on or off, "All" for viewable by everyone, "Local" for only viewable by you, "Off" for none.
-Tune.TireSmokeStressOffset = 5 -- Offsets the stress required to activate smoke-related effects (in percent, higher means less smoke).
+Tune.TireSmokeStressOffset = 3 -- Offsets the stress required to activate smoke-related effects (in percent, higher means less smoke).
 Tune.TireSmokePollingRate = 1 / 8 -- "All" setting only. This changes how often the server gets data to run the smoke effects. Higher = more delay.
 Tune.TireMarkTransparencyLevels = 5 -- How many levels of transparency there are (0 for no marks)
-Tune.TireMarkTransparency = 0.95 -- The transparency of the tire marks
+Tune.TireMarkTransparency = 0.9 -- The transparency of the tire marks
 
 --[[Friction]]
 Tune.TireFMinTemp = 8 -- Minimum temperature of the front tires in celcius
