@@ -81,6 +81,7 @@ function Speedometer.SlowUpdate(self: Speedometer)
 	self:GearUpdate()
 	self:MileageUpdate()
 	self:FuelUpdate()
+	self:TempUpdate()
 	self:UpdateIcons()
 	self:LightsUpdate()
 	self:TurnSignalsUpdate()
@@ -194,6 +195,27 @@ function Speedometer.FuelUpdate(self: Speedometer)
 	end
 end
 
+function Speedometer.TempUpdate(self: Speedometer)
+	local function setColor(color: Color3)
+		self.Instance.Temp.CanvasGroup.FG.ImageColor3 = color
+		self.Instance.TempIcon.Icon.ImageColor3 = color
+	end
+
+	local rot = (self.Vehicle.Temperature - 60) / (self.Vehicle.Tune.EngineBurnTemp - 65) * 60
+	self.Instance.Temp.CanvasGroup.FG.Rotation = 180 - math.clamp(rot, 0, 60)
+
+	if self.Vehicle.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5) < 0.3 then
+		setColor(
+			Color3.new(1, 1, 1):Lerp(
+				Color3.new(1, 0, 0),
+				math.clamp(1 - (self.Vehicle.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5)) / 0.3, 0, 1)
+			)
+		)
+	else
+		setColor(Color3.new(1, 1, 1))
+	end
+end
+
 function Speedometer.UpdateIcons(self: Speedometer)
 	self.Instance.PBrake.ImageColor3 = (self.Vehicle.PBrake or self.Vehicle.Starting) and Color3.new(1, 1, 1)
 		or Color3.new()
@@ -235,11 +257,6 @@ function Speedometer.TSCUpdate(self: Speedometer)
 			self.Instance.TCS.ImageTransparency = 0.8
 		end
 	end
-end
-
-function Speedometer.TempoUpdate(self: Speedometer)
-	-- local rot = self.Vehicle.Tempo / 115 * 60
-	-- self.Instance.Tempo.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 60)
 end
 
 function Speedometer.Destroy(self: Speedometer)
