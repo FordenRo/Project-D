@@ -9,9 +9,13 @@ DatastoreHandler.__index = DatastoreHandler
 
 export type DatastoreHandler = typeof(setmetatable({} :: {}, DatastoreHandler))
 
-local remote = Instance.new("RemoteFunction")
-remote.Name = "DatastoreRemote"
-remote.Parent = ReplicatedStorage.Remotes
+local remoteFunction = Instance.new("RemoteFunction")
+remoteFunction.Name = "DatastoreRF"
+remoteFunction.Parent = ReplicatedStorage.Remotes
+
+local remoteEvent = Instance.new("RemoteEvent")
+remoteEvent.Name = "DatastoreRE"
+remoteEvent.Parent = ReplicatedStorage.Remotes
 
 function DatastoreHandler.new()
 	local self: DatastoreHandler = setmetatable({}, DatastoreHandler) :: any
@@ -20,14 +24,22 @@ function DatastoreHandler.new()
 end
 
 function DatastoreHandler.Initialize(self: DatastoreHandler)
-	local types = {}
+	local getTypes = {}
+	local setTypes = {}
 
-	types.Controls = function(player) return self:GetPlayerControls(player) end
+	getTypes.Controls = function(player) return self:GetPlayerControls(player) end
+	setTypes.Controls = function(player, value) self:SetPlayerControls(player, value) end
 
-	remote.OnServerEvent:Connect(function(player, type: string)
-		if not types[type] then return end
+	remoteFunction.OnServerInvoke = function(player: Player, type: string)
+		if not getTypes[type] then return end
 
-		return types[type](player)
+		return getTypes[type](player)
+	end
+
+	remoteEvent.OnServerEvent:Connect(function(player, type: string, value: any)
+		if not setTypes[type] then return end
+
+		setTypes[type](player, value)
 	end)
 end
 
