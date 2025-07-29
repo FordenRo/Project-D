@@ -1,7 +1,7 @@
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local DefaultControls = require(ReplicatedStorage.Shared.Classes.ClientVehicle.DefaultControls)
+local DefaultControls = require(ReplicatedStorage.Shared.Vehicle.DefaultControls)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
 local DatastoreHandler = {}
@@ -15,8 +15,6 @@ remote.Parent = ReplicatedStorage.Remotes
 
 function DatastoreHandler.new()
 	local self: DatastoreHandler = setmetatable({}, DatastoreHandler) :: any
-
-	remote.OnServerEvent:Connect(function(player, type: string) end)
 
 	return self
 end
