@@ -15,15 +15,21 @@ export type HitResult = {
 type HitCallback = (hit: HitResult) -> ()
 
 local registeredParts: { [BasePart]: HitCallback } = {}
-local hittableRE = ReplicatedStorage.Events.Hittable
+local hittableRE
 local isServer = RunService:IsServer()
 
 function HittableService.new(): HittableService
 	local self = setmetatable({}, HittableService) :: HittableService
 
 	if isServer then
+		hittableRE = Instance.new("RemoteEvent")
+		hittableRE.Name = "HittableRE"
+		hittableRE.Parent = ReplicatedStorage
+
 		hittableRE.OnServerEvent:Connect(function(_, hit: HitResult) silentHit(hit) end)
 	else
+		hittableRE = ReplicatedStorage:WaitForChild("HittableRE")
+
 		hittableRE.OnClientEvent:Connect(function(hit: HitResult) silentHit(hit) end)
 	end
 
