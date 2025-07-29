@@ -6,24 +6,24 @@ local Tune = {} :: Types.Tune
 Tune.SuspensionEnabled = true -- Enables suspension, true or false
 
 -- Front Suspension
-Tune.FSusStiffness = 12.3 -- Spring Force in kgf/mm. (To convert from Roblox stiffness, divide Roblox stiffness by 447.18324)
-Tune.FSusDamping = 3.9 -- Spring Damping in thousands of kg/s. (To convert from Roblox damping, divide Roblox damping by 45.6)
+Tune.FSusStiffness = 2.6 -- Spring Force in kgf/mm. (To convert from Roblox stiffness, divide Roblox stiffness by 447.18324)
+Tune.FSusDamping = 1.4 -- Spring Damping in thousands of kg/s. (To convert from Roblox damping, divide Roblox damping by 45.6)
 Tune.FSwayBar = 3.2 -- Sway Bar Force in kgf/mm (more = less roll)
 
 Tune.FSusLength = 1.2 -- Base spring height (in studs)
 Tune.FPreCompress = 0.2 -- Adds to base spring height (in studs)
-Tune.FExtensionLim = 0.5 -- Max Extension Travel (in studs)
-Tune.FCompressLim = 0.3 -- Max Compression Travel (in studs)
+Tune.FExtensionLim = 0.8 -- Max Extension Travel (in studs)
+Tune.FCompressLim = 0.6 -- Max Compression Travel (in studs)
 
 --Rear Suspension
-Tune.RSusStiffness = 13.2 -- Spring Force in kgf/mm. (To convert from Roblox stiffness, divide Roblox stiffness by 447.18324)
-Tune.RSusDamping = 4.4 -- Spring Damping in thousands of kg/s. (To convert from Roblox damping, divide Roblox damping by 45.6)
+Tune.RSusStiffness = 2.3 -- Spring Force in kgf/mm. (To convert from Roblox stiffness, divide Roblox stiffness by 447.18324)
+Tune.RSusDamping = 1.4 -- Spring Damping in thousands of kg/s. (To convert from Roblox damping, divide Roblox damping by 45.6)
 Tune.RSwayBar = 1.1 -- Sway Bar Force in kgf/mm (more = less roll)
 
 Tune.RSusLength = 1.2 -- Base spring height (in studs)
 Tune.RPreCompress = 0.2 -- Adds to base spring height (in studs)
-Tune.RExtensionLim = 0.5 -- Max Extension Travel (in studs)
-Tune.RCompressLim = 0.3 -- Max Compression Travel (in studs)
+Tune.RExtensionLim = 0.8 -- Max Extension Travel (in studs)
+Tune.RCompressLim = 0.6 -- Max Compression Travel (in studs)
 
 --Old Suspension Settings, applies if there is no SuspensionGeometry for the respective wheel
 Tune.FSusAngle = 80 -- Spring Angle (degrees from horizontal)
