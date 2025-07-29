@@ -76,7 +76,7 @@ function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
 	end
 
 	local assel = math.min(self.Vehicle.Acceleration.Magnitude / 20, 3)
-	local offset
+	local offset = Vector3.new()
 	if assel > 0 then offset = -assel * self.Vehicle.Acceleration.Unit end
 
 	local bumping = Vector3.yAxis * self.Vehicle.Acceleration.Y * BUMPING_STRENGTH

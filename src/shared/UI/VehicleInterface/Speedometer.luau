@@ -28,7 +28,7 @@ function Speedometer.new(vehicle: Types.ClientVehicle, instance: Frame)
 		},
 	}
 
-	if not (self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers) then
+	if self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers == 0 then
 		self.Instance.Boost.Visible = false
 		self.Instance.BoostBG.Visible = false
 		self.Instance.Labels.Boost.Visible = false
