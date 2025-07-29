@@ -30,9 +30,9 @@ function PlayerStatsHandler.OnPlayerAdded(self: PlayerStatsHandler, player: Play
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
-	local playtime = Instance.new("IntValue")
+	local playtime = Instance.new("StringValue")
 	playtime.Name = "Hours"
-	playtime.Value = DatastoreHandler:GetPlayerHours(player)
+	playtime.Value = "-"
 	playtime.Parent = leaderstats
 
 	local laps = Instance.new("IntValue")

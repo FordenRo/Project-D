@@ -76,12 +76,12 @@ function DatastoreHandler.SetPlayerControls(self: DatastoreHandler, player: Play
 	DataStoreService:GetDataStore("PlayerSettings", "Controls"):SetAsync(player.UserId, HttpService:JSONEncode(value))
 end
 
-function DatastoreHandler.GetPlayerHours(self: DatastoreHandler, player: Player): number
-	return DataStoreService:GetOrderedDataStore("PlayerStats", "Hours"):GetAsync(player.UserId) or 0
+function DatastoreHandler.GetPlayerPlaytime(self: DatastoreHandler, player: Player): number
+	return DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime"):GetAsync(player.UserId) or 0
 end
 
-function DatastoreHandler.SetPlayerHours(self: DatastoreHandler, player: Player, value: number)
-	DataStoreService:GetOrderedDataStore("PlayerStats", "Hours"):SetAsync(player.UserId, math.floor(value))
+function DatastoreHandler.SetPlayerPlaytime(self: DatastoreHandler, player: Player, value: number)
+	DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime"):SetAsync(player.UserId, math.floor(value))
 end
 
 return DatastoreHandler.new()
