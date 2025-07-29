@@ -4,7 +4,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
-local DefaultControls = require(script.DefaultControls)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -13,6 +12,8 @@ local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
+
+local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
 
 local ClientVehicle = {}
 ClientVehicle.__index = ClientVehicle
@@ -170,15 +171,8 @@ function ClientVehicle.InitializePlugins(self: ClientVehicle)
 end
 
 -- TODO: Add VirtualInput & Mobile
--- TODO: Get controls from datastore
 function ClientVehicle.InitControls(self: ClientVehicle)
-	self.Controls = DefaultControls
-	-- local controls = ControlsDataStore:GetAsync(player.UserId)
-	-- if controls then
-	-- 	for k, v in controls do
-	-- 		self.Controls[k] = v
-	-- 	end
-	-- end
+	self.Controls = DatastoreController:GetControls()
 
 	-- Disable jumping
 	require(player.PlayerScripts.PlayerModule):GetControls():GetActiveController().jumpEnabled = false
