@@ -1,5 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local ScreenGui = ReplicatedStorage.UI.Settings
 local player = Players.LocalPlayer
@@ -69,6 +70,24 @@ function Settings.InitializeControls(self: Settings)
 		local button = Instance.new("TextButton")
 		button.Text = v.Name
 		button.Parent = frame
+
+		button.Activated:Connect(function()
+			button.Text = "Enter a key..."
+
+			local input = UserInputService.InputBegan:Wait()
+			if input.KeyCode == Enum.KeyCode.Return then return end
+
+			if
+				input.UserInputType == Enum.UserInputType.MouseButton1
+				or input.UserInputType == Enum.UserInputType.MouseButton2
+			then
+				self.Controls[k] = input.UserInputType
+				button.Text = input.UserInputType.Name
+			elseif input.UserInputType == Enum.UserInputType.Keyboard then
+				self.Controls[k] = input.KeyCode
+				button.Text = input.KeyCode.Name
+			end
+		end)
 
 		frame.Parent = self.Instance.Window.Content.Controls[parent]
 	end
