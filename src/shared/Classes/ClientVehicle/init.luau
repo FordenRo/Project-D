@@ -371,6 +371,10 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 				humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 			end
 
+		-- Horn
+		elseif input.KeyCode == self.Controls.Horn then
+			self.Horning = input.UserInputState == Enum.UserInputState.Begin
+
 		--Toggle TCS and ESC
 		elseif
 			self.Tune.TCSEnabled
@@ -1576,6 +1580,7 @@ function ClientVehicle.ReplicateVariables(self: ClientVehicle)
 		"TqSuper",
 		"TqBoosted",
 		"Torque",
+		"Horning",
 		"Throttle",
 		"InputThrottle",
 		"Brake",

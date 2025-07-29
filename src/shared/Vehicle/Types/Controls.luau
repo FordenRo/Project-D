@@ -13,6 +13,7 @@ export type VehicleControls = {
 	SteerLeft: Enum.KeyCode,
 	SteerRight: Enum.KeyCode,
 	Ignition: Enum.KeyCode,
+	Horn: Enum.KeyCode,
 	Leave: Enum.KeyCode,
 
 	--Secondary Controls

@@ -62,6 +62,13 @@ Tune.Sounds = {
 		BaseVolume = 1,
 		BasePlaybackSpeed = 1,
 	},
+	Horn = {
+		Type = "Horn",
+		SoundId = "rbxassetid://143133249",
+		Parent = "Engine",
+		BaseVolume = 0.7,
+		BasePlaybackSpeed = 1,
+	},
 }
 
 return Tune

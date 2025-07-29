@@ -18,6 +18,7 @@ export type BaseVehicle = {
 	Fuel: number,
 	Temperature: number,
 	FanSpeed: number,
+	Horning: boolean,
 	-- Transmission
 	Clutch: number,
 	Gear: number,

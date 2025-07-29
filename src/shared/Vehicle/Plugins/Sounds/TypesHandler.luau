@@ -109,6 +109,12 @@ function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: Types.ServerSound
 	end
 end
 
+function SoundTypesHandler.Horn(self: SoundTypesHandler, sound: Types.ServerSoundData)
+	sound.Instance.Playing = self.Vehicle.Horning
+	sound.Instance.Volume = sound.BaseVolume
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+end
+
 function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { Types.ServerSoundData })
 	for _, sound in sounds do
 		self[sound.Type](self, sound)
