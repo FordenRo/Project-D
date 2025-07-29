@@ -23,7 +23,7 @@ function DatetimeHandler.new()
 
 	task.spawn(function()
 		while true do
-			local deltaTime = task.wait(1 / 10)
+			local deltaTime = task.wait(1)
 			Lighting.ClockTime += deltaTime / 60
 
 			local t = (1 - math.abs(Lighting.ClockTime - 12) / 12) ^ 2
