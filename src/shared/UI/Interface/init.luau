@@ -1,7 +1,9 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Garage = require(script.Parent.Garage)
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Settings = require(script.Parent.Settings)
 
 local ScreenGui = ReplicatedStorage.UI.Interface
@@ -17,6 +19,7 @@ export type Interface = typeof(setmetatable(
 		Instance: ScreenGui & {
 			Buttons: { TextButton },
 		},
+		_cons: { RBXScriptConnection },
 	},
 	Interface
 ))
@@ -28,13 +31,17 @@ function Interface.new()
 	self.Instance.Parent = player.PlayerGui
 
 	self.CurrentWindow = nil
+	self._cons = {}
 
 	self:Initialize()
 
 	return self
 end
 
-function Interface.Initialize(self: Interface) self:InitializeButtons() end
+function Interface.Initialize(self: Interface)
+	self:InitializeButtons()
+	self:InitializeDebug()
+end
 
 function Interface.InitializeButtons(self: Interface)
 	for _, v in self.Instance.Buttons:GetChildren() do
@@ -51,10 +58,26 @@ function Interface.InitializeButtons(self: Interface)
 	end
 end
 
+function Interface.InitializeDebug(self: Interface)
+	local fps = 0
+	table.insert(
+		self._cons,
+		RunService.RenderStepped:Connect(function(deltaTime)
+			fps = Lerp(fps, 1 / deltaTime, deltaTime * 5)
+			self.Instance.Debug.FPS.Text = string.format("FPS: %.1f", fps)
+		end)
+	)
+end
+
 function Interface.Show(self: Interface) self.Instance.Enabled = true end
 
 function Interface.Hide(self: Interface) self.Instance.Enabled = false end
 
-function Interface.Destroy(self: Interface) self.Instance:Destroy() end
+function Interface.Destroy(self: Interface)
+	for _, v in self._cons do
+		v:Disconnect()
+	end
+	self.Instance:Destroy()
+end
 
 return Interface
