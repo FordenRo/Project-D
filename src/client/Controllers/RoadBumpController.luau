@@ -9,7 +9,7 @@ RoadBumpController.__index = RoadBumpController
 export type RoadBumpController = typeof(setmetatable({} :: {}, RoadBumpController))
 
 function RoadBumpController.new()
-	local self = setmetatable({}, RoadBumpController) :: RoadBumpController
+	local self: RoadBumpController = setmetatable({}, RoadBumpController) :: any
 
 	for _, roadBump in CollectionService:GetTagged("RoadBump") do
 		RoadBump.new(roadBump)
