@@ -1,5 +1,4 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
 
 local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)

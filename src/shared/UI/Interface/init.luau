@@ -19,6 +19,7 @@ export type Interface = typeof(setmetatable(
 		Instance: ScreenGui & {
 			Buttons: { TextButton },
 		},
+		CurrentWindow: any,
 		_cons: { RBXScriptConnection },
 	},
 	Interface
@@ -71,7 +72,14 @@ end
 
 function Interface.Show(self: Interface) self.Instance.Enabled = true end
 
-function Interface.Hide(self: Interface) self.Instance.Enabled = false end
+function Interface.Hide(self: Interface)
+	if self.CurrentWindow then
+		self.CurrentWindow:Destroy()
+		self.CurrentWindow = nil
+	end
+
+	self.Instance.Enabled = false
+end
 
 function Interface.Destroy(self: Interface)
 	for _, v in self._cons do

@@ -333,8 +333,6 @@ function Tire.Update(self: Tire, deltaTime: number)
 		)
 	end
 
-	-- TODO: Update UI
-
 	-- Update haptic values
 	stress += self.Stress
 	count += 1
@@ -468,13 +466,11 @@ function Tire.Update(self: Tire, deltaTime: number)
 	then
 		stress /= count
 		stress = math.clamp(stress / 2, 0, 0.5)
-		-- script.Parent.TextLabel.Text = stress
 		HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, stress)
 	end
 end
 
-function Tire.Destroy(self: Tire)
-	-- Пустой метод
-end
+--TODO: Destroy function
+function Tire.Destroy(self: Tire) end
 
 return Tire

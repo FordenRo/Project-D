@@ -12,7 +12,7 @@ ServerVehicle.__index = ServerVehicle
 type ServerVehicle = Types.ServerVehicle
 
 function ServerVehicle.new(instance: Model)
-	local self: Types.ServerVehicle = setmetatable({}, ServerVehicle) :: any
+	local self: ServerVehicle = setmetatable({}, ServerVehicle) :: any
 
 	self.Instance = instance :: any
 	self.Tune = require(
@@ -154,16 +154,6 @@ function ServerVehicle.GetCenter(self: ServerVehicle)
 end
 
 function ServerVehicle.CreateChassisAssembly(self: ServerVehicle)
-	local fDistX = self.Tune.FWsBoneLen * math.cos(math.rad(self.Tune.FWsBoneAngle))
-	local fDistY = self.Tune.FWsBoneLen * math.sin(math.rad(self.Tune.FWsBoneAngle))
-	local rDistX = self.Tune.RWsBoneLen * math.cos(math.rad(self.Tune.RWsBoneAngle))
-	local rDistY = self.Tune.RWsBoneLen * math.sin(math.rad(self.Tune.RWsBoneAngle))
-
-	local fSLX = self.Tune.FSusLength * math.cos(math.rad(self.Tune.FSusAngle))
-	local fSLY = self.Tune.FSusLength * math.sin(math.rad(self.Tune.FSusAngle))
-	local rSLX = self.Tune.RSusLength * math.cos(math.rad(self.Tune.RSusAngle))
-	local rSLY = self.Tune.RSusLength * math.sin(math.rad(self.Tune.RSusAngle))
-
 	for _, v in self.Instance.Wheels:GetChildren() do
 		if
 			not v:IsA("BasePart")
@@ -179,7 +169,7 @@ function ServerVehicle.CreateChassisAssembly(self: ServerVehicle)
 			continue
 		end
 
-		local wheel = Wheel.new(self, v)
+		Wheel.new(self, v)
 	end
 end
 
