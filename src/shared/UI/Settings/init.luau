@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ScreenGui = ReplicatedStorage.UI.Settings
 local player = Players.LocalPlayer
 
-local DefaultControls = require(ReplicatedStorage.Shared.Classes.ClientVehicle.DefaultControls)
+local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
 local Types = require(ReplicatedStorage.Shared.Types)
 local VehicleController = require(player.PlayerScripts.Client.Controllers.VehicleController)
 local VehicleTypes = require(ReplicatedStorage.Shared.Vehicle.Types)
@@ -29,7 +29,7 @@ function Settings.new()
 
 	self.Instance = ScreenGui:Clone()
 	self.Instance.Parent = player.PlayerGui
-	self.Controls = DefaultControls
+	self.Controls = DatastoreController:GetControls()
 
 	self:Initialize()
 
@@ -37,10 +37,14 @@ function Settings.new()
 end
 
 function Settings.Initialize(self: Settings)
-	self.Instance.Window.Bottom.Done.Activated:Connect(function() self:Destroy() end)
 	self:InitializeControls()
 
 	self:SetTab("Controls")
+
+	self.Instance.Window.Bottom.Done.Activated:Connect(function()
+		self:Apply()
+		self:Destroy()
+	end)
 end
 
 function Settings.InitializeControls(self: Settings)
@@ -84,6 +88,8 @@ end
 
 function Settings.Apply(self: Settings)
 	if VehicleController.DrivenVehicle then VehicleController.DrivenVehicle.Controls = self.Controls end
+
+	DatastoreController:SetControls(self.Controls)
 end
 
 function Settings.IsA(self: Settings, type: string) return self.Type == type end
