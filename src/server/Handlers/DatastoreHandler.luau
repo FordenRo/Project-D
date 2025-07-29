@@ -1,4 +1,5 @@
 local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DefaultControls = require(ReplicatedStorage.Shared.Vehicle.DefaultControls)
@@ -11,14 +12,16 @@ export type DatastoreHandler = typeof(setmetatable({} :: {}, DatastoreHandler))
 
 local remoteFunction = Instance.new("RemoteFunction")
 remoteFunction.Name = "DatastoreRF"
-remoteFunction.Parent = ReplicatedStorage.Remotes
+remoteFunction.Parent = ReplicatedStorage
 
 local remoteEvent = Instance.new("RemoteEvent")
 remoteEvent.Name = "DatastoreRE"
-remoteEvent.Parent = ReplicatedStorage.Remotes
+remoteEvent.Parent = ReplicatedStorage
 
 function DatastoreHandler.new()
 	local self: DatastoreHandler = setmetatable({}, DatastoreHandler) :: any
+
+	self:Initialize()
 
 	return self
 end
@@ -46,10 +49,19 @@ end
 function DatastoreHandler.GetPlayerControls(self: DatastoreHandler, player: Player): Types.VehicleControls
 	local controls = DefaultControls
 
-	local playerControls = DataStoreService:GetDataStore("PlayerSettings", "Controls"):GetAsync(player.UserId)
-	if playerControls then
-		for k, v in playerControls do
+	local data = DataStoreService:GetDataStore("PlayerSettings", "Controls"):GetAsync(player.UserId)
+	if data then
+		for k, v in HttpService:JSONDecode(data) do
 			controls[k] = v
+			if typeof(v) == "string" then
+				local hasKeyCode, keyCode = pcall(function() return Enum.KeyCode[v] end)
+				local hasInputType, inputType = pcall(function() return Enum.UserInputType[v] end)
+				if hasKeyCode then
+					controls[k] = keyCode
+				elseif hasInputType then
+					controls[k] = inputType
+				end
+			end
 		end
 	end
 
@@ -57,7 +69,11 @@ function DatastoreHandler.GetPlayerControls(self: DatastoreHandler, player: Play
 end
 
 function DatastoreHandler.SetPlayerControls(self: DatastoreHandler, player: Player, value: Types.VehicleControls)
-	DataStoreService:GetDataStore("PlayerSettings", "Controls"):SetAsync(player.UserId, value)
+	for k, v in value do
+		if typeof(v) == "EnumItem" then value[k] = v.Name end
+	end
+
+	DataStoreService:GetDataStore("PlayerSettings", "Controls"):SetAsync(player.UserId, HttpService:JSONEncode(value))
 end
 
 function DatastoreHandler.GetPlayerHours(self: DatastoreHandler, player: Player): number
@@ -65,7 +81,7 @@ function DatastoreHandler.GetPlayerHours(self: DatastoreHandler, player: Player)
 end
 
 function DatastoreHandler.SetPlayerHours(self: DatastoreHandler, player: Player, value: number)
-	DataStoreService:GetOrderedDataStore("PlayerStats", "Hours"):SetAsync(player.UserId, value)
+	DataStoreService:GetOrderedDataStore("PlayerStats", "Hours"):SetAsync(player.UserId, math.floor(value))
 end
 
 return DatastoreHandler.new()

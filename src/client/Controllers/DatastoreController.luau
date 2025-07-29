@@ -7,8 +7,8 @@ DatastoreController.__index = DatastoreController
 
 export type DatastoreController = typeof(setmetatable({} :: {}, DatastoreController))
 
-local remoteFunction: RemoteFunction = ReplicatedStorage.Remotes:WaitForChild("DatastoreRF")
-local remoteEvent: RemoteEvent = ReplicatedStorage.Remotes:WaitForChild("DatastoreRE")
+local remoteFunction: RemoteFunction = ReplicatedStorage:WaitForChild("DatastoreRF")
+local remoteEvent: RemoteEvent = ReplicatedStorage:WaitForChild("DatastoreRE")
 
 function DatastoreController.new()
 	local self: DatastoreController = setmetatable({}, DatastoreController) :: any
