@@ -49,6 +49,7 @@ function Tire.InitializeVariables(self: Tire)
 	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition") :: AlignPosition
 	self.CurrentSound = nil
 	self.CurrentSmoke = nil
+	self.CurrentWheelSmoke = nil
 	self.CurrentTrail = nil
 	self.TrailStress = 0
 	self.Trails = {
@@ -60,6 +61,7 @@ function Tire.InitializeVariables(self: Tire)
 	self._deltaTime = 0
 	self.Sounds = {}
 	self.Smokes = {}
+	self.WheelSmokes = {}
 	-- Tremolo
 end
 
@@ -103,6 +105,27 @@ function Tire.Initialize(self: Tire)
 				elseif v:IsA("Sound") then
 					self.Sounds[effectType] = effect
 				end
+			end
+		end
+		for _, v in self.Wheel.Instance:FindFirstChild("WheelSmokePart"):GetChildren() do
+			if string.find(v.Name, "Local_") then continue end
+			if v:IsA("ParticleEmitter") then
+				local effectType = (string.find(v.Name, "road") and "road")
+					or (string.find(v.Name, "sand") and "sand")
+					or (string.find(v.Name, "dirt") and "dirt")
+					or (string.find(v.Name, "snow") and "snow")
+				local effect = v
+				if self.Vehicle.Tune.TireSmokeEffects == "Local" then
+					v.Name = "Local_" .. v.Name
+				else
+					local new = self.Wheel.Instance:FindFirstChild("Local_" .. v.Name) or v:Clone()
+					new.Name = "Local_" .. v.Name
+					new.Parent = self.Wheel.Instance
+					effect = new
+					v:SetAttribute("data", v.Lifetime)
+					v.Lifetime = NumberRange.new(0)
+				end
+				self.WheelSmokes[effectType] = effect
 			end
 		end
 	end
@@ -384,13 +407,16 @@ function Tire.Update(self: Tire, deltaTime: number)
 		-- Set sounds and smoke
 		local currentSound = self.CurrentSound
 		local currentSmoke = self.CurrentSmoke
+		local currentWheelSmoke = self.CurrentWheelSmoke
 		if materialChanged then
 			if currentSound then currentSound.Playing = false end
 			if currentSmoke then currentSmoke.Enabled = false end
 			currentSound = self.Sounds[materialType]
 			currentSmoke = self.Smokes[materialType]
+			currentWheelSmoke = self.WheelSmokes[materialType]
 			self.CurrentSound = currentSound
 			self.CurrentSmoke = currentSmoke
+			self.CurrentWheelSmoke = currentWheelSmoke
 		end
 
 		-- Set Trails
@@ -425,6 +451,11 @@ function Tire.Update(self: Tire, deltaTime: number)
 			-- Smoke
 			currentSmoke.Enabled = true
 			currentSmoke.Rate = smokeStress ^ 10 * 100
+		end
+		if currentWheelSmoke then
+			-- Wheel smoke
+			currentWheelSmoke.Enabled = true
+			currentWheelSmoke.Rate = smokeStress ^ 10 * 100
 		end
 		local compression = 1
 		if self.Collision then

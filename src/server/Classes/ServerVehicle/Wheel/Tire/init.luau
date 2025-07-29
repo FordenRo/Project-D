@@ -76,6 +76,47 @@ function Tire.Initialize(self: Tire)
 			clone.Parent = smokePart
 		end
 
+		local wheelSmokePart = self.Wheel.Instance:FindFirstChild("WheelSmokePart") or self.Wheel.Instance.Arm:Clone()
+		wheelSmokePart.Name = "WheelSmokePart"
+		wheelSmokePart.Massless = true
+		wheelSmokePart:ClearAllChildren()
+		wheelSmokePart.Parent = self.Wheel.Instance
+
+		local wta0 = Instance.new("Attachment")
+		wta0.Parent = self.Wheel.Instance.Arm
+
+		local wta1 = Instance.new("Attachment")
+		wta1.Parent = wheelSmokePart
+
+		local wheelAlign = Instance.new("AlignPosition")
+		wheelAlign.Attachment0 = wta0
+		wheelAlign.Attachment1 = wta1
+		wheelAlign.RigidityEnabled = true
+		wheelAlign.ReactionForceEnabled = true
+		wheelAlign.Parent = wheelSmokePart
+
+		local wheelOrient = Instance.new("AlignOrientation")
+		wheelOrient.Attachment0 = wta1
+		wheelOrient.AlignType = Enum.AlignType.PrimaryAxisParallel
+		wheelOrient.Mode = Enum.OrientationAlignmentMode.OneAttachment
+		wheelOrient.RigidityEnabled = true
+		wheelOrient.MaxTorque = math.huge
+		wheelOrient.Parent = wheelSmokePart
+
+		local angForce = Instance.new("AngularVelocity")
+		angForce.AngularVelocity = Vector3.new(-5, 0, 0)
+		angForce.Attachment0 = wta1
+		angForce.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+		angForce.MaxTorque = math.huge
+		angForce.Parent = wheelSmokePart
+
+		for _, a in ReplicatedStorage.Vehicle.Wheel:GetChildren() do
+			if self.Wheel.Instance:FindFirstChild(a.Name) then continue end
+
+			local clone = a:Clone()
+			clone.Parent = wheelSmokePart
+		end
+
 		-- create trails
 		local trailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart") or smokePart:Clone()
 		trailAttachmentPart:ClearAllChildren()
