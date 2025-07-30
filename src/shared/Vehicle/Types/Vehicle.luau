@@ -1,3 +1,4 @@
+local Controls = require(script.Parent.Controls)
 local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
@@ -88,7 +89,7 @@ export type ClientVehicle = {
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: any,
-	Controls: VehicleControls,
+	Controls: Controls.VehicleControls,
 	Interface: VehicleInterface,
 	-- Transmission
 	_GoalRPM: number,
@@ -146,5 +147,165 @@ export type ServerVehicle = {
 	RemoveCharacterWeight: (self: ServerVehicle) -> (),
 	InitializeDriveSeat: (self: ServerVehicle) -> (),
 } & BaseVehicle
+
+export type ClientWheelSharedData = {
+	TCSCount: number,
+	ABSCount: number,
+	ESCCount: number,
+	Rotation: number,
+	MaxSpin: number,
+	DriveWheelSpeed: number,
+}
+
+export type ClientWheel = {
+	__index: ClientWheel,
+	Vehicle: ClientVehicle,
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: nil | (Instance & {
+			Steer: Instance?,
+		}),
+		Parts: Model & {
+			Tire: BasePart,
+		},
+		WheelFixed: Model,
+		["#AV"]: any,
+		["#BV"]: any,
+		SuspensionFixed: Model,
+	},
+	Tire: ClientWheelTire,
+	IsFront: boolean,
+	IsDriven: boolean,
+	CanSteer: number,
+	OppositeWheel: BasePart,
+	Trackers: { ABS: number, TCS: number, ESC: number },
+	_WheelSpeeds: { number },
+
+	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
+	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
+	Destroy: (self: ClientWheel) -> (),
+}
+
+export type ServerWheel = {
+	__index: ServerWheel,
+	Vehicle: ServerVehicle,
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: nil | (Instance & {
+			Steer: Instance?,
+		}),
+		Parts: Model & {
+			Tire: BasePart,
+		},
+		Fixed: Model,
+		WheelFixed: Model,
+		SuspensionFixed: Model,
+	} & any,
+	Tire: ServerWheelTire,
+
+	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
+	Initialize: (self: ServerWheel) -> (),
+}
+
+export type ClientWheelTire = {
+	__index: ClientWheelTire,
+	Instance: BasePart,
+	Wheel: ClientWheel,
+	Vehicle: ClientVehicle,
+	Temperature: number,
+	_Remote: UnreliableRemoteEvent,
+	_deltaTime: number,
+	Stress: number,
+	Dirt: number,
+	Ray: RaycastResult?,
+	RayParams: RaycastParams,
+	Material: string,
+	SmokePart: BasePart,
+	Collision: BasePart,
+	CollisionModel: Model,
+	FlexCollision: BasePart,
+	FlexCollisionGravComp: any,
+	ObjectGravComp: any,
+	TrailAttachmentPart: BasePart,
+	FlexCollisionAlignPosition: AlignPosition,
+	CurrentSound: Sound?,
+	CurrentSmoke: Smoke?,
+	CurrentTrail: { Trail }?,
+	Sounds: { [string]: Sound },
+	Smokes: { [string]: Smoke },
+	Trails: { [string]: { Trail } },
+	TrailStress: number,
+
+	new: (wheel: ClientWheel, instance: BasePart) -> ClientWheelTire,
+	Initialize: (self: ClientWheelTire) -> (),
+	InitializeVariables: (self: ClientWheelTire) -> (),
+	Update: (self: ClientWheelTire, deltaTime: number) -> (),
+	FlexPhysicsUpdate: (self: ClientWheelTire, deltaTime: number) -> (),
+	SmokeUpdate: (self: ClientWheelTire) -> (),
+	Destroy: (self: ClientWheelTire) -> (),
+}
+
+export type ServerWheelTire = {
+	__index: ServerWheelTire,
+	Instance: BasePart,
+	Wheel: ServerWheel,
+	Vehicle: ServerVehicle,
+	WearInstance: BasePart,
+	PreviousMaterialData: { [BasePart]: string },
+	PreviousSoundsData: { [BasePart]: Sound },
+	PreviousSmokesData: { [BasePart]: Smoke },
+	PreviousTrailsData: { [BasePart]: { Trail } },
+	_Remote: UnreliableRemoteEvent,
+
+	new: (wheel: ServerWheel, instance: BasePart) -> ServerWheelTire,
+	Initialize: (self: ServerWheelTire) -> (),
+	Replicate: (
+		self: ServerWheelTire,
+		materialType: string,
+		smokeStress: number,
+		rayNormal: Vector3,
+		temperature: number,
+		deltaTime: number
+	) -> (),
+}
+
+export type VehicleSpeedometer = {
+	__index: VehicleSpeedometer,
+	Vehicle: ClientVehicle,
+	Instance: Frame & any,
+	CurrentUnit: number,
+	Units: { { Unit: string, Scaling: number, MaxSpeed: number } },
+	_conn: RBXScriptConnection,
+	_task: thread,
+
+	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
+	Update: (self: VehicleSpeedometer) -> (),
+	SlowUpdate: (self: VehicleSpeedometer) -> (),
+	SpeedUpdate: (self: VehicleSpeedometer) -> (),
+	BoostUpdate: (self: VehicleSpeedometer) -> (),
+	GearUpdate: (self: VehicleSpeedometer) -> (),
+	MileageUpdate: (self: VehicleSpeedometer) -> (),
+	FuelUpdate: (self: VehicleSpeedometer) -> (),
+	TachUpdate: (self: VehicleSpeedometer) -> (),
+	UpdateIcons: (self: VehicleSpeedometer) -> (),
+	ABSUpdate: (self: VehicleSpeedometer) -> (),
+	TSCUpdate: (self: VehicleSpeedometer) -> (),
+	TempUpdate: (self: VehicleSpeedometer) -> (),
+	Destroy: (self: VehicleSpeedometer) -> (),
+	TachInit: (self: VehicleSpeedometer) -> (),
+	LightsUpdate: (self: VehicleSpeedometer) -> (),
+	TurnSignalsUpdate: (self: VehicleSpeedometer) -> (),
+}
+
+export type VehicleInterface = {
+	__index: VehicleInterface,
+	Vehicle: ClientVehicle,
+	Instance: ScreenGui & any,
+	Speedometer: VehicleSpeedometer,
+
+	new: (vehicle: ClientVehicle) -> VehicleInterface,
+	UpdateTires: (self: VehicleInterface) -> (),
+	Destroy: (self: VehicleInterface) -> (),
+}
 
 return {}
