@@ -59,6 +59,7 @@ export type BaseVehicle = {
 	PBrake: boolean,
 	-- Velocity
 	Velocity: Vector3,
+	AngularVelocity: Vector3,
 	AverageRotSpeed: number,
 	Acceleration: Vector3,
 	Mileage: number,
@@ -297,11 +298,33 @@ export type VehicleSpeedometer = {
 	TurnSignalsUpdate: (self: VehicleSpeedometer) -> (),
 }
 
+export type EffectFrame = {
+	Instance: Frame,
+	Rotation: number,
+	Force: number,
+	Position: number,
+
+	Move: (self: EffectFrame, delta: number) -> (),
+	Destroy: (self: EffectFrame) -> (),
+}
+
+export type SpeedEffect = {
+	__index: SpeedEffect,
+	Vehicle: ClientVehicle,
+	Parent: GuiObject,
+	Effects: { EffectFrame },
+	_LastSpawn: number,
+
+	new: (self: SpeedEffect, vehicle: ClientVehicle, part: GuiObject) -> SpeedEffect,
+	Update: (self: SpeedEffect, deltaTime: number) -> (),
+}
+
 export type VehicleInterface = {
 	__index: VehicleInterface,
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & any,
 	Speedometer: VehicleSpeedometer,
+	SpeedEffect: SpeedEffect,
 
 	new: (vehicle: ClientVehicle) -> VehicleInterface,
 	UpdateTires: (self: VehicleInterface) -> (),

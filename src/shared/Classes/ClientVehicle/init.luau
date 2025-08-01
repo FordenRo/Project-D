@@ -120,6 +120,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.MouseSteerOn = false
 	self.PBrake = false
 	self.Velocity = Vector3.new()
+	self.AngularVelocity = Vector3.new()
 	self._OldVelocity = Vector3.new()
 	self.AverageRotSpeed = 0
 	self.Acceleration = Vector3.new()
@@ -1590,6 +1591,7 @@ function ClientVehicle.ReplicateVariables(self: ClientVehicle)
 		"MouseSteerOn",
 		"PBrake",
 		"Velocity",
+		"AngularVelocity",
 		"AverageRotSpeed",
 		"Acceleration",
 		"Mileage",
@@ -1617,6 +1619,7 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self.Center = getCenter(self)
 	self.Boost = self.BoostTurbo + self.BoostSuper
 	self.Velocity = self.Instance.Body["#Weight"].AssemblyLinearVelocity
+	self.AngularVelocity = self.Instance.Body["#Weight"].AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
 	self._OldVelocity = self.Velocity
 	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime

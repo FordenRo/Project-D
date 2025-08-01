@@ -10,7 +10,6 @@ export type ServerSoundData = SoundData.ServerSoundData
 export type ClientSoundData = SoundData.ClientSoundData
 
 export type VehicleControls = Controls.VehicleControls
-
 export type VehicleInterface = Vehicle.VehicleInterface
 export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
 

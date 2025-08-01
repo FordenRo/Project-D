@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
@@ -22,6 +23,7 @@ function VehicleInterface.new(vehicle: Types.ClientVehicle)
 	self.Instance.Parent = player.PlayerGui
 
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
+	self.SpeedEffect = SpeedEffect.new(vehicle, self.Instance)
 
 	RunService.Heartbeat:Connect(function() self:UpdateTires() end)
 
