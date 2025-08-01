@@ -28,7 +28,7 @@ function Garage.new()
 end
 
 function Garage.Initialize(self: Garage)
-	self.Instance.Window.Upper.Close.Activated:Connect(function() self:Destroy() end)
+	(self.Instance.Window.Upper.Close :: TextButton).Activated:Connect(function() self:Destroy() end)
 end
 
 function Garage.IsA(self: Garage, type: string) return self.Type == type end

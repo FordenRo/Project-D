@@ -17,7 +17,8 @@ Interface.__index = Interface
 export type Interface = typeof(setmetatable(
 	{} :: {
 		Instance: ScreenGui & {
-			Buttons: { TextButton },
+			Buttons: Frame,
+			Debug: Frame & { FPS: TextLabel },
 		},
 		CurrentWindow: any,
 		_cons: { RBXScriptConnection },
@@ -46,6 +47,8 @@ end
 
 function Interface.InitializeButtons(self: Interface)
 	for _, v in self.Instance.Buttons:GetChildren() do
+		if not v:IsA("TextButton") then continue end
+
 		v.Activated:Connect(function()
 			local lastWindowType
 			if self.CurrentWindow then

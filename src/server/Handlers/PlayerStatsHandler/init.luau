@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local DatastoreHandler = require(ServerScriptService.Server.Handlers.DatastoreHandler)
 local PlaytimeHandler = require(script.PlaytimeHandler)
 
 local PlayerStatsHandler = {}

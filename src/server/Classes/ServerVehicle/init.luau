@@ -56,7 +56,7 @@ function ServerVehicle.InitializeVariables(self: ServerVehicle)
 	self.Starting = false
 	self.Occupant = nil
 	self.Fuel = self.Tune.FuelCapacity
-	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number or 22
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.FanSpeed = 0
 	self.Clutch = 0
 	self.Gear = ParkingGearEnabled and -2 or 0
@@ -343,7 +343,6 @@ function ServerVehicle.RemoveCharacterWeight(self: ServerVehicle)
 	end
 end
 
--- TODO: Interface
 function ServerVehicle.InitializeDriveSeat(self: ServerVehicle)
 	-- Driver Sit
 	self.Instance.DriveSeat.ChildAdded:Connect(function(child)

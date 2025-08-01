@@ -31,7 +31,7 @@ function Tire.new(wheel: Types.ClientWheel, instance: BasePart)
 end
 
 function Tire.InitializeVariables(self: Tire)
-	self.Temperature = (game.Workspace:GetAttribute("GlobalTemperature") or 22) :: number
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.Stress = 0
 	self.Dirt = 0
 	self.Ray = nil
@@ -225,6 +225,7 @@ function Tire.Update(self: Tire, deltaTime: number)
 	local currentPhysicalProperties = self.Wheel.Instance.CurrentPhysicalProperties
 	local coldLoss = 0
 	local heatLoss = 0
+	local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	if self.Wheel.IsFront then
 		self.Temperature = math.clamp(
 			self.Temperature
@@ -235,7 +236,7 @@ function Tire.Update(self: Tire, deltaTime: number)
 						- self.Vehicle.Tune.TireFCooling
 					)
 					* (60 / (1 / deltaTime)),
-			(game.Workspace:GetAttribute("GlobalTemperature") or 22) :: number,
+			globalTemperature,
 			self.Vehicle.Tune.TireFMaxTemp
 		)
 	else
@@ -248,7 +249,7 @@ function Tire.Update(self: Tire, deltaTime: number)
 						- self.Vehicle.Tune.TireRCooling
 					)
 					* (60 / (1 / deltaTime)),
-			(game.Workspace:GetAttribute("GlobalTemperature") or 22) :: number,
+			globalTemperature,
 			self.Vehicle.Tune.TireRMaxTemp
 		)
 	end

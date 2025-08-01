@@ -42,7 +42,8 @@ function Settings.Initialize(self: Settings)
 
 	self:SetTab("Controls")
 
-	self.Instance.Window.Bottom.Done.Activated:Connect(function()
+	local done: TextButton = (self.Instance.Window.Bottom :: any).Done
+	done.Activated:Connect(function()
 		self:Apply()
 		self:Destroy()
 	end)
@@ -89,20 +90,23 @@ function Settings.InitializeControls(self: Settings)
 			end
 		end)
 
-		frame.Parent = self.Instance.Window.Content.Controls[parent]
+		frame.Parent = (self.Instance.Window.Content :: any).Controls[parent]
 	end
 end
 
 function Settings.SetTab(self: Settings, tab: Tab)
-	for _, v in self.Instance.Window.Upper.Tabs:GetChildren() do
+	local tabs: Frame = self.Instance.Window.Upper.Tabs :: any
+	for _, v in tabs:GetChildren() do
+		if not v:IsA("TextButton") then continue end
+
 		v.Interactable = true
 	end
-	self.Instance.Window.Upper.Tabs:FindFirstChild(tab).Interactable = false
+	(tabs:FindFirstChild(tab) :: TextButton).Interactable = false
 
-	for _, v: Frame in self.Instance.Window.Content:GetChildren() do
+	for _, v in self.Instance.Window.Content:GetChildren() do
 		v.Visible = false
 	end
-	self.Instance.Window.Content:FindFirstChild(tab).Visible = true
+	(self.Instance.Window.Content:FindFirstChild(tab) :: Frame).Visible = true
 end
 
 function Settings.Apply(self: Settings)

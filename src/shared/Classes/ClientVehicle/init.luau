@@ -114,7 +114,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._InBrake = 0
 	self.SteerC = 0
 	self.Fuel = self.Tune.FuelCapacity
-	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number or 22
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.FanSpeed = 0
 	self.SteerT = 0
 	self._LastOffTime = tick()
@@ -996,7 +996,7 @@ function ClientVehicle.UpdateEngine(self: ClientVehicle, deltaTime: number)
 						x
 					)
 				or 0
-			local globalTemperature = (game.Workspace:GetAttribute("GlobalTemperature") :: number?) or 22
+			local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 			local AirPressurePercent = math.exp(
 				(-9.80665 * 0.0289644 * (self.Center.Y * Units.Length_mm / 1000))
 					/ (8.3142 * (globalTemperature + 273.15))
@@ -1521,8 +1521,8 @@ function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine then return end
 
 	local kW = self.Horsepower / 1.35962
-	local heat = kW * Lerp(2, 1, self.RPM / self.Tune.Redline) / 120
-	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") or 22)
+	local heat = kW * Lerp(1, 2, self.RPM / self.Tune.Redline) / 120
+	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
 	local cooling = tDelta * 0.015
 	cooling += (self.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
 	self.Temperature += (heat - cooling) * deltaTime
