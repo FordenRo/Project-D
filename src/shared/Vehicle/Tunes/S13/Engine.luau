@@ -12,21 +12,21 @@ Tune.CustomEngineCalculations = false -- Enables the use of the CustomEngine mod
 -- Naturally Aspirated Engine
 Tune.Engine = true
 
-Tune.PeakTorque = 120 -- The maximum amount of torque the engine makes in lb-ft.
+Tune.PeakTorque = 116 -- The maximum amount of torque the engine makes in lb-ft.
 Tune.PeakTorqueRPM = 4800 -- When the engine reaches PeakTorque in RPM.
 
 Tune.IdleRPM = 1000 -- The engine's desired idle RPM. IdleDamping may change this.
-Tune.IdleTorque = 148 -- How much torque the engine makes at idle.
+Tune.IdleTorque = 90 -- How much torque the engine makes at idle.
 Tune.IdleTorqueCurve = 0.5 -- The shape of the torque curve between idle and PeakRPM.
 
-Tune.Redline = 8200 -- The maximum RPM.
-Tune.RedlineTorque = 67 -- How much torque the engine makes at redline.
-Tune.RedlineTorqueCurve = 0.7 -- The shape of the torque curve between PeakRPM and redline.
+Tune.Redline = 8000 -- The maximum RPM.
+Tune.RedlineTorque = 86 -- How much torque the engine makes at redline.
+Tune.RedlineTorqueCurve = 0.6 -- The shape of the torque curve between PeakRPM and redline.
 
 Tune.ShiftRPM = 7000 -- This is when the engine shifts.
 Tune.PeakRPM = Tune.ShiftRPM -- This is deprecated, only used for plugin compatibility.
 
-Tune.VVLTorque = 22 -- Variable Valve Lift (VVL, aka VTEC)'s amount of torque. Set this to 0 to turn off.
+Tune.VVLTorque = 0 -- Variable Valve Lift (VVL, aka VTEC)'s amount of torque. Set this to 0 to turn off.
 Tune.VVLRPM = 6000 -- When VVL activates in RPM.
 Tune.VVLTime = 500 -- How long it takes for VVL to activate in RPM.
 Tune.VVLCurve = 0.002 -- The shape of the curve during VVL activation.
@@ -93,14 +93,14 @@ Tune.S_Response = 0.1 -- Throttle response of the supercharger. (Higher = more r
 
 -- Ignition
 Tune.IgnitionRPM = 2000 -- This is how high the engine revs for the ignition.
-Tune.IgnitionAccel = 30 -- The acceleration of the RPM while starting the car.
+Tune.IgnitionAccel = 60 -- The acceleration of the RPM while starting the car.
 Tune.IgnitionMinRPM = 800 -- The minimum RPM required to start the car.
 
 -- Throttle and brake input
-Tune.ThrotAccel = 0.05 -- Throttle acceleration, applied per tick (recommended values between 0.1 to 0.3)
-Tune.ThrotDecel = 0.2 -- Throttle deceleration, applied per tick (recommended values between 0.05 to 0.1)
+Tune.ThrotAccel = 0.1 -- Throttle acceleration, applied per tick (recommended values between 0.1 to 0.3)
+Tune.ThrotDecel = 0.1 -- Throttle deceleration, applied per tick (recommended values between 0.05 to 0.1)
 Tune.BrakeAccel = 0.1 -- Brake acceleration, applied per tick
-Tune.BrakeDecel = 0.2 -- Brake deceleration, applied per tick
+Tune.BrakeDecel = 0.1 -- Brake deceleration, applied per tick
 
 -- Engine speed
 Tune.RevBounce = 200 -- RPM kickback from redline
@@ -110,7 +110,7 @@ Tune.RevAccel = 180 -- RPM acceleration when clutch is on (this should be higher
 Tune.RevDecay = 30 -- RPM decay when clutch is on
 Tune.RevDecayRPM = 60 -- RPM decay from engine speed
 
-Tune.Flywheel = 800 -- Flywheel weight (higher = faster response, lower = more stable RPM)
+Tune.Flywheel = 600 -- Flywheel weight (higher = faster response, lower = more stable RPM)
 Tune.DumpMult = 1.0 -- Flywheel energy multiplier when dumping the clutch (keep at 1.0 for the best result).
 
 Tune.IdleThrottle = 5 -- Percent throttle with no input. (in percent)

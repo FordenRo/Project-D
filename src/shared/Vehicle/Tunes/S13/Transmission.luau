@@ -79,26 +79,24 @@ Tune.ShiftDnTime = 0.1 -- Time required to shift into next gear, from a higher g
 
 --Gear Ratios
 --You can tune the gears in the engine graphs by switching G_TunerType inside Desmos
-Tune.FinalDrive = 4.2
+Tune.FinalDrive = 4.38
 Tune.Ratios = {
 	--[[Park]]
 	--0			, --"0" enables the parking gear, "--0" disables.
 	--[[Reverse]]
-	3.18,
+	3.2,
 	--[[Neutral]]
 	0,
 	--[[ 1 ]]
-	3.927,
+	3.6,
 	--[[ 2 ]]
-	2.454,
+	2,
 	--[[ 3 ]]
-	1.785,
+	1.3,
 	--[[ 4 ]]
-	1.413,
+	1,
 	--[[ 5 ]]
-	1.101,
-	--[[ 6 ]]
-	0.893,
+	0.82,
 }
 
 Tune.FDMult = 1 -- Ratio multiplier (keep this at 1 if car is not struggling with torque)
