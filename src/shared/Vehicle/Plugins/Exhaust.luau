@@ -9,6 +9,8 @@ if not RunService:IsServer() then return nil end
 local Exhaust = {}
 Exhaust.__index = Exhaust
 
+local STRENGTH = 0.08
+
 export type Exhaust = typeof(setmetatable(
 	{} :: {
 		Vehicle: Types.ServerVehicle,
@@ -42,10 +44,14 @@ function Exhaust.Update(self: Exhaust)
 	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.PeakRPM) ^ 0.5, 0.2, 0.8)
 	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.PeakRPM) ^ 1.5 * 1.5
 
-	local x = math.sin(tick() * 120) * (1 - rpmDelta) * 0.01
-	local y = math.cos(tick() * 100) * (1 - rpmDelta) * 0.01
-	local z = math.sin(tick() * 80) * (1 - rpmDelta) * 0.01
-	self.Weld.C0 = CFrame.new(z, y, x)
+	local t = math.sin(tick() * 60)
+	local offset = Vector3.new(
+		math.noise(t, 0, 0) * (1 - rpmDelta) * STRENGTH,
+		math.noise(0, t, 0) * (1 - rpmDelta) * STRENGTH,
+		math.noise(0, 0, t) * (1 - rpmDelta) * STRENGTH
+	)
+
+	self.Weld.C0 = CFrame.new(offset)
 end
 
 return Exhaust
