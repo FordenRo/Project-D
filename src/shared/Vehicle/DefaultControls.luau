@@ -43,7 +43,7 @@ return {
 	MousePBrake = Enum.KeyCode.Space,
 
 	MSteerWidth = 70,
-	MSteerDZone = 5,
+	MSteerDZone = 0,
 
 	--Controller Mapping
 	ContlrThrottle = Enum.KeyCode.ButtonR2,
