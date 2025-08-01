@@ -12,13 +12,13 @@ UserInputService.GamepadConnected:Connect(
 	function() isVibrationSupported = HapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1) end
 )
 
-local Tire = {}
-Tire.__index = Tire
+local ClientTire = {}
+ClientTire.__index = ClientTire
 
-type Tire = Types.ClientWheelTire
+type ClientTire = Types.ClientWheelTire
 
-function Tire.new(wheel: Types.ClientWheel, instance: BasePart)
-	local self: Tire = setmetatable({}, Tire) :: any
+function ClientTire.new(wheel: Types.ClientWheel, instance: BasePart)
+	local self: ClientTire = setmetatable({}, ClientTire) :: any
 
 	self.Wheel = wheel
 	self.Vehicle = self.Wheel.Vehicle
@@ -30,7 +30,7 @@ function Tire.new(wheel: Types.ClientWheel, instance: BasePart)
 	return self
 end
 
-function Tire.InitializeVariables(self: Tire)
+function ClientTire.InitializeVariables(self: ClientTire)
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.Stress = 0
 	self.Dirt = 0
@@ -63,7 +63,7 @@ function Tire.InitializeVariables(self: Tire)
 	-- Tremolo
 end
 
-function Tire.Initialize(self: Tire)
+function ClientTire.Initialize(self: ClientTire)
 	self:InitializeVariables()
 
 	if self.Vehicle.Tune.TireSmokeEffects == "Local" or self.Vehicle.Tune.TireSmokeEffects == "All" then
@@ -116,7 +116,7 @@ function Tire.Initialize(self: Tire)
 	RunService.Heartbeat:Connect(function(deltaTime) self:FlexPhysicsUpdate(deltaTime) end)
 end
 
-function Tire.FlexPhysicsUpdate(self: Tire, deltaTime: number)
+function ClientTire.FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
 	self._deltaTime = deltaTime
 	if self.Wheel.IsFront then
 		self.FlexCollisionAlignPosition.MaxForce = self.Vehicle.Tune.TireFPressureForce
@@ -127,12 +127,12 @@ function Tire.FlexPhysicsUpdate(self: Tire, deltaTime: number)
 	end
 end
 
-function Tire.SmokeUpdate(self: Tire)
+function ClientTire.SmokeUpdate(self: ClientTire)
 	local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
 	self._Remote:FireServer(self.Material, smokeStress, self.Ray and self.Ray.Normal, self.Temperature, self._deltaTime)
 end
 
-function Tire.Update(self: Tire, deltaTime: number)
+function ClientTire.Update(self: ClientTire, deltaTime: number)
 	local stress = 0
 	local count = 0
 
@@ -472,6 +472,6 @@ function Tire.Update(self: Tire, deltaTime: number)
 end
 
 --TODO: Destroy function
-function Tire.Destroy(self: Tire) end
+function ClientTire.Destroy(self: ClientTire) end
 
-return Tire
+return ClientTire

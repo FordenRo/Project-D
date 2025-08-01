@@ -2,6 +2,7 @@ local Controls = require(script.Parent.Controls)
 local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
+	__index: BaseVehicle,
 	Instance: Instance & {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
@@ -14,8 +15,11 @@ export type BaseVehicle = {
 		},
 	},
 	_Remote: UnreliableRemoteEvent,
+	Plugins: { [string]: any },
+	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
 	Starting: boolean,
+	Broken: boolean,
 	Occupant: Player?,
 	Fuel: number,
 	Temperature: number,
@@ -75,6 +79,9 @@ export type BaseVehicle = {
 	CS: boolean,
 	CSActive: boolean,
 	IsOn: boolean,
+
+	new: (instance: Instance) -> BaseVehicle,
+	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 }
 
 export type DeformationController = {
@@ -90,7 +97,7 @@ export type DeformationController = {
 	BodyTexture: EditableImage,
 	ScratchTexture: EditableImage,
 
-	new: (self: DeformationController, vehicle: ClientVehicle) -> DeformationController,
+	new: (vehicle: ClientVehicle) -> DeformationController,
 	BlowEngine: (self: DeformationController) -> (),
 }
 
@@ -100,13 +107,7 @@ export type ClientVehicle = {
 	_task: thread,
 	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,
-	Plugins: { [string]: any },
-	WheelCount: { Front: number, Rear: number },
-	Wheels: { ClientWheel },
-	Broken: boolean,
 	DeformationController: DeformationController,
-	DriveWheels: { ClientWheel },
-	ParkingGearEnabled: boolean,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: any,
@@ -139,24 +140,17 @@ export type ClientVehicle = {
 	SlowUpdate: (self: ClientVehicle) -> (),
 	UpdateWheels: (self: ClientVehicle) -> (),
 	SmoothInputs: (self: ClientVehicle, deltaTime: number) -> (),
-	UpdateSteering: (self: ClientVehicle, deltaTime: number) -> (),
-	UpdateTransmission: (self: ClientVehicle) -> (),
-	UpdateEngine: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateTemp: (self: ClientVehicle, deltaTime: number) -> (),
-	OnInput: (self: ClientVehicle, input: InputObject) -> (),
-	OnLastInputTypeChanged: (self: ClientVehicle, inputType: Enum.UserInputType) -> (),
 	ReplicateVariables: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
-	Plugins: { [string]: any },
 
 	new: (instance: Instance) -> ServerVehicle,
 	Initialize: (self: ServerVehicle) -> (),
-	InitializeVariables: (self: ServerVehicle) -> (),
 	MakeGravity: (self: ServerVehicle) -> (),
 	MakeCollider: (self: ServerVehicle) -> (),
 	GetCenter: (self: ServerVehicle) -> (),
@@ -164,11 +158,36 @@ export type ServerVehicle = {
 	CreateFlip: (self: ServerVehicle) -> (),
 	Finalize: (self: ServerVehicle) -> (),
 	InitializePlugins: (self: ServerVehicle) -> (),
-	CreateChassisAssembly: (self: ServerVehicle) -> (),
+	InitializeWheels: (self: ServerVehicle) -> (),
 	ApplyWeight: (self: ServerVehicle) -> (),
 	RemoveCharacterWeight: (self: ServerVehicle) -> (),
 	InitializeDriveSeat: (self: ServerVehicle) -> (),
 } & BaseVehicle
+
+export type BaseWheel = {
+	__index: BaseWheel,
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: BasePart & {
+			Steer: Instance,
+		},
+		Parts: Model & {
+			Tire: BasePart,
+		},
+		Fixed: Model,
+		WheelFixed: Model,
+		["#AV"]: any,
+		["#BV"]: any,
+		AB: any,
+		Collision: BasePart,
+		SuspensionFixed: Model,
+	},
+	Vehicle: BaseVehicle,
+	IsFront: boolean,
+	IsDriven: boolean,
+
+	new: (vehicle: BaseVehicle, instance: BasePart) -> BaseWheel,
+}
 
 export type ClientWheelSharedData = {
 	TCSCount: number,
@@ -182,22 +201,7 @@ export type ClientWheelSharedData = {
 export type ClientWheel = {
 	__index: ClientWheel,
 	Vehicle: ClientVehicle,
-	Instance: BasePart & {
-		Base: BasePart,
-		Arm: nil | (Instance & {
-			Steer: Instance?,
-		}),
-		Parts: Model & {
-			Tire: BasePart,
-		},
-		WheelFixed: Model,
-		["#AV"]: any,
-		["#BV"]: any,
-		SuspensionFixed: Model,
-	},
 	Tire: ClientWheelTire,
-	IsFront: boolean,
-	IsDriven: boolean,
 	CanSteer: number,
 	OppositeWheel: BasePart,
 	Trackers: { ABS: number, TCS: number, ESC: number },
@@ -206,28 +210,16 @@ export type ClientWheel = {
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
 	Destroy: (self: ClientWheel) -> (),
-}
+} & BaseWheel
 
 export type ServerWheel = {
 	__index: ServerWheel,
 	Vehicle: ServerVehicle,
-	Instance: BasePart & {
-		Base: BasePart,
-		Arm: nil | (Instance & {
-			Steer: Instance?,
-		}),
-		Parts: Model & {
-			Tire: BasePart,
-		},
-		Fixed: Model,
-		WheelFixed: Model,
-		SuspensionFixed: Model,
-	} & any,
 	Tire: ServerWheelTire,
 
 	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
 	Initialize: (self: ServerWheel) -> (),
-}
+} & BaseWheel
 
 export type ClientWheelTire = {
 	__index: ClientWheelTire,

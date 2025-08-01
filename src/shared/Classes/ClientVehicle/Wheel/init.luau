@@ -1,27 +1,22 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local Tire = require(script.Tire)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
-local Wheel = {}
-Wheel.__index = Wheel
+local ClientWheel = setmetatable({}, BaseWheel)
+ClientWheel.__index = ClientWheel
 
-type Wheel = Types.ClientWheel
+type ClientWheel = Types.ClientWheel
 
-function Wheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
-	local self: Wheel = setmetatable({}, Wheel) :: any
+function ClientWheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
+	local self: ClientWheel = setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
-	self.Vehicle = vehicle
-	self.Instance = instance :: any
 	self.Trackers = {
 		ABS = 0,
 		TCS = 0,
 		ESC = 0,
 	}
-
-	self.IsFront = string.find(self.Instance.Name, "F") ~= nil
-	self.IsDriven = ((self.Vehicle.Tune.Config == "FWD" or self.Vehicle.Tune.Config == "AWD") and self.IsFront)
-		or ((self.Vehicle.Tune.Config == "RWD" or self.Vehicle.Tune.Config == "AWD") and not self.IsFront)
 
 	self.OppositeWheel = (
 		(self.Instance.Name == "FL" and self.Vehicle.Instance.Wheels:FindFirstChild("FR"))
@@ -44,7 +39,7 @@ function Wheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
 	return self
 end
 
-function Wheel.Update(self: Wheel, data: Types.ClientWheelSharedData)
+function ClientWheel.Update(self: ClientWheel, data: Types.ClientWheelSharedData)
 	-- Wheel speeds
 	table.insert(self._WheelSpeeds, self.Instance.AssemblyAngularVelocity.Magnitude)
 	if #self._WheelSpeeds > 8 then table.remove(self._WheelSpeeds, 1) end
@@ -83,13 +78,14 @@ function Wheel.Update(self: Wheel, data: Types.ClientWheelSharedData)
 	end
 end
 
-function Wheel.Destroy(self: Wheel)
+function ClientWheel.Destroy(self: ClientWheel)
 	if self.Instance["#AV"] then
 		self.Instance["#AV"].MotorMaxTorque = 0
 		self.Instance["#AV"].AngularVelocity = 0
 	end
 	if self.Instance["#BV"] then
-		if self.Vehicle.ParkingGearEnabled then
+		local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
+		if ParkingGearEnabled then
 			self.Vehicle.Gear = -2
 		else
 			self.Vehicle.PBrake = true
@@ -104,4 +100,4 @@ function Wheel.Destroy(self: Wheel)
 	self.Tire:Destroy()
 end
 
-return Wheel
+return ClientWheel

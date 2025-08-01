@@ -35,8 +35,8 @@ function Speedometer.new(vehicle: Types.ClientVehicle, instance: Frame)
 	end
 
 	local wDia = 0
-	for _, wheel in self.Vehicle.DriveWheels do
-		if wheel.Instance.Size.Y > wDia then wDia = wheel.Instance.Size.Y end
+	for _, wheel in self.Vehicle.Wheels do
+		if wheel.IsDriven and wheel.Instance.Size.Y > wDia then wDia = wheel.Instance.Size.Y end
 	end
 
 	for _, v in pairs(self.Units) do

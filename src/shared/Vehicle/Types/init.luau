@@ -15,6 +15,7 @@ export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
 export type EffectFrame = Vehicle.EffectFrame
 export type SpeedEffect = Vehicle.SpeedEffect
 
+export type BaseWheel = Vehicle.BaseWheel
 export type ClientWheel = Vehicle.ClientWheel
 export type ClientWheelSharedData = Vehicle.ClientWheelSharedData
 export type ServerWheel = Vehicle.ServerWheel
@@ -22,9 +23,9 @@ export type ServerWheel = Vehicle.ServerWheel
 export type ClientWheelTire = Vehicle.ClientWheelTire
 export type ServerWheelTire = Vehicle.ServerWheelTire
 
-export type DeformationController = Vehicle.DeformationController
 export type BaseVehicle = Vehicle.BaseVehicle
 export type ClientVehicle = Vehicle.ClientVehicle
+export type DeformationController = Vehicle.DeformationController
 export type ServerVehicle = Vehicle.ServerVehicle
 
 export type Tune = Tune.Tune

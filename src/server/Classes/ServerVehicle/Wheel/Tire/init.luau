@@ -4,13 +4,13 @@ local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
-local Tire = {}
-Tire.__index = Tire
+local ServerTire = {}
+ServerTire.__index = ServerTire
 
-type Tire = Types.ServerWheelTire
+type ServerTire = Types.ServerWheelTire
 
-function Tire.new(wheel: Types.ServerWheel, instance: BasePart)
-	local self: Tire = setmetatable({}, Tire) :: any
+function ServerTire.new(wheel: Types.ServerWheel, instance: BasePart)
+	local self: ServerTire = setmetatable({}, ServerTire) :: any
 
 	self.Wheel = wheel
 	self.Vehicle = wheel.Vehicle
@@ -40,7 +40,7 @@ function Tire.new(wheel: Types.ServerWheel, instance: BasePart)
 	return self
 end
 
-function Tire.Initialize(self: Tire)
+function ServerTire.Initialize(self: ServerTire)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
 		local caster = string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.FCaster
 			or self.Vehicle.Tune.RCaster
@@ -240,8 +240,8 @@ function Tire.Initialize(self: Tire)
 	end
 end
 
-function Tire.Replicate(
-	self: Tire,
+function ServerTire.Replicate(
+	self: ServerTire,
 	materialType: string,
 	smokeStress: number,
 	rayNormal: Vector3,
@@ -290,8 +290,8 @@ function Tire.Replicate(
 		local tremolo = currentSound:FindFirstChildWhichIsA("TremoloSoundEffect")
 		if tremolo then
 			local lateralDiff = (
-				math.abs(self.Wheel.Instance.Velocity:Dot(self.Wheel.Instance.CFrame.RightVector))
-				/ self.Wheel.Instance.Velocity.Magnitude
+				math.abs(self.Wheel.Instance.AssemblyLinearVelocity:Dot(self.Wheel.Instance.CFrame.RightVector))
+				/ self.Wheel.Instance.AssemblyLinearVelocity.Magnitude
 			)
 			tremolo.Depth = lateralDiff
 		end
@@ -307,15 +307,17 @@ function Tire.Replicate(
 			math.clamp((self.Wheel.Instance.Position - self.Wheel.Instance.Collision.Position).Magnitude / 0.1, 0, 1)
 	end
 	local trailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart")
-	if trailAttachmentPart and smokeStress > 0.05 and self.Wheel.Instance.Velocity.Magnitude > 10 then
+	if trailAttachmentPart and smokeStress > 0.05 and self.Wheel.Instance.AssemblyLinearVelocity.Magnitude > 10 then
 		trailAttachmentPart.TrailAttachment0.Position =
 			Vector3.new(self.Wheel.Instance.Size.X / 2 - 0.2 + 0.1 * compression, 0.02, 0)
 		trailAttachmentPart.TrailAttachment1.Position =
 			Vector3.new(-self.Wheel.Instance.Size.X / 2 + 0.2 - 0.1 * compression, 0.02, 0)
 		trailAttachmentPart.AlignOrientation.CFrame = CFrame.lookAt(
 			smokePart.Position,
-			(smokePart.CFrame * CFrame.new(0, 0, -5 + math.min(self.Wheel.Instance.Velocity.Magnitude, 5))).Position
-				+ self.Wheel.Instance.Velocity,
+			(
+				smokePart.CFrame
+				* CFrame.new(0, 0, -5 + math.min(self.Wheel.Instance.AssemblyLinearVelocity.Magnitude, 5))
+			).Position + self.Wheel.Instance.AssemblyLinearVelocity,
 			rayNormal or smokePart.CFrame.UpVector
 		)
 	end
@@ -324,7 +326,7 @@ function Tire.Replicate(
 		0,
 		self.Wheel.Instance.Size.Y / 2 + self.Vehicle.Tune.AxleSize,
 		0
-	) + smokePart.CFrame:VectorToObjectSpace(self.Wheel.Instance.Velocity) * deltaTime
+	) + smokePart.CFrame:VectorToObjectSpace(self.Wheel.Instance.AssemblyLinearVelocity) * deltaTime
 
 	local wear = (temperature - 40)
 		/ (
@@ -340,4 +342,4 @@ function Tire.Replicate(
 	self.WearInstance.Transparency = 1 - (wear * 0.5)
 end
 
-return Tire
+return ServerTire

@@ -1,0 +1,93 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+
+return function(self: Types.ClientVehicle)
+	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
+	if self._ShiftUp and not self.Shifting then
+		if
+			(self.TransmissionMode == "Manual" and not self._ClutchPressing)
+			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self._InThrot > 0))
+			or self.Gear == #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0)
+			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
+		then
+			self._ShiftUp = false
+			return
+		end
+		local NextGear = math.min(self.Gear + 3 + (ParkingGearEnabled and 1 or 0), #self.Tune.Ratios)
+		if self.TransmissionMode ~= "Manual" and self.Tune.ClutchType ~= "CVT" then
+			self.Shifting = true
+			if self.Gear > 0 then
+				if self.Tune.AutoShiftType == "DCT" then
+					task.wait(self.Tune.ShiftUpTime)
+				elseif self.Tune.AutoShiftType == "Rev" then
+					repeat
+						task.wait()
+					until self.RPM
+							<= math.max(
+								math.min(
+									self._MaxSpin * self.Tune.Ratios[NextGear] * self.FinalDriveRatio,
+									self.Tune.Redline - self.Tune.RevBounce
+								),
+								self.Tune.IdleRPM
+							)
+						or not self.IsOn
+						or self._ShiftDown
+				end
+			end
+		end
+		self._ShiftUp = false
+		self.Shifting = false
+		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
+		if NextGear > 3 + (ParkingGearEnabled and 1 or 0) and self.Tune.ClutchType == "CVT" then return end -- make sure it cannot go past 1st gear
+		self.Gear = math.min(self.Gear + 1, #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0))
+		if
+			self.TransmissionMode ~= "Manual"
+			or (self.TransmissionMode == "Manual" and self.Gear == 1) and self.IsOn
+		then
+			self._ClutchPressing = self._InputClutch
+		end
+	end
+	if self._ShiftDown and not self.Shifting then
+		if
+			(self.TransmissionMode == "Manual" and not self._ClutchPressing)
+			or self.Gear == -1 - (ParkingGearEnabled and 1 or 0)
+			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
+		then
+			self._ShiftDown = false
+			return
+		end
+		local PrevGear = math.min(self.Gear + 1 + (ParkingGearEnabled and 1 or 0), #self.Tune.Ratios)
+		if self.TransmissionMode ~= "Manual" then
+			self.Shifting = true
+			if self.Gear > 1 then
+				if self.Tune.AutoShiftType == "DCT" then
+					task.wait(self.Tune.ShiftDnTime)
+				elseif self.Tune.AutoShiftType == "Rev" then
+					repeat
+						task.wait()
+					until self.RPM
+							>= math.max(
+								math.min(
+									self._MaxSpin * self.Tune.Ratios[PrevGear] * self.FinalDriveRatio,
+									self.Tune.Redline - self.Tune.RevBounce
+								),
+								self.Tune.IdleRPM
+							)
+						or not self.IsOn
+						or self._ShiftUp
+				end
+			end
+		end
+		self._ShiftDown = false
+		self.Shifting = false
+		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
+		self.Gear = math.max(self.Gear - 1, self.Velocity.Magnitude > 5 and -1 or -2)
+		if
+			self.TransmissionMode ~= "Manual"
+			or (self.TransmissionMode == "Manual" and self.Gear == -1) and self.IsOn
+		then
+			self._ClutchPressing = self._InputClutch
+		end
+	end
+end
