@@ -1,114 +1,175 @@
+local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
-local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
 local player = Players.LocalPlayer
 
 local DeformationController = {}
 DeformationController.__index = DeformationController
 
-type DeformationController = {
-	Vehicle: Types.ClientVehicle,
-	Collider: MeshPart,
-	ColliderMesh: EditableMesh,
-	DeformParts: { MeshPart },
-	DeformMeshes: { EditableMesh },
-}
+type DeformationController = Types.DeformationController
 
-function createPoint(position: Vector3, parent: Instance)
-	local ball = Instance.new("Part")
+function setImageAlpha(image: EditableImage, alpha: number)
+	local imageBuffer = image:ReadPixelsBuffer(Vector2.zero, image.Size)
+	for i = 1, image.Size.X * image.Size.Y do
+		local pixelIndex = (i - 1) * 4
+		local a = buffer.readu8(imageBuffer, pixelIndex + 3)
+		buffer.writeu8(imageBuffer, pixelIndex + 3, math.floor(a * alpha))
+	end
+	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
+end
 
-	ball.Name = "Ball"
-	ball.Size = Vector3.new(0.2, 0.2, 0.2)
-	ball.Position = position
-	ball.CanCollide = false
-	ball.Anchored = false
-	ball.Parent = parent
+function whiteToAlpha(image: EditableImage)
+	local imageBuffer = image:ReadPixelsBuffer(Vector2.zero, image.Size)
+	for i = 1, image.Size.X * image.Size.Y do
+		local pixelIndex = (i - 1) * 4
+		local r = buffer.readu8(imageBuffer, pixelIndex)
+		buffer.writeu8(imageBuffer, pixelIndex + 3, -r)
+	end
+	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
+end
 
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = ball
-	weld.Part1 = parent
-	weld.Parent = ball
-
-	return ball
+function copyImage(image: EditableImage): EditableImage
+	return AssetService:CreateEditableImageAsync(Content.fromObject(image))
 end
 
 function DeformationController.new(Vehicle: Types.ClientVehicle)
-	local self = setmetatable({}, DeformationController)
+	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = Vehicle
 
-	self.Collider = self.Vehicle.Instance.Body.Collider
-	self.ColliderMesh = CreateEditableMesh(self.Collider)
+	self.DeformModel = (self.Vehicle.Instance.Body :: any).Deform
+	self.ColliderModel = (self.Vehicle.Instance.Body :: any).Collider
+	self.Body = self.DeformModel.Body
+	self.BodyTexture = AssetService:CreateEditableImageAsync(self.Body.TextureContent)
+	self.BodyMesh = CreateEditableMesh(self.Body)
+	self.Body.TextureContent = Content.fromObject(self.BodyTexture)
+	self.ScratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 
-	self.DeformParts = {}
-	self.DeformMeshes = {}
-	self.Points = {}
+	local touchedPoints = {}
+	for _, part in self.ColliderModel:GetChildren() do
+		if not part:IsA("BasePart") then continue end
 
-	for _, part in self.Vehicle.Instance.Body.Deform:GetDescendants() do
-		if not part:IsA("MeshPart") then continue end
+		part.Touched:Connect(function(hitPart)
+			if hitPart:IsDescendantOf(self.Vehicle.Instance) then return end
+			if hitPart:IsDescendantOf(player.Character) then return end
 
-		table.insert(self.DeformParts, part)
-		table.insert(self.DeformMeshes, CreateEditableMesh(part))
-		print("Mesh registered")
-	end
-
-	-- local touchingParts = {}
-	for _, vertex in self.ColliderMesh:GetVertices() do
-		local position = self.Collider.CFrame:PointToWorldSpace(self.ColliderMesh:GetPosition(vertex) * 2.3)
-		local point = createPoint(position, self.Collider)
-
-		point.Touched:Connect(function(hit)
-			if hit:IsDescendantOf(self.Vehicle.Instance) then return end
-			-- if table.find(touchingParts, hit) then return end
-
-			-- table.insert(touchingParts, hit)
-
-			local params = RaycastParams.new()
-			params.FilterType = Enum.RaycastFilterType.Include
-			params.FilterDescendantsInstances = { hit }
-			local rayInfo =
-				game.Workspace:Raycast(point.Position, point.Position - self.Collider.CFrame.Position, params)
-			if not rayInfo then return end
-
-			local origin = rayInfo.Position
-			local normal = rayInfo.Normal
-			local force = (point.AssemblyLinearVelocity / Units.Velocity_mdivs):Dot(normal) * self.Vehicle.Tune.Weight
-
-			if force > 1000 then
-				print("Impact " .. force)
-				for _, mesh in self.DeformMeshes do
-					local vertices =
-						mesh:FindVerticesWithinSphere(self.Collider.CFrame:PointToObjectSpace(origin), force ^ 0.2)
-
-					for _, vertex in vertices do
-						local vertexPosition = mesh:GetPosition(vertex)
-						mesh:SetPosition(vertex, vertexPosition - normal * force ^ 0.05)
-					end
-				end
-			end
+			table.insert(touchedPoints, part.Position)
 		end)
-
-		-- point.TouchEnded:Connect(function(hit) table.remove(touchingParts, table.find(touchingParts, hit)) end)
-
-		table.insert(self.Points, point)
 	end
 
-	print("DeformationController initialized")
+	local canDeform = true
+	local meshScale = self.BodyMesh:GetSize() / self.Body.Size
+	RunService.PostSimulation:Connect(function()
+		if #touchedPoints == 0 then return end
 
-	task.spawn(function()
-		while task.wait(1 / 2) do
-			self:Update()
+		local points = table.clone(touchedPoints)
+		table.clear(touchedPoints)
+
+		local hitVelocity = self.Vehicle.Instance.Body["#Weight"].AssemblyLinearVelocity - self.Vehicle.Velocity
+		local force = hitVelocity.Magnitude
+		if force < 1 then return end
+
+		repeat
+			task.wait()
+		until canDeform
+
+		canDeform = false
+		local direction = hitVelocity.Unit
+		local relativeDirection = self.Body.CFrame:VectorToObjectSpace(direction)
+
+		local scratch = copyImage(self.ScratchTexture)
+		setImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
+
+		local hitCenter = Vector3.new()
+		for _, point in points do
+			hitCenter += point
 		end
+		hitCenter /= #points
+		hitCenter = self.Body.CFrame:PointToObjectSpace(hitCenter) * meshScale
+
+		local size = Vector3.one * 5
+		local projection = {
+			Position = hitCenter,
+			Direction = relativeDirection,
+			Size = size,
+			Up = Vector3.yAxis,
+		}
+		local config = {
+			AlphaBlendType = Enum.ImageAlphaType.Default,
+			ColorBlendType = Enum.ImageCombineType.AlphaBlend,
+			Decal = scratch,
+			FadeAngle = 0,
+			BlendIntensity = 0,
+		}
+		self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
+		print(string.format("Impact %.1f", force))
+
+		if force > 10 then
+			local hitVertexId = self.BodyMesh:FindClosestVertex(hitCenter)
+			local hitPosition = self.BodyMesh:GetPosition(hitVertexId)
+			local vertices = self.BodyMesh:FindVerticesWithinSphere(hitPosition, 3)
+			for k, vertexId in vertices do
+				local vertexPosition = self.BodyMesh:GetPosition(vertexId)
+				local distance = (hitPosition - vertexPosition).Magnitude
+				local distanceMul = (3 - distance) / 3 ^ 2
+				local offset = relativeDirection * force / 40 ^ 0.7 * distanceMul
+				offset += offset * math.random() * 0.1
+				self.BodyMesh:SetPosition(vertexId, vertexPosition + offset)
+				if k % 2 == 0 then task.wait() end
+			end
+		end
+
+		canDeform = true
 	end)
 
 	return self
 end
 
-function DeformationController.Update(self: DeformationController) end
+function DeformationController.BlowEngine(self: DeformationController)
+	local meshScale = self.BodyMesh:GetSize() / self.Body.Size
+	local position = self.DeformModel.EngineBlow.Position
+	position = self.Body.CFrame:PointToObjectSpace(position) * meshScale
+	local radius = self.DeformModel.EngineBlow.Size.X / 2 * meshScale.Magnitude
+
+	task.spawn(function()
+		local vertices = self.BodyMesh:FindVerticesWithinSphere(position, radius)
+		for k, vertexId in vertices do
+			local vertexPosition = self.BodyMesh:GetPosition(vertexId)
+			local direction = position - vertexPosition
+			local distance = (position - vertexPosition).Magnitude
+			local distanceMul = (radius - distance) / radius ^ 0.5
+			local offset = direction
+				* math.noise(vertexPosition.X, vertexPosition.Y, vertexPosition.Z)
+				* distanceMul
+				* 0.05
+			self.BodyMesh:SetPosition(vertexId, vertexPosition + offset)
+			if k % 2 == 0 then task.wait() end
+		end
+	end)
+
+	local noiseTexture = AssetService:CreateEditableImageAsync("rbxassetid://118989734106899")
+	whiteToAlpha(noiseTexture)
+	setImageAlpha(noiseTexture, 0.5)
+
+	local projection = {
+		Position = position,
+		Direction = Vector3.xAxis,
+		Size = Vector3.new(5, 0.5, 1) * radius * 2,
+		Up = Vector3.yAxis,
+	}
+	local config = {
+		AlphaBlendType = Enum.ImageAlphaType.Default,
+		ColorBlendType = Enum.ImageCombineType.AlphaBlend,
+		Decal = noiseTexture,
+		FadeAngle = 0,
+		BlendIntensity = 0,
+	}
+	self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
+end
 
 return DeformationController

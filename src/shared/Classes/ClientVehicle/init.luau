@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local DeformationController = require(script.DeformationController)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -37,6 +38,7 @@ function ClientVehicle.new(instance: Instance)
 	self:Initialize()
 	self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 
+	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
 
 	return self
@@ -73,6 +75,7 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self.DriveWheels = {}
 	self.Occupant = nil
 	self.Clutch = 0
+	self.Broken = false
 	self.Gear = self.ParkingGearEnabled and -2 or 0
 	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult
 	self.FinalDriveRatio = self.FinalDrive * 30 / math.pi
@@ -358,7 +361,7 @@ function ClientVehicle.OnInput(self: ClientVehicle, input: InputObject)
 			end
 
 		-- Ignition
-		elseif input.KeyCode == self.Controls.Ignition then
+		elseif input.KeyCode == self.Controls.Ignition and not self.Broken then
 			if self.IsOn and not self.Starting then
 				if input.UserInputState == Enum.UserInputState.Begin then self.IsOn = false end
 			else
@@ -1523,6 +1526,12 @@ function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
 	local cooling = tDelta * 0.015
 	cooling += (self.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
 	self.Temperature += (heat - cooling) * deltaTime
+
+	if self.Temperature > self.Tune.EngineBurnTemp then
+		self.IsOn = false
+		self.Broken = true
+		self.DeformationController:BlowEngine()
+	end
 end
 
 function getCenter(vehicle: ClientVehicle)

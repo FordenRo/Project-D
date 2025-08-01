@@ -77,6 +77,23 @@ export type BaseVehicle = {
 	IsOn: boolean,
 }
 
+export type DeformationController = {
+	__index: DeformationController,
+	Vehicle: ClientVehicle,
+	DeformModel: Model & {
+		Body: MeshPart,
+		EngineBlow: Part,
+	},
+	ColliderModel: Model,
+	Body: MeshPart,
+	BodyMesh: EditableMesh,
+	BodyTexture: EditableImage,
+	ScratchTexture: EditableImage,
+
+	new: (self: DeformationController, vehicle: ClientVehicle) -> DeformationController,
+	BlowEngine: (self: DeformationController) -> (),
+}
+
 export type ClientVehicle = {
 	__index: ClientVehicle,
 	_conn: { RBXScriptConnection },
@@ -86,6 +103,8 @@ export type ClientVehicle = {
 	Plugins: { [string]: any },
 	WheelCount: { Front: number, Rear: number },
 	Wheels: { ClientWheel },
+	Broken: boolean,
+	DeformationController: DeformationController,
 	DriveWheels: { ClientWheel },
 	ParkingGearEnabled: boolean,
 	BrakeForce: { Front: number, Rear: number },
