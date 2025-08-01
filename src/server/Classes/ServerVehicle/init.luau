@@ -90,6 +90,7 @@ function ServerVehicle.InitializeVariables(self: ServerVehicle)
 	self.MouseSteerOn = false
 	self.PBrake = false
 	self.Velocity = Vector3.new()
+	self.AngularVelocity = Vector3.new()
 	self.AverageRotSpeed = 0
 	self.Acceleration = Vector3.new()
 	self.Center = CFrame.new()
