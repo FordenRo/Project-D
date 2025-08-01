@@ -9,6 +9,7 @@ export type BaseVehicle = {
 		},
 		Body: Model & {
 			["#Weight"]: BasePart,
+			Collider: Model,
 			Sounds: Model,
 		},
 	},
@@ -138,6 +139,7 @@ export type ServerVehicle = {
 	Initialize: (self: ServerVehicle) -> (),
 	InitializeVariables: (self: ServerVehicle) -> (),
 	MakeGravity: (self: ServerVehicle) -> (),
+	MakeCollider: (self: ServerVehicle) -> (),
 	GetCenter: (self: ServerVehicle) -> (),
 	RemoveMass: (self: ServerVehicle) -> (),
 	CreateFlip: (self: ServerVehicle) -> (),

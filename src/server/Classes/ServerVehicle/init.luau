@@ -40,6 +40,7 @@ end
 function ServerVehicle.Initialize(self: ServerVehicle)
 	self:InitializeVariables()
 	self:RemoveMass()
+	self:MakeCollider()
 	self:CreateChassisAssembly()
 	self:ApplyWeight()
 	self:MakeGravity()
@@ -129,6 +130,19 @@ function ServerVehicle.MakeGravity(self: ServerVehicle)
 		if v.Massless then
 			force:Destroy()
 			attachment:Destroy()
+		end
+	end
+end
+
+function ServerVehicle.MakeCollider(self: ServerVehicle)
+	for _, part in self.Instance.Body.Collider:GetChildren() do
+		for _, wheel in self.Instance.Wheels:GetChildren() do
+			if not wheel:IsA("BasePart") then continue end
+
+			local constraint = Instance.new("NoCollisionConstraint")
+			constraint.Part0 = part
+			constraint.Part1 = wheel
+			constraint.Parent = wheel
 		end
 	end
 end
