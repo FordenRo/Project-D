@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
 local player = Players.LocalPlayer
@@ -12,20 +13,6 @@ local DeformationController = {}
 DeformationController.__index = DeformationController
 
 type DeformationController = Types.DeformationController
-
-function setImageAlpha(image: EditableImage, alpha: number)
-	local imageBuffer = image:ReadPixelsBuffer(Vector2.zero, image.Size)
-	for i = 1, image.Size.X * image.Size.Y do
-		local pixelIndex = (i - 1) * 4
-		local a = buffer.readu8(imageBuffer, pixelIndex + 3)
-		buffer.writeu8(imageBuffer, pixelIndex + 3, math.floor(a * alpha))
-	end
-	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
-end
-
-function copyImage(image: EditableImage): EditableImage
-	return AssetService:CreateEditableImageAsync(Content.fromObject(image))
-end
 
 function DeformationController.new(Vehicle: Types.ClientVehicle)
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
@@ -72,8 +59,8 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 		local direction = hitVelocity.Unit
 		local relativeDirection = self.Body.CFrame:VectorToObjectSpace(direction)
 
-		local scratch = copyImage(self.ScratchTexture)
-		setImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
+		local scratch = ImageUtils.CopyImage(self.ScratchTexture)
+		ImageUtils.SetImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
 
 		local hitCenter = Vector3.new()
 		for _, point in points do
@@ -144,7 +131,7 @@ function DeformationController.BlowEngine(self: DeformationController)
 	end)
 
 	local engineBlowTexture = AssetService:CreateEditableImageAsync(self.Vehicle.Tune.EngineBlowTexture)
-	setImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
+	ImageUtils.SetImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
 
 	self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
 	engineBlowTexture:Destroy()
