@@ -215,6 +215,7 @@ function ClientTire.Update(self: ClientTire, deltaTime: number)
 	-- Update dirt
 	if materialType ~= "road" and materialType ~= "" then
 		self.Dirt = Lerp(self.Dirt, 1, rotSpeed * 0.004 * deltaTime)
+		self.Vehicle.Dirt += math.min(rotSpeed * 0.0001 * deltaTime, 1)
 	else
 		self.Dirt = Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
 	end

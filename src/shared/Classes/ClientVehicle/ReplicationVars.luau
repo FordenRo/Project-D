@@ -1,6 +1,7 @@
 return {
 	"Starting",
 	"Occupant",
+	"Dirt",
 	"Fuel",
 	"Clutch",
 	"Gear",

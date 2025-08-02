@@ -27,8 +27,9 @@ Tune.WBVisible = false -- Makes the weight brick visible
 Tune.GravComp = 35 -- Desired gravitational force in Roblox units. (35 is the default. Set to 0 to use workspace.Gravity instead)
 
 -- Textures
-Tune.EngineBlowTexture = ""
+Tune.EngineBlowTexture = "rbxassetid://131488880080508"
 Tune.EngineBlowOpacity = 0.3
+Tune.DirtTexture = "rbxassetid://129422656076701"
 
 -- Speed Limiter
 Tune.SpeedLimit = 0 -- Maximum speed limit in km/h (0 or less for no limiter)

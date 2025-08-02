@@ -39,6 +39,7 @@ export type Tune = {
 	-- Textures
 	EngineBlowTexture: string,
 	EngineBlowOpacity: number,
+	DirtTexture: string,
 	-- Unsprung Weight
 	FWheelWeight: number,
 	RWheelWeight: number,

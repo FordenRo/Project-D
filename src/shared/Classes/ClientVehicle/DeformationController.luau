@@ -105,6 +105,22 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 		canDeform = true
 	end)
 
+	-- Dirt update
+	local _lastDirt = 0
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			local dirt = math.floor(self.Vehicle.Dirt ^ 0.7 * 20) / 20 * 1
+			if dirt - _lastDirt > 0.01 then
+				local dirtTexture = AssetService:CreateEditableImageAsync(self.Vehicle.Tune.DirtTexture)
+				ImageUtils.SetImageAlpha(dirtTexture, dirt - _lastDirt)
+				self.BodyTexture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
+				print(dirt - _lastDirt)
+				_lastDirt = dirt
+			end
+		end
+	end)
+
 	return self
 end
 

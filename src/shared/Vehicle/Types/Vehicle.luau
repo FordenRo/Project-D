@@ -21,6 +21,7 @@ export type BaseVehicle = {
 	Starting: boolean,
 	Broken: boolean,
 	Occupant: Player?,
+	Dirt: number,
 	Fuel: number,
 	Temperature: number,
 	FanSpeed: number,
