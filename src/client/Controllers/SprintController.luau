@@ -1,5 +1,6 @@
 local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
+local StarterPlayer = game:GetService("StarterPlayer")
 
 local player = Players.LocalPlayer
 
@@ -10,8 +11,7 @@ local SPRINT_MULTIPLIER = 1.5
 
 export type SprintController = typeof(setmetatable(
 	{} :: {
-		Humanoid: Humanoid,
-		_WalkSpeed: number,
+		Humanoid: Humanoid?,
 	},
 	SprintController
 ))
@@ -19,8 +19,7 @@ export type SprintController = typeof(setmetatable(
 function SprintController.new()
 	local self: SprintController = setmetatable({}, SprintController) :: any
 
-	self.Humanoid = player.Character:WaitForChild("Humanoid")
-	self._WalkSpeed = self.Humanoid.WalkSpeed
+	player.CharacterAdded:Connect(function() self.Humanoid = player.Character:WaitForChild("Humanoid") end)
 
 	ContextActionService:BindAction(
 		"Sprint",
@@ -33,7 +32,9 @@ function SprintController.new()
 end
 
 function SprintController.ToggleSprint(self: SprintController, state: boolean)
-	self.Humanoid.WalkSpeed = self._WalkSpeed * (state and SPRINT_MULTIPLIER or 1)
+	if not self.Humanoid then return end
+
+	self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed * (state and SPRINT_MULTIPLIER or 1)
 end
 
 return SprintController.new()
