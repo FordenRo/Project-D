@@ -25,6 +25,13 @@ function ServerTire.new(wheel: Types.ServerWheel, instance: BasePart)
 	self.WearInstance.Parent = self.Instance
 	MakeWeld(self.WearInstance, self.Instance)
 
+	self.DirtInstance = self.Instance:Clone()
+	self.DirtInstance.Transparency = 1
+	self.DirtInstance.Color = Color3.new(0.6, 0.3, 0)
+	self.DirtInstance.Material = Enum.Material.Rock
+	self.DirtInstance.Parent = self.Instance
+	MakeWeld(self.DirtInstance, self.Instance)
+
 	self.PreviousMaterialData = {}
 	self.PreviousSoundsData = {}
 	self.PreviousSmokesData = {}
@@ -246,6 +253,7 @@ function ServerTire.Replicate(
 	smokeStress: number,
 	rayNormal: Vector3,
 	temperature: number,
+	dirt: number,
 	deltaTime: number
 )
 	-- if not self.Vehicle.Occupant then return end
@@ -340,6 +348,7 @@ function ServerTire.Replicate(
 	self.Instance.Color = Color3.fromHSV(0, 0, wear * 0.2)
 	self.WearInstance.Color = Color3.fromHSV(0, 0, wear * 0.4)
 	self.WearInstance.Transparency = 1 - (wear * 0.5)
+	self.DirtInstance.Transparency = 1 - dirt ^ 1.5 * 0.6
 end
 
 return ServerTire

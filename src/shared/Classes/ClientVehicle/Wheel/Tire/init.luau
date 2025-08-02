@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MaterialGroups = require(script.MaterialGroups)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -129,7 +130,14 @@ end
 
 function ClientTire.SmokeUpdate(self: ClientTire)
 	local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
-	self._Remote:FireServer(self.Material, smokeStress, self.Ray and self.Ray.Normal, self.Temperature, self._deltaTime)
+	self._Remote:FireServer(
+		self.Material,
+		smokeStress,
+		self.Ray and self.Ray.Normal,
+		self.Temperature,
+		self.Dirt,
+		self._deltaTime
+	)
 end
 
 function ClientTire.Update(self: ClientTire, deltaTime: number)
@@ -206,18 +214,9 @@ function ClientTire.Update(self: ClientTire, deltaTime: number)
 
 	-- Update dirt
 	if materialType ~= "road" and materialType ~= "" then
-		self.Dirt = 1
+		self.Dirt = Lerp(self.Dirt, 1, rotSpeed * 0.004 * deltaTime)
 	else
-		self.Dirt = math.max(
-			self.Dirt
-				- (
-						self.Wheel.IsFront and self.Vehicle.Tune.TireFDirtFadeRate
-						or self.Vehicle.Tune.TireRDirtFadeRate
-					)
-					* (rotSpeed / 100)
-					* (60 / (1 / deltaTime)),
-			0
-		)
+		self.Dirt = Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
 	end
 
 	-- Apply friction

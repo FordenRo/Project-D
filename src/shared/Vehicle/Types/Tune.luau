@@ -83,8 +83,6 @@ export type Tune = {
 	TireFSpeedStress: number,
 	TireRSpeedStress: number,
 	TireDirtBumps: number,
-	TireFDirtFadeRate: number,
-	TireRDirtFadeRate: number,
 	TireFHeating: number,
 	TireFCooling: number,
 	TireFMaxTemp: number,

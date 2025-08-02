@@ -265,6 +265,7 @@ export type ServerWheelTire = {
 	Wheel: ServerWheel,
 	Vehicle: ServerVehicle,
 	WearInstance: BasePart,
+	DirtInstance: BasePart,
 	PreviousMaterialData: { [BasePart]: string },
 	PreviousSoundsData: { [BasePart]: Sound },
 	PreviousSmokesData: { [BasePart]: Smoke },
