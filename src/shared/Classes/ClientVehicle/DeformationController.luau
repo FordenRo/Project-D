@@ -23,16 +23,6 @@ function setImageAlpha(image: EditableImage, alpha: number)
 	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
 end
 
-function whiteToAlpha(image: EditableImage)
-	local imageBuffer = image:ReadPixelsBuffer(Vector2.zero, image.Size)
-	for i = 1, image.Size.X * image.Size.Y do
-		local pixelIndex = (i - 1) * 4
-		local r = buffer.readu8(imageBuffer, pixelIndex)
-		buffer.writeu8(imageBuffer, pixelIndex + 3, -r)
-	end
-	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
-end
-
 function copyImage(image: EditableImage): EditableImage
 	return AssetService:CreateEditableImageAsync(Content.fromObject(image))
 end
@@ -107,6 +97,7 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 			BlendIntensity = 0,
 		}
 		self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
+		scratch:Destroy()
 		print(string.format("Impact %.1f", force))
 
 		if force > 10 then
@@ -152,24 +143,11 @@ function DeformationController.BlowEngine(self: DeformationController)
 		end
 	end)
 
-	local noiseTexture = AssetService:CreateEditableImageAsync("rbxassetid://118989734106899")
-	whiteToAlpha(noiseTexture)
-	setImageAlpha(noiseTexture, 0.5)
+	local engineBlowTexture = AssetService:CreateEditableImageAsync(self.Vehicle.Tune.EngineBlowTexture)
+	setImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
 
-	local projection = {
-		Position = position,
-		Direction = Vector3.xAxis,
-		Size = Vector3.new(5, 0.5, 1) * radius * 2,
-		Up = Vector3.yAxis,
-	}
-	local config = {
-		AlphaBlendType = Enum.ImageAlphaType.Default,
-		ColorBlendType = Enum.ImageCombineType.AlphaBlend,
-		Decal = noiseTexture,
-		FadeAngle = 0,
-		BlendIntensity = 0,
-	}
-	self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
+	self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
+	engineBlowTexture:Destroy()
 end
 
 return DeformationController

@@ -36,6 +36,9 @@ export type Tune = {
 	CGHeight: number,
 	WBVisible: boolean,
 	GravComp: number,
+	-- Textures
+	EngineBlowTexture: string,
+	EngineBlowOpacity: number,
 	-- Unsprung Weight
 	FWheelWeight: number,
 	RWheelWeight: number,
