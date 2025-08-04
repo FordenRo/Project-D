@@ -7,7 +7,7 @@ HittableService.__index = HittableService
 export type HittableService = typeof(setmetatable({} :: {}, HittableService))
 
 export type HitResult = {
-	Origin: Vector3,
+	Position: Vector3,
 	Velocity: Vector3,
 	Part: BasePart,
 }
@@ -50,7 +50,15 @@ function HittableService:Register(parts: BasePart | { BasePart }, callback: HitC
 	end
 end
 
-function HittableService:Hit(hit: HitResult)
+function HittableService:Hit(parts: BasePart | { BasePart }, position: Vector3, velocity: Vector3)
+	if typeof(parts) == "table" then
+		for _, part in parts do
+			self:Hit(part, position, velocity)
+		end
+		return
+	end
+
+	local hit = { Part = parts, Position = position, Velocity = velocity }
 	silentHit(hit)
 
 	if isServer then
