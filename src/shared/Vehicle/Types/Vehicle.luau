@@ -22,6 +22,7 @@ export type BaseVehicle = {
 	Broken: boolean,
 	Occupant: Player?,
 	Fuel: number,
+	EngineHealth: number,
 	Temperature: number,
 	FanSpeed: number,
 	Horning: boolean,
@@ -142,6 +143,7 @@ export type ClientVehicle = {
 	SmoothInputs: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateTemp: (self: ClientVehicle, deltaTime: number) -> (),
+	UpdateHealth: (self: ClientVehicle, deltaTime: number) -> (),
 	ReplicateVariables: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle

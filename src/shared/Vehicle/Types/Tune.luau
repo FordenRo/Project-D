@@ -184,6 +184,9 @@ export type Tune = {
 	CoolingFactor: number,
 	EngineMaterialFactor: number,
 	EfficientCombustionRPM: number,
+	-- Damage
+	RPMDamage: number,
+	RedlineDamage: number,
 	-- Electric Engine
 	Electric: boolean,
 	E_Torque: number,

@@ -2,6 +2,7 @@ return {
 	"Starting",
 	"Occupant",
 	"Fuel",
+	"EngineHealth",
 	"Clutch",
 	"Gear",
 	"FinalDrive",

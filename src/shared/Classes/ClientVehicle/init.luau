@@ -280,7 +280,7 @@ end
 
 -- TODO: Взрыв двигателя, дым из под капота
 function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
-	if not self.Tune.Engine then return end
+	if not self.Tune.Engine or self.Broken then return end
 
 	local kW = self.Horsepower / 1.35962
 	local heat = kW * Lerp(1, 2, self.RPM / self.Tune.Redline) / 120
@@ -291,6 +291,21 @@ function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
 
 	if self.Temperature > self.Tune.EngineBurnTemp then
 		self.IsOn = false
+		self.Broken = true
+		self.DeformationController:BlowEngine()
+	end
+end
+
+function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
+	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
+
+	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
+	damage += math.max(self.Tune.Redline - self.RPM, 0) / 1000 * self.Tune.RedlineDamage
+	self.EngineHealth -= damage * deltaTime
+
+	if self.EngineHealth <= 0 then
+		self.EngineHealth = 0
+        self.IsOn = false
 		self.Broken = true
 		self.DeformationController:BlowEngine()
 	end
@@ -344,6 +359,7 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	UpdateEngine(self, deltaTime)
 	self:UpdateFuel(deltaTime)
 	self:UpdateTemp(deltaTime)
+	self:UpdateHealth(deltaTime)
 	self:ReplicateVariables()
 end
 
