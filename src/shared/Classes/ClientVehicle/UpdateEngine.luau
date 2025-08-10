@@ -428,7 +428,13 @@ return function(self: Types.ClientVehicle, deltaTime: number)
 
 	--Update Wheels
 	for _, wheel in self.Wheels do
-		-- local wheelPosition = wheel.Position
+		--Stop when engine broken
+		if self.Broken and wheel.IsDriven then
+			wheel.Instance["#AV"].AngularVelocity = 0
+			wheel.Instance["#AV"].MotorMaxTorque = 0
+			wheel.Instance["#BV"].MotorMaxTorque = 1000
+		end
+
 		--Apply Power
 		local on = 1
 		if not self.IsOn then on = 0 end

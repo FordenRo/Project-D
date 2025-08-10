@@ -40,6 +40,7 @@ function initializeVariables(self: BaseVehicle)
 	self.Broken = false
 	self.Occupant = nil
 	self.Fuel = self.Tune.FuelCapacity
+	self.EngineHealth = 1
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.FanSpeed = 0
 	self.Dirt = 0

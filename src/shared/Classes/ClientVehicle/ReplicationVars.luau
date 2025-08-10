@@ -3,6 +3,7 @@ return {
 	"Occupant",
 	"Dirt",
 	"Fuel",
+	"EngineHealth",
 	"Clutch",
 	"Gear",
 	"FinalDrive",

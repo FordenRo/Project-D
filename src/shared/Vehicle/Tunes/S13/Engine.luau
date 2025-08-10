@@ -38,7 +38,7 @@ Tune.FuelCapacity = 60 -- Fuel capacity in liters
 Tune.FuelDensity = 0.71 -- Fuel density in kg/l (0.71 for petrol 0.83 for diesel)
 Tune.BSFC = 250 -- Brake Specific Fuel Consumption in g/kW*h
 
--- Temperatune
+-- Temperature
 Tune.OperatingEngineTemp = 100 -- The temperature at which the engine operating normally
 Tune.EngineBurnTemp = 120 -- The temperature at which the engine will explode
 Tune.EngineMaterialFactor = 2.5 -- The factor
@@ -48,6 +48,10 @@ Tune.IdleHeatRejection = 1.5 -- Heat gain multiplier at idle (excluding rpm effe
 Tune.FanAirSpeed = 15 -- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
 Tune.CoolingFactor = 0.02 -- Think of this as a size of radiator + efficiency variable
 Tune.EfficientCombustionRPM = 2000 -- RPM at which the engine is most efficient
+
+-- Damage
+Tune.RPMDamage = 0.6 -- Max damage on Redline per hour
+Tune.RedlineDamage = 0.08 -- Damage above Redline per 1000 RPM per second
 
 -- Electric Engine
 Tune.Electric = false

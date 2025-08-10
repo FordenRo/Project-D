@@ -6,6 +6,7 @@ local RunService = game:GetService("RunService")
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 
 local player = Players.LocalPlayer
 
@@ -28,6 +29,7 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 	self.ScratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 
 	local touchedPoints = {}
+	local touchedParts = {}
 	for _, part in self.ColliderModel:GetChildren() do
 		if not part:IsA("BasePart") then continue end
 
@@ -36,6 +38,7 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 			if hitPart:IsDescendantOf(player.Character) then return end
 
 			table.insert(touchedPoints, part.Position)
+			table.insert(touchedParts, hitPart)
 		end)
 	end
 
@@ -45,29 +48,33 @@ function DeformationController.new(Vehicle: Types.ClientVehicle)
 		if #touchedPoints == 0 then return end
 
 		local points = table.clone(touchedPoints)
+		local parts = table.clone(touchedParts)
 		table.clear(touchedPoints)
+		table.clear(touchedParts)
 
 		local hitVelocity = self.Vehicle.Instance.Body["#Weight"].AssemblyLinearVelocity - self.Vehicle.Velocity
 		local force = hitVelocity.Magnitude
 		if force < 1 then return end
-
-		repeat
-			task.wait()
-		until canDeform
-
-		canDeform = false
-		local direction = hitVelocity.Unit
-		local relativeDirection = self.Body.CFrame:VectorToObjectSpace(direction)
-
-		local scratch = ImageUtils.CopyImage(self.ScratchTexture)
-		ImageUtils.SetImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
 
 		local hitCenter = Vector3.new()
 		for _, point in points do
 			hitCenter += point
 		end
 		hitCenter /= #points
+
+		HittableService:Hit(parts, hitCenter, hitVelocity / #parts)
+
+		repeat
+			task.wait()
+		until canDeform
+
+		canDeform = false
 		hitCenter = self.Body.CFrame:PointToObjectSpace(hitCenter) * meshScale
+		local direction = hitVelocity.Unit
+		local relativeDirection = self.Body.CFrame:VectorToObjectSpace(direction)
+
+		local scratch = ImageUtils.CopyImage(self.ScratchTexture)
+		ImageUtils.SetImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
 
 		local size = Vector3.one * 5
 		local projection = {
