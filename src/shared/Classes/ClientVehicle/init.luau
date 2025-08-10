@@ -42,6 +42,7 @@ end
 
 function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitializeVariables()
+	hideCharacter(self)
 	self:InitializeWheels()
 	self:InitControls()
 	self:InitializePlugins()
@@ -87,6 +88,15 @@ function ClientVehicle.InitializePlugins(self: ClientVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin)
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+	end
+end
+
+-- Hides character for a while
+function hideCharacter(self: ClientVehicle)
+	for _, v in player.Character:GetDescendants() do
+		if not v:IsA("BasePart") then continue end
+
+		v.Transparency = 1
 	end
 end
 
