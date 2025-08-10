@@ -310,7 +310,7 @@ function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
 
 	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
-	damage += math.max(self.Tune.Redline - self.RPM, 0) / 1000 * self.Tune.RedlineDamage
+	damage += math.max(self.RPM - self.Tune.Redline, 0) / 1000 * self.Tune.RedlineDamage
 	self.EngineHealth -= damage * deltaTime
 
 	if self.EngineHealth <= 0 then
