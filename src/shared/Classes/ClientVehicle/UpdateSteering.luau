@@ -136,8 +136,8 @@ return function(self: Types.ClientVehicle, deltaTime: number)
 		end
 
 		if self.Tune.PowerSteeringType == "New" then
-			-- data.SteerAttach0.Orientation =
-			-- 	Vector3.new(0, data.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
+			wheel.Instance.Arm.SteerAttach0.Orientation =
+				Vector3.new(0, wheel.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
 		else
 			wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
 				* (
