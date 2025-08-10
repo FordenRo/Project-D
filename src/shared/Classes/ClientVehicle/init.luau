@@ -315,7 +315,7 @@ function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
 
 	if self.EngineHealth <= 0 then
 		self.EngineHealth = 0
-        self.IsOn = false
+		self.IsOn = false
 		self.Broken = true
 		self.DeformationController:BlowEngine()
 	end

@@ -4,9 +4,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
-local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 
 local player = Players.LocalPlayer
 

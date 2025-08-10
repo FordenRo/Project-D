@@ -104,7 +104,7 @@ return function(self: Types.ClientVehicle, deltaTime: number)
 	)
 
 	--Apply Steering
-	for _, wheel in self.Wheels do
+	for _, wheel in self.Wheels :: { Types.ClientWheel } do
 		if wheel.CanSteer == 0 then continue end
 
 		local angle = 0
@@ -139,7 +139,7 @@ return function(self: Types.ClientVehicle, deltaTime: number)
 			-- data.SteerAttach0.Orientation =
 			-- 	Vector3.new(0, data.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
 		else
-			(wheel.Instance.Arm :: any).Steer.CFrame = wheel.Instance.Base.CFrame
+			wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
 				* (
 					wheel.CanSteer == 1 and CFrame.new(0, 0, 0)
 					or (CFrame.Angles(0, -math.rad(self.SteerC * angle * rsteerVariableAngle), 0))
