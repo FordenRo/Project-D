@@ -2,7 +2,6 @@ local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 
@@ -12,8 +11,7 @@ local Camera = game.Workspace.CurrentCamera
 
 local MAX_DISTANCE = 32
 local MIN_DISTANCE = 16
-
-local BUMPING_STRENGTH = 0.07
+local FOV = Camera.FieldOfView
 
 local CameraPlugin = {}
 CameraPlugin.__index = CameraPlugin
@@ -21,11 +19,11 @@ CameraPlugin.__index = CameraPlugin
 export type CameraPlugin = typeof(setmetatable(
 	{} :: {
 		Vehicle: Types.ClientVehicle,
-		Delta: Vector3,
-		Bumping: Vector3,
-		AngularOffset: CFrame,
 		Distance: number,
 		Offset: Vector3,
+		LookOffset: Vector3,
+		Angles: Vector3,
+		Bumping: Vector3,
 	},
 	CameraPlugin
 ))
@@ -34,11 +32,11 @@ function CameraPlugin.new(vehicle: Types.ClientVehicle)
 	local self = setmetatable({}, CameraPlugin) :: CameraPlugin
 
 	self.Vehicle = vehicle
-	self.Delta = Vector3.new()
+	self.Distance = 22
 	self.Offset = Vector3.new()
+	self.LookOffset = Vector3.new()
+	self.Angles = Vector3.new()
 	self.Bumping = Vector3.new()
-	self.AngularOffset = Vector3.new()
-	self.Distance = 24
 	Camera.CameraType = Enum.CameraType.Scriptable
 
 	RunService:BindToRenderStep(
@@ -63,51 +61,66 @@ function CameraPlugin.UpdateZoom(self: CameraPlugin, input: InputObject)
 end
 
 function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
-	local position = self.Vehicle.Center.Position + Vector3.new(0, 7, 0)
+	local weightB = self.Vehicle.Instance.Body["#Weight"]
+	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 
-	local velocity = self.Vehicle.Velocity * Vector3.new(1, 0, 1)
+	local heightOffset = weightB.CFrame.UpVector * 7
+	local offset = Vector3.new()
+	local lookOffset = weightB.CFrame.UpVector * 4
+	local angles = Vector3.new()
+
 	local distance = self.Distance
-	local delta
-	if velocity.Magnitude > 10 then
-		distance -= self.Distance * 0.3 * math.abs(self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)) ^ 1.5
-		delta = -velocity.Unit * distance
+	if sideVelocity.Magnitude > 10 then
+		distance -= self.Distance * 0.2 * math.abs(self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)) ^ 1.5
+		offset -= (sideVelocity.Unit + Vector3.yAxis * weightB.CFrame.LookVector.Y) * distance
 	elseif self.Vehicle.Gear == -1 then
-		delta = self.Vehicle.Center.LookVector * distance
+		offset += weightB.CFrame.LookVector * distance
 	else
-		delta = -self.Vehicle.Center.LookVector * distance
+		offset -= weightB.CFrame.LookVector * distance
 	end
 
-	local assel = math.min(self.Vehicle.Acceleration.Magnitude / 20, 3)
-	local offset = Vector3.new()
-	if assel > 0 then offset = -assel * self.Vehicle.Acceleration.Unit end
+	local bumping = Vector3.yAxis * math.clamp(self.Vehicle.Acceleration.Y, -40, 40) * 0.07
+	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 4)
 
-	local bumping = Vector3.yAxis * math.clamp(self.Vehicle.Acceleration.Y, -40, 40) * BUMPING_STRENGTH
+	local accelForce = math.min(self.Vehicle.Acceleration.Magnitude, 60) * 0.03
+	if accelForce > 0 then
+		offset -= accelForce * self.Vehicle.Acceleration.Unit
+	end
 
-	local angularOffset = Vector3.yAxis * self.Vehicle.AngularVelocity.Y * 0.1
-		+ Vector3.new(1, 0, 1)
-			* -self.Vehicle.AngularVelocity.Unit
-			* math.clamp(self.Vehicle.AngularVelocity.Magnitude, -2, 2)
-			* 0.2
+	angles += Vector3.yAxis * self.Vehicle.AngularVelocity.Y * 0.07
+	angles += Vector3.new(1, 0, 1) * weightB.AssemblyAngularVelocity.Unit * math.clamp(
+		weightB.AssemblyAngularVelocity.Magnitude,
+		-2,
+		2
+	) * 0.1
 
-	self.Offset = self.Offset:Lerp(offset, deltaTime * 2)
-	self.Delta = self.Delta:Lerp(delta, deltaTime * 2)
-	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 3)
-	self.AngularOffset = self.AngularOffset:Lerp(angularOffset, deltaTime * 2)
+	self.Offset = self.Offset:Lerp(offset, deltaTime * 3)
+	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
+	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
 
-	local sideDelta = self.Vehicle.Center.RightVector
+	local right = weightB.CFrame.RightVector:Dot(self.Offset)
+	if math.abs(right) < 0.2 then right = 1 end
+
+	local sideOffset = math.sign(right)
+		* weightB.CFrame.RightVector
 		* distance
-		* 0.4
-		* math.clamp(MapToRange(1 - self.Delta.Magnitude / distance, 0.3, 1), 0, 1) ^ 1.5
+		* 0.5
+		* math.clamp(MapToRange(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1), 0, 1)
 
-	local offsetMagnitude = math.clamp(self.Offset.Magnitude, -3, 3)
-	Camera.CFrame = CFrame.new(
-		position + self.Delta + self.Bumping + self.Offset.Unit * offsetMagnitude + sideDelta,
-		self.Vehicle.Center.Position + Vector3.new(0, 4.5, 0) + self.Offset + self.Bumping
-	) * CFrame.Angles(0, self.AngularOffset.Y, 0) * CFrame.fromOrientation(
-		self.AngularOffset.X,
-		0,
-		self.AngularOffset.Z
-	)
+	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
+
+	Camera.CFrame = CFrame.lookAt(
+		weightB.Position + self.Offset + self.Bumping + heightOffset + sideOffset,
+		weightB.Position + self.LookOffset + self.Bumping,
+		self.Vehicle.Center.UpVector
+	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
+end
+
+function CameraPlugin.Destroy(self: CameraPlugin)
+	RunService:UnbindFromRenderStep("CameraUpdate")
+	ContextActionService:UnbindAction("CameraZoom")
+
+	Camera.CameraType = Enum.CameraType.Custom
 end
 
 return CameraPlugin
