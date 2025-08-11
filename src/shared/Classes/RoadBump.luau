@@ -50,7 +50,7 @@ end
 
 function RoadBump.Hit(self: RoadBump, hit: HittableService.HitResult)
 	local origin = self.meshes.bump:GetPosition(
-		self.meshes.bump:FindClosestVertex(self.bump.CFrame:PointToObjectSpace(hit.Origin))
+		self.meshes.bump:FindClosestVertex(self.bump.CFrame:PointToObjectSpace(hit.Position))
 	)
 	local velocity = self.bump.CFrame:VectorToObjectSpace(hit.Velocity)
 	local force = velocity.Magnitude

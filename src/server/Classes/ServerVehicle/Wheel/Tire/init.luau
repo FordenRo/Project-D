@@ -278,7 +278,7 @@ function ServerTire.Replicate(
 		if d.ClassName == "Trail" then
 			d.Enabled = false
 			if
-				materialType ~= ""
+				materialType
 				and string.find(d.Name, materialType)
 				and d:GetAttribute("stress") < smokeStress ^ 3
 				and rayNormal

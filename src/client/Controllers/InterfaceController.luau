@@ -13,7 +13,7 @@ export type InterfaceController = typeof(setmetatable(
 ))
 
 function InterfaceController.new()
-	local self: InterfaceController = setmetatable({}, InterfaceController) :: any
+	local self = setmetatable({}, InterfaceController) :: InterfaceController
 
 	self.Interface = Interface.new()
 

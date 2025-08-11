@@ -42,7 +42,7 @@ Tune.SLimitBrake = true -- If true, this will apply the brake if the car is movi
 for _, module in script:GetChildren() do
 	if not module:IsA("ModuleScript") then continue end
 
-	for k, v in require(module) do
+	for k, v in require(module) :: { [string]: any } do
 		Tune[k] = v
 	end
 end

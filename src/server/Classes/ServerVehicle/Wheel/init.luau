@@ -70,7 +70,7 @@ function ServerWheel.Initialize(self: ServerWheel)
 		* CFrame.Angles(
 			math.rad(self.Vehicle.Tune[posChar .. "Caster"] * (isLeft and 1 or -1)),
 			math.rad(self.Vehicle.Tune[posChar .. "Toe"] * (isLeft and -1 or 1)),
-			math.rad(self.Vehicle.Tune[posChar .. "Camber"])
+			math.rad(self.Vehicle.Tune[posChar .. "Camber"] :: number)
 		)
 
 	for _, a in WParts do
@@ -436,7 +436,7 @@ function ServerWheel.Initialize(self: ServerWheel)
 
 	--Realign Caster
 	self.Instance.CFrame = self.Instance.CFrame
-		* CFrame.Angles(math.rad(self.Vehicle.Tune[posChar .. "Caster"]) * (isLeft and -1 or 1), 0, 0)
+		* CFrame.Angles(math.rad(self.Vehicle.Tune[posChar .. "Caster"] :: number) * (isLeft and -1 or 1), 0, 0)
 end
 
 return ServerWheel

@@ -9,17 +9,18 @@ local DeformationController = require(script.DeformationController)
 local HandleInput = require(script.HandleInput)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local ReplicationVars = require(script.ReplicationVars)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateEngine = require(script.UpdateEngine)
 local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
 
 local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
+local PlayerModule = require(player.PlayerScripts.PlayerModule) :: any
 
 local ClientVehicle = setmetatable({}, BaseVehicle)
 ClientVehicle.__index = ClientVehicle
@@ -86,7 +87,7 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.Initial
 
 function ClientVehicle.InitializePlugins(self: ClientVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
-		local pluginClass = require(plugin)
+		local pluginClass = require(plugin) :: any
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
 	end
 end
@@ -105,7 +106,7 @@ function ClientVehicle.InitControls(self: ClientVehicle)
 	self.Controls = DatastoreController:GetControls()
 
 	-- Disable jumping
-	require(player.PlayerScripts.PlayerModule :: any):GetControls():GetActiveController().jumpEnabled = false
+	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
 	table.insert(self._conn, UserInputService.InputBegan:Connect(function(input) HandleInput(self, input) end))
 	table.insert(self._conn, UserInputService.InputChanged:Connect(function(input) HandleInput(self, input) end))
@@ -377,7 +378,7 @@ end
 function ClientVehicle.SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
-	require(player.PlayerScripts.PlayerModule :: any):GetControls():GetActiveController().jumpEnabled = true
+	PlayerModule:GetControls():GetActiveController().jumpEnabled = true
 
 	--Remove Flip Force
 	if self.Instance.DriveSeat:FindFirstChild("Flip") then

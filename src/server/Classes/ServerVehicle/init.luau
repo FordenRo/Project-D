@@ -214,7 +214,7 @@ end
 
 function ServerVehicle.InitializePlugins(self: ServerVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
-		local pluginClass = require(plugin)
+		local pluginClass = require(plugin) :: any
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
 	end
 end

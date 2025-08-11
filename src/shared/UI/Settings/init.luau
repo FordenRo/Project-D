@@ -26,7 +26,7 @@ export type Settings = typeof(setmetatable(
 ))
 
 function Settings.new()
-	local self: Settings = setmetatable({}, Settings) :: any
+	local self = setmetatable({}, Settings) :: Settings
 
 	self.Instance = ScreenGui:Clone()
 	self.Instance.Parent = player.PlayerGui
@@ -50,7 +50,7 @@ function Settings.Initialize(self: Settings)
 end
 
 function Settings.InitializeControls(self: Settings)
-	for k, v in self.Controls do
+	for k, v in self.Controls :: { [string]: EnumItem } do
 		if typeof(v) ~= "EnumItem" then continue end
 
 		local frame = Instance.new("Frame")

@@ -96,7 +96,7 @@ function ClientTire.Initialize(self: ClientTire)
 				end
 				if v:IsA("Trail") then
 					self.Trails[effectType][math.round(
-						v:GetAttribute("stress") * self.Vehicle.Tune.TireMarkTransparencyLevels
+						(v:GetAttribute("stress") :: number) * self.Vehicle.Tune.TireMarkTransparencyLevels
 					)] =
 						effect
 				elseif v:IsA("ParticleEmitter") then
