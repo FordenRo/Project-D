@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 
 local SoundTypesHandler = {}
@@ -8,7 +8,7 @@ SoundTypesHandler.__index = SoundTypesHandler
 
 export type SoundTypesHandler = typeof(setmetatable(
 	{} :: {
-		Vehicle: Types.BaseVehicle,
+		Vehicle: VehicleTypes.BaseVehicle,
 		_UpdateBOV: boolean,
 		_PrevBoostTurbo: number,
 		_LastBOV: number,
@@ -16,7 +16,7 @@ export type SoundTypesHandler = typeof(setmetatable(
 	SoundTypesHandler
 ))
 
-function SoundTypesHandler.new(vehicle: Types.BaseVehicle)
+function SoundTypesHandler.new(vehicle: VehicleTypes.BaseVehicle)
 	local self: SoundTypesHandler = setmetatable({}, SoundTypesHandler) :: any
 
 	self.Vehicle = vehicle
@@ -27,7 +27,7 @@ function SoundTypesHandler.new(vehicle: Types.BaseVehicle)
 	return self
 end
 
-function SoundTypesHandler.Engine(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Engine(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
 	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
@@ -39,7 +39,7 @@ function SoundTypesHandler.Engine(self: SoundTypesHandler, sound: Types.ServerSo
 		* math.clamp(-1 / sound.TransitionEnd * (self.Vehicle.RPM - sound.RangeEnd), 0, 1)
 end
 
-function SoundTypesHandler.Transmission(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Transmission(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
 	sound.Instance.PlaybackSpeed = sound.VariablePlaybackSpeed
@@ -50,7 +50,7 @@ function SoundTypesHandler.Transmission(self: SoundTypesHandler, sound: Types.Se
 		or sound.OffVolume
 end
 
-function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
 	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostTurbo
@@ -58,7 +58,7 @@ function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: Types.ServerSou
 	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostTurbo
 end
 
-function SoundTypesHandler.Super(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Super(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
 	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostSuper
@@ -66,7 +66,7 @@ function SoundTypesHandler.Super(self: SoundTypesHandler, sound: Types.ServerSou
 	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostSuper
 end
 
-function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if
 		(self.Vehicle.BoostTurbo - sound.Sensitivity < self._PrevBoostTurbo)
 		and (tick() - self._LastBOV > 1)
@@ -82,7 +82,7 @@ function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: Types.ServerS
 	self._PrevBoostTurbo = self.Vehicle.BoostTurbo
 end
 
-function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if self.Vehicle.Starting then
 		if not sound.Instance:GetAttribute("Played") then
 			sound.Instance.TimePosition = 0
@@ -98,7 +98,7 @@ function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: Types.Server
 	end
 end
 
-function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if self.Vehicle.FanSpeed > 0 then
 		if not sound.Instance.Playing then sound.Instance.Playing = true end
 
@@ -109,13 +109,13 @@ function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: Types.ServerSound
 	end
 end
 
-function SoundTypesHandler.Horn(self: SoundTypesHandler, sound: Types.ServerSoundData)
+function SoundTypesHandler.Horn(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	sound.Instance.Playing = self.Vehicle.Horning
 	sound.Instance.Volume = sound.BaseVolume
 	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
 end
 
-function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { Types.ServerSoundData })
+function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { VehicleTypes.ServerSoundData })
 	for _, sound in sounds do
 		self[sound.Type](self, sound)
 	end

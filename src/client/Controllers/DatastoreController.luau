@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local DatastoreController = {}
 DatastoreController.__index = DatastoreController
@@ -18,7 +18,7 @@ end
 
 function DatastoreController.GetControls(self: DatastoreController) return remoteFunction:InvokeServer("Controls") end
 
-function DatastoreController.SetControls(self: DatastoreController, controls: Types.VehicleControls)
+function DatastoreController.SetControls(self: DatastoreController, controls: VehicleTypes.VehicleControls)
 	remoteEvent:FireServer("Controls", controls)
 end
 

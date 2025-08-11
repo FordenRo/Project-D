@@ -1,6 +1,8 @@
-local Types = require(script.Parent.Parent.Parent.Types)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Tune = {} :: Types.Tune
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
+local Tune = {} :: VehicleTypes.Tune
 
 --[[Tires]]
 Tune.TireDirtBumps = 90 -- Aggresiveness of artificial bumps in dirt-, sand-, and snow-type surfaces (0 for none)

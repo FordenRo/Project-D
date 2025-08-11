@@ -6,16 +6,16 @@ local RunService = game:GetService("RunService")
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 
 local DeformationController = {}
 DeformationController.__index = DeformationController
 
-type DeformationController = Types.DeformationController
+type DeformationController = VehicleTypes.DeformationController
 
-function DeformationController.new(Vehicle: Types.ClientVehicle)
+function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = Vehicle

@@ -3,7 +3,7 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DefaultControls = require(ReplicatedStorage.Shared.Vehicle.DefaultControls)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local DatastoreHandler = {}
 DatastoreHandler.__index = DatastoreHandler
@@ -19,7 +19,7 @@ remoteEvent.Name = "DatastoreRE"
 remoteEvent.Parent = ReplicatedStorage
 
 function DatastoreHandler.new()
-	local self: DatastoreHandler = setmetatable({}, DatastoreHandler) :: any
+	local self = setmetatable({}, DatastoreHandler) :: DatastoreHandler
 
 	self:Initialize()
 
@@ -46,7 +46,7 @@ function DatastoreHandler.Initialize(self: DatastoreHandler)
 	end)
 end
 
-function DatastoreHandler.GetPlayerControls(self: DatastoreHandler, player: Player): Types.VehicleControls
+function DatastoreHandler.GetPlayerControls(self: DatastoreHandler, player: Player): VehicleTypes.VehicleControls
 	local controls = DefaultControls
 
 	local data = DataStoreService:GetDataStore("PlayerSettings", "Controls"):GetAsync(player.UserId)
@@ -68,7 +68,7 @@ function DatastoreHandler.GetPlayerControls(self: DatastoreHandler, player: Play
 	return controls
 end
 
-function DatastoreHandler.SetPlayerControls(self: DatastoreHandler, player: Player, value: Types.VehicleControls)
+function DatastoreHandler.SetPlayerControls(self: DatastoreHandler, player: Player, value: VehicleTypes.VehicleControls)
 	for k, v in value do
 		if typeof(v) == "EnumItem" then value[k] = v.Name end
 	end

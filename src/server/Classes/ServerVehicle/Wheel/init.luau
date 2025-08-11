@@ -4,15 +4,15 @@ local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Tire = require(script.Tire)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerWheel = setmetatable({}, BaseWheel)
 ServerWheel.__index = ServerWheel
 
-type ServerWheel = Types.ServerWheel
+type ServerWheel = VehicleTypes.ServerWheel
 
-function ServerWheel.new(vehicle: Types.ServerVehicle, instance: BasePart)
+function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart)
 	local self: ServerWheel = setmetatable(BaseWheel.new(vehicle, instance), ServerWheel) :: any
 
 	self:Initialize()

@@ -3,14 +3,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
 local ServerVehicle = setmetatable({}, BaseVehicle)
 ServerVehicle.__index = ServerVehicle
 
-type ServerVehicle = Types.ServerVehicle
+type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance)
 	local self: ServerVehicle = setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any

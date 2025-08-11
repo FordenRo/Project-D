@@ -1,13 +1,13 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 
-return function(self: Types.ClientVehicle, deltaTime: number)
+return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 	local controller = self._LastInputWasGamepad or (self.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
 	local SteerSpeed
@@ -104,7 +104,7 @@ return function(self: Types.ClientVehicle, deltaTime: number)
 	)
 
 	--Apply Steering
-	for _, wheel in self.Wheels :: { Types.ClientWheel } do
+	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		if wheel.CanSteer == 0 then continue end
 
 		local angle = 0

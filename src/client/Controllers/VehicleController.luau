@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ClientVehicle = require(ReplicatedStorage.Shared.Classes.ClientVehicle)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 
@@ -12,7 +12,7 @@ VehicleController.__index = VehicleController
 
 export type VehicleController = typeof(setmetatable(
 	{} :: {
-		DrivenVehicle: Types.ClientVehicle?,
+		DrivenVehicle: VehicleTypes.ClientVehicle?,
 	},
 	VehicleController
 ))

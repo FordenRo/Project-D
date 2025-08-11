@@ -1,6 +1,8 @@
-local Types = require(script.Parent.Parent.Parent.Types)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Tune = {} :: Types.Tune
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
+local Tune = {} :: VehicleTypes.Tune
 
 -- *USE THE GRAPH BELOW TO PROPERLY TUNE THE ENGINE.*
 -- https://www.desmos.com/calculator/cqhgbm0vlt

@@ -3,8 +3,6 @@ local SoundData = require(script.SoundData)
 local Tune = require(script.Tune)
 local Vehicle = require(script.Vehicle)
 
-local Types = {}
-
 export type SoundData = SoundData.SoundData
 export type ServerSoundData = SoundData.ServerSoundData
 export type ClientSoundData = SoundData.ClientSoundData
@@ -30,4 +28,4 @@ export type ServerVehicle = Vehicle.ServerVehicle
 
 export type Tune = Tune.Tune
 
-return Types
+return {}

@@ -8,7 +8,7 @@ local player = Players.LocalPlayer
 local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
 local Types = require(ReplicatedStorage.Shared.Types)
 local VehicleController = require(player.PlayerScripts.Client.Controllers.VehicleController)
-local VehicleTypes = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Settings = {}
 Settings.__index = Settings

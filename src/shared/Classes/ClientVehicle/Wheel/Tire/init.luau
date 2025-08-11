@@ -5,8 +5,8 @@ local UserInputService = game:GetService("UserInputService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MaterialGroups = require(script.MaterialGroups)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local isVibrationSupported = HapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1)
 UserInputService.GamepadConnected:Connect(
@@ -16,9 +16,9 @@ UserInputService.GamepadConnected:Connect(
 local ClientTire = {}
 ClientTire.__index = ClientTire
 
-type ClientTire = Types.ClientWheelTire
+type ClientTire = VehicleTypes.ClientWheelTire
 
-function ClientTire.new(wheel: Types.ClientWheel, instance: BasePart)
+function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart)
 	local self: ClientTire = setmetatable({}, ClientTire) :: any
 
 	self.Wheel = wheel

@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 if not RunService:IsServer() then return nil end
 
@@ -13,14 +13,14 @@ local STRENGTH = 0.08
 
 export type Exhaust = typeof(setmetatable(
 	{} :: {
-		Vehicle: Types.ServerVehicle,
+		Vehicle: VehicleTypes.ServerVehicle,
 		Exhaust: BasePart,
 		Weld: Weld,
 	},
 	Exhaust
 ))
 
-function Exhaust.new(vehicle: Types.ServerVehicle)
+function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
 	local self = setmetatable({}, Exhaust) :: Exhaust
 
 	self.Vehicle = vehicle

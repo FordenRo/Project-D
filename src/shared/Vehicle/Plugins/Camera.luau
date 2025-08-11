@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 if not RunService:IsClient() then return nil end
 
@@ -18,7 +18,7 @@ CameraPlugin.__index = CameraPlugin
 
 export type CameraPlugin = typeof(setmetatable(
 	{} :: {
-		Vehicle: Types.ClientVehicle,
+		Vehicle: VehicleTypes.ClientVehicle,
 		Distance: number,
 		Offset: Vector3,
 		LookOffset: Vector3,
@@ -28,7 +28,7 @@ export type CameraPlugin = typeof(setmetatable(
 	CameraPlugin
 ))
 
-function CameraPlugin.new(vehicle: Types.ClientVehicle)
+function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 	local self = setmetatable({}, CameraPlugin) :: CameraPlugin
 
 	self.Vehicle = vehicle

@@ -3,15 +3,15 @@ local RunService = game:GetService("RunService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local SpeedEffect = {}
 SpeedEffect.__index = SpeedEffect
 
-type EffectFrame = Types.EffectFrame
-type SpeedEffect = Types.SpeedEffect
+type EffectFrame = VehicleTypes.EffectFrame
+type SpeedEffect = VehicleTypes.SpeedEffect
 
-function SpeedEffect.new(vehicle: Types.ClientVehicle, parent: GuiObject)
+function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 	local self: SpeedEffect = setmetatable({}, SpeedEffect) :: any
 
 	self.Parent = parent

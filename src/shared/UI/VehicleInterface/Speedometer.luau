@@ -1,15 +1,15 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Speedometer = {}
 Speedometer.__index = Speedometer
 
-type Speedometer = Types.VehicleSpeedometer
+type Speedometer = VehicleTypes.VehicleSpeedometer
 
-function Speedometer.new(vehicle: Types.ClientVehicle, instance: Frame)
+function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 	local self: Speedometer = setmetatable({}, Speedometer) :: any
 
 	self.Vehicle = vehicle

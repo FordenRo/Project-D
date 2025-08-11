@@ -1,12 +1,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local BaseVehicle = {}
 BaseVehicle.__index = BaseVehicle
 
-type BaseVehicle = Types.BaseVehicle
+type BaseVehicle = VehicleTypes.BaseVehicle
 
 function BaseVehicle.new(instance: Instance)
 	local self: BaseVehicle = setmetatable({}, BaseVehicle) :: any
@@ -102,7 +102,7 @@ function initializeVariables(self: BaseVehicle)
 	self.CSActive = false
 end
 
-function BaseVehicle.InitializeWheels(self: BaseVehicle, wheelClass: Types.BaseWheel)
+function BaseVehicle.InitializeWheels(self: BaseVehicle, wheelClass: VehicleTypes.BaseWheel)
 	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
 	for _, v in self.Instance.Wheels:GetChildren() do
 		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then continue end

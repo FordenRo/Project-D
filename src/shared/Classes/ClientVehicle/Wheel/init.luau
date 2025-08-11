@@ -2,14 +2,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local Tire = require(script.Tire)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ClientWheel = setmetatable({}, BaseWheel)
 ClientWheel.__index = ClientWheel
 
-type ClientWheel = Types.ClientWheel
+type ClientWheel = VehicleTypes.ClientWheel
 
-function ClientWheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
+function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart)
 	local self: ClientWheel = setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
 	self.Trackers = {
@@ -39,7 +39,7 @@ function ClientWheel.new(vehicle: Types.ClientVehicle, instance: BasePart)
 	return self
 end
 
-function ClientWheel.Update(self: ClientWheel, data: Types.ClientWheelSharedData)
+function ClientWheel.Update(self: ClientWheel, data: VehicleTypes.ClientWheelSharedData)
 	-- Wheel speeds
 	table.insert(self._WheelSpeeds, self.Instance.AssemblyAngularVelocity.Magnitude)
 	if #self._WheelSpeeds > 8 then table.remove(self._WheelSpeeds, 1) end

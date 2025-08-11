@@ -1,15 +1,15 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerTire = {}
 ServerTire.__index = ServerTire
 
-type ServerTire = Types.ServerWheelTire
+type ServerTire = VehicleTypes.ServerWheelTire
 
-function ServerTire.new(wheel: Types.ServerWheel, instance: BasePart)
+function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart)
 	local self: ServerTire = setmetatable({}, ServerTire) :: any
 
 	self.Wheel = wheel

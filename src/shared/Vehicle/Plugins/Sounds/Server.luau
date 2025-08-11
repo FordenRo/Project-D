@@ -2,21 +2,21 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local SoundTypesHandler = require(script.Parent.TypesHandler)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local SoundHandler = {}
 SoundHandler.__index = SoundHandler
 
 export type SoundHandler = typeof(setmetatable(
 	{} :: {
-		Vehicle: Types.ServerVehicle,
-		Sounds: { Types.ServerSoundData },
+		Vehicle: VehicleTypes.ServerVehicle,
+		Sounds: { VehicleTypes.ServerSoundData },
 		SoundTypesHandler: SoundTypesHandler.SoundTypesHandler,
 	},
 	SoundHandler
 ))
 
-function SoundHandler.new(vehicle: Types.ServerVehicle)
+function SoundHandler.new(vehicle: VehicleTypes.ServerVehicle)
 	local self: SoundHandler = setmetatable({}, SoundHandler) :: any
 
 	self.Vehicle = vehicle
@@ -24,7 +24,7 @@ function SoundHandler.new(vehicle: Types.ServerVehicle)
 	self.SoundTypesHandler = SoundTypesHandler.new(vehicle)
 
 	for name, sound in self.Vehicle.Tune.Sounds do
-		local cachedSound = sound :: Types.ServerSoundData
+		local cachedSound = sound :: VehicleTypes.ServerSoundData
 		local instance = Instance.new("Sound")
 		instance.Playing = false
 		instance.Volume = 0

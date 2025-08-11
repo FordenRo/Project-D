@@ -1,6 +1,8 @@
-local Types = require(script.Parent.Parent.Parent.Types)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Tune = {} :: Types.Tune
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
+local Tune = {} :: VehicleTypes.Tune
 
 Tune.Clutch = true -- Implements a realistic clutch, change to "false" for the chassis to act like AC6.81T.
 

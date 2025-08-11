@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 return {
 	--Keyboard Controls
@@ -60,4 +60,4 @@ return {
 
 	ControlLDZone = 5,
 	ControlRDZone = 5,
-} :: Types.VehicleControls
+} :: VehicleTypes.VehicleControls

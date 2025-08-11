@@ -9,7 +9,7 @@ local DeformationController = require(script.DeformationController)
 local HandleInput = require(script.HandleInput)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local ReplicationVars = require(script.ReplicationVars)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateEngine = require(script.UpdateEngine)
 local UpdateSteering = require(script.UpdateSteering)
@@ -24,13 +24,13 @@ local DatastoreController = require(player.PlayerScripts.Client.Controllers.Data
 local ClientVehicle = setmetatable({}, BaseVehicle)
 ClientVehicle.__index = ClientVehicle
 
-type ClientVehicle = Types.ClientVehicle
+type ClientVehicle = VehicleTypes.ClientVehicle
 
 -- TODO
 local _InControls = false
 
 function ClientVehicle.new(instance: Instance)
-	local self: Types.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
+	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
 	self:Initialize()
 
@@ -248,7 +248,7 @@ function ClientVehicle.UpdateWheels(self: ClientVehicle)
 	local count = #self.Wheels
 	local driveCount = 0
 
-	local data: Types.ClientWheelSharedData = {
+	local data: VehicleTypes.ClientWheelSharedData = {
 		TCSAmt = 0,
 		ABSAmt = 0,
 		ESCAmt = 0,
@@ -259,7 +259,7 @@ function ClientVehicle.UpdateWheels(self: ClientVehicle)
 		MaxSpin = 0,
 		DriveWheelSpeed = 0,
 	}
-	for _, wheel in self.Wheels :: { Types.ClientWheel } do
+	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		wheel:Update(data)
 
 		if wheel.IsDriven then
@@ -391,7 +391,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	-- Save PBrake state
 	-- car["A-Chassis Tune"]["A-Chassis Interface"].Values.PBrake.Value = _PBrake
 
-	for _, wheel in self.Wheels :: { Types.BaseWheel } do
+	for _, wheel in self.Wheels :: { VehicleTypes.BaseWheel } do
 		wheel:Destroy()
 	end
 

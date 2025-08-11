@@ -1,8 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-return function(self: Types.ClientVehicle)
+return function(self: VehicleTypes.ClientVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 	if self._ShiftUp and not self.Shifting then
 		if

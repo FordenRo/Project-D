@@ -4,7 +4,7 @@ local RunService = game:GetService("RunService")
 
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
-local Types = require(ReplicatedStorage.Shared.Vehicle.Types)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local UI = ReplicatedStorage.UI.VehicleInterface
 local player = Players.LocalPlayer
@@ -12,9 +12,9 @@ local player = Players.LocalPlayer
 local VehicleInterface = {}
 VehicleInterface.__index = VehicleInterface
 
-type VehicleInterface = Types.VehicleInterface
+type VehicleInterface = VehicleTypes.VehicleInterface
 
-function VehicleInterface.new(vehicle: Types.ClientVehicle)
+function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	local self: VehicleInterface = setmetatable({}, VehicleInterface) :: any
 
 	self.Vehicle = vehicle
