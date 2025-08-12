@@ -45,8 +45,8 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 		local y = 1 - SettingsController:GetSetting("MSteerCursorY")
 		self.MousePosition = Vector2.new(x, y)
 
-		local mdZone = SettingsController:GetSetting("MSteerDZone") / 100
-		local mST = (self.MousePosition.X - 0.5) / (SettingsController:GetSetting("MSteerWidth") / 200)
+		local mdZone = SettingsController:GetSetting("MSteerDZone")
+		local mST = (self.MousePosition.X - 0.5) / SettingsController:GetSetting("MSteerWidth") * 2
 		if math.abs(mST) <= mdZone then
 			self.SteerT = 0
 		else
