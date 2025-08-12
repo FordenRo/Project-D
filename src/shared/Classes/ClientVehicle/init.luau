@@ -28,9 +28,6 @@ ClientVehicle.__index = ClientVehicle
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
--- TODO
-local _InControls = false
-
 function ClientVehicle.new(instance: Instance)
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 

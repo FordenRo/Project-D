@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
@@ -25,9 +26,24 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
 	self.SpeedEffect = SpeedEffect.new(vehicle, self.Instance)
 
-	RunService.Heartbeat:Connect(function() self:UpdateTires() end)
+	self.CursorInstance = self.Instance.Cursor
+
+	self._conn = RunService.Heartbeat:Connect(function() self:UpdateTires() end)
+	RunService:BindToRenderStep(
+		"CursorUpdate",
+		Enum.RenderPriority.Camera.Value + 1,
+		function() self:UpdateCursor() end
+	)
 
 	return self
+end
+
+function VehicleInterface.UpdateCursor(self: VehicleInterface)
+	UserInputService.MouseIconEnabled = not self.Vehicle.MouseSteerOn
+	self.CursorInstance.Visible = self.Vehicle.MouseSteerOn
+	if self.Vehicle.MouseSteerOn then
+		self.CursorInstance.Position = UDim2.fromScale(self.Vehicle.MousePosition.X, self.Vehicle.MousePosition.Y)
+	end
 end
 
 function VehicleInterface.UpdateTires(self: VehicleInterface)
@@ -51,8 +67,11 @@ function VehicleInterface.UpdateTires(self: VehicleInterface)
 end
 
 function VehicleInterface.Destroy(self: VehicleInterface)
+	self._conn:Disconnect()
 	self.Speedometer:Destroy()
 	self.Instance:Destroy()
+	RunService:UnbindFromRenderStep("CursorUpdate")
+	UserInputService.MouseIconEnabled = true
 end
 
 return VehicleInterface
