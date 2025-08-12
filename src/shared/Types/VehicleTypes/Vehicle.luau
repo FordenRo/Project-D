@@ -129,6 +129,7 @@ export type ClientVehicle = {
 	_SteerR: boolean,
 	_InThrot: number,
 	_InBrake: number,
+	MousePosition: Vector2,
 	-- Velocity
 	_OldVelocity: Vector3,
 

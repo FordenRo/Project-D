@@ -42,9 +42,6 @@ return {
 	MouseShiftDown = Enum.KeyCode.Q,
 	MousePBrake = Enum.KeyCode.Space,
 
-	MSteerWidth = 70,
-	MSteerDZone = 0,
-
 	--Controller Mapping
 	ContlrThrottle = Enum.KeyCode.ButtonR2,
 	ContlrBrake = Enum.KeyCode.ButtonL2,

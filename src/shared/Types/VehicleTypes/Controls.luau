@@ -38,9 +38,6 @@ export type VehicleControls = {
 	MouseShiftDown: Enum.KeyCode,
 	MousePBrake: Enum.KeyCode,
 
-	MSteerWidth: number,
-	MSteerDZone: number,
-
 	--Controller Mapping
 	ContlrThrottle: Enum.KeyCode,
 	ContlrBrake: Enum.KeyCode,
