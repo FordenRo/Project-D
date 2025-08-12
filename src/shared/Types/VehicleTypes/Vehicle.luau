@@ -247,9 +247,11 @@ export type ClientWheelTire = {
 	FlexCollisionAlignPosition: AlignPosition,
 	CurrentSound: Sound?,
 	CurrentSmoke: Smoke?,
+	CurrentWheelSmoke: Smoke?,
 	CurrentTrail: { Trail }?,
 	Sounds: { [string]: Sound },
 	Smokes: { [string]: Smoke },
+	WheelSmokes: { [string]: Smoke },
 	Trails: { [string]: { Trail } },
 	TrailStress: number,
 

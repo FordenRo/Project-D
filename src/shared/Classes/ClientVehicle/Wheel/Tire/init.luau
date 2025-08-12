@@ -40,16 +40,17 @@ function ClientTire.InitializeVariables(self: ClientTire)
 	self.RayParams.FilterDescendantsInstances = { self.Vehicle.Instance }
 	self.RayParams.FilterType = Enum.RaycastFilterType.Exclude
 	self.Material = ""
-	self.SmokePart = self.Wheel.Instance:FindFirstChild("SmokePart") :: BasePart
-	self.Collision = self.Wheel.Instance:FindFirstChild("Collision") :: BasePart
-	self.CollisionModel = self.Wheel.Instance:FindFirstChild("CollisionModel") :: Model
+	self.SmokePart = self.Wheel.Instance:FindFirstChild("SmokePart")
+	self.Collision = self.Wheel.Instance:FindFirstChild("Collision")
+	self.CollisionModel = self.Wheel.Instance:FindFirstChild("CollisionModel")
 	self.FlexCollision = self.Collision
-	self.FlexCollisionGravComp = self.FlexCollision:FindFirstChild("#GRAVCOMP") :: BasePart
-	self.ObjectGravComp = self.Wheel.Instance:FindFirstChild("#GRAVCOMP") :: BasePart
-	self.TrailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart") :: BasePart
-	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition") :: AlignPosition
+	self.FlexCollisionGravComp = self.FlexCollision:FindFirstChild("#GRAVCOMP")
+	self.ObjectGravComp = self.Wheel.Instance:FindFirstChild("#GRAVCOMP")
+	self.TrailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart")
+	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition")
 	self.CurrentSound = nil
 	self.CurrentSmoke = nil
+	self.CurrentWheelSmoke = nil
 	self.CurrentTrail = nil
 	self.TrailStress = 0
 	self.Trails = {
@@ -61,6 +62,7 @@ function ClientTire.InitializeVariables(self: ClientTire)
 	self._deltaTime = 0
 	self.Sounds = {}
 	self.Smokes = {}
+	self.WheelSmokes = {}
 	-- Tremolo
 end
 
@@ -104,6 +106,27 @@ function ClientTire.Initialize(self: ClientTire)
 				elseif v:IsA("Sound") then
 					self.Sounds[effectType] = effect
 				end
+			end
+		end
+		for _, v in self.Wheel.Instance:FindFirstChild("WheelSmokePart"):GetChildren() do
+			if string.find(v.Name, "Local_") then continue end
+			if v:IsA("ParticleEmitter") then
+				local effectType = (string.find(v.Name, "road") and "road")
+					or (string.find(v.Name, "sand") and "sand")
+					or (string.find(v.Name, "dirt") and "dirt")
+					or (string.find(v.Name, "snow") and "snow")
+				local effect = v
+				if self.Vehicle.Tune.TireSmokeEffects == "Local" then
+					v.Name = "Local_" .. v.Name
+				else
+					local new = self.Wheel.Instance.WheelSmokePart:FindFirstChild("Local_" .. v.Name) or v:Clone()
+					new.Name = "Local_" .. v.Name
+					new.Parent = self.Wheel.Instance.WheelSmokePart
+					effect = new
+					v:SetAttribute("data", v.Lifetime)
+					v.Lifetime = NumberRange.new(0)
+				end
+				self.WheelSmokes[effectType] = effect
 			end
 		end
 	end
@@ -385,13 +408,16 @@ function ClientTire.Update(self: ClientTire, deltaTime: number)
 		-- Set sounds and smoke
 		local currentSound = self.CurrentSound
 		local currentSmoke = self.CurrentSmoke
+		local currentWheelSmoke = self.CurrentWheelSmoke
 		if materialChanged then
 			if currentSound then currentSound.Playing = false end
 			if currentSmoke then currentSmoke.Enabled = false end
 			currentSound = self.Sounds[materialType]
 			currentSmoke = self.Smokes[materialType]
+			currentWheelSmoke = self.WheelSmokes[materialType]
 			self.CurrentSound = currentSound
 			self.CurrentSmoke = currentSmoke
+			self.CurrentWheelSmoke = currentWheelSmoke
 		end
 
 		-- Set Trails
@@ -426,6 +452,11 @@ function ClientTire.Update(self: ClientTire, deltaTime: number)
 			-- Smoke
 			currentSmoke.Enabled = true
 			currentSmoke.Rate = smokeStress ^ 10 * 100
+		end
+		if currentWheelSmoke then
+			-- Wheel smoke
+			currentWheelSmoke.Enabled = true
+			currentWheelSmoke.Rate = smokeStress ^ 10 * 200
 		end
 		local compression = 1
 		if self.Collision then

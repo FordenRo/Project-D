@@ -83,6 +83,32 @@ function ServerTire.Initialize(self: ServerTire)
 			clone.Parent = smokePart
 		end
 
+		local wheelSmokePart = self.Wheel.Instance:FindFirstChild("WheelSmokePart") or self.Wheel.Instance:Clone()
+		wheelSmokePart.Name = "WheelSmokePart"
+		wheelSmokePart.Massless = true
+		wheelSmokePart.CanCollide = false
+		wheelSmokePart:ClearAllChildren()
+		wheelSmokePart.Parent = self.Wheel.Instance
+
+		local wta = Instance.new("Attachment")
+		wta.Parent = wheelSmokePart
+
+		local wheelHinge = Instance.new("HingeConstraint")
+		wheelHinge.Attachment0 = self.Wheel.Instance.AxleP.AA
+		wheelHinge.Attachment1 = wta
+		wheelHinge.ActuatorType = Enum.ActuatorType.Motor
+		wheelHinge.MotorMaxAcceleration = 500000
+		wheelHinge.MotorMaxTorque = 100
+		wheelHinge.AngularVelocity = 30
+		wheelHinge.Parent = wheelSmokePart
+
+		for _, a in ReplicatedStorage.Vehicle.Wheel:GetChildren() do
+			if self.Wheel.Instance:FindFirstChild(a.Name) then continue end
+
+			local clone = a:Clone()
+			clone.Parent = wheelSmokePart
+		end
+
 		-- create trails
 		local trailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart") or smokePart:Clone()
 		trailAttachmentPart:ClearAllChildren()
