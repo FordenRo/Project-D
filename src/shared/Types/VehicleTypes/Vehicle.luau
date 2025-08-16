@@ -185,6 +185,10 @@ export type BaseWheel = {
 		AB: any,
 		Collision: BasePart,
 		SuspensionFixed: Model,
+		WheelSmokePart: Part,
+		AxleP: Part & {
+			AA: Attachment,
+		},
 	},
 	Vehicle: BaseVehicle,
 	IsFront: boolean,

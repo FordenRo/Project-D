@@ -11,7 +11,7 @@ local remoteFunction: RemoteFunction = ReplicatedStorage:WaitForChild("Datastore
 local remoteEvent: RemoteEvent = ReplicatedStorage:WaitForChild("DatastoreRE")
 
 function DatastoreController.new()
-	local self = setmetatable({}, DatastoreController) :: DatastoreController
+	local self: DatastoreController = setmetatable({}, DatastoreController) :: any
 
 	return self
 end

@@ -29,7 +29,7 @@ export type CameraPlugin = typeof(setmetatable(
 ))
 
 function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
-	local self = setmetatable({}, CameraPlugin) :: CameraPlugin
+	local self: CameraPlugin = setmetatable({}, CameraPlugin) :: any
 
 	self.Vehicle = vehicle
 	self.Distance = 22

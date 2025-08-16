@@ -18,7 +18,7 @@ export type VehicleController = typeof(setmetatable(
 ))
 
 function VehicleController.new()
-	local self = setmetatable({}, VehicleController) :: VehicleController
+	local self: VehicleController = setmetatable({}, VehicleController) :: any
 
 	for _, vehicle in CollectionService:GetTagged("Vehicle") do
 		self:RegisterVehicle(vehicle)

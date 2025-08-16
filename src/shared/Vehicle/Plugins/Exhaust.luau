@@ -21,7 +21,7 @@ export type Exhaust = typeof(setmetatable(
 ))
 
 function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
-	local self = setmetatable({}, Exhaust) :: Exhaust
+	local self: Exhaust = setmetatable({}, Exhaust) :: any
 
 	self.Vehicle = vehicle
 	self.Exhaust = self.Vehicle.Instance.Misc:FindFirstChild("Exhaust")

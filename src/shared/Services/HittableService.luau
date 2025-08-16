@@ -18,8 +18,8 @@ local registeredParts: { [BasePart]: HitCallback } = {}
 local hittableRE
 local isServer = RunService:IsServer()
 
-function HittableService.new(): HittableService
-	local self = setmetatable({}, HittableService) :: HittableService
+function HittableService.new()
+	local self: HittableService = setmetatable({}, HittableService) :: any
 
 	if isServer then
 		hittableRE = Instance.new("RemoteEvent")

@@ -26,7 +26,7 @@ export type Settings = typeof(setmetatable(
 ))
 
 function Settings.new()
-	local self = setmetatable({}, Settings) :: Settings
+	local self: Settings = setmetatable({}, Settings) :: any
 
 	self.Instance = ScreenGui:Clone()
 	self.Instance.Parent = player.PlayerGui

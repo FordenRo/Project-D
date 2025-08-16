@@ -9,7 +9,7 @@ CarServiceController.__index = CarServiceController
 export type CarServiceController = typeof(setmetatable({}, CarServiceController))
 
 function CarServiceController.new()
-	local self = setmetatable({}, CarServiceController) :: CarServiceController
+	local self: CarServiceController = setmetatable({}, CarServiceController) :: any
 
 	for _, v in CollectionService:GetTagged("CarService") do
 		CarServiceClient.new(v)

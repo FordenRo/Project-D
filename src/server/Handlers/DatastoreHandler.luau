@@ -19,7 +19,7 @@ remoteEvent.Name = "DatastoreRE"
 remoteEvent.Parent = ReplicatedStorage
 
 function DatastoreHandler.new()
-	local self = setmetatable({}, DatastoreHandler) :: DatastoreHandler
+	local self: DatastoreHandler = setmetatable({}, DatastoreHandler) :: any
 
 	self:Initialize()
 

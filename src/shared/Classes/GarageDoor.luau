@@ -26,7 +26,7 @@ export type GarageDoor = typeof(setmetatable(
 ))
 
 function GarageDoor.new(instance: Model)
-	local self = setmetatable({}, GarageDoor) :: GarageDoor
+	local self: GarageDoor = setmetatable({}, GarageDoor) :: any
 
 	self.Instance = instance
 
