@@ -27,9 +27,12 @@ function CarService.new(instance: Model)
 
 	self.Occupants = self._RF:InvokeServer("Occupants")
 
+	task.wait(1)
+
 	self._GarageDoors = {}
 	for _, v in self.Instance.GarageDoors:GetChildren() do
-		local k = tonumber(string.gsub(v.Name, "Door", ""))
+		local sk = string.gsub(v.Name, "Door", "")
+		local k = tonumber(sk)
 		self._GarageDoors[k] = GarageDoor.new(v)
 
 		if not self.Occupants[k] then self._GarageDoors[k]:Open() end
