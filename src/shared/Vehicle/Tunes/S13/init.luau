@@ -11,6 +11,7 @@ Tune.AutoFlip = true -- Set to false if using manual flip plugin
 Tune.Mobile = true -- Set to false if using a 3rd party mobile support method.
 Tune.FlipType = "New" -- "New" uses AlignOrientation, "Old" uses BodyGyro. This really only needs to be changed for plugin compatibility.
 Tune.Haptics = "Controller" -- "Controller" | "Mobile" | "Both" | "None"
+Tune.Title = "Missat Zilfia S13"
 
 -- Weight and CG
 Tune.Weight = 1130 -- Total weight (in kilograms, under Earth's gravity, including wheel and suspension weight)

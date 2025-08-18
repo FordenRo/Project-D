@@ -22,6 +22,7 @@ export type Tune = {
 	Mobile: boolean,
 	Haptics: HapticsType,
 	FlipType: FlipType,
+	Title: string,
 	-- Wheel Alignment
 	FCamber: number,
 	RCamber: number,
