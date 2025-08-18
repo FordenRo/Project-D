@@ -17,6 +17,8 @@ export type VehicleController = typeof(setmetatable(
 	VehicleController
 ))
 
+local remoteFunction = ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
+
 function VehicleController.new()
 	local self: VehicleController = setmetatable({}, VehicleController) :: any
 
@@ -45,6 +47,23 @@ function VehicleController.RegisterVehicle(self: VehicleController, vehicle: Ins
 			end
 		end
 	end)
+end
+
+function VehicleController.GetVehicles(self: VehicleController): { VehicleTypes.PlayerVehicle }
+	return remoteFunction:InvokeServer("GetPlayerVehicles")
+end
+
+function VehicleController.GetVehicleInfo(self: VehicleController, id: number): VehicleTypes.PlayerVehicleInfo
+	return remoteFunction:InvokeServer("GetPlayerVehicleInfo", id)
+end
+
+function VehicleController.GetVehiclesByName(self: VehicleController, name: string): { VehicleTypes.PlayerVehicle }
+	local vehicles = self:GetVehicles()
+	local list = {}
+	for _, v in vehicles do
+		if v.Name == name then table.insert(list, v) end
+	end
+	return list
 end
 
 return VehicleController.new()

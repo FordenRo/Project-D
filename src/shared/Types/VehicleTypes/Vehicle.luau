@@ -23,6 +23,7 @@ export type BaseVehicle = {
 	Occupant: Player?,
 	Dirt: number,
 	Fuel: number,
+	ID: string,
 	EngineHealth: number,
 	Temperature: number,
 	FanSpeed: number,

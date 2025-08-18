@@ -1,4 +1,5 @@
 local Controls = require(script.Controls)
+local PlayerVehicle = require(script.PlayerVehicle)
 local SoundData = require(script.SoundData)
 local Tune = require(script.Tune)
 local Vehicle = require(script.Vehicle)
@@ -27,5 +28,7 @@ export type DeformationController = Vehicle.DeformationController
 export type ServerVehicle = Vehicle.ServerVehicle
 
 export type Tune = Tune.Tune
+export type PlayerVehicle = PlayerVehicle.PlayerVehicle
+export type PlayerVehicleInfo = PlayerVehicle.PlayerVehicleInfo
 
 return {}
