@@ -20,12 +20,15 @@ local Tab = {
 	Gameplay = "Gameplay",
 }
 
-export type Settings = typeof(setmetatable(
-	{} :: {
-		Controls: VehicleTypes.VehicleControls,
-	},
-	Settings
-)) & BaseWindow.BaseWindow
+export type Settings = {
+	__index: Settings,
+	Controls: VehicleTypes.VehicleControls,
+
+	new: () -> Settings,
+	Initialize: (self: Settings) -> (),
+	InitializeControls: (self: Settings) -> (),
+	Apply: (self: Settings) -> (),
+} & BaseWindow.BaseWindow
 
 function Settings.new()
 	local self: Settings = setmetatable(BaseWindow.new(ScreenGui:Clone()), Settings) :: any

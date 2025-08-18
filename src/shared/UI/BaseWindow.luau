@@ -5,23 +5,26 @@ local player = Players.LocalPlayer
 local BaseWindow = {}
 BaseWindow.__index = BaseWindow
 
-export type BaseWindow = typeof(setmetatable(
-	{} :: {
-		Instance: ScreenGui & {
-			Window: Frame & {
-				Upper: Frame & {
-					Close: TextButton,
-					Tabs: Frame,
-					Title: TextLabel,
-				},
-				Bottom: Frame,
-				Content: Frame | ScrollingFrame,
+export type BaseWindow = {
+	__index: BaseWindow,
+	Instance: ScreenGui & {
+		Window: Frame & {
+			Upper: Frame & {
+				Close: TextButton,
+				Tabs: Frame,
+				Title: TextLabel,
 			},
+			Bottom: Frame,
+			Content: Frame | ScrollingFrame,
 		},
-		Type: string,
 	},
-	BaseWindow
-))
+	Type: string,
+
+	new: (instance: ScreenGui) -> BaseWindow,
+	SetTab: (self: BaseWindow, tab: string) -> (),
+	IsA: (self: BaseWindow, type: string) -> boolean,
+	Destroy: (self: BaseWindow) -> (),
+}
 
 function BaseWindow.new(instance: ScreenGui)
 	local self: BaseWindow = setmetatable({}, BaseWindow) :: any

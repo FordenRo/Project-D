@@ -13,7 +13,12 @@ local Tab = {
 	Store = "Store",
 }
 
-export type Garage = typeof(setmetatable({} :: {}, Garage)) & BaseWindow.BaseWindow
+export type Garage = {
+	__index: Garage,
+
+	new: () -> Garage,
+	Initialize: (self: Garage) -> (),
+} & BaseWindow.BaseWindow
 
 function Garage.new()
 	local self: Garage = setmetatable(BaseWindow.new(ScreenGui:Clone()), Garage) :: any
