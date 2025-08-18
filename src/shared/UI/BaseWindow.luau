@@ -35,6 +35,13 @@ function BaseWindow.new(instance: ScreenGui)
 	local close = self.Instance.Window.Upper:FindFirstChild("Close") :: TextButton?
 	if close then close.Activated:Connect(function() self:Destroy() end) end
 
+	local tabs: Frame = self.Instance.Window.Upper.Tabs
+	for _, v in tabs:GetChildren() do
+		if not v:IsA("TextButton") then continue end
+
+		v.Activated:Connect(function() self:SetTab(v.Name) end)
+	end
+
 	return self
 end
 
