@@ -1,9 +1,16 @@
+local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local AbbreviateNumber = require(ReplicatedStorage.Shared.Utils.AbbreviateNumber)
 local PlaytimeHandler = require(script.PlaytimeHandler)
 
 local PlayerStatsHandler = {}
 PlayerStatsHandler.__index = PlayerStatsHandler
+
+local remoteFunction = Instance.new("RemoteFunction")
+remoteFunction.Name = "PlayerStatsRF"
+remoteFunction.Parent = ReplicatedStorage
 
 export type PlayerStatsHandler = typeof(setmetatable(
 	{} :: {
@@ -19,6 +26,7 @@ function PlayerStatsHandler.new()
 
 	Players.PlayerAdded:Connect(function(player) self:OnPlayerAdded(player) end)
 	Players.PlayerRemoving:Connect(function(player) self:OnPlayerRemoving(player) end)
+	remoteFunction.OnServerInvoke = function(player: Player, event: string, ...) return self[event](self, player, ...) end
 
 	return self
 end
@@ -38,11 +46,27 @@ function PlayerStatsHandler.OnPlayerAdded(self: PlayerStatsHandler, player: Play
 	laps.Value = "-"
 	laps.Parent = leaderstats
 
+	local cash = Instance.new("StringValue")
+	cash.Name = "Cash"
+	cash.Value = "-"
+	cash.Parent = leaderstats
+
 	self.PlaytimeHandler:OnPlayerAdded(player)
+
+	cash.Value = AbbreviateNumber(self:GetPlayerCash(player))
 end
 
 function PlayerStatsHandler.OnPlayerRemoving(self: PlayerStatsHandler, player: Player)
 	self.PlaytimeHandler:OnPlayerRemoving(player)
+end
+
+function PlayerStatsHandler.GetPlayerCash(self: PlayerStatsHandler, player: Player)
+	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):GetAsync(player.UserId) or 5000000
+end
+
+function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player, cash: number)
+	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):SetAsync(player.UserId, cash)
+	player.leaderstats.Cash.Value = AbbreviateNumber(cash)
 end
 
 return PlayerStatsHandler.new()
