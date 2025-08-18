@@ -5,31 +5,31 @@ local UserInputService = game:GetService("UserInputService")
 local ScreenGui = ReplicatedStorage.UI.Settings
 local player = Players.LocalPlayer
 
+local BaseWindow = require(script.Parent.BaseWindow)
 local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
-local Types = require(ReplicatedStorage.Shared.Types)
 local VehicleController = require(player.PlayerScripts.Client.Controllers.VehicleController)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local Settings = {}
+local Settings = setmetatable({}, BaseWindow)
 Settings.__index = Settings
 Settings.Type = "Settings"
 
-type Tab = "Controls" | "Graphics" | "Gameplay"
+local Tab = {
+	Controls = "Controls",
+	Graphics = "Graphics",
+	Gameplay = "Gameplay",
+}
 
 export type Settings = typeof(setmetatable(
 	{} :: {
-		Instance: Types.WindowInstance,
 		Controls: VehicleTypes.VehicleControls,
-		Type: "Settings",
 	},
 	Settings
-))
+)) & BaseWindow.BaseWindow
 
 function Settings.new()
-	local self: Settings = setmetatable({}, Settings) :: any
+	local self: Settings = setmetatable(BaseWindow.new(ScreenGui:Clone()), Settings) :: any
 
-	self.Instance = ScreenGui:Clone()
-	self.Instance.Parent = player.PlayerGui
 	self.Controls = DatastoreController:GetControls()
 
 	self:Initialize()
@@ -40,9 +40,9 @@ end
 function Settings.Initialize(self: Settings)
 	self:InitializeControls()
 
-	self:SetTab("Controls")
+	self:SetTab(Tab.Controls)
 
-	local done: TextButton = (self.Instance.Window.Bottom :: any).Done
+	local done = self.Instance.Window.Bottom.Done :: TextButton
 	done.Activated:Connect(function()
 		self:Apply()
 		self:Destroy()
@@ -90,23 +90,8 @@ function Settings.InitializeControls(self: Settings)
 			end
 		end)
 
-		frame.Parent = (self.Instance.Window.Content :: any).Controls[parent]
+		frame.Parent = self.Instance.Window.Content.Controls[parent]
 	end
-end
-
-function Settings.SetTab(self: Settings, tab: Tab)
-	local tabs: Frame = self.Instance.Window.Upper.Tabs :: any
-	for _, v in tabs:GetChildren() do
-		if not v:IsA("TextButton") then continue end
-
-		v.Interactable = true
-	end
-	(tabs:FindFirstChild(tab) :: TextButton).Interactable = false
-
-	for _, v in self.Instance.Window.Content:GetChildren() do
-		v.Visible = false
-	end
-	(self.Instance.Window.Content:FindFirstChild(tab) :: Frame).Visible = true
 end
 
 function Settings.Apply(self: Settings)
@@ -114,9 +99,5 @@ function Settings.Apply(self: Settings)
 
 	DatastoreController:SetControls(self.Controls)
 end
-
-function Settings.IsA(self: Settings, type: string) return self.Type == type end
-
-function Settings.Destroy(self: Settings) self.Instance:Destroy() end
 
 return Settings

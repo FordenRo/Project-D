@@ -1,38 +1,28 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Types = require(ReplicatedStorage.Shared.Types)
+local BaseWindow = require(script.Parent.BaseWindow)
 
 local ScreenGui = ReplicatedStorage.UI.Garage
-local player = Players.LocalPlayer
 
-local Garage = {}
+local Garage = setmetatable({}, BaseWindow)
 Garage.__index = Garage
 Garage.Type = "Garage"
 
-export type Garage = typeof(setmetatable(
-	{} :: {
-		Instance: Types.WindowInstance,
-		Type: "Garage",
-	},
-	Garage
-))
+local Tab = {
+	Owned = "Owned",
+	Store = "Store",
+}
+
+export type Garage = typeof(setmetatable({} :: {}, Garage)) & BaseWindow.BaseWindow
 
 function Garage.new()
-	local self: Garage = setmetatable({}, Garage) :: any
+	local self: Garage = setmetatable(BaseWindow.new(ScreenGui:Clone()), Garage) :: any
 
-	self.Instance = ScreenGui:Clone()
-	self.Instance.Parent = player.PlayerGui
+	self:Initialize()
 
 	return self
 end
 
-function Garage.Initialize(self: Garage)
-	(self.Instance.Window.Upper.Close :: TextButton).Activated:Connect(function() self:Destroy() end)
-end
-
-function Garage.IsA(self: Garage, type: string) return self.Type == type end
-
-function Garage.Destroy(self: Garage) self.Instance:Destroy() end
+function Garage.Initialize(self: Garage) self:SetTab(Tab.Owned) end
 
 return Garage
