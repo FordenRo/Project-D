@@ -17,4 +17,8 @@ function PlayerStatsController.GetCash(self: PlayerStatsController): number
 	return remoteFunction:InvokeServer("GetPlayerCash")
 end
 
+function PlayerStatsController.GetLaps(self: PlayerStatsController): number
+	return remoteFunction:InvokeServer("GetPlayerLaps")
+end
+
 return PlayerStatsController.new()
