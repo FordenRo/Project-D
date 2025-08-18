@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local BaseWindow = require(script.Parent.BaseWindow)
 local Garage = require(script.Parent.Garage)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Settings = require(script.Parent.Settings)
@@ -20,7 +21,7 @@ export type Interface = typeof(setmetatable(
 			Buttons: Frame,
 			Debug: Frame & { FPS: TextLabel },
 		},
-		CurrentWindow: any,
+		CurrentWindow: BaseWindow.BaseWindow?,
 		_cons: { RBXScriptConnection },
 	},
 	Interface
@@ -45,6 +46,15 @@ function Interface.Initialize(self: Interface)
 	self:InitializeDebug()
 end
 
+function toggleButtons(self: Interface, interactable: boolean)
+	for _, v: TextButton in self.Instance.Buttons:GetChildren() do
+		if not v:IsA("TextButton") then continue end
+
+		v.Interactable = interactable
+		v.BackgroundTransparency = interactable and 0.5 or 0.8
+	end
+end
+
 function Interface.InitializeButtons(self: Interface)
 	for _, v in self.Instance.Buttons:GetChildren() do
 		if not v:IsA("TextButton") then continue end
@@ -57,7 +67,12 @@ function Interface.InitializeButtons(self: Interface)
 				self.CurrentWindow = nil
 			end
 
-			if lastWindowType ~= v.Name then self.CurrentWindow = Windows[v.Name].new() end
+			if lastWindowType ~= v.Name then
+				toggleButtons(self, false)
+				local success, window = pcall(Windows[v.Name].new)
+				if success then self.CurrentWindow = window end
+				toggleButtons(self, true)
+			end
 		end)
 	end
 end
