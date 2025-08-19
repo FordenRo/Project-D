@@ -46,8 +46,8 @@ end
 function Exhaust.Update(self: Exhaust)
 	if not self.Vehicle.IsOn and not self.Vehicle.Starting then return end
 
-	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.PeakRPM) ^ 0.5, 0.2, 0.8)
-	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.PeakRPM) ^ 1.5 * 1.5
+	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM) ^ 0.5, 0.2, 0.8)
+	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM) ^ 1.5 * 1.5
 
 	local t = math.sin(tick() * 60)
 	local offset = Vector3.new(
