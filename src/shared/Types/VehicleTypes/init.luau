@@ -22,6 +22,10 @@ export type ServerWheel = Vehicle.ServerWheel
 export type ClientWheelTire = Vehicle.ClientWheelTire
 export type ServerWheelTire = Vehicle.ServerWheelTire
 
+export type BaseBrakeDisk = Vehicle.BaseBrakeDisk
+export type ClientBrakeDisk = Vehicle.ClientBrakeDisk
+export type ServerBrakeDisk = Vehicle.ServerBrakeDisk
+
 export type BaseVehicle = Vehicle.BaseVehicle
 export type ClientVehicle = Vehicle.ClientVehicle
 export type DeformationController = Vehicle.DeformationController

@@ -178,11 +178,12 @@ export type BaseWheel = {
 		},
 		Parts: Model & {
 			Tire: BasePart,
+			BrakeDisk: BasePart,
 		},
 		Fixed: Model,
 		WheelFixed: Model,
-		["#AV"]: any,
-		["#BV"]: any,
+		["#AV"]: HingeConstraint,
+		["#BV"]: HingeConstraint,
 		AB: any,
 		Collision: BasePart,
 		SuspensionFixed: Model,
@@ -211,6 +212,7 @@ export type ClientWheel = {
 	__index: ClientWheel,
 	Vehicle: ClientVehicle,
 	Tire: ClientWheelTire,
+	BrakeDisk: ClientBrakeDisk,
 	CanSteer: number,
 	OppositeWheel: BasePart,
 	Trackers: { ABS: number, TCS: number, ESC: number },
@@ -225,6 +227,7 @@ export type ServerWheel = {
 	__index: ServerWheel,
 	Vehicle: ServerVehicle,
 	Tire: ServerWheelTire,
+	BrakeDisk: ServerBrakeDisk,
 
 	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
 	Initialize: (self: ServerWheel) -> (),
@@ -294,6 +297,39 @@ export type ServerWheelTire = {
 		deltaTime: number
 	) -> (),
 }
+
+export type BaseBrakeDisk = {
+	__index: BaseBrakeDisk,
+	_Remote: UnreliableRemoteEvent,
+	Instance: BasePart,
+	Wheel: BaseWheel,
+	Temperature: number,
+
+	new: (wheel: BaseWheel, instance: BasePart) -> BaseBrakeDisk,
+}
+
+export type ClientBrakeDisk = {
+	__index: ClientBrakeDisk,
+	_conn: RBXScriptConnection,
+	_task: thread,
+	_serverInstance: BasePart,
+	_startColor: Color3,
+	Wheel: ClientWheel,
+
+	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
+	Update: (self: ClientBrakeDisk, deltaTime: number) -> (),
+	Destroy: (self: ClientBrakeDisk) -> (),
+} & BaseBrakeDisk
+
+export type ServerBrakeDisk = {
+	__index: ServerBrakeDisk,
+	_conn: RBXScriptConnection,
+	Wheel: ServerWheel,
+
+	new: (wheel: ServerWheel, instance: BasePart) -> ServerBrakeDisk,
+	Update: (self: ServerBrakeDisk, temperature: number, color: Color3) -> (),
+	Destroy: (self: ServerBrakeDisk) -> (),
+} & BaseBrakeDisk
 
 export type VehicleSpeedometer = {
 	__index: VehicleSpeedometer,

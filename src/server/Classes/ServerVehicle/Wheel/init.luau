@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
+local BrakeDisk = require(script.BrakeDisk)
 local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Tire = require(script.Tire)
@@ -18,6 +19,7 @@ function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart
 	self:Initialize()
 
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
+	self.BrakeDisk = BrakeDisk.new(self, self.Instance.Parts.BrakeDisk)
 
 	return self
 end
