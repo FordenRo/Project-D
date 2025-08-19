@@ -34,6 +34,8 @@ function VehicleController.new()
 end
 
 function VehicleController.RegisterVehicle(self: VehicleController, vehicle: Instance)
+	if not vehicle:IsDescendantOf(game.Workspace) then return end
+
 	local seat = vehicle:WaitForChild("DriveSeat") :: VehicleSeat
 
 	seat:GetPropertyChangedSignal("Occupant"):Connect(function()

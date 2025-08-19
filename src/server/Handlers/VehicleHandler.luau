@@ -21,10 +21,16 @@ function VehicleHandler.new()
 	local self: VehicleHandler = setmetatable({}, VehicleHandler) :: any
 
 	for _, vehicle in CollectionService:GetTagged("Vehicle") do
+		if not vehicle:IsDescendantOf(game.Workspace) then continue end
+
 		ServerVehicle.new(vehicle)
 	end
 
-	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(ServerVehicle.new)
+	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle)
+		if not vehicle:IsDescendantOf(game.Workspace) then return end
+
+		ServerVehicle.new(vehicle)
+	end)
 
 	remoteFunction.OnServerInvoke = function(player: Player, event: string, ...) return self[event](self, player, ...) end
 
