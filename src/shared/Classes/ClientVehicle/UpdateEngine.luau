@@ -428,13 +428,6 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 
 	--Update Wheels
 	for _, wheel in self.Wheels do
-		--Stop when engine broken
-		if self.Broken and wheel.IsDriven then
-			wheel.Instance["#AV"].AngularVelocity = 0
-			wheel.Instance["#AV"].MotorMaxTorque = 0
-			wheel.Instance["#BV"].MotorMaxTorque = 1000
-		end
-
 		--Apply Power
 		local on = 1
 		if not self.IsOn then on = 0 end
@@ -679,14 +672,20 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 				wheel.Instance["#AV"].MotorMaxTorque = tqOUT
 			end
 			wheel.Instance["#AV"].AngularVelocity = spLimit * math.sign(self.Gear)
-			if wheel.IsFront then
-				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS)
-					+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
-					+ (self.PBrakeForce.Front * PBrakeV)
+
+			if self.Broken then
+				-- Brake when the engine has broken
+				wheel.Instance["#BV"].MotorMaxTorque = 2000
 			else
-				wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS)
-					+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
-					+ (self.PBrakeForce.Rear * PBrakeV)
+				if wheel.IsFront then
+					wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Front * brake * tqABS)
+						+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
+						+ (self.PBrakeForce.Front * PBrakeV)
+				else
+					wheel.Instance["#BV"].MotorMaxTorque = (self.BrakeForce.Rear * brake * tqABS)
+						+ (self.Tune.EBrakeForce * clutch * ((1 - throt) * (self.RPM / self.Tune.Redline)))
+						+ (self.PBrakeForce.Rear * PBrakeV)
+				end
 			end
 		else --luaint edit
 			wheel.Instance["#AV"].MotorMaxTorque = 0
