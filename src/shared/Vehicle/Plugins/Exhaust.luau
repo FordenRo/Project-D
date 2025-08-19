@@ -26,6 +26,11 @@ function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
 	self.Vehicle = vehicle
 	self.Exhaust = self.Vehicle.Instance.Misc:FindFirstChild("Exhaust")
 
+	if not self.Exhaust then
+		warn(self.Vehicle.Instance.Name .. ".Misc.Exhaust not found, exhaust plugin wouldn't work")
+		return
+	end
+
 	self.Weld = Instance.new("Weld")
 	self.Weld.Part0 = self.Exhaust
 	self.Weld.Part1 = self.Vehicle.Instance.Body["#Weight"]
