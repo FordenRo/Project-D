@@ -1,6 +1,7 @@
 local ContextActionService = game:GetService("ContextActionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -24,6 +25,8 @@ export type CameraPlugin = typeof(setmetatable(
 		LookOffset: Vector3,
 		Angles: Vector3,
 		Bumping: Vector3,
+		_LastCameraRotation: number,
+		CameraCFrame: CFrame,
 	},
 	CameraPlugin
 ))
@@ -37,6 +40,8 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 	self.LookOffset = Vector3.new()
 	self.Angles = Vector3.new()
 	self.Bumping = Vector3.new()
+	self._LastCameraRotation = 0
+	self.CameraCFrame = CFrame.new()
 	Camera.CameraType = Enum.CameraType.Scriptable
 
 	RunService:BindToRenderStep(
@@ -52,12 +57,37 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 		Enum.UserInputType.MouseWheel
 	)
 
+	ContextActionService:BindAction(
+		"CameraRotation",
+		function(_, _, input) self:UpdateRotation(input) end,
+		false,
+		Enum.UserInputType.MouseMovement
+	)
+
 	return self
 end
 
 function CameraPlugin.UpdateZoom(self: CameraPlugin, input: InputObject)
 	self.Distance -= input.Position.Z * 0.4
 	self.Distance = math.clamp(self.Distance, MIN_DISTANCE, MAX_DISTANCE)
+end
+
+function CameraPlugin.UpdateRotation(self: CameraPlugin, input: InputObject)
+	if
+		not (
+			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and not self.Vehicle.MouseSteerOn
+			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and self.Vehicle.MouseSteerOn
+		)
+	then
+		return
+	end
+
+	local x, y, z = self.CameraCFrame:ToOrientation()
+	x -= math.rad(input.Delta.Y)
+	x = math.clamp(x, math.rad(-25), math.rad(15))
+	y -= math.rad(input.Delta.X)
+	self.CameraCFrame = CFrame.fromOrientation(x, y, z)
+	self._LastCameraRotation = tick()
 end
 
 function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
@@ -98,7 +128,16 @@ function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
 	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
 	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
 
-	local right = weightB.CFrame.RightVector:Dot(self.Offset)
+	if self.Vehicle.Velocity.Magnitude > 10 and tick() - self._LastCameraRotation > 2 then
+		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
+	end
+
+	local cameraDirection = weightB.CFrame:VectorToWorldSpace(
+		self.CameraCFrame:VectorToWorldSpace(weightB.CFrame:VectorToObjectSpace(self.Offset.Unit))
+	)
+	local rotatedOffset = self.Offset.Magnitude * cameraDirection
+
+	local right = weightB.CFrame.RightVector:Dot(rotatedOffset)
 	if math.abs(right) < 0.2 then right = 1 end
 
 	local sideOffset = math.sign(right)
@@ -110,7 +149,7 @@ function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
 	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
 
 	Camera.CFrame = CFrame.lookAt(
-		weightB.Position + self.Offset + self.Bumping + heightOffset + sideOffset,
+		weightB.Position + rotatedOffset + self.Bumping + heightOffset + sideOffset,
 		weightB.Position + self.LookOffset + self.Bumping,
 		self.Vehicle.Center.UpVector
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
@@ -119,6 +158,7 @@ end
 function CameraPlugin.Destroy(self: CameraPlugin)
 	RunService:UnbindFromRenderStep("CameraUpdate")
 	ContextActionService:UnbindAction("CameraZoom")
+	ContextActionService:UnbindAction("CameraRotation")
 
 	Camera.CameraType = Enum.CameraType.Custom
 end

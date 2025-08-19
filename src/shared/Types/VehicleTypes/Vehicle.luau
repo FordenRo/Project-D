@@ -347,10 +347,13 @@ export type SpeedEffect = {
 export type VehicleInterface = {
 	__index: VehicleInterface,
 	Vehicle: ClientVehicle,
-	Instance: ScreenGui & any,
+	Instance: ScreenGui & {
+		Cursor: Frame,
+	},
 	Speedometer: VehicleSpeedometer,
 	SpeedEffect: SpeedEffect,
 	CursorInstance: Frame,
+	_CursorTransparency: number,
 	_conn: RBXScriptConnection,
 
 	new: (vehicle: ClientVehicle) -> VehicleInterface,

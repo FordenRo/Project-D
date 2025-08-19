@@ -37,8 +37,10 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 			)
 	end
 
-	UserInputService.MouseBehavior = self.MouseSteerOn and Enum.MouseBehavior.LockCenter or Enum.MouseBehavior.Default
-	if self.MouseSteerOn then
+	UserInputService.MouseBehavior = self.MouseSteerOn and Enum.MouseBehavior.LockCenter
+		or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Enum.MouseBehavior.LockCurrentPosition
+		or Enum.MouseBehavior.Default
+	if self.MouseSteerOn and not UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then
 		local sensivity = SettingsController:GetSetting("MSteerSensivity")
 		local delta = UserInputService:GetMouseDelta()
 		local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity * 4, 0, 1)

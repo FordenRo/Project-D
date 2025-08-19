@@ -27,6 +27,7 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.SpeedEffect = SpeedEffect.new(vehicle, self.Instance)
 
 	self.CursorInstance = self.Instance.Cursor
+	self._CursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
 	self._conn = RunService.Heartbeat:Connect(function() self:UpdateTires() end)
 	RunService:BindToRenderStep(
@@ -43,6 +44,9 @@ function VehicleInterface.UpdateCursor(self: VehicleInterface)
 	self.CursorInstance.Visible = self.Vehicle.MouseSteerOn
 	if self.Vehicle.MouseSteerOn then
 		self.CursorInstance.Position = UDim2.fromScale(self.Vehicle.MousePosition.X, self.Vehicle.MousePosition.Y)
+		self.CursorInstance.BackgroundTransparency = 1
+			- (1 - self._CursorTransparency)
+				* (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
 	end
 end
 
