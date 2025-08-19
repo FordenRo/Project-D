@@ -190,6 +190,7 @@ export type Tune = {
 	-- Damage
 	RPMDamage: number,
 	RedlineDamage: number,
+	RedlineDamageCurve: number,
 	-- Electric Engine
 	Electric: boolean,
 	E_Torque: number,

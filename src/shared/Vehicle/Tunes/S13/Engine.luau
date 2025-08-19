@@ -52,8 +52,9 @@ Tune.CoolingFactor = 0.02 -- Think of this as a size of radiator + efficiency va
 Tune.EfficientCombustionRPM = 2000 -- RPM at which the engine is most efficient
 
 -- Damage
-Tune.RPMDamage = 0.6 -- Max damage on Redline per hour
-Tune.RedlineDamage = 0.08 -- Damage above Redline per 1000 RPM per second
+Tune.RPMDamage = 0.6 -- Max damage on redline per hour
+Tune.RedlineDamage = 0.06 -- Damage at 1000 RPM beyond the redline per second
+Tune.RedlineDamageCurve = 2.4 -- The shape of the redline damage curve
 
 -- Electric Engine
 Tune.Electric = false
