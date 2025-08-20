@@ -16,9 +16,17 @@ function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart
 	return self
 end
 
-function ServerBrakeDisk.Update(self: ServerBrakeDisk, temperature: number, color: Color3)
+function ServerBrakeDisk.Update(
+	self: ServerBrakeDisk,
+	temperature: number,
+	color: Color3,
+	volume: number,
+	pitch: number
+)
 	self.Temperature = temperature
 	self.Instance.Color = color
+	self.Sound.Volume = volume
+	self.Sound.PitchEffect.Octave = pitch
 end
 
 function ServerBrakeDisk.Destroy(self: ServerBrakeDisk) self._conn:Disconnect() end

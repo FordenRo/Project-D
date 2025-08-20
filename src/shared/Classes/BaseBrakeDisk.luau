@@ -19,8 +19,22 @@ function BaseBrakeDisk.new(wheel: VehicleTypes.BaseWheel, instance: BasePart)
 		self._Remote = Instance.new("UnreliableRemoteEvent")
 		self._Remote.Name = "_DiskRemote"
 		self._Remote.Parent = self.Instance
+
+		self.Sound = Instance.new("Sound")
+		self.Sound.Name = "BrakeWhistle"
+		self.Sound.SoundId = "rbxassetid://185857550"
+		self.Sound.PlaybackSpeed = 0.9
+
+		local pitch = Instance.new("PitchShiftSoundEffect")
+		pitch.Octave = 1
+		pitch.Name = "PitchEffect"
+		pitch.Parent = self.Sound
+
+		self.Sound.Parent = wheel.Instance
 	else
 		self._Remote = self.Instance:WaitForChild("_DiskRemote") :: UnreliableRemoteEvent
+
+		self.Sound = wheel.Instance:WaitForChild("BrakeWhistle") :: Sound
 	end
 
 	return self

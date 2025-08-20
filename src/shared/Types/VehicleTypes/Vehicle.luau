@@ -193,6 +193,7 @@ export type BaseWheel = {
 		},
 	},
 	Vehicle: BaseVehicle,
+	BrakeDisk: BaseBrakeDisk,
 	IsFront: boolean,
 	IsDriven: boolean,
 
@@ -304,6 +305,9 @@ export type BaseBrakeDisk = {
 	Instance: BasePart,
 	Wheel: BaseWheel,
 	Temperature: number,
+	Sound: Sound & {
+		PitchEffect: PitchShiftSoundEffect,
+	},
 
 	new: (wheel: BaseWheel, instance: BasePart) -> BaseBrakeDisk,
 }
@@ -313,7 +317,9 @@ export type ClientBrakeDisk = {
 	_conn: RBXScriptConnection,
 	_task: thread,
 	_serverInstance: BasePart,
+	_serverSound: Sound,
 	_startColor: Color3,
+	Volume: number,
 	Wheel: ClientWheel,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
