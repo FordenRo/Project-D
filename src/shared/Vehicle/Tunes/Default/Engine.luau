@@ -9,34 +9,12 @@ local Tune = {} :: VehicleTypes.Tune
 
 -- To import engines prior to 1.7, consult the README.
 
+Tune.CustomEngineCalculations = false -- Enables the use of the CustomEngine module. Even if enabled, please do not remove the default engine values.
+
 -- Naturally Aspirated Engine
 Tune.Engine = true
 
-Tune.PeakTorque = 116 -- The maximum amount of torque the engine makes in lb-ft.
-Tune.PeakTorqueRPM = 4800 -- When the engine reaches PeakTorque in RPM.
-
-Tune.IdleRPM = 1000 -- The engine's desired idle RPM. IdleDamping may change this.
-Tune.IdleTorque = 90 -- How much torque the engine makes at idle.
-Tune.IdleTorqueCurve = 0.5 -- The shape of the torque curve between idle and PeakRPM.
-
-Tune.Redline = 8000 -- The maximum RPM.
-Tune.RedlineTorque = 86 -- How much torque the engine makes at redline.
-Tune.RedlineTorqueCurve = 0.6 -- The shape of the torque curve between PeakRPM and redline.
-
-Tune.ShiftRPM = 7000 -- This is when the engine shifts.
-Tune.PeakRPM = Tune.ShiftRPM -- This is deprecated, only used for plugin compatibility.
-
-Tune.VVLTorque = 0 -- Variable Valve Lift (VVL, aka VTEC)'s amount of torque. Set this to 0 to turn off.
-Tune.VVLRPM = 6000 -- When VVL activates in RPM.
-Tune.VVLTime = 500 -- How long it takes for VVL to activate in RPM.
-Tune.VVLCurve = 0.002 -- The shape of the curve during VVL activation.
-
 Tune.HPLimit = 0 -- The horsepower limit of the engine (set to 0 to turn off).
-
--- Fuel
-Tune.FuelCapacity = 60 -- Fuel capacity in liters
-Tune.FuelDensity = 0.71 -- Fuel density in kg/l (0.71 for petrol 0.83 for diesel)
-Tune.BSFC = 250 -- Brake Specific Fuel Consumption in g/kW*h
 
 -- Temperature
 Tune.OperatingEngineTemp = 100 -- The temperature at which the engine operating normally
@@ -48,11 +26,6 @@ Tune.IdleHeatRejection = 1.5 -- Heat gain multiplier at idle (excluding rpm effe
 Tune.FanAirSpeed = 15 -- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
 Tune.CoolingFactor = 0.02 -- Think of this as a size of radiator + efficiency variable
 Tune.EfficientCombustionRPM = 2000 -- RPM at which the engine is most efficient
-
--- Damage
-Tune.RPMDamage = 0.6 -- Max damage on redline per hour
-Tune.RedlineDamage = 0.06 -- Damage at 1000 RPM beyond the redline per second
-Tune.RedlineDamageCurve = 2.4 -- The shape of the redline damage curve
 
 -- Electric Engine
 Tune.Electric = false
@@ -101,8 +74,15 @@ Tune.IgnitionRPM = 2000 -- This is how high the engine revs for the ignition.
 Tune.IgnitionAccel = 60 -- The acceleration of the RPM while starting the car.
 Tune.IgnitionMinRPM = 800 -- The minimum RPM required to start the car.
 
+-- Throttle and brake input
+Tune.ThrotAccel = 0.1 -- Throttle acceleration, applied per tick (recommended values between 0.1 to 0.3)
+Tune.ThrotDecel = 0.1 -- Throttle deceleration, applied per tick (recommended values between 0.05 to 0.1)
+Tune.BrakeAccel = 0.1 -- Brake acceleration, applied per tick
+Tune.BrakeDecel = 0.1 -- Brake deceleration, applied per tick
+
 -- Engine speed
 Tune.RevBounce = 200 -- RPM kickback from redline
+Tune.OverRev = true -- Set to true to allow the RPM to go above redline
 
 Tune.RevAccel = 180 -- RPM acceleration when clutch is on (this should be higher than RevDecay and RevDecayRPM)
 Tune.RevDecay = 30 -- RPM decay when clutch is on
@@ -114,10 +94,9 @@ Tune.DumpMult = 1.0 -- Flywheel energy multiplier when dumping the clutch (keep 
 Tune.IdleThrottle = 5 -- Percent throttle with no input. (in percent)
 Tune.IdleDamping = 4800 -- Damping of idle in RPM. This will change that actual idle RPM at higher values.
 Tune.IdlePadding = 800 -- Added on top of IdleRPM to account for IdleDamping
+Tune.RemoveCreep = false -- Tries to remove the natural creep of the chassis by applying clutch if there is no input throttle and if the RPM is below idle.
 
---[[Drivetrain]]
-Tune.Config = "RWD" -- "FWD" , "RWD" , "AWD"
-Tune.TorqueVector = 0.2 -- AWD ONLY, "-1" has a 100% front bias, "0" has a 50:50 bias, and "1" has a 100% rear bias. Can be any number between that range.
+Tune.InclineComp = 1.0 -- Torque compensation multiplier for inclines (applies gradient from 0-90 degrees)
 
 -- Options for a limited slip differential (LuaInt)
 -- *You can set all of these values to 0 to achieve an open differential.

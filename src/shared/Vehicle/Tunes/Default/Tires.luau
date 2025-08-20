@@ -5,7 +5,7 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Tune = {} :: VehicleTypes.Tune
 
 --[[Tires]]
-Tune.TireDirtBumps = 90 -- Aggresiveness of artificial bumps in dirt-, sand-, and snow-type surfaces (0 for none)
+Tune.TireDirtBumps = 70 -- Aggresiveness of artificial bumps in dirt-, sand-, and snow-type surfaces (0 for none)
 Tune.TireSandForce = 20 -- Sand force, more means going over sand slows down the car more
 
 --[[Aesthetics]]
@@ -18,22 +18,20 @@ Tune.TireMarkTransparency = 0.9 -- The transparency of the tire marks
 --[[Friction]]
 Tune.TireFMinTemp = 8 -- Minimum temperature of the front tires in celcius
 Tune.TireFMaxTemp = 100 -- Maximum temperature of the front tires in celcius
-Tune.TireFMaxFriction = 1.5 -- Maximum friction of the front tires
+Tune.TireFMaxFriction = 1.4 -- Maximum friction of the front tires
 Tune.TireFColdStats = { 0.38, 11.7, 0.32 } -- Loss, Sharpness, Offset
 Tune.TireFHotStats = { 0.96, 18.3, 1.05 } -- Loss, Sharpness, Offset
 Tune.TireFDirtLoss = 0.1 -- Friction loss from dirty tires
-Tune.TireFDirtFadeRate = 0.001 -- The rate that dirt fades
 Tune.TireFHeating = 0.012 -- Heat gain from maximum slippage
 Tune.TireFCooling = 0 -- Heat loss at no slippage
 Tune.TireFSpeedStress = 0.04 -- Stress generated at 100 km/h
 
 Tune.TireRMinTemp = 8 -- Minimum temperature of the rear tires in celcius
 Tune.TireRMaxTemp = 100 -- Maximum temperature of the rear tires in celcius
-Tune.TireRMaxFriction = 1.5 -- Maximum friction of the rear tires
+Tune.TireRMaxFriction = 1.4 -- Maximum friction of the rear tires
 Tune.TireRColdStats = { 0.38, 11.7, 0.32 } -- Loss, Sharpness, Offset
 Tune.TireRHotStats = { 0.96, 18.3, 1.05 } -- Loss, Sharpness, Offset
 Tune.TireRDirtLoss = 0.1 -- Friction loss from dirty tires
-Tune.TireRDirtFadeRate = 0.001 -- The rate that dirt fades
 Tune.TireRHeating = 0.012 -- Heat gain from maximum slippage
 Tune.TireRCooling = 0 -- Heat loss at no slippage
 Tune.TireRSpeedStress = 0.04 -- Stress generated at 100 km/h
