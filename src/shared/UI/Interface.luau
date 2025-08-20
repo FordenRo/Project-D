@@ -1,10 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
 local BaseWindow = require(script.Parent.BaseWindow)
 local Garage = require(script.Parent.Garage)
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Settings = require(script.Parent.Settings)
 
 local ScreenGui = ReplicatedStorage.UI.Interface
@@ -41,10 +39,7 @@ function Interface.new()
 	return self
 end
 
-function Interface.Initialize(self: Interface)
-	self:InitializeButtons()
-	self:InitializeDebug()
-end
+function Interface.Initialize(self: Interface) self:InitializeButtons() end
 
 function toggleButtons(self: Interface, interactable: boolean)
 	for _, v: TextButton in self.Instance.Buttons:GetChildren() do
@@ -75,17 +70,6 @@ function Interface.InitializeButtons(self: Interface)
 			end
 		end)
 	end
-end
-
-function Interface.InitializeDebug(self: Interface)
-	local fps = 0
-	table.insert(
-		self._cons,
-		RunService.RenderStepped:Connect(function(deltaTime)
-			fps = Lerp(fps, 1 / deltaTime, deltaTime * 5)
-			self.Instance.Debug.FPS.Text = string.format("FPS: %.1f", fps)
-		end)
-	)
 end
 
 function Interface.Show(self: Interface) self.Instance.Enabled = true end
