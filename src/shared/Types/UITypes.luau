@@ -1,0 +1,57 @@
+export type InterfaceController = {
+	__index: InterfaceController,
+	Interface: Interface,
+	MainWindow: MainWindow,
+
+	new: () -> InterfaceController,
+	Show: (self: InterfaceController) -> (),
+	Hide: (self: InterfaceController) -> (),
+	OpenWelcome: (self: InterfaceController) -> (),
+	OpenSettings: (self: InterfaceController) -> (),
+}
+
+export type Interface = {
+	__index: Interface,
+	_cons: { RBXScriptConnection },
+	InterfaceController: InterfaceController,
+	Instance: ScreenGui & {
+		Buttons: Frame,
+		Debug: Frame & { FPS: TextLabel },
+	},
+
+	new: (interfaceController: InterfaceController) -> Interface,
+	Initialize: (self: Interface) -> (),
+	InitializeButtons: (self: Interface) -> (),
+	Show: (self: Interface) -> (),
+	Hide: (self: Interface) -> (),
+	Destroy: (self: Interface) -> (),
+}
+
+type TabModule = any & { new: (instance: ScrollingFrame) -> TabModule, Destroy: (self: TabModule) -> () }
+
+export type MainWindow = {
+	__index: MainWindow,
+	_TabPositions: { [ScrollingFrame]: number },
+	_TabModules: { TabModule },
+	_cons: { RBXScriptConnection },
+	CurrentTab: string?,
+	Visible: boolean,
+	Instance: ScreenGui & {
+		Window: Frame & {
+			Content: Frame,
+			TabBar: Frame & {
+				Container: Frame,
+			},
+		},
+		Background: TextButton,
+	},
+
+	new: () -> MainWindow,
+	Initialize: (self: MainWindow) -> (),
+	Show: (self: MainWindow, tab: string?) -> (),
+	Hide: (self: MainWindow) -> (),
+	SetTab: (self: MainWindow, tab: string, skipAnim: boolean?) -> (),
+	Destroy: (self: MainWindow) -> (),
+}
+
+return {}
