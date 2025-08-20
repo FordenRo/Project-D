@@ -54,21 +54,24 @@ function Interface.InitializeButtons(self: Interface)
 	for _, v in self.Instance.Buttons:GetChildren() do
 		if not v:IsA("TextButton") then continue end
 
-		v.Activated:Connect(function()
-			local lastWindowType
-			if self.CurrentWindow then
-				lastWindowType = self.CurrentWindow.Type
-				self.CurrentWindow:Destroy()
-				self.CurrentWindow = nil
-			end
+		table.insert(
+			self._cons,
+			v.Activated:Connect(function()
+				local lastWindowType
+				if self.CurrentWindow then
+					lastWindowType = self.CurrentWindow.Type
+					self.CurrentWindow:Destroy()
+					self.CurrentWindow = nil
+				end
 
-			if lastWindowType ~= v.Name then
-				toggleButtons(self, false)
-				local success, window = pcall(Windows[v.Name].new)
-				if success then self.CurrentWindow = window end
-				toggleButtons(self, true)
-			end
-		end)
+				if lastWindowType ~= v.Name then
+					toggleButtons(self, false)
+					local success, window = pcall(Windows[v.Name].new)
+					if success then self.CurrentWindow = window end
+					toggleButtons(self, true)
+				end
+			end)
+		)
 	end
 end
 
