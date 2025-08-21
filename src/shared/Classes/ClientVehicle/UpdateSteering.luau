@@ -5,7 +5,8 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
-	local controller = self._LastInputWasGamepad or (self.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
+	local controller = self._LastInputWasGamepad
+		or (self.Tune.MSteerUsesContlr and self.InputController.MouseSteerOn or false)
 	local SteerSpeed
 	local ReturnSpeed
 	if controller then

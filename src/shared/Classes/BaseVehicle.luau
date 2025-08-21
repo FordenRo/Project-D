@@ -80,7 +80,6 @@ function initializeVariables(self: BaseVehicle)
 	self.Brake = 0
 	self.SteerC = 0
 	self.SteerT = 0
-	self.MouseSteerOn = false
 	self.PBrake = false
 	-- Velocity
 	self.Velocity = Vector3.new()

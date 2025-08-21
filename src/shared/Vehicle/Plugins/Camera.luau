@@ -75,8 +75,9 @@ end
 function CameraPlugin.UpdateRotation(self: CameraPlugin, input: InputObject)
 	if
 		not (
-			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and not self.Vehicle.MouseSteerOn
-			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and self.Vehicle.MouseSteerOn
+			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+				and not self.Vehicle.InputController.MouseSteerOn
+			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and self.Vehicle.InputController.MouseSteerOn
 		)
 	then
 		return

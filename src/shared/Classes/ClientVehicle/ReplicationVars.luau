@@ -33,7 +33,6 @@ return {
 	"Brake",
 	"SteerC",
 	"SteerT",
-	"MouseSteerOn",
 	"PBrake",
 	"Velocity",
 	"AngularVelocity",

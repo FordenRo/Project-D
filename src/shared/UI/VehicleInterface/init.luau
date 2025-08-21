@@ -40,9 +40,9 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 end
 
 function VehicleInterface.UpdateCursor(self: VehicleInterface)
-	UserInputService.MouseIconEnabled = not self.Vehicle.MouseSteerOn
-	self.CursorInstance.Visible = self.Vehicle.MouseSteerOn
-	if self.Vehicle.MouseSteerOn then
+	UserInputService.MouseIconEnabled = not self.Vehicle.InputController.MouseSteerOn
+	self.CursorInstance.Visible = self.Vehicle.InputController.MouseSteerOn
+	if self.Vehicle.InputController.MouseSteerOn then
 		self.CursorInstance.Position =
 			UDim2.fromScale(self.Vehicle.InputController.MousePosition.X, self.Vehicle.InputController.MousePosition.Y)
 		self.CursorInstance.BackgroundTransparency = 1

@@ -30,6 +30,7 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Brake = 0
 	self.Clutch = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
+	self.MouseSteerOn = false
 
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
@@ -51,7 +52,7 @@ end
 function Update(self: InputController, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
 
-	UserInputService.MouseBehavior = self.Vehicle.MouseSteerOn and Enum.MouseBehavior.LockCenter
+	UserInputService.MouseBehavior = self.MouseSteerOn and Enum.MouseBehavior.LockCenter
 		or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Enum.MouseBehavior.LockCurrentPosition
 		or Enum.MouseBehavior.Default
 
@@ -59,11 +60,11 @@ function Update(self: InputController, deltaTime: number)
 	Context.Ignition.Enabled = not self.Broken
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
-	Context.Steering.Enabled = not self.Vehicle.MouseSteerOn
-	Context.Throttle.Enabled = not self.Vehicle.MouseSteerOn
-	Context.Brake.Enabled = not self.Vehicle.MouseSteerOn
-	Context.MouseThrottle.Enabled = self.Vehicle.MouseSteerOn
-	Context.MouseBrake.Enabled = self.Vehicle.MouseSteerOn
+	Context.Steering.Enabled = not self.MouseSteerOn
+	Context.Throttle.Enabled = not self.MouseSteerOn
+	Context.Brake.Enabled = not self.MouseSteerOn
+	Context.MouseThrottle.Enabled = self.MouseSteerOn
+	Context.MouseBrake.Enabled = self.MouseSteerOn
 
 	local canShift = self.Vehicle.TransmissionMode == "Manual"
 		or (
@@ -98,7 +99,7 @@ function SmoothInputs(self: InputController, deltaTime: number)
 end
 
 function UpdateMouseInput(self: InputController)
-	if not self.Vehicle.MouseSteerOn or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then return end
+	if not self.MouseSteerOn or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then return end
 
 	local sensivity = SettingsController:GetSetting("MSteerSensivity")
 	local delta = UserInputService:GetMouseDelta()
@@ -169,7 +170,7 @@ function InitializeConnections(self: InputController)
 			if n > #self.Vehicle.Tune.TransModes then n = 1 end
 			self.Vehicle.TransmissionMode = self.Vehicle.Tune.TransModes[n]
 		end,
-		ToggleMouseSteering = function() self.Vehicle.MouseSteerOn = not self.Vehicle.MouseSteerOn end,
+		ToggleMouseSteering = function() self.MouseSteerOn = not self.MouseSteerOn end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then
 				if self.Vehicle.TCS and self.Vehicle.ESC then
