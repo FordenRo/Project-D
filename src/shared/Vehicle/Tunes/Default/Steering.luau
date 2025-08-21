@@ -39,7 +39,7 @@ Tune.RSteerMaxTorque = 20000 -- Rear Steering Force (old only)
 
 -- Steering aggressiveness
 Tune.SteerSmoothing = 1 -- The lower, the smoother the steering will arrive at max angle.
-Tune.PowerSteeringType = "New" -- "New" uses AlignOrientation. This may cause problems.
+Tune.PowerSteeringType = "Old" -- "New" uses AlignOrientation. This may cause problems.
 -- "Old" uses BodyGyro.
 Tune.SteerD = 1000 -- Steering Damping (old only)
 Tune.SteerP = 20000 -- Steering Aggressiveness (old only)
