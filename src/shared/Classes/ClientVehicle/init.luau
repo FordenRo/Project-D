@@ -6,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
-local HandleInput = require(script.HandleInput)
+local InputController = require(script.InputController)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Lights = require(script.Lights)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
@@ -35,6 +35,7 @@ function ClientVehicle.new(instance: Instance)
 
 	self:Initialize()
 
+	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
 	self.Lights = Lights.new(self)
@@ -78,8 +79,6 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._InThrot = 0
 	self._InBrake = 0
 	self._LastOffTime = tick()
-	self._SteerL = false
-	self._SteerR = false
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
 	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
@@ -110,9 +109,6 @@ function ClientVehicle.InitControls(self: ClientVehicle)
 	-- Disable jumping
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
-	table.insert(self._conn, UserInputService.InputBegan:Connect(function(input) HandleInput(self, input) end))
-	table.insert(self._conn, UserInputService.InputChanged:Connect(function(input) HandleInput(self, input) end))
-	table.insert(self._conn, UserInputService.InputEnded:Connect(function(input) HandleInput(self, input) end))
 	table.insert(
 		self._conn,
 		UserInputService.LastInputTypeChanged:Connect(
@@ -409,6 +405,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	-- Tell server to remove
 	-- car["A-Chassis Tune"].Shutdown:FireServer()
 
+	self.InputController:Destroy()
 	self.Interface:Destroy()
 	self.Lights:Destroy()
 

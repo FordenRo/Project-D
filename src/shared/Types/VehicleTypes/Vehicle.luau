@@ -120,6 +120,7 @@ export type ClientVehicle = {
 	_task: thread,
 	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,
+	InputController: InputController,
 	DeformationController: DeformationController,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
@@ -136,8 +137,6 @@ export type ClientVehicle = {
 	_LastOffTime: number,
 	_CanStall: boolean,
 	-- Inputs
-	_SteerL: boolean,
-	_SteerR: boolean,
 	_InThrot: number,
 	_InBrake: number,
 	MousePosition: Vector2,
@@ -160,6 +159,15 @@ export type ClientVehicle = {
 	ReplicateVariables: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
+
+export type InputController = {
+	__index: InputController,
+	_cons: { RBXScriptConnection },
+	Vehicle: ClientVehicle,
+
+	new: (vehicle: ClientVehicle) -> InputController,
+	Destroy: (self: InputController) -> (),
+}
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
