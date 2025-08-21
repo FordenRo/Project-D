@@ -31,7 +31,7 @@ return {
 	"Horning",
 	"Throttle",
 	"Brake",
-	"SteerC",
+	"Steering",
 	"PBrake",
 	"Velocity",
 	"AngularVelocity",

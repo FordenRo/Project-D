@@ -467,8 +467,8 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 						* (Units.Length_mm / 1000)
 					)
 			)
-			if math.sign(self.SteerC) ~= math.sign(g.X) then
-				local diff = self.SteerC - (g.X * -math.sign(self.Center:VectorToObjectSpace(self.Velocity).Z))
+			if math.sign(self.Steering) ~= math.sign(g.X) then
+				local diff = self.Steering - (g.X * -math.sign(self.Center:VectorToObjectSpace(self.Velocity).Z))
 				if math.abs(diff) > self.Tune.ESCThreshold then
 					local escVector, escBias = 1, (self.Tune.ESCVector + 1)
 					if wheel.IsFront then

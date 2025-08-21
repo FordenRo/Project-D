@@ -52,18 +52,18 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	end
 	local SteerWithCounter = math.clamp(self.InputController.Steering + CSAmt, -1, 1)
 	local SteerSmoothing =
-		math.clamp(math.abs(SteerWithCounter - self.SteerC) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
-	if self.SteerC < SteerWithCounter then
-		if self.SteerC < 0 then
-			self.SteerC = math.min(SteerWithCounter, self.SteerC + (ReturnSpeed * SteerSmoothing * deltaTime))
+		math.clamp(math.abs(SteerWithCounter - self.SteeSteeringrC) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
+	if self.Steering < SteerWithCounter then
+		if self.Steering < 0 then
+			self.Steering = math.min(SteerWithCounter, self.Steering + (ReturnSpeed * SteerSmoothing * deltaTime))
 		else
-			self.SteerC = math.min(SteerWithCounter, self.SteerC + (SteerSpeed * SteerSmoothing * deltaTime))
+			self.Steering = math.min(SteerWithCounter, self.Steering + (SteerSpeed * SteerSmoothing * deltaTime))
 		end
 	else
-		if self.SteerC > 0 then
-			self.SteerC = math.max(SteerWithCounter, self.SteerC - (ReturnSpeed * SteerSmoothing * deltaTime))
+		if self.Steering > 0 then
+			self.Steering = math.max(SteerWithCounter, self.Steering - (ReturnSpeed * SteerSmoothing * deltaTime))
 		else
-			self.SteerC = math.max(SteerWithCounter, self.SteerC - (SteerSpeed * SteerSmoothing * deltaTime))
+			self.Steering = math.max(SteerWithCounter, self.Steering - (SteerSpeed * SteerSmoothing * deltaTime))
 		end
 	end
 
@@ -96,15 +96,15 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 		if wheel.CanSteer == 2 then
 			if wheel.Instance.Name == "FL" then
 				-- self.SteerInner and self.SteerOuter
-				angle = (self.SteerC < 0 and self.Tune.SteerInner or self.Tune.SteerOuter) * sDecay
+				angle = (self.Steering < 0 and self.Tune.SteerInner or self.Tune.SteerOuter) * sDecay
 			elseif wheel.Instance.Name == "FR" then
-				angle = (self.SteerC < 0 and self.Tune.SteerOuter or self.Tune.SteerInner) * sDecay
+				angle = (self.Steering < 0 and self.Tune.SteerOuter or self.Tune.SteerInner) * sDecay
 			elseif wheel.Instance.Name == "F" then
 				angle = self.Tune.SteerInner * sDecay
 			elseif wheel.Instance.Name == "RL" then
-				angle = (self.SteerC < 0 and self.Tune.RSteerInner or self.Tune.RSteerOuter) * rsDecay
+				angle = (self.Steering < 0 and self.Tune.RSteerInner or self.Tune.RSteerOuter) * rsDecay
 			elseif wheel.Instance.Name == "RR" then
-				angle = (self.SteerC < 0 and self.Tune.RSteerOuter or self.Tune.RSteerInner) * rsDecay
+				angle = (self.Steering < 0 and self.Tune.RSteerOuter or self.Tune.RSteerInner) * rsDecay
 			elseif wheel.Instance.Name == "R" then
 				angle = self.Tune.RSteerInner * rsDecay
 			end
@@ -121,12 +121,12 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 
 		if self.Tune.PowerSteeringType == "New" then
 			wheel.Instance.Arm.SteerAttach0.Orientation =
-				Vector3.new(0, wheel.CanSteer == 1 and 0 or self.SteerC * angle * rsteerVariableAngle, 0)
+				Vector3.new(0, wheel.CanSteer == 1 and 0 or self.Steering * angle * rsteerVariableAngle, 0)
 		else
 			wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
 				* (
 					wheel.CanSteer == 1 and CFrame.new(0, 0, 0)
-					or (CFrame.Angles(0, -math.rad(self.SteerC * angle * rsteerVariableAngle), 0))
+					or (CFrame.Angles(0, -math.rad(self.Steering * angle * rsteerVariableAngle), 0))
 				)
 		end
 	end

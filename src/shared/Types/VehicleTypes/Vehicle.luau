@@ -68,7 +68,7 @@ export type BaseVehicle = {
 	-- Inputs
 	Throttle: number,
 	Brake: number,
-	SteerC: number,
+	Steering: number,
 	PBrake: boolean,
 	-- Velocity
 	Velocity: Vector3,
