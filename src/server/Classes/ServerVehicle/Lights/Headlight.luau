@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
 local Headlight = {}
 Headlight.__index = Headlight
 

@@ -6,10 +6,10 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 if not RunService:IsServer() then return nil end
 
+local STRENGTH = 0.08
+
 local Exhaust = {}
 Exhaust.__index = Exhaust
-
-local STRENGTH = 0.08
 
 export type Exhaust = typeof(setmetatable(
 	{} :: {

@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+
 local GarageDoor = {}
 GarageDoor.__index = GarageDoor
 

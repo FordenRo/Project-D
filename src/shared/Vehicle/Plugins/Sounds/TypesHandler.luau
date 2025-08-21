@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local SoundTypesHandler = {}
 SoundTypesHandler.__index = SoundTypesHandler

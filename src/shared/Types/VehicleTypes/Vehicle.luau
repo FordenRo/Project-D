@@ -114,7 +114,7 @@ export type DeformationController = {
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
-	_conn: { RBXScriptConnection },
+	_cons: { RBXScriptConnection },
 	_task: thread,
 	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,

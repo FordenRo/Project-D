@@ -4,10 +4,10 @@ local StarterPlayer = game:GetService("StarterPlayer")
 
 local player = Players.LocalPlayer
 
+local SPRINT_MULTIPLIER = 1.5
+
 local SprintController = {}
 SprintController.__index = SprintController
-
-local SPRINT_MULTIPLIER = 1.5
 
 export type SprintController = typeof(setmetatable(
 	{} :: {

@@ -50,7 +50,7 @@ function ClientVehicle.Initialize(self: ClientVehicle)
 	self:InitControls()
 	self:InitializePlugins()
 
-	table.insert(self._conn, RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end))
+	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end))
 	self._task = task.spawn(function()
 		while task.wait(1 / 8) do
 			self:SlowUpdate()
@@ -67,14 +67,14 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 		Front = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * self.Tune.PBrakeBias,
 		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
 	}
-	self._conn = {}
+	self._cons = {}
 	self._ShiftUp = false
 	self._ShiftDown = false
 	self._ClutchPressing = false
-		self._GoalRPM = 0
+	self._GoalRPM = 0
 	self._DriveWheelSpeed = 0
 	self._CanStall = false
-		self._LastOffTime = tick()
+	self._LastOffTime = tick()
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
 	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
@@ -106,7 +106,7 @@ function ClientVehicle.InitControls(self: ClientVehicle)
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
 	table.insert(
-		self._conn,
+		self._cons,
 		UserInputService.LastInputTypeChanged:Connect(
 			function(inputType) self._LastInputWasGamepad = string.find(inputType.Name, "Gamepad") and true or false end
 		)
@@ -394,7 +394,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 		plugin:Destroy()
 	end
 
-	for _, conn in self._conn do
+	for _, conn in self._cons do
 		conn:Disconnect()
 	end
 	task.cancel(self._task)
