@@ -2,6 +2,7 @@ local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
@@ -158,6 +159,21 @@ function DeformationController.BlowEngine(self: DeformationController)
 
 	self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
 	engineBlowTexture:Destroy()
+
+	-- Show smoke
+	for _, smokePart: Part in self.DeformModel.BlowSmokeParts:GetChildren() do
+		local emitter = smokePart:FindFirstChildOfClass("ParticleEmitter")
+		if not emitter then continue end
+
+		emitter.Enabled = true
+
+		local tween = TweenService:Create(emitter, TweenInfo.new(10), { Rate = 0 })
+		tween.Completed:Once(function()
+			emitter.Enabled = false
+			tween:Destroy()
+		end)
+		task.delay(20, function() tween:Play() end)
+	end
 end
 
 return DeformationController

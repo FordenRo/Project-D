@@ -93,6 +93,7 @@ export type DeformationController = {
 	DeformModel: Model & {
 		Body: MeshPart,
 		EngineBlow: Part,
+		BlowSmokeParts: Model,
 	},
 	ColliderModel: Model,
 	Body: MeshPart,
