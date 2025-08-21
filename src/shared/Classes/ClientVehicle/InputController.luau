@@ -29,6 +29,7 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Throttle = 0
 	self.Brake = 0
 	self.Clutch = 0
+	self.Steering = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.MouseSteerOn = false
 
@@ -110,9 +111,9 @@ function UpdateMouseInput(self: InputController)
 	local mdZone = SettingsController:GetSetting("MSteerDZone")
 	local mST = (self.MousePosition.X - 0.5) / SettingsController:GetSetting("MSteerWidth") * 2
 	if math.abs(mST) <= mdZone then
-		self.Vehicle.SteerT = 0
+		self.Steering = 0
 	else
-		self.Vehicle.SteerT = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
+		self.Steering = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
 				^ self.Vehicle.Tune.MSteerExp
 			* (mST / math.abs(mST))
 	end
@@ -128,12 +129,12 @@ function InitializeConnections(self: InputController)
 			if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
 				local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
 				if math.abs(value.X) > cDZone then
-					self.Vehicle.SteerT = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
+					self.Steering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
 				else
-					self.Vehicle.SteerT = 0
+					self.Steering = 0
 				end
 			else
-				self.Vehicle.SteerT = value.X
+				self.Steering = value.X
 			end
 		end,
 		Clutch = function(value)
@@ -215,7 +216,7 @@ function InputController.Destroy(self: InputController)
 
 	self._RawBrake = 0
 	self._RawThrottle = 0
-	self.Vehicle.SteerT = 0
+	self.Steering = 0
 end
 
 return InputController

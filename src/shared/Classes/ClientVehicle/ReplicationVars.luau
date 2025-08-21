@@ -32,7 +32,6 @@ return {
 	"Throttle",
 	"Brake",
 	"SteerC",
-	"SteerT",
 	"PBrake",
 	"Velocity",
 	"AngularVelocity",

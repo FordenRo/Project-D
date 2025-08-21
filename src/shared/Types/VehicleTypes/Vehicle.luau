@@ -69,7 +69,6 @@ export type BaseVehicle = {
 	Throttle: number,
 	Brake: number,
 	SteerC: number,
-	SteerT: number,
 	PBrake: boolean,
 	-- Velocity
 	Velocity: Vector3,
@@ -162,6 +161,7 @@ export type InputController = {
 	Clutch: number,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
+	Steering: number,
 
 	new: (vehicle: ClientVehicle) -> InputController,
 	Destroy: (self: InputController) -> (),

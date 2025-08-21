@@ -34,7 +34,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	--Interpolate Steering
 	local CSAmt = 0
 	if
-		math.abs(self.SteerT) < self.Tune.CSSteerThresh / 100
+		math.abs(self.InputController.Steering) < self.Tune.CSSteerThresh / 100
 		and self.CS
 		and self.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6 > self.Tune.CSSpeedThresh
 	then
@@ -50,7 +50,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	else
 		self.CSActive = false
 	end
-	local SteerWithCounter = math.clamp(self.SteerT + CSAmt, -1, 1)
+	local SteerWithCounter = math.clamp(self.InputController.Steering + CSAmt, -1, 1)
 	local SteerSmoothing =
 		math.clamp(math.abs(SteerWithCounter - self.SteerC) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
 	if self.SteerC < SteerWithCounter then
