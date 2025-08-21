@@ -46,7 +46,7 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 
 	RunService:BindToRenderStep(
 		"CameraUpdate",
-		Enum.RenderPriority.Camera.Value + 1,
+		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) self:Update(deltaTime) end
 	)
 

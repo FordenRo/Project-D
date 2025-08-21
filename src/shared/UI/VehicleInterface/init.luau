@@ -32,7 +32,7 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self._conn = RunService.Heartbeat:Connect(function() self:UpdateTires() end)
 	RunService:BindToRenderStep(
 		"CursorUpdate",
-		Enum.RenderPriority.Camera.Value + 1,
+		Enum.RenderPriority.Camera.Value - 1,
 		function() self:UpdateCursor() end
 	)
 

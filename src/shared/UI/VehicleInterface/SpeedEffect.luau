@@ -21,7 +21,7 @@ function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 
 	RunService:BindToRenderStep(
 		"SpeedEffect",
-		Enum.RenderPriority.Camera.Value + 1,
+		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) self:Update(deltaTime) end
 	)
 
