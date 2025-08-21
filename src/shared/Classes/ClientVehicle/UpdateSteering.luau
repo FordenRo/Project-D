@@ -1,14 +1,7 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-
-local player = Players.LocalPlayer
-local mouse = player:GetMouse()
-
-local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
 
 return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
@@ -35,27 +28,6 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 					1 - (self.Tune.MinSteerSpeed / 100)
 				)
 			)
-	end
-
-	UserInputService.MouseBehavior = self.MouseSteerOn and Enum.MouseBehavior.LockCenter
-		or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Enum.MouseBehavior.LockCurrentPosition
-		or Enum.MouseBehavior.Default
-	if self.MouseSteerOn and not UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then
-		local sensivity = SettingsController:GetSetting("MSteerSensivity")
-		local delta = UserInputService:GetMouseDelta()
-		local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity * 4, 0, 1)
-		local y = 1 - SettingsController:GetSetting("MSteerCursorY")
-		self.MousePosition = Vector2.new(x, y)
-
-		local mdZone = SettingsController:GetSetting("MSteerDZone")
-		local mST = (self.MousePosition.X - 0.5) / SettingsController:GetSetting("MSteerWidth") * 2
-		if math.abs(mST) <= mdZone then
-			self.SteerT = 0
-		else
-			self.SteerT = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
-					^ self.Tune.MSteerExp
-				* (mST / math.abs(mST))
-		end
 	end
 
 	--Interpolate Steering

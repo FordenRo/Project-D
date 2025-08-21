@@ -133,8 +133,6 @@ export type ClientVehicle = {
 	_DriveWheelSpeed: number,
 	_LastOffTime: number,
 	_CanStall: boolean,
-	-- Inputs
-	MousePosition: Vector2,
 	-- Velocity
 	_OldVelocity: Vector3,
 
@@ -163,6 +161,7 @@ export type InputController = {
 	Throttle: number,
 	Brake: number,
 	Clutch: number,
+	MousePosition: Vector2,
 
 	new: (vehicle: ClientVehicle) -> InputController,
 	Destroy: (self: InputController) -> (),

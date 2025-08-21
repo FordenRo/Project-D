@@ -43,10 +43,10 @@ function VehicleInterface.UpdateCursor(self: VehicleInterface)
 	UserInputService.MouseIconEnabled = not self.Vehicle.MouseSteerOn
 	self.CursorInstance.Visible = self.Vehicle.MouseSteerOn
 	if self.Vehicle.MouseSteerOn then
-		self.CursorInstance.Position = UDim2.fromScale(self.Vehicle.MousePosition.X, self.Vehicle.MousePosition.Y)
+		self.CursorInstance.Position =
+			UDim2.fromScale(self.Vehicle.InputController.MousePosition.X, self.Vehicle.InputController.MousePosition.Y)
 		self.CursorInstance.BackgroundTransparency = 1
-			- (1 - self._CursorTransparency)
-				* (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
+			- (1 - self._CursorTransparency) * (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
 	end
 end
 

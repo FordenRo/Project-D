@@ -1,12 +1,15 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local StarterPlayer = game:GetService("StarterPlayer")
 local UserInputService = game:GetService("UserInputService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local SettingsController = require(StarterPlayer.StarterPlayerScripts.Client.Controllers.SettingsController)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
+local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
 
 local InputController = {}
@@ -26,6 +29,7 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Throttle = 0
 	self.Brake = 0
 	self.Clutch = 0
+	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
@@ -35,15 +39,31 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	InitializeConnections(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime: number) Update(self, deltaTime) end))
+	RunService:BindToRenderStep(
+		"MouseSteerUpdate",
+		Enum.RenderPriority.Camera.Value - 2,
+		function() UpdateMouseInput(self) end
+	)
 
 	return self
 end
 
 function Update(self: InputController, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
+
+	UserInputService.MouseBehavior = self.Vehicle.MouseSteerOn and Enum.MouseBehavior.LockCenter
+		or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Enum.MouseBehavior.LockCurrentPosition
+		or Enum.MouseBehavior.Default
+
 	Context.Horn.Enabled = self.IsOn
 	Context.Ignition.Enabled = not self.Broken
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
+
+	Context.Steering.Enabled = not self.Vehicle.MouseSteerOn
+	Context.Throttle.Enabled = not self.Vehicle.MouseSteerOn
+	Context.Brake.Enabled = not self.Vehicle.MouseSteerOn
+	Context.MouseThrottle.Enabled = self.Vehicle.MouseSteerOn
+	Context.MouseBrake.Enabled = self.Vehicle.MouseSteerOn
 
 	local canShift = self.Vehicle.TransmissionMode == "Manual"
 		or (
@@ -77,10 +97,32 @@ function SmoothInputs(self: InputController, deltaTime: number)
 	end
 end
 
+function UpdateMouseInput(self: InputController)
+	if not self.Vehicle.MouseSteerOn or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then return end
+
+	local sensivity = SettingsController:GetSetting("MSteerSensivity")
+	local delta = UserInputService:GetMouseDelta()
+	local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity * 4, 0, 1)
+	local y = 1 - SettingsController:GetSetting("MSteerCursorY")
+	self.MousePosition = Vector2.new(x, y)
+
+	local mdZone = SettingsController:GetSetting("MSteerDZone")
+	local mST = (self.MousePosition.X - 0.5) / SettingsController:GetSetting("MSteerWidth") * 2
+	if math.abs(mST) <= mdZone then
+		self.Vehicle.SteerT = 0
+	else
+		self.Vehicle.SteerT = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
+				^ self.Vehicle.Tune.MSteerExp
+			* (mST / math.abs(mST))
+	end
+end
+
 function InitializeConnections(self: InputController)
 	local onChangeActions = {
 		Throttle = function(value) self._RawThrottle = value end,
 		Brake = function(value) self._RawBrake = value end,
+		MouseThrottle = function(value) self._RawThrottle = value end,
+		MouseBrake = function(value) self._RawBrake = value end,
 		Steering = function(value: Vector2)
 			if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
 				local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
@@ -127,12 +169,7 @@ function InitializeConnections(self: InputController)
 			if n > #self.Vehicle.Tune.TransModes then n = 1 end
 			self.Vehicle.TransmissionMode = self.Vehicle.Tune.TransModes[n]
 		end,
-		ToggleMouseSteering = function()
-			self.Vehicle.MouseSteerOn = not self.Vehicle.MouseSteerOn
-			self.Vehicle.SteerT = 0
-			self._RawThrottle = 0
-			self._RawBrake = 0
-		end,
+		ToggleMouseSteering = function() self.Vehicle.MouseSteerOn = not self.Vehicle.MouseSteerOn end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then
 				if self.Vehicle.TCS and self.Vehicle.ESC then

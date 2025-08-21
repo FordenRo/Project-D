@@ -23,7 +23,6 @@ local player = Players.LocalPlayer
 
 local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
 local PlayerModule = require(player.PlayerScripts.PlayerModule) :: any
-local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
 
 local ClientVehicle = setmetatable({}, BaseVehicle)
 ClientVehicle.__index = ClientVehicle
@@ -68,7 +67,6 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 		Front = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * self.Tune.PBrakeBias,
 		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
 	}
-	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self._conn = {}
 	self._ShiftUp = false
 	self._ShiftDown = false
