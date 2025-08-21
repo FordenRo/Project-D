@@ -8,6 +8,7 @@ local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
 local HandleInput = require(script.HandleInput)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local Lights = require(script.Lights)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local ReplicationVars = require(script.ReplicationVars)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -36,6 +37,7 @@ function ClientVehicle.new(instance: Instance)
 
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
+	self.Lights = Lights.new(self)
 
 	return self
 end
@@ -408,6 +410,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	-- car["A-Chassis Tune"].Shutdown:FireServer()
 
 	self.Interface:Destroy()
+	self.Lights:Destroy()
 
 	for _, plugin in self.Plugins do
 		plugin:Destroy()

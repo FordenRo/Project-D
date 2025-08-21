@@ -226,11 +226,14 @@ function UpdateIcons(self: Speedometer)
 
 	-- Lights
 	-- Low beam
-	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0) or Color3.new()
-	self.Instance.LowBeam.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
-	self.Instance.LowBeam.Visible = true
+	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0)
+		or self.Vehicle.Lights.State == "Low" and Color3.new(0, 1, 0)
+		or Color3.new()
+	self.Instance.LowBeam.ImageTransparency = (self.Vehicle.Starting or self.Vehicle.Lights.State == "Low") and 0.2
+		or 0.8
+	self.Instance.LowBeam.Visible = self.Vehicle.Lights.State ~= "High"
 	-- High beam
-	self.Instance.HighBeam.Visible = false
+	self.Instance.HighBeam.Visible = self.Vehicle.Lights.State == "High"
 
 	-- Turn signals
 	-- Right

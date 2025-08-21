@@ -12,12 +12,21 @@ export type BaseVehicle = {
 			["#Weight"]: BasePart,
 			Collider: Model,
 			Sounds: Model,
+			Lights: Model & {
+				Front: Model,
+				Rear: Model,
+				TurnRight: Model,
+				TurnLeft: Model,
+				Reverse: Model,
+				Brake: Model?,
+			},
 		},
 	},
 	_Remote: UnreliableRemoteEvent,
 	Plugins: { [string]: any },
 	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
+	Lights: BaseLights,
 	Starting: boolean,
 	Broken: boolean,
 	Occupant: Player?,
@@ -389,5 +398,47 @@ export type VehicleInterface = {
 	UpdateCursor: (self: VehicleInterface) -> (),
 	Destroy: (self: VehicleInterface) -> (),
 }
+
+export type Headlight = {
+	__index: Headlight,
+	_conn: RBXScriptConnection,
+	_startBrightness: number,
+	_currentBrightness: number,
+	Instance: BasePart,
+	Light: Light,
+	Enabled: boolean,
+	Brightness: number,
+	DisabledColor: Color3,
+	EnabledColor: Color3,
+
+	new: (instance: BasePart) -> Headlight,
+	SetBrightness: (self: Headlight, brightness: number) -> (),
+	Destroy: (self: Headlight) -> (),
+}
+
+export type BaseLights = {
+	_RE: RemoteEvent,
+	Vehicle: BaseVehicle,
+	State: "Off" | "Low" | "High",
+
+	Destroy: (self: BaseLights) -> (),
+}
+
+export type ClientLights = {
+	__index: ClientLights,
+	_conn: RBXScriptConnection,
+
+	new: (vehicle: ClientVehicle) -> ClientLights,
+} & BaseLights
+
+export type ServerLights = {
+	__index: ServerLights,
+	_typesBrightness: { [string]: number },
+	_cons: { RBXScriptConnection },
+	Headlights: Headlight,
+
+	new: (vehicle: ServerVehicle) -> ServerLights,
+	Update: (self: ClientVehicle) -> (),
+} & BaseLights
 
 return {}

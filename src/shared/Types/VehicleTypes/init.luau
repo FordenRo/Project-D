@@ -35,4 +35,9 @@ export type Tune = Tune.Tune
 export type PlayerVehicle = PlayerVehicle.PlayerVehicle
 export type PlayerVehicleInfo = PlayerVehicle.PlayerVehicleInfo
 
+export type BaseLights = Vehicle.BaseLights
+export type Headlight = Vehicle.Headlight
+export type ClientLights = Vehicle.ClientLights
+export type ServerLights = Vehicle.ServerLights
+
 return {}

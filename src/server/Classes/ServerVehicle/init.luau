@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
+local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -16,6 +17,8 @@ function ServerVehicle.new(instance: Instance)
 	local self: ServerVehicle = setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
 	self:Initialize()
+
+	self.Lights = Lights.new(self)
 
 	self._Remote.OnServerEvent:Connect(function(_, data: { [string]: any })
 		for k, v in data do
