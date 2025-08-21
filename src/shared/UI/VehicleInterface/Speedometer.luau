@@ -56,38 +56,36 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 		)
 	end
 
-	self:TachInit()
+	TachInit(self)
 
-	self._conn = RunService.Heartbeat:Connect(function() self:Update() end)
+	self._conn = RunService.Heartbeat:Connect(function() Update(self) end)
 	self._task = task.spawn(function()
 		while true do
 			task.wait(1 / 10)
-			self:SlowUpdate()
+			SlowUpdate(self)
 		end
 	end)
 
 	return self
 end
 
-function Speedometer.Update(self: Speedometer)
-	self:SpeedUpdate()
-	self:TachUpdate()
-	self:ABSUpdate()
-	self:BoostUpdate()
-	self:TSCUpdate()
+function Update(self: Speedometer)
+	SpeedUpdate(self)
+	TachUpdate(self)
+	ABSUpdate(self)
+	BoostUpdate(self)
+	TSCUpdate(self)
 end
 
-function Speedometer.SlowUpdate(self: Speedometer)
-	self:GearUpdate()
-	self:MileageUpdate()
-	self:FuelUpdate()
-	self:TempUpdate()
-	self:UpdateIcons()
-	self:LightsUpdate()
-	self:TurnSignalsUpdate()
+function SlowUpdate(self: Speedometer)
+	GearUpdate(self)
+	MileageUpdate(self)
+	FuelUpdate(self)
+	TempUpdate(self)
+	UpdateIcons(self)
 end
 
-function Speedometer.GearUpdate(self: Speedometer)
+function GearUpdate(self: Speedometer)
 	local labels = {
 		[-2] = "P",
 		[-1] = "R",
@@ -104,12 +102,12 @@ function Speedometer.GearUpdate(self: Speedometer)
 	end
 end
 
-function Speedometer.SpeedUpdate(self: Speedometer)
+function SpeedUpdate(self: Speedometer)
 	local speed = self.Vehicle.Velocity.Magnitude * self.Units[self.CurrentUnit].Scaling
 	self.Instance.Speed.Speed.Text = string.format("%03d", speed):gsub("^0+", '<font transparency="0.5">%0</font>')
 end
 
-function Speedometer.TachInit(self: Speedometer)
+function TachInit(self: Speedometer)
 	local max = math.ceil(self.Vehicle.Tune.Redline / 1000)
 	for i = 0, max do
 		local bin = self.Instance.Tach.Bin:Clone()
@@ -122,7 +120,7 @@ function Speedometer.TachInit(self: Speedometer)
 	end
 end
 
-function Speedometer.TachUpdate(self: Speedometer)
+function TachUpdate(self: Speedometer)
 	local function setColor(color: Color3)
 		for _, v: ImageLabel in { self.Instance.Tach.Left.CanvasGroup.FG, self.Instance.Tach.Right.CanvasGroup.FG } do
 			v.ImageColor3 = color
@@ -146,26 +144,13 @@ function Speedometer.TachUpdate(self: Speedometer)
 	end
 end
 
-function Speedometer.LightsUpdate(self: Speedometer)
-	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0) or Color3.new()
-	self.Instance.LowBeam.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
-end
-
-function Speedometer.TurnSignalsUpdate(self: Speedometer)
-	self.Instance.RTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
-	self.Instance.RTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
-
-	self.Instance.LTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
-	self.Instance.LTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
-end
-
-function Speedometer.MileageUpdate(self: Speedometer)
+function MileageUpdate(self: Speedometer)
 	local mileage = self.Vehicle.Mileage * self.Units[self.CurrentUnit].Scaling
 	self.Instance.Mileage.Mileage.Text =
 		string.format("%06.1f", mileage):gsub("^0+", '<font transparency="0.5">%0</font>')
 end
 
-function Speedometer.BoostUpdate(self: Speedometer)
+function BoostUpdate(self: Speedometer)
 	if not (self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers) then return end
 
 	local max = self.Vehicle.Tune.S_Boost + self.Vehicle.Tune.T_Boost
@@ -174,7 +159,7 @@ function Speedometer.BoostUpdate(self: Speedometer)
 	self.Instance.Boost.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 45)
 end
 
-function Speedometer.FuelUpdate(self: Speedometer)
+function FuelUpdate(self: Speedometer)
 	local function setColor(color: Color3)
 		self.Instance.Fuel.CanvasGroup.FG.ImageColor3 = color
 		self.Instance.FuelIcon.Icon.ImageColor3 = color
@@ -195,7 +180,7 @@ function Speedometer.FuelUpdate(self: Speedometer)
 	end
 end
 
-function Speedometer.TempUpdate(self: Speedometer)
+function TempUpdate(self: Speedometer)
 	local function setColor(color: Color3)
 		self.Instance.Temp.CanvasGroup.FG.ImageColor3 = color
 		self.Instance.TempIcon.Icon.ImageColor3 = color
@@ -216,15 +201,18 @@ function Speedometer.TempUpdate(self: Speedometer)
 	end
 end
 
-function Speedometer.UpdateIcons(self: Speedometer)
+function UpdateIcons(self: Speedometer)
+	-- PBrake
 	self.Instance.PBrake.ImageColor3 = (self.Vehicle.PBrake or self.Vehicle.Starting) and Color3.new(1, 1, 1)
 		or Color3.new()
 	self.Instance.PBrake.ImageTransparency = (self.Vehicle.PBrake or self.Vehicle.Starting) and 0.2 or 0.8
 
+	-- Battery
 	self.Instance.Battery.ImageColor3 = (not self.Vehicle.IsOn or self.Vehicle.Starting) and Color3.new(1, 0, 0)
 		or Color3.new()
 	self.Instance.Battery.ImageTransparency = (not self.Vehicle.IsOn or self.Vehicle.Starting) and 0.2 or 0.8
 
+	-- Check
 	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Broken) and Color3.new(1, 0, 0)
 		or self.Vehicle.EngineHealth < 0.2 and Color3.new(1, 0.5, 0)
 		or Color3.new()
@@ -235,9 +223,26 @@ function Speedometer.UpdateIcons(self: Speedometer)
 	)
 			and 0.2
 		or 0.8
+
+	-- Lights
+	-- Low beam
+	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0) or Color3.new()
+	self.Instance.LowBeam.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+	self.Instance.LowBeam.Visible = true
+	-- High beam
+	self.Instance.HighBeam.Visible = false
+
+	-- Turn signals
+	-- Right
+	self.Instance.RTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.RTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+
+	-- Left
+	self.Instance.LTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.LTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
 end
 
-function Speedometer.ABSUpdate(self: Speedometer)
+function ABSUpdate(self: Speedometer)
 	if self.Vehicle.Starting or not self.Vehicle.ABS then
 		self.Instance.ABS.ImageColor3 = Color3.new(1, 0, 0)
 		self.Instance.ABS.ImageTransparency = 0.2
@@ -252,7 +257,7 @@ function Speedometer.ABSUpdate(self: Speedometer)
 	end
 end
 
-function Speedometer.TSCUpdate(self: Speedometer)
+function TSCUpdate(self: Speedometer)
 	if self.Vehicle.Starting or not self.Vehicle.TCS then
 		self.Instance.TCS.ImageColor3 = Color3.new(1, 0, 0)
 		self.Instance.TCS.ImageTransparency = 0.2

@@ -348,22 +348,7 @@ export type VehicleSpeedometer = {
 	_task: thread,
 
 	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
-	Update: (self: VehicleSpeedometer) -> (),
-	SlowUpdate: (self: VehicleSpeedometer) -> (),
-	SpeedUpdate: (self: VehicleSpeedometer) -> (),
-	BoostUpdate: (self: VehicleSpeedometer) -> (),
-	GearUpdate: (self: VehicleSpeedometer) -> (),
-	MileageUpdate: (self: VehicleSpeedometer) -> (),
-	FuelUpdate: (self: VehicleSpeedometer) -> (),
-	TachUpdate: (self: VehicleSpeedometer) -> (),
-	UpdateIcons: (self: VehicleSpeedometer) -> (),
-	ABSUpdate: (self: VehicleSpeedometer) -> (),
-	TSCUpdate: (self: VehicleSpeedometer) -> (),
-	TempUpdate: (self: VehicleSpeedometer) -> (),
 	Destroy: (self: VehicleSpeedometer) -> (),
-	TachInit: (self: VehicleSpeedometer) -> (),
-	LightsUpdate: (self: VehicleSpeedometer) -> (),
-	TurnSignalsUpdate: (self: VehicleSpeedometer) -> (),
 }
 
 export type EffectFrame = {
