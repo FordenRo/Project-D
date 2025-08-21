@@ -10,7 +10,7 @@ local function u(s: string) return `<u>{s}</u>` end
 
 local Config = {}
 
-Config.Version = `0.0.0` .. (RunService:IsStudio() and "-PLAYTEST" or `-prealpha.{game.PlaceVersion}`)
+Config.Version = `0.0.0` .. (RunService:IsStudio() and "-PLAYTEST" or `-prealpha ({game.PlaceVersion})`)
 Config.Changelog = {}
 
 Config.Welcome = {
