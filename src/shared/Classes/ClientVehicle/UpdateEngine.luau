@@ -46,16 +46,16 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 		self.Throttle = self.Tune.ShiftThrot / 100
 	else
 		if self.Tune.AutoShiftVers == "Old" and self.Gear == -1 and self.TransmissionMode == "Auto" then
-			self.Throttle = self._InBrake
+			self.Throttle = self.InputController.Brake
 		else
-			self.Throttle = math.max(self._InThrot, self.Tune.IdleThrottle / 100)
+			self.Throttle = math.max(self.InputController.Throttle, self.Tune.IdleThrottle / 100)
 		end
 	end
 
 	if self.Tune.AutoShiftVers == "Old" and self.Gear == -1 and self.TransmissionMode == "Auto" then
-		self.Brake = self._InThrot
+		self.Brake = self.InputController.Throttle
 	else
-		self.Brake = self._InBrake
+		self.Brake = self.InputController.Brake
 	end
 
 	if not self.IsOn then
@@ -67,7 +67,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	if
 		(
 			(self._ClutchPressing and (self.Gear == 0 or (ParkingGearEnabled and self.Gear == -2)))
-			or (self._InputClutch and self.Gear ~= 0)
+			or (self.InputController.Clutch and self.Gear ~= 0)
 		) and self.Tune.NeutralLimit
 	then
 		if
@@ -251,7 +251,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 		self.AutoClutch
 		and (
 			self.Starting
-			or (self.Tune.RemoveCreep and self.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) and self.InputThrottle < 0.1)
+			or (self.Tune.RemoveCreep and self.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) and self.InputController.Throttle < 0.1)
 			or (revLimiting and self.Tune.OverRev == false)
 		)
 	then
@@ -443,7 +443,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 					or (
 						self.Tune.RemoveCreep
 						and self.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0)
-						and self.InputThrottle < 0.1
+						and self.InputController.Throttle < 0.1
 					)
 				)
 			)

@@ -77,9 +77,7 @@ function initializeVariables(self: BaseVehicle)
 	self.Torque = 0
 	-- Inputs
 	self.Throttle = 0
-	self.InputThrottle = 0
 	self.Brake = 0
-	self.InputBrake = 0
 	self.SteerC = 0
 	self.SteerT = 0
 	self.MouseSteerOn = false

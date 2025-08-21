@@ -33,9 +33,10 @@ type ClientVehicle = VehicleTypes.ClientVehicle
 function ClientVehicle.new(instance: Instance)
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
+	self.InputController = InputController.new(self)
+
 	self:Initialize()
 
-	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
 	self.Lights = Lights.new(self)
@@ -72,13 +73,10 @@ function ClientVehicle.InitializeVariables(self: ClientVehicle)
 	self._ShiftUp = false
 	self._ShiftDown = false
 	self._ClutchPressing = false
-	self._InputClutch = false
-	self._GoalRPM = 0
+		self._GoalRPM = 0
 	self._DriveWheelSpeed = 0
 	self._CanStall = false
-	self._InThrot = 0
-	self._InBrake = 0
-	self._LastOffTime = tick()
+		self._LastOffTime = tick()
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
 	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
@@ -223,20 +221,6 @@ end
 
 -- TODO: Drivetrain Initialize
 
-function ClientVehicle.SmoothInputs(self: ClientVehicle, deltaTime: number)
-	deltaTime = (60 / (1 / deltaTime))
-	if self._InThrot <= self.InputThrottle then
-		self._InThrot = math.min(self.InputThrottle, self._InThrot + (self.Tune.ThrotAccel * deltaTime))
-	else
-		self._InThrot = math.max(self.InputThrottle, self._InThrot - (self.Tune.ThrotDecel * deltaTime))
-	end
-	if self._InBrake <= self.InputBrake then
-		self._InBrake = math.min(self.InputBrake, self._InBrake + (self.Tune.BrakeAccel * deltaTime))
-	else
-		self._InBrake = math.max(self.InputBrake, self._InBrake - (self.Tune.BrakeDecel * deltaTime))
-	end
-end
-
 -- TODO: Steering Initialize
 -- function ClientVehicle.InitSteeringAuto(self: ClientVehicle)
 -- 	self.SteerOuter = (self.Tune.LockToLock * 180) / self.Tune.SteerRatio
@@ -367,7 +351,6 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime
 
 	self:UpdateWheels()
-	self:SmoothInputs(deltaTime)
 	UpdateSteering(self, deltaTime)
 	UpdateTransmission(self)
 	UpdateEngine(self, deltaTime)

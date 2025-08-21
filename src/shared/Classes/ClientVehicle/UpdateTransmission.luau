@@ -7,7 +7,7 @@ return function(self: VehicleTypes.ClientVehicle)
 	if self._ShiftUp and not self.Shifting then
 		if
 			(self.TransmissionMode == "Manual" and not self._ClutchPressing)
-			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self._InThrot > 0))
+			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self.InputController.Throttle > 0))
 			or self.Gear == #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0)
 			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
 		then
@@ -45,7 +45,7 @@ return function(self: VehicleTypes.ClientVehicle)
 			self.TransmissionMode ~= "Manual"
 			or (self.TransmissionMode == "Manual" and self.Gear == 1) and self.IsOn
 		then
-			self._ClutchPressing = self._InputClutch
+			self._ClutchPressing = self.InputController.Clutch
 		end
 	end
 	if self._ShiftDown and not self.Shifting then
@@ -87,7 +87,7 @@ return function(self: VehicleTypes.ClientVehicle)
 			self.TransmissionMode ~= "Manual"
 			or (self.TransmissionMode == "Manual" and self.Gear == -1) and self.IsOn
 		then
-			self._ClutchPressing = self._InputClutch
+			self._ClutchPressing = self.InputController.Clutch
 		end
 	end
 end

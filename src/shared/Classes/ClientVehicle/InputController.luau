@@ -21,6 +21,14 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 
 	self.Vehicle = vehicle
 
+	self._cons = {}
+	self._RawThrottle = 0
+	self._RawBrake = 0
+
+	self.Throttle = 0
+	self.Brake = 0
+	self.Clutch = 0
+
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
 	Context.CS.Enabled = self.Vehicle.Tune.CSEnabled
@@ -28,13 +36,12 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 
 	InitializeConnections(self)
 
-	self._cons = {}
-	table.insert(self._cons, RunService.Heartbeat:Connect(function() Update(self) end))
+	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime: number) Update(self, deltaTime) end))
 
 	return self
 end
 
-function Update(self: VehicleTypes.ClientVehicle)
+function Update(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
 	Context.Horn.Enabled = self.IsOn
 	Context.Ignition.Enabled = not self.Broken
@@ -54,12 +61,28 @@ function Update(self: VehicleTypes.ClientVehicle)
 		)
 	Context.ShiftDown.Enabled = canShift
 	Context.ShiftUp.Enabled = canShift
+
+	SmoothInputs(self, deltaTime)
+end
+
+function SmoothInputs(self: InputController, deltaTime: number)
+	deltaTime = (60 / (1 / deltaTime))
+	if self.Throttle <= self._RawThrottle then
+		self.Throttle = math.min(self._RawThrottle, self.Throttle + (self.Vehicle.Tune.ThrotAccel * deltaTime))
+	else
+		self.Throttle = math.max(self._RawThrottle, self.Throttle - (self.Vehicle.Tune.ThrotDecel * deltaTime))
+	end
+	if self.Brake <= self._RawBrake then
+		self.Brake = math.min(self._RawBrake, self.Brake + (self.Vehicle.Tune.BrakeAccel * deltaTime))
+	else
+		self.Brake = math.max(self._RawBrake, self.Brake - (self.Vehicle.Tune.BrakeDecel * deltaTime))
+	end
 end
 
 function InitializeConnections(self: InputController)
 	local onChangeActions = {
-		Throttle = function(value) self.Vehicle.InputThrottle = value end,
-		Brake = function(value) self.Vehicle.InputBrake = value end,
+		Throttle = function(value) self._RawThrottle = value end,
+		Brake = function(value) self._RawBrake = value end,
 		Steering = function(value: Vector2)
 			if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
 				local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
@@ -74,7 +97,7 @@ function InitializeConnections(self: InputController)
 		end,
 		Clutch = function(value)
 			self.Vehicle._ClutchPressing = value
-			self.Vehicle._InputClutch = value
+			self.Clutch = value
 		end,
 		Handbrake = function(value)
 			if value then
@@ -108,9 +131,9 @@ function InitializeConnections(self: InputController)
 		end,
 		ToggleMouseSteering = function()
 			self.Vehicle.MouseSteerOn = not self.Vehicle.MouseSteerOn
-			self.Vehicle.InputThrottle = 0
-			self.Vehicle.InputBrake = 0
 			self.Vehicle.SteerT = 0
+			self._RawThrottle = 0
+			self._RawBrake = 0
 		end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then
@@ -154,9 +177,9 @@ function InputController.Destroy(self: InputController)
 		v:Disconnect()
 	end
 
-	self.Vehicle.InputBrake = 0
+	self._RawBrake = 0
+	self._RawThrottle = 0
 	self.Vehicle.SteerT = 0
-	self.Vehicle.InputThrottle = 0
 end
 
 return InputController

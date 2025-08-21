@@ -67,9 +67,7 @@ export type BaseVehicle = {
 	Torque: number,
 	-- Inputs
 	Throttle: number,
-	InputThrottle: number,
 	Brake: number,
-	InputBrake: number,
 	SteerC: number,
 	SteerT: number,
 	MouseSteerOn: boolean,
@@ -132,13 +130,10 @@ export type ClientVehicle = {
 	_ShiftUp: boolean,
 	_ShiftDown: boolean,
 	_ClutchPressing: boolean,
-	_InputClutch: boolean,
 	_DriveWheelSpeed: number,
 	_LastOffTime: number,
 	_CanStall: boolean,
 	-- Inputs
-	_InThrot: number,
-	_InBrake: number,
 	MousePosition: Vector2,
 	-- Velocity
 	_OldVelocity: Vector3,
@@ -152,7 +147,6 @@ export type ClientVehicle = {
 	Update: (self: ClientVehicle, deltaTime: number) -> (),
 	SlowUpdate: (self: ClientVehicle) -> (),
 	UpdateWheels: (self: ClientVehicle) -> (),
-	SmoothInputs: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateTemp: (self: ClientVehicle, deltaTime: number) -> (),
 	UpdateHealth: (self: ClientVehicle, deltaTime: number) -> (),
@@ -164,6 +158,11 @@ export type InputController = {
 	__index: InputController,
 	_cons: { RBXScriptConnection },
 	Vehicle: ClientVehicle,
+	_RawThrottle: number,
+	_RawBrake: number,
+	Throttle: number,
+	Brake: number,
+	Clutch: number,
 
 	new: (vehicle: ClientVehicle) -> InputController,
 	Destroy: (self: InputController) -> (),
