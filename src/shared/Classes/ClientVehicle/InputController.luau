@@ -12,9 +12,7 @@ local Context = ReplicatedStorage.Input.Vehicle
 local InputController = {}
 InputController.__index = InputController
 
-type InputController = {
-	Vehicle: VehicleTypes.ClientVehicle,
-}
+type InputController = VehicleTypes.InputController
 
 function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	local self: InputController = setmetatable({}, InputController) :: any
@@ -41,7 +39,7 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	return self
 end
 
-function Update(self: VehicleTypes.ClientVehicle, deltaTime: number)
+function Update(self: InputController, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
 	Context.Horn.Enabled = self.IsOn
 	Context.Ignition.Enabled = not self.Broken

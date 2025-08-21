@@ -30,6 +30,7 @@ export type BaseVehicle = Vehicle.BaseVehicle
 export type ClientVehicle = Vehicle.ClientVehicle
 export type DeformationController = Vehicle.DeformationController
 export type ServerVehicle = Vehicle.ServerVehicle
+export type InputController = Vehicle.InputController
 
 export type Tune = Tune.Tune
 export type PlayerVehicle = PlayerVehicle.PlayerVehicle
