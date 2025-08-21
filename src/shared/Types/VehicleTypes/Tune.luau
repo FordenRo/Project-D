@@ -189,6 +189,7 @@ export type Tune = {
 	EfficientCombustionRPM: number,
 	-- Damage
 	RPMDamage: number,
+	HotDamage: number,
 	RedlineDamage: number,
 	RedlineDamageCurve: number,
 	-- Electric Engine

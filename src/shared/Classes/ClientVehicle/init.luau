@@ -8,6 +8,7 @@ local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
 local HandleInput = require(script.HandleInput)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local ReplicationVars = require(script.ReplicationVars)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateEngine = require(script.UpdateEngine)
@@ -311,6 +312,11 @@ function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
 
 	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
 	damage += (math.max(self.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
+	damage += self.Tune.HotDamage * math.clamp(
+		MapToRange(self.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
+		0,
+		1
+	) ^ 1.5
 	self.EngineHealth -= damage * deltaTime
 
 	if self.EngineHealth <= 0 then
