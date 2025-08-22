@@ -14,14 +14,16 @@ function Headlight.new(instance: BasePart)
 	self.Light = self.Instance:FindFirstChildWhichIsA("Light", true)
 	self.Enabled = false
 
-	self._startBrightness = self.Light.Brightness
+	if self.Light then self._lightBrightness = self.Light.Brightness end
 	self._currentBrightness = 0
 	self.Brightness = 0
 	self.DisabledColor = self.Instance.Color
-	self.EnabledColor = self.Light.Color
+	self.EnabledColor = self.Light and self.Light.Color or self.Instance:GetAttribute("Color")
 
-	self.Light.Brightness = 0
-	self.Light.Enabled = true
+	if self.Light then
+		self.Light.Brightness = 0
+		self.Light.Enabled = true
+	end
 
 	self._task = task.spawn(function()
 		while true do
@@ -40,7 +42,7 @@ function Update(self: Headlight, deltaTime: number)
 	end
 
 	local brightness = self._currentBrightness ^ 2
-	self.Light.Brightness = self._startBrightness * brightness
+	if self.Light then self.Light.Brightness = self._lightBrightness * brightness end
 	self.Instance.Color = self.DisabledColor:Lerp(self.EnabledColor, self._currentBrightness)
 end
 

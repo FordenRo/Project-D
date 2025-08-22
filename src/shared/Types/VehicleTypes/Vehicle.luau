@@ -366,7 +366,7 @@ export type VehicleInterface = {
 export type Headlight = {
 	__index: Headlight,
 	_conn: RBXScriptConnection,
-	_startBrightness: number,
+	_lightBrightness: number,
 	_currentBrightness: number,
 	Instance: BasePart,
 	Light: Light,
@@ -384,13 +384,14 @@ export type BaseLights = {
 	_RE: RemoteEvent,
 	Vehicle: BaseVehicle,
 	State: "Off" | "Low" | "High",
+	TurnState: "Off" | "Left" | "Right" | "Both",
 
 	Destroy: (self: BaseLights) -> (),
 }
 
 export type ClientLights = {
 	__index: ClientLights,
-	_conn: RBXScriptConnection,
+	_cons: { RBXScriptConnection },
 
 	new: (vehicle: ClientVehicle) -> ClientLights,
 } & BaseLights
