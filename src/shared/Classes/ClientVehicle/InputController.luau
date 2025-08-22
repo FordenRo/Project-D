@@ -170,7 +170,10 @@ function InitializeConnections(self: InputController)
 			if n > #self.Vehicle.Tune.TransModes then n = 1 end
 			self.Vehicle.TransmissionMode = self.Vehicle.Tune.TransModes[n]
 		end,
-		ToggleMouseSteering = function() self.MouseSteerOn = not self.MouseSteerOn end,
+		ToggleMouseSteering = function()
+			self.MouseSteerOn = not self.MouseSteerOn
+			self.Steering = 0
+		end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then
 				if self.Vehicle.TCS and self.Vehicle.ESC then
