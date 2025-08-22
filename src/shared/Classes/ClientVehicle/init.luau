@@ -1,8 +1,6 @@
-local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
@@ -20,9 +18,6 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
-
-local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
-local PlayerModule = require(player.PlayerScripts.PlayerModule) :: any
 
 local ClientVehicle = setmetatable({}, BaseVehicle)
 ClientVehicle.__index = ClientVehicle
@@ -47,7 +42,6 @@ function Initialize(self: ClientVehicle)
 	InitializeVariables(self)
 	HideCharacter(self)
 	self:InitializeWheels()
-	InitControls(self)
 	InitializePlugins(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
@@ -77,7 +71,6 @@ function InitializeVariables(self: ClientVehicle)
 	self._LastOffTime = tick()
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
-	self._LastInputWasGamepad = string.find(UserInputService:GetLastInputType().Name, "Gamepad") and true or false
 end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
@@ -97,125 +90,6 @@ function HideCharacter(self: ClientVehicle)
 		v.Transparency = 1
 	end
 end
-
--- TODO: Add VirtualInput & Mobile
-function InitControls(self: ClientVehicle)
-	self.Controls = DatastoreController:GetControls()
-
-	-- Disable jumping
-	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
-
-	table.insert(
-		self._cons,
-		UserInputService.LastInputTypeChanged:Connect(
-			function(inputType) self._LastInputWasGamepad = string.find(inputType.Name, "Gamepad") and true or false end
-		)
-	)
-	-- if VirtualInputEnabled then VirtualInput.Event:Connect(self.OnInput) end
-
-	-- if self.Tune.Mobile then self:OnMobileInput() end
-end
-
--- function ClientVehicle.DeadzoneAdjust(self: ClientVehicle)
--- 	local _PPH = self.Tune.Peripherals
--- 	for i, v in _PPH do
--- 		local a = Instance.new("IntValue", Controls)
--- 		a.Name = i
--- 		a.Value = v
--- 		a.Changed:connect(function()
--- 			a.Value = math.min(100, math.max(0, a.Value))
--- 			_PPH[i] = a.Value
--- 		end)
--- 	end
--- end
-
--- TODO
--- function ClientVehicle.OnMobileInput(self: ClientVehicle)
--- 	local mobile = script.Parent.Mobile
-
--- 	mobile.Jump.InputBegan:Connect(function(input)
--- 		if input.UserInputType ~= Enum.UserInputType.Touch then return end
--- 		player.Character:FindFirstChildWhichIsA("Humanoid").Jump = true
--- 	end)
-
--- 	mobile.ModeSwitch.MouseButton1Click:Connect(function()
--- 		MobileMode = MobileModes[(table.find(MobileModes, MobileMode) or 0) + 1]
--- 		if not MobileMode then MobileMode = MobileModes[1] end
--- 	end)
-
--- 	-- Tap
--- 	for _, button in mobile.Tap:GetChildren() do
--- 		if not button:IsA("ImageButton") then continue end
--- 		button.InputBegan:Connect(function(input)
--- 			if input.UserInputType ~= Enum.UserInputType.Touch then return end
--- 			button.ImageColor3 = Color3.fromRGB(178, 178, 178)
--- 			button.ImageLabel.ImageColor3 = Color3.new(0, 0, 0)
--- 			button.ImageLabel.ImageTransparency = 0.5
--- 			if button.Name == "Throttle" then
--- 				_IThrot = 1
--- 			elseif button.Name == "Brake" then
--- 				_IBrake = 1
--- 			elseif button.Name == "Left" then
--- 				_GSteerT = -1
--- 				_SteerL = true
--- 			elseif button.Name == "Right" then
--- 				_GSteerT = 1
--- 				_SteerR = true
--- 			end
--- 		end)
--- 		button.InputEnded:Connect(function(input)
--- 			if input.UserInputType ~= Enum.UserInputType.Touch then return end
--- 			button.ImageColor3 = Color3.new(0, 0, 0)
--- 			button.ImageLabel.ImageColor3 = Color3.new(1, 1, 1)
--- 			button.ImageLabel.ImageTransparency = 0.8
--- 			if button.Name == "Throttle" then
--- 				_IThrot = 0
--- 			elseif button.Name == "Brake" then
--- 				_IBrake = 0
--- 			elseif button.Name == "Left" then
--- 				if _SteerR then
--- 					_GSteerT = 1
--- 				else
--- 					_GSteerT = 0
--- 				end
--- 				_SteerL = false
--- 			elseif button.Name == "Right" then
--- 				if _SteerL then
--- 					_GSteerT = -1
--- 				else
--- 					_GSteerT = 0
--- 				end
--- 				_SteerR = false
--- 			end
--- 		end)
--- 	end
-
--- 	-- Tilt
--- 	for _, button in mobile.Tilt:GetChildren() do
--- 		if not button:IsA("TextButton") then continue end
--- 		button.InputBegan:Connect(function(input)
--- 			if input.UserInputType ~= Enum.UserInputType.Touch then return end
--- 			if button.Name == "Throttle" then
--- 				_IThrot = 1
--- 			elseif button.Name == "Brake" then
--- 				_IBrake = 1
--- 			end
--- 		end)
--- 		button.InputEnded:Connect(function(input)
--- 			if input.UserInputType ~= Enum.UserInputType.Touch then return end
--- 			if button.Name == "Throttle" then
--- 				_IThrot = 0
--- 			elseif button.Name == "Brake" then
--- 				_IBrake = 0
--- 			end
--- 		end)
--- 	end
--- 	if UserInputService.GyroscopeEnabled then
--- 		UserInputService.DeviceRotationChanged:Connect(function(rotation, cframe)
--- 			if MobileMode == "Tilt" then _GSteerT = -math.clamp(rotation.Position.Z * 2, -1, 1) end
--- 		end)
--- 	end
--- end
 
 -- TODO: Drivetrain Initialize
 
@@ -269,7 +143,6 @@ function UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if self.Fuel <= 0 then self.IsOn = false end
 end
 
--- TODO: Взрыв двигателя, дым из под капота
 function UpdateTemp(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Broken then return end
 
@@ -309,8 +182,6 @@ end
 
 -- TODO: Flip function
 
--- TODO: Mobile input
-
 function ReplicateVariables(self: ClientVehicle)
 	local data = {}
 	for _, var in ReplicationVars do
@@ -342,8 +213,6 @@ end
 function SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
-	PlayerModule:GetControls():GetActiveController().jumpEnabled = true
-
 	--Remove Flip Force
 	if self.Instance.DriveSeat:FindFirstChild("Flip") then
 		if self.Tune.FlipType == "New" then
@@ -353,18 +222,9 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 		end
 	end
 
-	-- Save PBrake state
-	-- car["A-Chassis Tune"]["A-Chassis Interface"].Values.PBrake.Value = _PBrake
-
 	for _, wheel in self.Wheels :: { VehicleTypes.BaseWheel } do
 		wheel:Destroy()
 	end
-
-	-- Reintroduce touch controls
-	if self.Tune.Mobile then GuiService.TouchControlsEnabled = true end
-
-	-- Tell server to remove
-	-- car["A-Chassis Tune"].Shutdown:FireServer()
 
 	self.InputController:Destroy()
 	self.Interface:Destroy()

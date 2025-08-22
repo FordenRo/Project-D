@@ -8,6 +8,7 @@ local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local PlayerModule = require(player.PlayerScripts.PlayerModule) :: any
 local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -35,6 +36,8 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
 	Context.CS.Enabled = self.Vehicle.Tune.CSEnabled
+
+	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 	Context.Enabled = true
 
 	InitializeConnections(self)
@@ -219,6 +222,8 @@ function InputController.Destroy(self: InputController)
 	self._RawBrake = 0
 	self._RawThrottle = 0
 	self.Steering = 0
+
+	PlayerModule:GetControls():GetActiveController().jumpEnabled = true
 end
 
 return InputController

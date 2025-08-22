@@ -1,11 +1,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
-	local controller = self._LastInputWasGamepad
+	local controller = UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
 		or (self.Tune.MSteerUsesContlr and self.InputController.MouseSteerOn or false)
 	local SteerSpeed
 	local ReturnSpeed
