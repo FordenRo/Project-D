@@ -1,28 +1,19 @@
 export type SettingType = "Slider" | "Binding" | "Checkbox"
 type SettingCategory = "Controls" | "Gameplay" | "Graphics"
+type ActionType = "Mouse" | "Controller" | "Keyboard"
 
-export type DefaultProperties = {
+export type SettingInfo = {
 	Title: string,
 	Description: string?,
 	Category: SettingCategory,
 	Type: SettingType,
-}
-export type SliderProperties = {
+	Value: any,
+	Default: any,
 	Max: number?,
 	Min: number?,
 	Step: number?,
-	Default: number?,
-	Value: number,
-} & DefaultProperties
-export type BindingProperties = {
-	Default: { [index<BindingProperties, "ActionTypes">]: Enum.KeyCode },
-	Value: { [index<BindingProperties, "ActionTypes">]: Enum.KeyCode },
-	ActionTypes: { "Mouse" | "Controller" | "Keyboard" },
-} & DefaultProperties
-export type CheckboxProperties = {
-	Value: boolean,
-	Default: boolean,
-} & DefaultProperties
+	ActionTypes: { ActionType }?,
+}
 
 local Info = {
 	ShowFPS = {
@@ -40,7 +31,7 @@ local Info = {
 		Default = 1,
 		Min = 0.05,
 		Max = 4,
-	} :: SliderProperties,
+	},
 	MSteerDZone = {
 		Title = "Mouse Steering Deadzone",
 		Category = "Controls",
@@ -48,7 +39,7 @@ local Info = {
 		Type = "Slider",
 		Default = 0,
 		Max = 0.9,
-	} :: SliderProperties,
+	},
 	MSteerCursorY = {
 		Title = "Mouse Steering Cursor Y",
 		Category = "Controls",
@@ -56,7 +47,7 @@ local Info = {
 		Type = "Slider",
 		Default = 0.2,
 		Max = 1,
-	} :: SliderProperties,
+	},
 	MSteerWidth = {
 		Title = "Mouse Steering Width",
 		Category = "Controls",
@@ -65,7 +56,7 @@ local Info = {
 		Default = 0.7,
 		Min = 0.1,
 		Max = 1,
-	} :: SliderProperties,
-}
+	},
+} :: { [string]: SettingInfo }
 
 return Info

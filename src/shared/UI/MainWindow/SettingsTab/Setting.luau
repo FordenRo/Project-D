@@ -46,17 +46,14 @@ export type Setting = typeof(setmetatable(
 			},
 		},
 		Type: SettingsInfo.SettingType,
-		Properties: SettingsInfo.SliderProperties & SettingsInfo.BindingProperties & SettingsInfo.CheckboxProperties,
+		Properties: SettingsInfo.SettingInfo,
 		Changed: RBXScriptSignal,
-		Value: boolean & Enum.KeyCode & number,
+		Value: any,
 	},
 	Setting
 ))
 
-function Setting.new(
-	instance: Frame,
-	properties: SettingsInfo.SliderProperties | SettingsInfo.BindingProperties | SettingsInfo.CheckboxProperties
-)
+function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo)
 	local self: Setting = setmetatable({}, Setting) :: any
 
 	self.Instance = instance
@@ -104,7 +101,7 @@ function InitSlider(self: Setting)
 		slider.Fill.Size = UDim2.fromScale(updateHandle and normalizedValue or MapToRange(value, min, max), 1)
 		local l = step >= 1 and 0 or step >= 0.1 and 1 or 2
 		valueFrame.Input.Text = string.format(`%.{l}f`, self.Value :: number)
-		valueFrame.Revert.Visible = math.abs((self.Properties.Default - self.Value) :: number) > step / 2
+		valueFrame.Revert.Visible = math.abs(self.Properties.Default - self.Value) > step / 2
 		if updateHandle then slider.Handle.Position = UDim2.fromScale(normalizedValue, 0.5) end
 		if fireEvent then self._changedEvent:Fire(self.Value) end
 	end
