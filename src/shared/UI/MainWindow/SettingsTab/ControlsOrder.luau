@@ -1,0 +1,35 @@
+return {
+	{
+		Context = "Player",
+		Actions = {
+			"Sprint",
+			"Interact",
+		},
+	},
+	{
+		Context = "Vehicle",
+		Actions = {
+			"Throttle",
+			"Brake",
+			"TurnLeft",
+			"TurnRight",
+			"ControllerSteering",
+			"Clutch",
+			"ShiftUp",
+			"ShiftDown",
+			"Ignition",
+			"Handbrake",
+			"Leave",
+			"ToggleMouseSteering",
+			"TransmissionMode",
+			"Lights",
+			"LeftTurnSignal",
+			"Hazards",
+			"RightTurnSignal",
+			"Horn",
+			"TCS",
+			"ABS",
+			"CS",
+		},
+	},
+}

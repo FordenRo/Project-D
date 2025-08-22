@@ -30,4 +30,6 @@ end
 
 function InterfaceController.OpenWelcome(self: InterfaceController) self.MainWindow:Show() end
 
+function InterfaceController.OpenSettings(self: InterfaceController) self.MainWindow:Show("Settings") end
+
 return InterfaceController.new()

@@ -30,7 +30,7 @@ function Initialize(self: Interface) InitializeButtons(self) end
 
 function InitializeButtons(self: Interface)
 	local callbacks = {
-		Settings = function() end,
+		Settings = function() self.InterfaceController:OpenSettings() end,
 		Store = function() end,
 		Garage = function() end,
 		Changelog = function() end,
