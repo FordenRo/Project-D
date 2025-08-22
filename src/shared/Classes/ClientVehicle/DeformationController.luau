@@ -93,7 +93,6 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 		}
 		self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
 		scratch:Destroy()
-		print(string.format("Impact %.1f", force))
 
 		if force > 10 then
 			local hitVertexId = self.BodyMesh:FindClosestVertex(hitCenter)
@@ -123,7 +122,6 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 				local dirtTexture = AssetService:CreateEditableImageAsync(self.Vehicle.Tune.DirtTexture)
 				ImageUtils.SetImageAlpha(dirtTexture, dirt - _lastDirt)
 				self.BodyTexture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
-				print(dirt - _lastDirt)
 				_lastDirt = dirt
 			end
 		end
