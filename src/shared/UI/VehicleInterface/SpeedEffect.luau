@@ -36,7 +36,7 @@ function createEffect(rotation: number, force: number)
 	frame.BackgroundColor3 = Color3.new(1, 1, 1)
 	frame.BorderSizePixel = 0
 	frame.SizeConstraint = Enum.SizeConstraint.RelativeXX
-	frame.Size = UDim2.fromScale(0.5, force * 0.01)
+	frame.Size = UDim2.fromScale(0.3, force ^ 0.8 * 0.001)
 	frame.Rotation = rotation
 
 	local gradient = Instance.new("UIGradient")
@@ -65,9 +65,9 @@ function createEffect(rotation: number, force: number)
 end
 
 function Update(self: SpeedEffect, deltaTime: number)
-	if self.Vehicle.Velocity.Magnitude > 80 then
-		local force = MapToRange(self.Vehicle.Velocity.Magnitude, 80, 200)
-		local debounce = Lerp(1 / 3, 1 / 60, force ^ 0.8)
+	if self.Vehicle.Velocity.Magnitude > 60 then
+		local force = math.clamp(MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200), 0, 1)
+		local debounce = Lerp(1 / 3, 1 / 200, force ^ 0.8)
 		if tick() - self._LastSpawn > debounce then
 			local effect = createEffect(math.random() * 360, force)
 			effect:Move(math.min(force, 0.5))
@@ -79,7 +79,7 @@ function Update(self: SpeedEffect, deltaTime: number)
 	end
 
 	for _, effect in self.Effects do
-		local position = effect.Position - effect.Force * deltaTime * 4
+		local position = effect.Position - effect.Force * deltaTime * 6
 		effect:Move(position)
 
 		if position < 0 then effect:Destroy() end
