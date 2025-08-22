@@ -104,6 +104,7 @@ end
 
 function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	if self.CurrentTab == tab then return end
+	local lastTab = self.CurrentTab
 	self.CurrentTab = tab
 
 	for _, button: TabBarButton in self.Instance.Window.TabBar.Container:GetChildren() do
@@ -127,13 +128,18 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	end
 
 	for tabContent: ScrollingFrame, position in self._TabPositions do
+		tabContent.Visible = tabContent.Name == lastTab or tabContent.Name == tab
+
 		local newPosition = UDim2.fromScale(position - tabButton.LayoutOrder, 0)
 		if skipAnim then
 			tabContent.Position = newPosition
 			continue
 		end
 		local tween = TweenService:Create(tabContent, SwitchTweenInfo, { Position = newPosition })
-		tween.Completed:Once(function() tween:Destroy() end)
+		tween.Completed:Once(function()
+			if tabContent.Name == lastTab then tabContent.Visible = false end
+			tween:Destroy()
+		end)
 		tween:Play()
 	end
 end
