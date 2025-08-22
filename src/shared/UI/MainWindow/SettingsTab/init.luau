@@ -6,6 +6,7 @@ local player = Players.LocalPlayer
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
 local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
+local SplitPascalCase = require(ReplicatedStorage.Shared.Utils.SplitPascalCase)
 
 local SettingsTab = {}
 SettingsTab.__index = SettingsTab
@@ -39,7 +40,7 @@ function SettingsTab.new(instance: ScrollingFrame)
 	local contextInstance = self.Instance.ControlContext
 	for _, inputContext in ReplicatedStorage.Input:GetChildren() :: { InputContext } do
 		local context = contextInstance:Clone()
-		context.Title.Text = string.gsub(inputContext.Name, "([a-z])([A-Z][a-z])", "%1 %2")
+		context.Title.Text = SplitPascalCase(inputContext.Name)
 		context.Visible = true
 		local contextOrder, actionsOrder = getOrder(inputContext.Name)
 		context.LayoutOrder = contextOrder
@@ -48,7 +49,7 @@ function SettingsTab.new(instance: ScrollingFrame)
 			if string.match(inputAction.Name, "Mouse") then continue end
 
 			local properties = {
-				Title = string.gsub(inputAction.Name, "([a-z])([A-Z][a-z])", "%1 %2"),
+				Title = SplitPascalCase(inputAction.Name),
 				Type = "Binding",
 				Value = {},
 				Default = {},
