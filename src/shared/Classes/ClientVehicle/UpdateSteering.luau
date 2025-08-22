@@ -52,7 +52,7 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 	end
 	local SteerWithCounter = math.clamp(self.InputController.Steering + CSAmt, -1, 1)
 	local SteerSmoothing =
-		math.clamp(math.abs(SteerWithCounter - self.SteeSteeringrC) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
+		math.clamp(math.abs(SteerWithCounter - self.Steering) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
 	if self.Steering < SteerWithCounter then
 		if self.Steering < 0 then
 			self.Steering = math.min(SteerWithCounter, self.Steering + (ReturnSpeed * SteerSmoothing * deltaTime))
