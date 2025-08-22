@@ -103,8 +103,8 @@ function UpdateMouseInput(self: InputController)
 	if not self.MouseSteerOn or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then return end
 
 	local sensivity = SettingsController:GetSetting("MSteerSensivity")
-	local delta = UserInputService:GetMouseDelta()
-	local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity * 4, 0, 1)
+	local delta = UserInputService:GetMouseDelta() / UserSettings().GameSettings.MouseSensitivity
+	local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity, 0, 1)
 	local y = 1 - SettingsController:GetSetting("MSteerCursorY")
 	self.MousePosition = Vector2.new(x, y)
 
