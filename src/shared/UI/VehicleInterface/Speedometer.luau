@@ -237,12 +237,18 @@ function UpdateIcons(self: Speedometer)
 
 	-- Turn signals
 	-- Right
-	self.Instance.RTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
-	self.Instance.RTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+	local rTurn = self.Vehicle.Starting
+		or (self.Vehicle.Lights.TurnState == "Right" or self.Vehicle.Lights.TurnState == "Both")
+			and math.round(tick() * 2) % 2 == 0
+	self.Instance.RTurn.ImageColor3 = rTurn and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.RTurn.ImageTransparency = rTurn and 0.2 or 0.8
 
 	-- Left
-	self.Instance.LTurn.ImageColor3 = self.Vehicle.Starting and Color3.new(0.2, 1, 0.2) or Color3.new()
-	self.Instance.LTurn.ImageTransparency = self.Vehicle.Starting and 0.2 or 0.8
+	local lTurn = self.Vehicle.Starting
+		or (self.Vehicle.Lights.TurnState == "Left" or self.Vehicle.Lights.TurnState == "Both")
+			and math.round(tick() * 2) % 2 == 0
+	self.Instance.LTurn.ImageColor3 = lTurn and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.LTurn.ImageTransparency = lTurn and 0.2 or 0.8
 end
 
 function ABSUpdate(self: Speedometer)
