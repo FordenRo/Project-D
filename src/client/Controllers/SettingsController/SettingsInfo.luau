@@ -25,6 +25,13 @@ export type CheckboxProperties = {
 } & DefaultProperties
 
 local Info = {
+	ShowFPS = {
+		Title = "Show Framerate",
+		Category = "Gameplay",
+		Description = "Show game framerate in bottom left corner of screen",
+		Type = "Checkbox",
+		Default = false,
+	},
 	MSteerSensivity = {
 		Title = "Mouse Steering Sensivity",
 		Category = "Controls",

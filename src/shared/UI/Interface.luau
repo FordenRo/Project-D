@@ -1,10 +1,14 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
 local ScreenGui = ReplicatedStorage.UI.Interface
 local player = Players.LocalPlayer
+
+local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
 
 local Interface = {}
 Interface.__index = Interface
@@ -26,7 +30,22 @@ function Interface.new(interfaceController: UITypes.InterfaceController)
 	return self
 end
 
-function Initialize(self: Interface) InitializeButtons(self) end
+function Initialize(self: Interface)
+	InitializeButtons(self)
+	InitializeFPSLabel(self)
+end
+
+function InitializeFPSLabel(self: Interface)
+	local fps = 0
+	RunService.Heartbeat:Connect(function(deltaTime: number)
+		local fpsEnabled = SettingsController:GetSetting("ShowFPS")
+		self.Instance.FPS.Visible = fpsEnabled
+		if fpsEnabled then
+			fps = Lerp(fps, 1 / deltaTime, deltaTime * 3)
+			self.Instance.FPS.Text = `FPS: {math.round(fps)}`
+		end
+	end)
+end
 
 function InitializeButtons(self: Interface)
 	local callbacks = {

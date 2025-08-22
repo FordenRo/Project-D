@@ -17,6 +17,7 @@ export type Interface = {
 	Instance: ScreenGui & {
 		Buttons: Frame,
 		Debug: Frame & { FPS: TextLabel },
+		FPS: TextLabel,
 	},
 
 	new: (interfaceController: InterfaceController) -> Interface,
