@@ -1,16 +1,15 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local StarterPlayer = game:GetService("StarterPlayer")
 local UserInputService = game:GetService("UserInputService")
-
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local SettingsController = require(StarterPlayer.StarterPlayerScripts.Client.Controllers.SettingsController)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
+
+local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local InputController = {}
 InputController.__index = InputController
@@ -61,7 +60,9 @@ function Update(self: InputController, deltaTime: number)
 	Context.Ignition.Enabled = not self.Broken
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
-	Context.Steering.Enabled = not self.MouseSteerOn
+	Context.ControllerSteering.Enabled = not self.MouseSteerOn
+	Context.TurnLeft.Enabled = not self.MouseSteerOn
+	Context.TurnRight.Enabled = not self.MouseSteerOn
 	Context.Throttle.Enabled = not self.MouseSteerOn
 	Context.Brake.Enabled = not self.MouseSteerOn
 	Context.MouseThrottle.Enabled = self.MouseSteerOn
@@ -102,14 +103,14 @@ end
 function UpdateMouseInput(self: InputController)
 	if not self.MouseSteerOn or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) then return end
 
-	local sensivity = SettingsController:GetSetting("MSteerSensivity")
+	local sensivity = SettingsController:GetSetting("MSteerSensivity") :: number
 	local delta = UserInputService:GetMouseDelta() / UserSettings().GameSettings.MouseSensitivity
 	local x = math.clamp(self.MousePosition.X + delta.X / mouse.ViewSizeX * sensivity, 0, 1)
-	local y = 1 - SettingsController:GetSetting("MSteerCursorY")
+	local y = 1 - SettingsController:GetSetting("MSteerCursorY") :: number
 	self.MousePosition = Vector2.new(x, y)
 
-	local mdZone = SettingsController:GetSetting("MSteerDZone")
-	local mST = (self.MousePosition.X - 0.5) / SettingsController:GetSetting("MSteerWidth") * 2
+	local mdZone = SettingsController:GetSetting("MSteerDZone") :: number
+	local mST = (self.MousePosition.X - 0.5) / (SettingsController:GetSetting("MSteerWidth") :: number) * 2
 	if math.abs(mST) <= mdZone then
 		self.Steering = 0
 	else
@@ -125,16 +126,14 @@ function InitializeConnections(self: InputController)
 		Brake = function(value) self._RawBrake = value end,
 		MouseThrottle = function(value) self._RawThrottle = value end,
 		MouseBrake = function(value) self._RawBrake = value end,
-		Steering = function(value: Vector2)
-			if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
-				local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
-				if math.abs(value.X) > cDZone then
-					self.Steering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
-				else
-					self.Steering = 0
-				end
+		TurnLeft = function(value) self.Steering = -value end,
+		TurnRight = function(value) self.Steering = value end,
+		ControllerSteering = function(value: Vector2)
+			local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
+			if math.abs(value.X) > cDZone then
+				self.Steering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
 			else
-				self.Steering = value.X
+				self.Steering = 0
 			end
 		end,
 		Clutch = function(value)
