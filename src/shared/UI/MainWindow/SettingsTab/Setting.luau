@@ -35,8 +35,9 @@ export type Setting = typeof(setmetatable(
 				},
 			},
 			Checkbox: Frame & {
-				Button: TextButton,
-				Box: Frame & { Enabled: ImageLabel },
+				Button: TextButton & {
+					Box: Frame & { Enabled: ImageLabel },
+				},
 			},
 			Binding: Frame & {
 				Mouse: BindingButton,
@@ -103,7 +104,7 @@ function InitSlider(self: Setting)
 		slider.Fill.Size = UDim2.fromScale(updateHandle and normalizedValue or MapToRange(value, min, max), 1)
 		local l = step >= 1 and 0 or step >= 0.1 and 1 or 2
 		valueFrame.Input.Text = string.format(`%.{l}f`, self.Value :: number)
-		valueFrame.Revert.Visible = math.abs(self.Properties.Default - self.Value) > step / 2
+		valueFrame.Revert.Visible = math.abs((self.Properties.Default - self.Value) :: number) > step / 2
 		if updateHandle then slider.Handle.Position = UDim2.fromScale(normalizedValue, 0.5) end
 		if fireEvent then self._changedEvent:Fire(self.Value) end
 	end
@@ -219,7 +220,7 @@ end
 function InitCheckbox(self: Setting)
 	local function updateCheckbox(value: boolean)
 		self.Value = value
-		self.Instance.Checkbox.Box.Enabled.Visible = self.Value
+		self.Instance.Checkbox.Button.Box.Enabled.Visible = self.Value
 		self.Instance.Checkbox.Button.Text = self.Value and "Enabled" or "Disabled"
 		self._changedEvent:Fire(self.Value)
 	end
@@ -228,6 +229,9 @@ function InitCheckbox(self: Setting)
 		self._cons,
 		self.Instance.Checkbox.Button.Activated:Connect(function() updateCheckbox(not self.Value) end)
 	)
+
+	updateCheckbox(self.Value)
+	self.Instance.Checkbox.Visible = true
 end
 
 function Setting.Destroy(self: Setting)

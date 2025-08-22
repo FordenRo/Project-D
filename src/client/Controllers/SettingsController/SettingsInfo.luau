@@ -21,6 +21,7 @@ export type BindingProperties = {
 } & DefaultProperties
 export type CheckboxProperties = {
 	Value: boolean,
+	Default: boolean,
 } & DefaultProperties
 
 local Info = {
