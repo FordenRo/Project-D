@@ -169,7 +169,7 @@ function InitBinding(self: Setting)
 						:gsub("DPad", "D")
 				or "-"
 			binding.Revert.Visible = self.Value[v] ~= self.Properties.Default[v]
-			if fireEvent then self._changedEvent:Fire(self.Value[v]) end
+			if fireEvent then self._changedEvent:Fire(v, self.Value[v]) end
 		end
 
 		table.insert(

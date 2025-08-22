@@ -71,7 +71,13 @@ function SettingsTab.new(instance: ScrollingFrame)
 			local actionOrder = table.find(actionsOrder, inputAction.Name)
 			setting.Instance.LayoutOrder = actionOrder
 
-			table.insert(self._cons, setting.Changed:Connect(function(value) end))
+			table.insert(
+				self._cons,
+				setting.Changed:Connect(function(actionType: string, keyCode: Enum.KeyCode)
+					local binding = inputAction:FindFirstChild(actionType) :: InputBinding
+					binding.KeyCode = keyCode
+				end)
+			)
 			setting.Instance.Parent = context
 		end
 
