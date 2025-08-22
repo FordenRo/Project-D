@@ -1,5 +1,5 @@
-local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 local player = Players.LocalPlayer
@@ -20,21 +20,15 @@ function SprintController.new()
 	local self: SprintController = setmetatable({}, SprintController) :: any
 
 	player.CharacterAdded:Connect(function() self.Humanoid = player.Character:WaitForChild("Humanoid") end)
+	if player.Character then self.Humanoid = player.Character:WaitForChild("Humanoid") end
 
-	ContextActionService:BindAction(
-		"Sprint",
-		function(_, state: Enum.UserInputState) self:ToggleSprint(state == Enum.UserInputState.Begin) end,
-		false,
-		Enum.KeyCode.LeftShift
-	)
+	ReplicatedStorage.Input.Player.Sprint.StateChanged:Connect(function(value)
+		if not self.Humanoid then return end
+
+		self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed * (value and SPRINT_MULTIPLIER or 1)
+	end)
 
 	return self
-end
-
-function SprintController.ToggleSprint(self: SprintController, state: boolean)
-	if not self.Humanoid then return end
-
-	self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed * (state and SPRINT_MULTIPLIER or 1)
 end
 
 return SprintController.new()
