@@ -44,12 +44,12 @@ function MainWindow.new()
 	self.CurrentTab = nil
 	self.Visible = false
 
-	self:Initialize()
+	Initialize(self)
 
 	return self
 end
 
-function MainWindow.Initialize(self: MainWindow)
+function Initialize(self: MainWindow)
 	for _, button in self.Instance.Window.TabBar.Container:GetChildren() do
 		if not button:IsA("TextButton") then continue end
 

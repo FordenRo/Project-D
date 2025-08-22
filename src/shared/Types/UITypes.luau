@@ -20,8 +20,6 @@ export type Interface = {
 	},
 
 	new: (interfaceController: InterfaceController) -> Interface,
-	Initialize: (self: Interface) -> (),
-	InitializeButtons: (self: Interface) -> (),
 	Show: (self: Interface) -> (),
 	Hide: (self: Interface) -> (),
 	Destroy: (self: Interface) -> (),
@@ -47,7 +45,6 @@ export type MainWindow = {
 	},
 
 	new: () -> MainWindow,
-	Initialize: (self: MainWindow) -> (),
 	Show: (self: MainWindow, tab: string?) -> (),
 	Hide: (self: MainWindow) -> (),
 	SetTab: (self: MainWindow, tab: string, skipAnim: boolean?) -> (),

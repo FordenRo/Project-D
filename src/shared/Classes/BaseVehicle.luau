@@ -19,7 +19,7 @@ function BaseVehicle.new(instance: Instance)
 		)
 	) :: VehicleTypes.Tune
 
-	initializeVariables(self)
+	InitializeVariables(self)
 
 	if RunService:IsServer() then
 		self._Remote = Instance.new("UnreliableRemoteEvent")
@@ -32,7 +32,7 @@ function BaseVehicle.new(instance: Instance)
 	return self
 end
 
-function initializeVariables(self: BaseVehicle)
+function InitializeVariables(self: BaseVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 
 	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
@@ -105,6 +105,27 @@ function BaseVehicle.InitializeWheels(self: BaseVehicle, wheelClass: VehicleType
 
 		table.insert(self.Wheels, wheelClass.new(self, v))
 	end
+end
+
+function BaseVehicle.GetCenter(self: BaseVehicle)
+	local centerF = Vector3.new()
+	local centerR = Vector3.new()
+	local countF = 0
+	local countR = 0
+	for _, v in self.Instance.Wheels:GetChildren() do
+		if not v:IsA("BasePart") then continue end
+		if v.Name == "FL" or v.Name == "FR" or v.Name == "F" then
+			centerF = centerF + v.CFrame.Position
+			countF = countF + 1
+		else
+			centerR = centerR + v.CFrame.Position
+			countR = countR + 1
+		end
+	end
+	centerF = centerF / countF
+	centerR = centerR / countR
+	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
+	return center
 end
 
 return BaseVehicle

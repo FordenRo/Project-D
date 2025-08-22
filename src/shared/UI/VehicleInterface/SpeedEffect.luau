@@ -22,7 +22,7 @@ function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 	RunService:BindToRenderStep(
 		"SpeedEffect",
 		Enum.RenderPriority.Camera.Value - 1,
-		function(deltaTime) self:Update(deltaTime) end
+		function(deltaTime) Update(self, deltaTime) end
 	)
 
 	return self
@@ -64,7 +64,7 @@ function createEffect(rotation: number, force: number)
 	return effect
 end
 
-function SpeedEffect.Update(self: SpeedEffect, deltaTime: number)
+function Update(self: SpeedEffect, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 80 then
 		local force = MapToRange(self.Vehicle.Velocity.Magnitude, 80, 200)
 		local debounce = Lerp(1 / 3, 1 / 60, force ^ 0.8)

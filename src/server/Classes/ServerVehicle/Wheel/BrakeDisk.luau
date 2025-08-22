@@ -11,18 +11,12 @@ type ServerBrakeDisk = VehicleTypes.ServerBrakeDisk
 function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart)
 	local self: ServerBrakeDisk = setmetatable(BaseBrakeDisk.new(wheel, instance), ServerBrakeDisk) :: any
 
-	self._conn = self._Remote.OnServerEvent:Connect(function(player: Player, ...) self:Update(...) end)
+	self._conn = self._Remote.OnServerEvent:Connect(function(_, ...) Update(self, ...) end)
 
 	return self
 end
 
-function ServerBrakeDisk.Update(
-	self: ServerBrakeDisk,
-	temperature: number,
-	color: Color3,
-	volume: number,
-	pitch: number
-)
+function Update(self: ServerBrakeDisk, temperature: number, color: Color3, volume: number, pitch: number)
 	self.Temperature = temperature
 	self.Instance.Color = color
 	self.Sound.Volume = volume

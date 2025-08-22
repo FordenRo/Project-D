@@ -52,7 +52,7 @@ function GarageDoor.new(instance: Model)
 		self._relativePositions[k] = (v.Position.Y - self._startPositions[1].Y) / self.Length
 	end
 	self._sep = (self._startPositions[2].Y - self._startPositions[1].Y) / self.Length / 2
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
+	self._conn = RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end)
 
 	return self
 end
@@ -85,7 +85,7 @@ function calcCFrame(self: GarageDoor, position: number, index: number)
 	return CFrame.new(self._startPositions[1] + partPosition * self.Length) * CFrame.fromAxisAngle(Vector3.zAxis, angle)
 end
 
-function GarageDoor.Update(self: GarageDoor, deltaTime: number)
+function Update(self: GarageDoor, deltaTime: number)
 	if not self.Closing and not self.Opening then return end
 
 	self.Speed = Lerp(self.Speed, self.Opening and 1 or self.Closing and -1 or 0, deltaTime)

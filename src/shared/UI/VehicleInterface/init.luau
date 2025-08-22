@@ -27,30 +27,26 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.SpeedEffect = SpeedEffect.new(vehicle, self.Instance)
 
 	self.CursorInstance = self.Instance.Cursor
-	self._CursorTransparency = self.Instance.Cursor.BackgroundTransparency
+	self._cursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
-	self._conn = RunService.Heartbeat:Connect(function() self:UpdateTires() end)
-	RunService:BindToRenderStep(
-		"CursorUpdate",
-		Enum.RenderPriority.Camera.Value - 1,
-		function() self:UpdateCursor() end
-	)
+	self._conn = RunService.Heartbeat:Connect(function() UpdateTires(self) end)
+	RunService:BindToRenderStep("CursorUpdate", Enum.RenderPriority.Camera.Value - 1, function() UpdateCursor(self) end)
 
 	return self
 end
 
-function VehicleInterface.UpdateCursor(self: VehicleInterface)
+function UpdateCursor(self: VehicleInterface)
 	UserInputService.MouseIconEnabled = not self.Vehicle.InputController.MouseSteerOn
 	self.CursorInstance.Visible = self.Vehicle.InputController.MouseSteerOn
 	if self.Vehicle.InputController.MouseSteerOn then
 		self.CursorInstance.Position =
 			UDim2.fromScale(self.Vehicle.InputController.MousePosition.X, self.Vehicle.InputController.MousePosition.Y)
 		self.CursorInstance.BackgroundTransparency = 1
-			- (1 - self._CursorTransparency) * (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
+			- (1 - self._cursorTransparency) * (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
 	end
 end
 
-function VehicleInterface.UpdateTires(self: VehicleInterface)
+function UpdateTires(self: VehicleInterface)
 	for _, wheel in self.Vehicle.Wheels do
 		local tireUI = self.Instance.Tires[wheel.Instance.Name]
 		tireUI.First.Second.Size = UDim2.new(

@@ -25,8 +25,6 @@ export type Settings = {
 	Controls: VehicleTypes.VehicleControls,
 
 	new: () -> Settings,
-	Initialize: (self: Settings) -> (),
-	InitializeControls: (self: Settings) -> (),
 	Apply: (self: Settings) -> (),
 } & BaseWindow.BaseWindow
 
@@ -35,13 +33,13 @@ function Settings.new()
 
 	self.Controls = DatastoreController:GetControls()
 
-	self:Initialize()
+	Initialize(self)
 
 	return self
 end
 
-function Settings.Initialize(self: Settings)
-	self:InitializeControls()
+function Initialize(self: Settings)
+	InitializeControls(self)
 
 	self:SetTab(Tab.Controls)
 
@@ -52,7 +50,7 @@ function Settings.Initialize(self: Settings)
 	end)
 end
 
-function Settings.InitializeControls(self: Settings)
+function InitializeControls(self: Settings)
 	for k, v in self.Controls :: { [string]: EnumItem } do
 		if typeof(v) ~= "EnumItem" then continue end
 

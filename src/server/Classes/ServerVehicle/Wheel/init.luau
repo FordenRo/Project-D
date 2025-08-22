@@ -16,7 +16,7 @@ type ServerWheel = VehicleTypes.ServerWheel
 function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart)
 	local self: ServerWheel = setmetatable(BaseWheel.new(vehicle, instance), ServerWheel) :: any
 
-	self:Initialize()
+	Initialize(self)
 
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
 	self.BrakeDisk = BrakeDisk.new(self, self.Instance.Parts.BrakeDisk)
@@ -24,7 +24,7 @@ function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart
 	return self
 end
 
-function ServerWheel.Initialize(self: ServerWheel)
+function Initialize(self: ServerWheel)
 	local fDistX = self.Vehicle.Tune.FWsBoneLen * math.cos(math.rad(self.Vehicle.Tune.FWsBoneAngle))
 	local fDistY = self.Vehicle.Tune.FWsBoneLen * math.sin(math.rad(self.Vehicle.Tune.FWsBoneAngle))
 	local rDistX = self.Vehicle.Tune.RWsBoneLen * math.cos(math.rad(self.Vehicle.Tune.RWsBoneAngle))

@@ -28,13 +28,8 @@ export type Garage = {
 	StoreItems: { VehicleItem.VehicleItem },
 
 	new: () -> Garage,
-	Initialize: (self: Garage) -> (),
-	InitializeOwned: (self: Garage) -> (),
-	InitializeStore: (self: Garage) -> (),
-	InitializeButtons: (self: Garage) -> (),
 	SelectOwnedVehicle: (self: Garage, id: string?) -> (),
 	SelectStoreVehicle: (self: Garage, name: string?) -> (),
-	UpdateButtons: (self: Garage) -> (),
 } & BaseWindow.BaseWindow
 
 function Garage.new()
@@ -46,15 +41,15 @@ function Garage.new()
 	self.OwnedItems = {}
 	self.StoreItems = {}
 
-	self:Initialize()
+	Initialize(self)
 
 	return self
 end
 
-function Garage.Initialize(self: Garage)
-	self:InitializeOwned()
-	self:InitializeStore()
-	self:InitializeButtons()
+function Initialize(self: Garage)
+	InitializeOwned(self)
+	InitializeStore(self)
+	InitializeButtons(self)
 
 	self:SetTab(Tab.Owned)
 end
@@ -67,7 +62,7 @@ function Garage.SelectStoreVehicle(self: Garage, name: string?)
 	end
 
 	self.SelectedStoreVehicle = name
-	self:UpdateButtons()
+	UpdateButtons(self)
 end
 
 function Garage.SelectOwnedVehicle(self: Garage, id: string?)
@@ -78,10 +73,10 @@ function Garage.SelectOwnedVehicle(self: Garage, id: string?)
 	end
 
 	self.SelectedOwnedVehicle = id
-	self:UpdateButtons()
+	UpdateButtons(self)
 end
 
-function Garage.InitializeOwned(self: Garage)
+function InitializeOwned(self: Garage)
 	local list = self.Instance.Window.Content.VehicleContent.Owned :: ScrollingFrame
 	for _, v in VehicleController:GetVehicles() do
 		v.Owned = true
@@ -97,7 +92,7 @@ function Garage.InitializeOwned(self: Garage)
 	end
 end
 
-function Garage.InitializeStore(self: Garage)
+function InitializeStore(self: Garage)
 	local list = self.Instance.Window.Content.VehicleContent.Store :: ScrollingFrame
 	for _, v in ReplicatedStorage.Vehicles:GetChildren() do
 		local owned = VehicleController:GetVehiclesByName(v.Name)[1] ~= nil
@@ -112,9 +107,9 @@ function Garage.InitializeStore(self: Garage)
 	end
 end
 
-function Garage.InitializeButtons(self: Garage) end
+function InitializeButtons(self: Garage) end
 
-function Garage.UpdateButtons(self: Garage)
+function UpdateButtons(self: Garage)
 	local buttons = self.Instance.Window.Content.VehicleContent.Buttons :: Frame
 	for _, v in buttons:GetChildren() do
 		if not v:IsA("TextButton") then continue end
@@ -162,7 +157,7 @@ function Garage.SetTab(self: Garage, tab: string)
 	local content = vehicleContent[tab] :: ScrollingFrame
 	content.Visible = true
 
-	self:UpdateButtons()
+	UpdateButtons(self)
 end
 
 return Garage

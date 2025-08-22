@@ -36,12 +36,12 @@ function SoundHandler.new(vehicle: VehicleTypes.ServerVehicle)
 		table.insert(self.Sounds, cachedSound)
 	end
 
-	RunService.Heartbeat:Connect(function() self:Update() end)
+	RunService.Heartbeat:Connect(function() Update(self) end)
 
 	return self
 end
 
-function SoundHandler.Update(self: SoundHandler)
+function Update(self: SoundHandler)
 	if not self.Vehicle.Occupant then return end
 
 	self.SoundTypesHandler:HandleSounds(self.Sounds)

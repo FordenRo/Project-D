@@ -24,14 +24,14 @@ function PlayerStatsHandler.new()
 
 	self.PlaytimeHandler = PlaytimeHandler.new()
 
-	Players.PlayerAdded:Connect(function(player) self:OnPlayerAdded(player) end)
-	Players.PlayerRemoving:Connect(function(player) self:OnPlayerRemoving(player) end)
+	Players.PlayerAdded:Connect(function(player) OnPlayerAdded(self, player) end)
+	Players.PlayerRemoving:Connect(function(player) OnPlayerRemoving(self, player) end)
 	remoteFunction.OnServerInvoke = function(player: Player, event: string, ...) return self[event](self, player, ...) end
 
 	return self
 end
 
-function PlayerStatsHandler.OnPlayerAdded(self: PlayerStatsHandler, player: Player)
+function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
@@ -57,9 +57,7 @@ function PlayerStatsHandler.OnPlayerAdded(self: PlayerStatsHandler, player: Play
 	laps.Value = AbbreviateNumber(self:GetPlayerLaps(player))
 end
 
-function PlayerStatsHandler.OnPlayerRemoving(self: PlayerStatsHandler, player: Player)
-	self.PlaytimeHandler:OnPlayerRemoving(player)
-end
+function OnPlayerRemoving(self: PlayerStatsHandler, player: Player) self.PlaytimeHandler:OnPlayerRemoving(player) end
 
 function PlayerStatsHandler.GetPlayerCash(self: PlayerStatsHandler, player: Player)
 	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):GetAsync(player.UserId) or 5000000

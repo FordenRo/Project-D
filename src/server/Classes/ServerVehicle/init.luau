@@ -16,7 +16,7 @@ type ServerVehicle = VehicleTypes.ServerVehicle
 function ServerVehicle.new(instance: Instance)
 	local self: ServerVehicle = setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
-	self:Initialize()
+	Initialize(self)
 
 	self.Lights = Lights.new(self)
 
@@ -29,26 +29,26 @@ function ServerVehicle.new(instance: Instance)
 	return self
 end
 
-function ServerVehicle.Initialize(self: ServerVehicle)
-	self:RemoveMass()
-	self:MakeCollider()
+function Initialize(self: ServerVehicle)
+	RemoveMass(self)
+	MakeCollider(self)
 	self:InitializeWheels()
-	self:ApplyWeight()
-	self:MakeGravity()
-	self:CreateFlip()
-	self:Finalize()
-	self:InitializePlugins()
-	self:RemoveCharacterWeight()
-	self:InitializeDriveSeat()
+	ApplyWeight(self)
+	MakeGravity(self)
+	CreateFlip(self)
+	Finalize(self)
+	InitializePlugins(self)
+	RemoveCharacterWeight(self)
+	InitializeDriveSeat(self)
 end
 
-function ServerVehicle.RemoveMass(self: ServerVehicle)
+function RemoveMass(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
 		if v:IsA("BasePart") then v.Massless = true end
 	end
 end
 
-function ServerVehicle.MakeGravity(self: ServerVehicle)
+function MakeGravity(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
 		if not v:IsA("BasePart") then continue end
 
@@ -69,7 +69,7 @@ function ServerVehicle.MakeGravity(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.MakeCollider(self: ServerVehicle)
+function MakeCollider(self: ServerVehicle)
 	for _, part in self.Instance.Body.Collider:GetChildren() do
 		for _, wheel in self.Instance.Wheels:GetChildren() do
 			if not wheel:IsA("BasePart") then continue end
@@ -82,30 +82,9 @@ function ServerVehicle.MakeCollider(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.GetCenter(self: ServerVehicle)
-	local centerF = Vector3.new()
-	local centerR = Vector3.new()
-	local countF = 0
-	local countR = 0
-	for _, v in self.Instance.Wheels:GetChildren() do
-		if not v:IsA("BasePart") then continue end
-		if v.Name == "FL" or v.Name == "FR" or v.Name == "F" then
-			centerF = centerF + v.CFrame.Position
-			countF = countF + 1
-		else
-			centerR = centerR + v.CFrame.Position
-			countR = countR + 1
-		end
-	end
-	centerF = centerF / countF
-	centerR = centerR / countR
-	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
-	return center
-end
-
 function ServerVehicle.InitializeWheels(self: ServerVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
 
-function ServerVehicle.ApplyWeight(self: ServerVehicle)
+function ApplyWeight(self: ServerVehicle)
 	local mass = 0
 
 	for _, v in self.Instance:GetDescendants() do
@@ -180,7 +159,7 @@ function ServerVehicle.ApplyWeight(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.CreateFlip(self: ServerVehicle)
+function CreateFlip(self: ServerVehicle)
 	local flipG
 	if self.Tune.FlipType == "New" then
 		local flipAttach = Instance.new("Attachment")
@@ -206,7 +185,7 @@ function ServerVehicle.CreateFlip(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.Finalize(self: ServerVehicle)
+function Finalize(self: ServerVehicle)
 	ModelWeld(self.Instance.Body, self.Instance.DriveSeat)
 
 	-- Unanchor
@@ -215,14 +194,14 @@ function ServerVehicle.Finalize(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.InitializePlugins(self: ServerVehicle)
+function InitializePlugins(self: ServerVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin) :: any
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
 	end
 end
 
-function ServerVehicle.RemoveCharacterWeight(self: ServerVehicle)
+function RemoveCharacterWeight(self: ServerVehicle)
 	--Get Seats
 	local Seats = {}
 	for _, v in self.Instance:GetDescendants() do
@@ -260,7 +239,7 @@ function ServerVehicle.RemoveCharacterWeight(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.InitializeDriveSeat(self: ServerVehicle)
+function InitializeDriveSeat(self: ServerVehicle)
 	-- Driver Sit
 	self.Instance.DriveSeat.ChildAdded:Connect(function(child)
 		if child.Name == "SeatWeld" and child:IsA("Weld") then

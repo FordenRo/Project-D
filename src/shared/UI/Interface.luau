@@ -21,14 +21,14 @@ function Interface.new(interfaceController: UITypes.InterfaceController)
 
 	self._cons = {}
 
-	self:Initialize()
+	Initialize(self)
 
 	return self
 end
 
-function Interface.Initialize(self: Interface) self:InitializeButtons() end
+function Initialize(self: Interface) InitializeButtons(self) end
 
-function Interface.InitializeButtons(self: Interface)
+function InitializeButtons(self: Interface)
 	local callbacks = {
 		Settings = function() end,
 		Store = function() end,

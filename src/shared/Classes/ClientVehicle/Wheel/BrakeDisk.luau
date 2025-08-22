@@ -31,7 +31,7 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 	self._serverSound.SoundId = ""
 	self._serverInstance.Transparency = 1
 
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end)
+	self._conn = RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end)
 	self._task = task.spawn(function()
 		while task.wait(1 / 10) do
 			self._Remote:FireServer(
@@ -46,7 +46,7 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 	return self
 end
 
-function ClientBrakeDisk.Update(self: ClientBrakeDisk, deltaTime: number)
+function Update(self: ClientBrakeDisk, deltaTime: number)
 	local GlobalTemperature = game.Workspace:GetAttribute("GlobalTemperature")
 
 	local inBrake = self.Wheel.Vehicle.Brake > 0 or self.Wheel.Vehicle.PBrake

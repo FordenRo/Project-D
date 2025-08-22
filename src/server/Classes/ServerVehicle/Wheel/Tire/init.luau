@@ -41,13 +41,13 @@ function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart)
 	self._Remote.Name = "_Remote"
 	self._Remote.Parent = self.Instance
 
-	self:Initialize()
-	self._Remote.OnServerEvent:Connect(function(_, ...) self:Replicate(...) end)
+	Initialize(self)
+	self._Remote.OnServerEvent:Connect(function(_, ...) Replicate(self, ...) end)
 
 	return self
 end
 
-function ServerTire.Initialize(self: ServerTire)
+function Initialize(self: ServerTire)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
 		local caster = string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.FCaster
 			or self.Vehicle.Tune.RCaster
@@ -273,7 +273,7 @@ function ServerTire.Initialize(self: ServerTire)
 	end
 end
 
-function ServerTire.Replicate(
+function Replicate(
 	self: ServerTire,
 	materialType: string,
 	smokeStress: number,

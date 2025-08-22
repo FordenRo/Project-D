@@ -25,14 +25,14 @@ function Slider.new(instance: Frame)
 	self.Progress = 0
 	self._currentProgress = 0
 
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime: number) self:Update(deltaTime) end)
+	self._conn = RunService.Heartbeat:Connect(function(deltaTime: number) Update(self, deltaTime) end)
 
 	return self
 end
 
 function Slider.SetProgress(self: Slider, value: number) self.Progress = value end
 
-function Slider.Update(self: Slider, deltaTime: number)
+function Update(self: Slider, deltaTime: number)
 	self._currentProgress += (self.Progress - self._currentProgress) * deltaTime * 5
 
 	self.Instance.Content.Fill.Size = UDim2.fromScale(self._currentProgress, 1)

@@ -40,12 +40,12 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle)
 		table.insert(self.Sounds, cachedSound)
 	end
 
-	RunService.Heartbeat:Connect(function() self:Update() end)
+	RunService.Heartbeat:Connect(function() Update(self) end)
 
 	return self
 end
 
-function SoundController.Update(self: SoundController) self.SoundTypesHandler:HandleSounds(self.Sounds) end
+function Update(self: SoundController) self.SoundTypesHandler:HandleSounds(self.Sounds) end
 
 function SoundController.Destroy(self: SoundController)
 	for _, sound in self.Sounds do

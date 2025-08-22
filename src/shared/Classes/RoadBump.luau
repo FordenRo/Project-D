@@ -39,7 +39,7 @@ function RoadBump.new(instance: Instance)
 	-- 	table.insert(self.meshes.legs, CreateEditableMesh(leg, true))
 	-- end
 
-	HittableService:Register({ self.bump }, function(hit: HittableService.HitResult) self:Hit(hit) end)
+	HittableService:Register({ self.bump }, function(hit: HittableService.HitResult) OnHit(self, hit) end)
 	-- HittableService:Register(
 	-- 	table.pack(table.unpack(self.legs), self.bump),
 	-- 	function(hit: HittableService.HitResult) self:Hit(hit) end
@@ -48,7 +48,7 @@ function RoadBump.new(instance: Instance)
 	return self
 end
 
-function RoadBump.Hit(self: RoadBump, hit: HittableService.HitResult)
+function OnHit(self: RoadBump, hit: HittableService.HitResult)
 	local origin = self.meshes.bump:GetPosition(
 		self.meshes.bump:FindClosestVertex(self.bump.CFrame:PointToObjectSpace(hit.Position))
 	)

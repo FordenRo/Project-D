@@ -3,6 +3,7 @@ local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
 	__index: BaseVehicle,
+	_Remote: UnreliableRemoteEvent,
 	Instance: Instance & {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
@@ -22,7 +23,6 @@ export type BaseVehicle = {
 			},
 		},
 	},
-	_Remote: UnreliableRemoteEvent,
 	Plugins: { [string]: any },
 	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
@@ -89,6 +89,7 @@ export type BaseVehicle = {
 	IsOn: boolean,
 
 	new: (instance: Instance) -> BaseVehicle,
+	GetCenter: (self: BaseVehicle) -> CFrame,
 	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 }
 
@@ -135,27 +136,16 @@ export type ClientVehicle = {
 	_OldVelocity: Vector3,
 
 	new: (instance: Instance) -> ClientVehicle,
-	Initialize: (self: ClientVehicle) -> (),
-	InitializeVariables: (self: ClientVehicle) -> (),
 	InitializeWheels: (self: ClientVehicle) -> (),
-	InitControls: (self: ClientVehicle) -> (),
-	InitializePlugins: (self: ClientVehicle) -> (),
-	Update: (self: ClientVehicle, deltaTime: number) -> (),
-	SlowUpdate: (self: ClientVehicle) -> (),
-	UpdateWheels: (self: ClientVehicle) -> (),
-	UpdateFuel: (self: ClientVehicle, deltaTime: number) -> (),
-	UpdateTemp: (self: ClientVehicle, deltaTime: number) -> (),
-	UpdateHealth: (self: ClientVehicle, deltaTime: number) -> (),
-	ReplicateVariables: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type InputController = {
 	__index: InputController,
 	_cons: { RBXScriptConnection },
-	Vehicle: ClientVehicle,
 	_RawThrottle: number,
 	_RawBrake: number,
+	Vehicle: ClientVehicle,
 	Throttle: number,
 	Brake: number,
 	Clutch: number,
@@ -171,18 +161,7 @@ export type ServerVehicle = {
 	__index: ServerVehicle,
 
 	new: (instance: Instance) -> ServerVehicle,
-	Initialize: (self: ServerVehicle) -> (),
-	MakeGravity: (self: ServerVehicle) -> (),
-	MakeCollider: (self: ServerVehicle) -> (),
-	GetCenter: (self: ServerVehicle) -> (),
-	RemoveMass: (self: ServerVehicle) -> (),
-	CreateFlip: (self: ServerVehicle) -> (),
-	Finalize: (self: ServerVehicle) -> (),
-	InitializePlugins: (self: ServerVehicle) -> (),
 	InitializeWheels: (self: ServerVehicle) -> (),
-	ApplyWeight: (self: ServerVehicle) -> (),
-	RemoveCharacterWeight: (self: ServerVehicle) -> (),
-	InitializeDriveSeat: (self: ServerVehicle) -> (),
 } & BaseVehicle
 
 export type BaseWheel = {
@@ -227,16 +206,15 @@ export type ClientWheelSharedData = {
 
 export type ClientWheel = {
 	__index: ClientWheel,
+	_WheelSpeeds: { number },
 	Vehicle: ClientVehicle,
 	Tire: ClientWheelTire,
 	BrakeDisk: ClientBrakeDisk,
 	CanSteer: number,
 	OppositeWheel: BasePart,
 	Trackers: { ABS: number, TCS: number, ESC: number },
-	_WheelSpeeds: { number },
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
-	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 
@@ -247,17 +225,16 @@ export type ServerWheel = {
 	BrakeDisk: ServerBrakeDisk,
 
 	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
-	Initialize: (self: ServerWheel) -> (),
 } & BaseWheel
 
 export type ClientWheelTire = {
 	__index: ClientWheelTire,
+	_Remote: UnreliableRemoteEvent,
+	_deltaTime: number,
 	Instance: BasePart,
 	Wheel: ClientWheel,
 	Vehicle: ClientVehicle,
 	Temperature: number,
-	_Remote: UnreliableRemoteEvent,
-	_deltaTime: number,
 	Stress: number,
 	Dirt: number,
 	Ray: RaycastResult?,
@@ -282,16 +259,12 @@ export type ClientWheelTire = {
 	TrailStress: number,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientWheelTire,
-	Initialize: (self: ClientWheelTire) -> (),
-	InitializeVariables: (self: ClientWheelTire) -> (),
-	Update: (self: ClientWheelTire, deltaTime: number) -> (),
-	FlexPhysicsUpdate: (self: ClientWheelTire, deltaTime: number) -> (),
-	SmokeUpdate: (self: ClientWheelTire) -> (),
 	Destroy: (self: ClientWheelTire) -> (),
 }
 
 export type ServerWheelTire = {
 	__index: ServerWheelTire,
+	_Remote: UnreliableRemoteEvent,
 	Instance: BasePart,
 	Wheel: ServerWheel,
 	Vehicle: ServerVehicle,
@@ -301,18 +274,8 @@ export type ServerWheelTire = {
 	PreviousSoundsData: { [BasePart]: Sound },
 	PreviousSmokesData: { [BasePart]: Smoke },
 	PreviousTrailsData: { [BasePart]: { Trail } },
-	_Remote: UnreliableRemoteEvent,
 
 	new: (wheel: ServerWheel, instance: BasePart) -> ServerWheelTire,
-	Initialize: (self: ServerWheelTire) -> (),
-	Replicate: (
-		self: ServerWheelTire,
-		materialType: string,
-		smokeStress: number,
-		rayNormal: Vector3,
-		temperature: number,
-		deltaTime: number
-	) -> (),
 }
 
 export type BaseBrakeDisk = {
@@ -339,7 +302,6 @@ export type ClientBrakeDisk = {
 	Wheel: ClientWheel,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
-	Update: (self: ClientBrakeDisk, deltaTime: number) -> (),
 	Destroy: (self: ClientBrakeDisk) -> (),
 } & BaseBrakeDisk
 
@@ -349,18 +311,17 @@ export type ServerBrakeDisk = {
 	Wheel: ServerWheel,
 
 	new: (wheel: ServerWheel, instance: BasePart) -> ServerBrakeDisk,
-	Update: (self: ServerBrakeDisk, temperature: number, color: Color3) -> (),
 	Destroy: (self: ServerBrakeDisk) -> (),
 } & BaseBrakeDisk
 
 export type VehicleSpeedometer = {
 	__index: VehicleSpeedometer,
+	_conn: RBXScriptConnection,
+	_task: thread,
 	Vehicle: ClientVehicle,
 	Instance: Frame & any,
 	CurrentUnit: number,
 	Units: { { Unit: string, Scaling: number, MaxSpeed: number } },
-	_conn: RBXScriptConnection,
-	_task: thread,
 
 	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
 	Destroy: (self: VehicleSpeedometer) -> (),
@@ -378,17 +339,18 @@ export type EffectFrame = {
 
 export type SpeedEffect = {
 	__index: SpeedEffect,
+	_LastSpawn: number,
 	Vehicle: ClientVehicle,
 	Parent: GuiObject,
 	Effects: { EffectFrame },
-	_LastSpawn: number,
 
 	new: (self: SpeedEffect, vehicle: ClientVehicle, part: GuiObject) -> SpeedEffect,
-	Update: (self: SpeedEffect, deltaTime: number) -> (),
 }
 
 export type VehicleInterface = {
 	__index: VehicleInterface,
+	_cursorTransparency: number,
+	_conn: RBXScriptConnection,
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & {
 		Cursor: Frame,
@@ -396,12 +358,8 @@ export type VehicleInterface = {
 	Speedometer: VehicleSpeedometer,
 	SpeedEffect: SpeedEffect,
 	CursorInstance: Frame,
-	_CursorTransparency: number,
-	_conn: RBXScriptConnection,
 
 	new: (vehicle: ClientVehicle) -> VehicleInterface,
-	UpdateTires: (self: VehicleInterface) -> (),
-	UpdateCursor: (self: VehicleInterface) -> (),
 	Destroy: (self: VehicleInterface) -> (),
 }
 
@@ -444,7 +402,6 @@ export type ServerLights = {
 	Headlights: Headlight,
 
 	new: (vehicle: ServerVehicle) -> ServerLights,
-	Update: (self: ClientVehicle) -> (),
 } & BaseLights
 
 return {}

@@ -19,13 +19,13 @@ CameraPlugin.__index = CameraPlugin
 
 export type CameraPlugin = typeof(setmetatable(
 	{} :: {
+		_LastCameraRotation: number,
 		Vehicle: VehicleTypes.ClientVehicle,
 		Distance: number,
 		Offset: Vector3,
 		LookOffset: Vector3,
 		Angles: Vector3,
 		Bumping: Vector3,
-		_LastCameraRotation: number,
 		CameraCFrame: CFrame,
 	},
 	CameraPlugin
@@ -47,19 +47,19 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 	RunService:BindToRenderStep(
 		"CameraUpdate",
 		Enum.RenderPriority.Camera.Value - 1,
-		function(deltaTime) self:Update(deltaTime) end
+		function(deltaTime) Update(self, deltaTime) end
 	)
 
 	ContextActionService:BindAction(
 		"CameraZoom",
-		function(_, _, input) self:UpdateZoom(input) end,
+		function(_, _, input) UpdateZoom(self, input) end,
 		false,
 		Enum.UserInputType.MouseWheel
 	)
 
 	ContextActionService:BindAction(
 		"CameraRotation",
-		function(_, _, input) self:UpdateRotation(input) end,
+		function(_, _, input) UpdateRotation(self, input) end,
 		false,
 		Enum.UserInputType.MouseMovement
 	)
@@ -67,12 +67,12 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 	return self
 end
 
-function CameraPlugin.UpdateZoom(self: CameraPlugin, input: InputObject)
+function UpdateZoom(self: CameraPlugin, input: InputObject)
 	self.Distance -= input.Position.Z * 0.4
 	self.Distance = math.clamp(self.Distance, MIN_DISTANCE, MAX_DISTANCE)
 end
 
-function CameraPlugin.UpdateRotation(self: CameraPlugin, input: InputObject)
+function UpdateRotation(self: CameraPlugin, input: InputObject)
 	if
 		not (
 			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
@@ -91,7 +91,7 @@ function CameraPlugin.UpdateRotation(self: CameraPlugin, input: InputObject)
 	self._LastCameraRotation = tick()
 end
 
-function CameraPlugin.Update(self: CameraPlugin, deltaTime: number)
+function Update(self: CameraPlugin, deltaTime: number)
 	local weightB = self.Vehicle.Instance.Body["#Weight"]
 	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 

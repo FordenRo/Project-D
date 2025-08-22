@@ -34,7 +34,7 @@ function ClientVehicle.new(instance: Instance)
 
 	self.InputController = InputController.new(self)
 
-	self:Initialize()
+	Initialize(self)
 
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
@@ -43,22 +43,22 @@ function ClientVehicle.new(instance: Instance)
 	return self
 end
 
-function ClientVehicle.Initialize(self: ClientVehicle)
-	self:InitializeVariables()
-	hideCharacter(self)
+function Initialize(self: ClientVehicle)
+	InitializeVariables(self)
+	HideCharacter(self)
 	self:InitializeWheels()
-	self:InitControls()
-	self:InitializePlugins()
+	InitControls(self)
+	InitializePlugins(self)
 
-	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) self:Update(deltaTime) end))
+	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
 	self._task = task.spawn(function()
 		while task.wait(1 / 8) do
-			self:SlowUpdate()
+			SlowUpdate(self)
 		end
 	end)
 end
 
-function ClientVehicle.InitializeVariables(self: ClientVehicle)
+function InitializeVariables(self: ClientVehicle)
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce * 9.80665 * Units.Force_N * self.Tune.BrakeBias,
 		Rear = self.Tune.BrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.BrakeBias),
@@ -82,7 +82,7 @@ end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
 
-function ClientVehicle.InitializePlugins(self: ClientVehicle)
+function InitializePlugins(self: ClientVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin) :: any
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
@@ -90,7 +90,7 @@ function ClientVehicle.InitializePlugins(self: ClientVehicle)
 end
 
 -- Hides character for a while
-function hideCharacter(self: ClientVehicle)
+function HideCharacter(self: ClientVehicle)
 	for _, v in player.Character:GetDescendants() do
 		if not v:IsA("BasePart") then continue end
 
@@ -99,7 +99,7 @@ function hideCharacter(self: ClientVehicle)
 end
 
 -- TODO: Add VirtualInput & Mobile
-function ClientVehicle.InitControls(self: ClientVehicle)
+function InitControls(self: ClientVehicle)
 	self.Controls = DatastoreController:GetControls()
 
 	-- Disable jumping
@@ -225,7 +225,7 @@ end
 -- 	self.SteerInner = math.min(self.SteerOuter - (self.SteerOuter * (1 - self.Tune.Ackerman)), self.SteerOuter * 1.2)
 -- end
 
-function ClientVehicle.UpdateWheels(self: ClientVehicle)
+function UpdateWheels(self: ClientVehicle)
 	local count = #self.Wheels
 	local driveCount = 0
 
@@ -259,7 +259,7 @@ end
 
 -- TODO: При низком количестве топлива, сбрасывать обороты, имитировать захлебывание двигателя
 -- TODO: Проверить работу
-function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
+function UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
 
 	local kW = self.Horsepower * 1.35962
@@ -270,7 +270,7 @@ function ClientVehicle.UpdateFuel(self: ClientVehicle, deltaTime: number)
 end
 
 -- TODO: Взрыв двигателя, дым из под капота
-function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
+function UpdateTemp(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Broken then return end
 
 	local kW = self.Horsepower / 1.35962
@@ -287,7 +287,7 @@ function ClientVehicle.UpdateTemp(self: ClientVehicle, deltaTime: number)
 	end
 end
 
-function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
+function UpdateHealth(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
 
 	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
@@ -307,31 +307,11 @@ function ClientVehicle.UpdateHealth(self: ClientVehicle, deltaTime: number)
 	end
 end
 
-function getCenter(vehicle: ClientVehicle)
-	local centerF = Vector3.new()
-	local centerR = Vector3.new()
-	local countF = 0
-	local countR = 0
-	for _, wheel in vehicle.Wheels do
-		if wheel.IsFront then
-			centerF = centerF + wheel.Instance.Position
-			countF = countF + 1
-		else
-			centerR = centerR + wheel.Instance.Position
-			countR = countR + 1
-		end
-	end
-	centerF = centerF / countF
-	centerR = centerR / countR
-	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
-	return center
-end
-
 -- TODO: Flip function
 
 -- TODO: Mobile input
 
-function ClientVehicle.ReplicateVariables(self: ClientVehicle)
+function ReplicateVariables(self: ClientVehicle)
 	local data = {}
 	for _, var in ReplicationVars do
 		data[var] = self[var]
@@ -339,8 +319,8 @@ function ClientVehicle.ReplicateVariables(self: ClientVehicle)
 	self._Remote:FireServer(data)
 end
 
-function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
-	self.Center = getCenter(self)
+function Update(self: ClientVehicle, deltaTime: number)
+	self.Center = self:GetCenter()
 	self.Boost = self.BoostTurbo + self.BoostSuper
 	self.Velocity = self.Instance.Body["#Weight"].AssemblyLinearVelocity
 	self.AngularVelocity = self.Instance.Body["#Weight"].AssemblyAngularVelocity
@@ -348,18 +328,18 @@ function ClientVehicle.Update(self: ClientVehicle, deltaTime: number)
 	self._OldVelocity = self.Velocity
 	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime
 
-	self:UpdateWheels()
+	UpdateWheels(self)
 	UpdateSteering(self, deltaTime)
 	UpdateTransmission(self)
 	UpdateEngine(self, deltaTime)
-	self:UpdateFuel(deltaTime)
-	self:UpdateTemp(deltaTime)
-	self:UpdateHealth(deltaTime)
-	self:ReplicateVariables()
+	UpdateFuel(self, deltaTime)
+	UpdateTemp(self, deltaTime)
+	UpdateHealth(self, deltaTime)
+	ReplicateVariables(self)
 end
 
 -- TODO
-function ClientVehicle.SlowUpdate(self: ClientVehicle) end
+function SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = true

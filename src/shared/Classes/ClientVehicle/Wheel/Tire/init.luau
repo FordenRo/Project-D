@@ -25,13 +25,13 @@ function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart)
 	self.Vehicle = self.Wheel.Vehicle
 	self.Instance = instance
 
-	self:Initialize()
+	Initialize(self)
 	self._Remote = self.Instance:WaitForChild("_Remote") :: UnreliableRemoteEvent
 
 	return self
 end
 
-function ClientTire.InitializeVariables(self: ClientTire)
+function InitializeVariables(self: ClientTire)
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.Stress = 0
 	self.Dirt = 0
@@ -66,8 +66,8 @@ function ClientTire.InitializeVariables(self: ClientTire)
 	-- Tremolo
 end
 
-function ClientTire.Initialize(self: ClientTire)
-	self:InitializeVariables()
+function Initialize(self: ClientTire)
+	InitializeVariables(self)
 
 	if self.Vehicle.Tune.TireSmokeEffects == "Local" or self.Vehicle.Tune.TireSmokeEffects == "All" then
 		for _, v in self.SmokePart:GetChildren() do
@@ -133,14 +133,14 @@ function ClientTire.Initialize(self: ClientTire)
 
 	task.spawn(function()
 		while true do
-			self:Update(task.wait(1 / 30))
-			self:SmokeUpdate()
+			Update(self, task.wait(1 / 30))
+			SmokeUpdate(self)
 		end
 	end)
-	RunService.Heartbeat:Connect(function(deltaTime) self:FlexPhysicsUpdate(deltaTime) end)
+	RunService.Heartbeat:Connect(function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end)
 end
 
-function ClientTire.FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
+function FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
 	self._deltaTime = deltaTime
 	if self.Wheel.IsFront then
 		self.FlexCollisionAlignPosition.MaxForce = self.Vehicle.Tune.TireFPressureForce
@@ -151,7 +151,7 @@ function ClientTire.FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
 	end
 end
 
-function ClientTire.SmokeUpdate(self: ClientTire)
+function SmokeUpdate(self: ClientTire)
 	local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
 	self._Remote:FireServer(
 		self.Material,
@@ -163,7 +163,7 @@ function ClientTire.SmokeUpdate(self: ClientTire)
 	)
 end
 
-function ClientTire.Update(self: ClientTire, deltaTime: number)
+function Update(self: ClientTire, deltaTime: number)
 	local stress = 0
 	local count = 0
 

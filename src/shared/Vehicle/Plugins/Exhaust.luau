@@ -55,12 +55,12 @@ function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
 	self.Weld.C1 = self.Vehicle.Instance.Body["#Weight"].CFrame:Inverse() * self.Exhaust.CFrame
 	self.Weld.Parent = self.Exhaust
 
-	RunService.Heartbeat:Connect(function() self:Update() end)
+	RunService.Heartbeat:Connect(function() Update(self) end)
 
 	return self
 end
 
-function Exhaust.Update(self: Exhaust)
+function Update(self: Exhaust)
 	self.Emitter.Enabled = (self.Vehicle.IsOn or self.Vehicle.Starting)
 		and (self.Vehicle.Velocity.Magnitude < 10 or self.Vehicle.RPM > self.Vehicle.Tune.Redline)
 
