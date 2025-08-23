@@ -53,19 +53,15 @@ Tune.E_TransitionRPM = 4600
 
 Tune.E_Redline = 20000
 Tune.E_RedlineTorque = 205
-
 Tune.E_Curve = 0.84
 
 Tune.Turbochargers = 0
 
 Tune.T_Boost = 8.7
 Tune.T_PeakRPM = 5020
-
 Tune.T_IdleBoost = 1.2
 Tune.T_Curve = 0.2
-
 Tune.T_Efficiency = 5
-
 Tune.T_Size = 9.1
 Tune.T_SpoolIncrease = 0.06
 Tune.T_SpoolDecrease = 0.03
@@ -74,15 +70,11 @@ Tune.Superchargers = 0
 
 Tune.S_Boost = 8
 Tune.S_PeakRPM = 5500
-
 Tune.S_IdleBoost = 6.1
 Tune.S_IdleCurve = 0.31
-
 Tune.S_RedlineBoost = 5.6
 Tune.S_RedlineCurve = 0.187
-
 Tune.S_Efficiency = 4.34
-
 Tune.S_Response = 0.1
 
 Tune.IgnitionRPM = 2000
@@ -90,7 +82,6 @@ Tune.IgnitionAccel = 60
 Tune.IgnitionMinRPM = 800
 
 Tune.RevBounce = 200
-
 Tune.RevAccel = 180
 Tune.RevDecay = 30
 Tune.RevDecayRPM = 60

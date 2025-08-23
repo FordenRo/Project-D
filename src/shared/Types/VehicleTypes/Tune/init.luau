@@ -12,14 +12,6 @@ type HapticsType = "Controller" | "Mobile" | "Both" | "None"
 type FlipType = "New" | "Old"
 
 export type Tune = {
-	--- Delay before initializing chassis (in seconds)
-	LoadDelay: number,
-	--- Set to false if using manual ignition plugin
-	AutoStart: boolean,
-	--- Set to false if using manual flip plugin
-	AutoFlip: boolean,
-	--- Set to false if using a 3rd party mobile support method.
-	Mobile: boolean,
 	---  "New" uses AlignOrientation, "Old" uses BodyGyro. This really only needs to be changed for plugin compatibility.
 	FlipType: FlipType,
 	--- Device haptics

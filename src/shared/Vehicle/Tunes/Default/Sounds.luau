@@ -4,7 +4,6 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
--- Sounds
 Tune.Sounds = {
 	Blowoff = {
 		Type = "Blowoff",

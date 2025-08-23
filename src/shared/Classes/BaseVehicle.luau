@@ -35,7 +35,7 @@ end
 function InitializeVariables(self: BaseVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 
-	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
+	self.IsOn = false
 	self.Starting = false
 	self.Occupant = nil
 	self.Fuel = self.Tune.FuelCapacity
