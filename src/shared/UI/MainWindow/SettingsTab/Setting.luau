@@ -1,12 +1,9 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local player = Players.LocalPlayer
-
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local SettingsInfo = require(player.PlayerScripts.Client.Controllers.SettingsController.SettingsInfo)
+local SettingsInfo = require(ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo)
 
 local Setting = {}
 Setting.__index = Setting

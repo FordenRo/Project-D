@@ -1,11 +1,8 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local player = Players.LocalPlayer
 
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
-local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
+local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SplitPascalCase = require(ReplicatedStorage.Shared.Utils.SplitPascalCase)
 
 local SettingsTab = {}

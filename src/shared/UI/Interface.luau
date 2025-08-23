@@ -3,12 +3,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
 local ScreenGui = ReplicatedStorage.UI.Interface
 local player = Players.LocalPlayer
-
-local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
 
 local Interface = {}
 Interface.__index = Interface

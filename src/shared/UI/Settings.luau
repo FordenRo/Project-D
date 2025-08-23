@@ -1,14 +1,12 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local ScreenGui = ReplicatedStorage.UI.Settings
-local player = Players.LocalPlayer
-
 local BaseWindow = require(script.Parent.BaseWindow)
-local DatastoreController = require(player.PlayerScripts.Client.Controllers.DatastoreController)
-local VehicleController = require(player.PlayerScripts.Client.Controllers.VehicleController)
+local DatastoreController = require(ReplicatedStorage.Shared.Controllers.DatastoreController)
+local VehicleController = require(ReplicatedStorage.Shared.Controllers.VehicleController)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
+local ScreenGui = ReplicatedStorage.UI.Settings
 
 local Settings = setmetatable({}, BaseWindow)
 Settings.__index = Settings

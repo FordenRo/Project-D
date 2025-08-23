@@ -3,14 +3,14 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local PlayerModule = require(Players.LocalPlayer.PlayerScripts.PlayerModule) :: any
+local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
-
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
-local PlayerModule = require(player.PlayerScripts.PlayerModule) :: any
-local SettingsController = require(player.PlayerScripts.Client.Controllers.SettingsController)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local InputController = {}
 InputController.__index = InputController

@@ -1,14 +1,11 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseWindow = require(script.Parent.BaseWindow)
+local VehicleController = require(ReplicatedStorage.Shared.Controllers.VehicleController)
 local VehicleItem = require(script.VehicleItem)
 
 local ScreenGui = ReplicatedStorage.UI.Garage
 local VehicleItemInstance = ScreenGui.VehicleItem
-local player = Players.LocalPlayer
-
-local VehicleController = require(player.PlayerScripts.Client.Controllers.VehicleController)
 
 local Garage = setmetatable({}, BaseWindow)
 Garage.__index = Garage
