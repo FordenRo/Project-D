@@ -16,7 +16,6 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 
 	self.Vehicle = vehicle
 	self.GoalRPM = 0
-	self.CanStall = false
 	self.Broken = false
 	self.Health = 1
 	self.FuelSuppy = 0
@@ -235,7 +234,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	if
 		self.Vehicle.RPM <= (self.Vehicle.Tune.IdleRPM / 4)
-		and self.CanStall
 		and (tick() - self._LastOffTime >= 0.2)
 		and self.Vehicle.Tune.Stall
 	then
@@ -246,7 +244,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 	if self.Vehicle.Shifting or (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2)) then
 		self.Vehicle._ClutchPressing = true
 		self.Vehicle.Clutch = 1
-		self.CanStall = false
 	end
 
 	-- TODO: CHECK THIS!
@@ -308,9 +305,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 				self.Vehicle.Clutch = 0
 			end
 		end
-		self.CanStall = (self.Vehicle.Clutch <= 0.01) or self.CanStall
 	else
-		self.CanStall = false
 		if not self.Vehicle._ClutchPressing and not self.Vehicle.Shifting then
 			self.Vehicle.Clutch = 0
 		else

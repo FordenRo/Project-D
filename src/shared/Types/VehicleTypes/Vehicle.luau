@@ -123,7 +123,6 @@ export type Engine = {
 	Vehicle: ClientVehicle,
 	Broken: boolean,
 	GoalRPM: number,
-	CanStall: boolean,
 	FuelSuppy: number,
 	Health: number,
 	Temperature: number,
