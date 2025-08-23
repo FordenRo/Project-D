@@ -132,7 +132,7 @@ function InitializeConnections(self: InputController)
 		TurnLeft = function(value) self.Steering = -value end,
 		TurnRight = function(value) self.Steering = value end,
 		ControllerSteering = function(value: Vector2)
-			local cDZone = math.min(0.99, self.Vehicle.Controls.ControllerDeadzone)
+			local cDZone = math.min(0.99, SettingsController:GetSetting("ControllerDZone"))
 			if math.abs(value.X) > cDZone then
 				self.Steering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
 			else

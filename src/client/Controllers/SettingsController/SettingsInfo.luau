@@ -23,6 +23,13 @@ local Info = {
 		Type = "Checkbox",
 		Default = false,
 	},
+	ControllerDZone = {
+		Title = "Controller Deadzone",
+		Category = "Controls",
+		Type = "Slider",
+		Default = 0,
+		Max = 0.9,
+	},
 	MSteerSensivity = {
 		Title = "Mouse Steering Sensivity",
 		Category = "Controls",
