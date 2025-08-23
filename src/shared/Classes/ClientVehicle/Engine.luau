@@ -212,6 +212,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 			goalMin,
 			goalMax
 		)
+
+		if not self.Vehicle.IsOn then self.GoalRPM = 0 end
 	end
 
 	-- Starting
