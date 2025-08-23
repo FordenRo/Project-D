@@ -31,4 +31,8 @@ for k, v in assets do
 	screen:SetProgress(k / count)
 end
 
+for _, controller in ReplicatedStorage.Shared.Controllers:GetChildren() do
+	if controller:IsA("ModuleScript") then task.spawn(function() local _ = require(controller) :: any end) end
+end
+
 screen:Destroy()
