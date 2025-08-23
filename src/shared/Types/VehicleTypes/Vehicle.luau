@@ -143,8 +143,6 @@ export type Engine = {
 	TqSuper: number,
 	TqBoosted: number,
 
-	CustomEngine: any,
-
 	new: (vehicle: ClientVehicle) -> Engine,
 	Update: (self: Engine, deltaTime: number) -> (),
 	Destroy: (self: Engine) -> (),

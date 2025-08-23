@@ -4,8 +4,6 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
-Tune.CustomEngineCalculations = false
-
 Tune.Engine = true
 
 Tune.HPLimit = 0

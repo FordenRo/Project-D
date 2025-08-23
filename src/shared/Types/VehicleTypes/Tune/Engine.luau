@@ -1,8 +1,6 @@
 type Drivetrain = "FWD" | "RWD" | "AWD"
 
 export type Type = {
-	--- Enables the use of the CustomEngine module. Even if enabled, please do not remove the default engine values.
-	CustomEngineCalculations: boolean,
 	--- Naturally Aspirated Engine
 	---
 	--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)

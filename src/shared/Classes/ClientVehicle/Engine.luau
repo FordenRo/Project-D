@@ -324,173 +324,146 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Torque calculations (Detomiks)
 	-- What you see here is mostly just ported over from Desmos.
-	if (not self.CustomEngine) or self.Vehicle.Tune.CustomEngineCalculations == false then
-		local x = self.Vehicle.RPM / 1000
-		local NTorque = 0
-		local ETorque = 0
-		local TTorque = 0
-		local STorque = 0
-		if self.Vehicle.Tune.Engine then
-			local NIdleTorque = calcPower(
-				self.Vehicle.Tune.IdleRPM / 1000,
-				self.Vehicle.Tune.IdleTorque,
-				self.Vehicle.Tune.PeakTorqueRPM / 1000,
-				self.Vehicle.Tune.PeakTorque,
-				self.Vehicle.Tune.PeakTorque,
-				self.Vehicle.Tune.IdleTorqueCurve,
-				x
-			)
-			local NRedlineTorque = calcPower(
-				self.Vehicle.Tune.PeakTorqueRPM / 1000,
-				self.Vehicle.Tune.PeakTorque,
-				self.Vehicle.Tune.Redline / 1000,
-				self.Vehicle.Tune.RedlineTorque,
-				self.Vehicle.Tune.PeakTorque,
-				1 / self.Vehicle.Tune.RedlineTorqueCurve,
-				x
-			)
-			local VVL = self.Vehicle.Tune.VVLTorque > 0
-					and self.Vehicle.Tune.VVLTorque - calcPower(
-						self.Vehicle.Tune.VVLRPM / 1000,
-						0,
-						(self.Vehicle.Tune.VVLRPM + self.Vehicle.Tune.VVLTime) / 1000,
-						self.Vehicle.Tune.VVLTorque,
-						self.Vehicle.Tune.VVLTorque,
-						self.Vehicle.Tune.VVLCurve,
-						x
-					)
-				or 0
-			local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
-			local AirPressurePercent = math.exp(
-				(-9.80665 * 0.0289644 * (self.Vehicle.Center.Y * Units.Length_mm / 1000))
-					/ (8.3142 * (globalTemperature + 273.15))
-			) -- look up the barometric formula
-			NTorque = (self.Vehicle.Tune.Engine and 1 or 0)
-				* (self.Vehicle.Tune.PeakTorque - NIdleTorque - NRedlineTorque + VVL)
-				* AirPressurePercent
-			self.HpNatural, self.TqNatural = (NTorque * x) / 5.252, NTorque
-
-			if self.Vehicle.Tune.Turbochargers > 0 then
-				local _TBoostGoal = self.Vehicle.Tune.Turbochargers
-					* (
-						(self.Vehicle.Throttle ^ 3) * (100 / self.Vehicle.Tune.T_Size) * ((NTorque * x) / 5.252)
-						- calcPower(
-							self.Vehicle.Tune.IdleRPM / 1000,
-							self.Vehicle.Tune.T_IdleBoost,
-							self.Vehicle.Tune.T_PeakRPM / 1000,
-							self.Vehicle.Tune.T_Boost,
-							(self.Vehicle.Throttle ^ 3) * (100 / self.Vehicle.Tune.T_Size) * ((NTorque * x) / 5.252),
-							1 / self.Vehicle.Tune.T_Curve,
-							x
-						)
-					)
-				if _TBoostGoal > self.BoostTurbo then
-					self.BoostTurbo = self.BoostTurbo
-						+ math.min(
-								self.Vehicle.Tune.T_SpoolIncrease * (_TBoostGoal - self.BoostTurbo),
-								self.Vehicle.Tune.T_SpoolIncrease
-									* (10 / self.Vehicle.Tune.T_Size)
-									* self.Vehicle.Tune.Turbochargers
-							)
-							* deltaTime -- i should probably base this off of the maximum horsepower instead of the RPM, but it's the same thing anyway
-				elseif self.BoostTurbo > _TBoostGoal then
-					self.BoostTurbo = self.BoostTurbo
-						+ self.Vehicle.Tune.T_SpoolDecrease * (_TBoostGoal - self.BoostTurbo) * deltaTime
-				end
-				self.BoostTurbo =
-					math.clamp(self.BoostTurbo, 0, self.Vehicle.Tune.Turbochargers * self.Vehicle.Tune.T_Boost)
-				TTorque = self.BoostTurbo * self.Vehicle.Tune.T_Efficiency
-				self.HpTurbo, self.TqTurbo = (TTorque * x) / 5.252, TTorque
-			end
-			if self.Vehicle.Tune.Superchargers > 0 then
-				local SIdleBoost = calcPower(
-					self.Vehicle.Tune.IdleRPM / 1000,
-					self.Vehicle.Tune.S_IdleBoost,
-					self.Vehicle.Tune.S_PeakRPM / 1000,
-					self.Vehicle.Tune.S_Boost,
-					self.Vehicle.Tune.S_Boost,
-					self.Vehicle.Tune.S_IdleCurve,
-					x
-				)
-				local SRedlineBoost = calcPower(
-					self.Vehicle.Tune.S_PeakRPM / 1000,
-					self.Vehicle.Tune.S_Boost,
-					self.Vehicle.Tune.Redline / 1000,
-					self.Vehicle.Tune.S_RedlineBoost,
-					self.Vehicle.Tune.S_Boost,
-					1 / self.Vehicle.Tune.S_RedlineCurve,
-					x
-				)
-				local _SBoostGoal = self.Vehicle.Tune.Superchargers
-					* self.Vehicle.Throttle
-					* (self.Vehicle.Tune.S_Boost - SIdleBoost - SRedlineBoost)
-				if _SBoostGoal > self.BoostSuper then
-					self.BoostSuper = math.min(
-						self.BoostSuper + self.Vehicle.Tune.S_Boost * self.Vehicle.Tune.S_Response * deltaTime,
-						_SBoostGoal
-					)
-				elseif self.BoostSuper > _SBoostGoal then
-					self.BoostSuper = math.max(
-						self.BoostSuper - self.Vehicle.Tune.S_Boost * self.Vehicle.Tune.S_Response * deltaTime,
-						_SBoostGoal
-					)
-				end
-				STorque = self.BoostSuper * self.Vehicle.Tune.S_Efficiency
-				self.HpSuper, self.TqSuper = (STorque * x) / 5.252, STorque
-			end
-			if self.Vehicle.Tune.Turbochargers > 0 or self.Vehicle.Tune.Superchargers > 0 then
-				self.HpBoosted, self.TqBoosted = ((TTorque + STorque) * x) / 5.252, TTorque + STorque
-				self.Boost = self.BoostTurbo + self.BoostSuper
-			end
-		end
-		if self.Vehicle.Tune.Electric then
-			ETorque = (self.Vehicle.Tune.Electric and 1 or 0)
-				* (
-					self.Vehicle.Tune.E_Torque
-					- calcPower(
-						self.Vehicle.Tune.E_TransitionRPM / 1000,
-						self.Vehicle.Tune.E_Torque,
-						self.Vehicle.Tune.E_Redline / 1000,
-						self.Vehicle.Tune.E_RedlineTorque,
-						self.Vehicle.Tune.E_Torque,
-						self.Vehicle.Tune.E_Curve,
-						x
-					)
-				)
-			self.HpElectric, self.TqElectric = (ETorque * x) / 5.252, ETorque
-		end
-		local TotalTorque = math.clamp(
-			NTorque + ETorque + TTorque + STorque,
-			self.Vehicle.Tune.Stall and 0 or self.Vehicle.Tune.IdleTorque,
-			(self.Vehicle.Tune.HPLimit > 0 and self.Vehicle.Tune.HPLimit or math.huge) * (5.252 / x)
+	local x = self.Vehicle.RPM / 1000
+	local NTorque = 0
+	local ETorque = 0
+	local TTorque = 0
+	local STorque = 0
+	if self.Vehicle.Tune.Engine then
+		local NIdleTorque = calcPower(
+			self.Vehicle.Tune.IdleRPM / 1000,
+			self.Vehicle.Tune.IdleTorque,
+			self.Vehicle.Tune.PeakTorqueRPM / 1000,
+			self.Vehicle.Tune.PeakTorque,
+			self.Vehicle.Tune.PeakTorque,
+			self.Vehicle.Tune.IdleTorqueCurve,
+			x
 		)
-		self.Horsepower, self.Torque = (TotalTorque * x) / 5.252, TotalTorque
-	else
-		self.CustomEngine.run({
-			-- Manually add environment variables here
-			_RPM = self.Vehicle.RPM,
-			_GThrot = self.Vehicle.Throttle,
-			_IsOn = self.Vehicle.IsOn,
-			_CGear = self.Vehicle.Gear,
-		}, deltaTime)
+		local NRedlineTorque = calcPower(
+			self.Vehicle.Tune.PeakTorqueRPM / 1000,
+			self.Vehicle.Tune.PeakTorque,
+			self.Vehicle.Tune.Redline / 1000,
+			self.Vehicle.Tune.RedlineTorque,
+			self.Vehicle.Tune.PeakTorque,
+			1 / self.Vehicle.Tune.RedlineTorqueCurve,
+			x
+		)
+		local VVL = self.Vehicle.Tune.VVLTorque > 0
+				and self.Vehicle.Tune.VVLTorque - calcPower(
+					self.Vehicle.Tune.VVLRPM / 1000,
+					0,
+					(self.Vehicle.Tune.VVLRPM + self.Vehicle.Tune.VVLTime) / 1000,
+					self.Vehicle.Tune.VVLTorque,
+					self.Vehicle.Tune.VVLTorque,
+					self.Vehicle.Tune.VVLCurve,
+					x
+				)
+			or 0
+		local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+		local AirPressurePercent = math.exp(
+			(-9.80665 * 0.0289644 * (self.Vehicle.Center.Y * Units.Length_mm / 1000))
+				/ (8.3142 * (globalTemperature + 273.15))
+		) -- look up the barometric formula
+		NTorque = (self.Vehicle.Tune.Engine and 1 or 0)
+			* (self.Vehicle.Tune.PeakTorque - NIdleTorque - NRedlineTorque + VVL)
+			* AirPressurePercent
+		self.HpNatural, self.TqNatural = (NTorque * x) / 5.252, NTorque
 
-		self.Boost = self.CustomEngine._Boost
-		self.BoostTurbo = self.CustomEngine._TBoost
-		self.BoostSuper = self.CustomEngine._SBoost
-
-		self.Horsepower = self.CustomEngine._HP
-		self.Torque = self.CustomEngine._TQ
-		self.HpNatural = self.CustomEngine._NH
-		self.TqNatural = self.CustomEngine._NT
-		self.HpElectric = self.CustomEngine._EH
-		self.TqElectric = self.CustomEngine._ET
-		self.HpTurbo = self.CustomEngine._TH
-		self.TqTurbo = self.CustomEngine._TT
-		self.HpSuper = self.CustomEngine._SH
-		self.TqSuper = self.CustomEngine._ST
-		self.HpBoosted = self.CustomEngine._BH
-		self.TqBoosted = self.CustomEngine._BT
+		if self.Vehicle.Tune.Turbochargers > 0 then
+			local _TBoostGoal = self.Vehicle.Tune.Turbochargers
+				* (
+					(self.Vehicle.Throttle ^ 3) * (100 / self.Vehicle.Tune.T_Size) * ((NTorque * x) / 5.252)
+					- calcPower(
+						self.Vehicle.Tune.IdleRPM / 1000,
+						self.Vehicle.Tune.T_IdleBoost,
+						self.Vehicle.Tune.T_PeakRPM / 1000,
+						self.Vehicle.Tune.T_Boost,
+						(self.Vehicle.Throttle ^ 3) * (100 / self.Vehicle.Tune.T_Size) * ((NTorque * x) / 5.252),
+						1 / self.Vehicle.Tune.T_Curve,
+						x
+					)
+				)
+			if _TBoostGoal > self.BoostTurbo then
+				self.BoostTurbo = self.BoostTurbo
+					+ math.min(
+							self.Vehicle.Tune.T_SpoolIncrease * (_TBoostGoal - self.BoostTurbo),
+							self.Vehicle.Tune.T_SpoolIncrease
+								* (10 / self.Vehicle.Tune.T_Size)
+								* self.Vehicle.Tune.Turbochargers
+						)
+						* deltaTime -- i should probably base this off of the maximum horsepower instead of the RPM, but it's the same thing anyway
+			elseif self.BoostTurbo > _TBoostGoal then
+				self.BoostTurbo = self.BoostTurbo
+					+ self.Vehicle.Tune.T_SpoolDecrease * (_TBoostGoal - self.BoostTurbo) * deltaTime
+			end
+			self.BoostTurbo =
+				math.clamp(self.BoostTurbo, 0, self.Vehicle.Tune.Turbochargers * self.Vehicle.Tune.T_Boost)
+			TTorque = self.BoostTurbo * self.Vehicle.Tune.T_Efficiency
+			self.HpTurbo, self.TqTurbo = (TTorque * x) / 5.252, TTorque
+		end
+		if self.Vehicle.Tune.Superchargers > 0 then
+			local SIdleBoost = calcPower(
+				self.Vehicle.Tune.IdleRPM / 1000,
+				self.Vehicle.Tune.S_IdleBoost,
+				self.Vehicle.Tune.S_PeakRPM / 1000,
+				self.Vehicle.Tune.S_Boost,
+				self.Vehicle.Tune.S_Boost,
+				self.Vehicle.Tune.S_IdleCurve,
+				x
+			)
+			local SRedlineBoost = calcPower(
+				self.Vehicle.Tune.S_PeakRPM / 1000,
+				self.Vehicle.Tune.S_Boost,
+				self.Vehicle.Tune.Redline / 1000,
+				self.Vehicle.Tune.S_RedlineBoost,
+				self.Vehicle.Tune.S_Boost,
+				1 / self.Vehicle.Tune.S_RedlineCurve,
+				x
+			)
+			local _SBoostGoal = self.Vehicle.Tune.Superchargers
+				* self.Vehicle.Throttle
+				* (self.Vehicle.Tune.S_Boost - SIdleBoost - SRedlineBoost)
+			if _SBoostGoal > self.BoostSuper then
+				self.BoostSuper = math.min(
+					self.BoostSuper + self.Vehicle.Tune.S_Boost * self.Vehicle.Tune.S_Response * deltaTime,
+					_SBoostGoal
+				)
+			elseif self.BoostSuper > _SBoostGoal then
+				self.BoostSuper = math.max(
+					self.BoostSuper - self.Vehicle.Tune.S_Boost * self.Vehicle.Tune.S_Response * deltaTime,
+					_SBoostGoal
+				)
+			end
+			STorque = self.BoostSuper * self.Vehicle.Tune.S_Efficiency
+			self.HpSuper, self.TqSuper = (STorque * x) / 5.252, STorque
+		end
+		if self.Vehicle.Tune.Turbochargers > 0 or self.Vehicle.Tune.Superchargers > 0 then
+			self.HpBoosted, self.TqBoosted = ((TTorque + STorque) * x) / 5.252, TTorque + STorque
+			self.Boost = self.BoostTurbo + self.BoostSuper
+		end
 	end
+	if self.Vehicle.Tune.Electric then
+		ETorque = (self.Vehicle.Tune.Electric and 1 or 0)
+			* (
+				self.Vehicle.Tune.E_Torque
+				- calcPower(
+					self.Vehicle.Tune.E_TransitionRPM / 1000,
+					self.Vehicle.Tune.E_Torque,
+					self.Vehicle.Tune.E_Redline / 1000,
+					self.Vehicle.Tune.E_RedlineTorque,
+					self.Vehicle.Tune.E_Torque,
+					self.Vehicle.Tune.E_Curve,
+					x
+				)
+			)
+		self.HpElectric, self.TqElectric = (ETorque * x) / 5.252, ETorque
+	end
+	local TotalTorque = math.clamp(
+		NTorque + ETorque + TTorque + STorque,
+		self.Vehicle.Tune.Stall and 0 or self.Vehicle.Tune.IdleTorque,
+		(self.Vehicle.Tune.HPLimit > 0 and self.Vehicle.Tune.HPLimit or math.huge) * (5.252 / x)
+	)
+	self.Horsepower, self.Torque = (TotalTorque * x) / 5.252, TotalTorque
 
 	-- Exit engine
 	local outTorque = self.Torque * self.Vehicle.CurrentRatio * self.Vehicle.FinalDrive
