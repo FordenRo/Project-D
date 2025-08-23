@@ -126,11 +126,7 @@ function ApplyWeight(self: ServerVehicle)
 			weightPart.Transparency = 1
 		end
 
-		weightPart.Size = Vector3.new(
-			self.Tune.WeightPartSize[1],
-			self.Tune.WeightPartSize[2],
-			self.Tune.WeightPartSize[3]
-		) / Units.Length_mm
+		weightPart.Size = self.Tune.WeightPartSize / Units.Length_mm
 		local tdensity = (self.Tune.Weight * Units.Mass_kg - mass)
 			/ (weightPart.Size.X * weightPart.Size.Y * weightPart.Size.Z) --fixed by denkodin
 		weightPart.CustomPhysicalProperties = PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)

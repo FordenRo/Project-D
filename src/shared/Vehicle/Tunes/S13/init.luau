@@ -8,7 +8,7 @@ local Tune = Default :: VehicleTypes.Tune
 Tune.Title = "Missat Zilfia S13"
 
 Tune.Weight = 1130
-Tune.WeightPartSize = { 1690, 1065, 4470 }
+Tune.WeightPartSize = Vector3.new(1690, 1065, 4470)
 Tune.WeightDist = 50
 
 for _, module in script:GetChildren() do
