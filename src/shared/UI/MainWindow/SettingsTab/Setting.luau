@@ -53,7 +53,7 @@ export type Setting = typeof(setmetatable(
 function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo)
 	local self: Setting = setmetatable({}, Setting) :: any
 
-	self.Instance = instance
+	self.Instance = instance :: any
 	self.Type = properties.Type
 	self.Properties = properties
 	self.Value = self.Properties.Value
@@ -147,6 +147,7 @@ function InitSlider(self: Setting)
 end
 
 function InitBinding(self: Setting)
+	assert(self.Properties.ActionTypes, "Type check")
 	for _, v in self.Instance.Binding:GetChildren() do
 		if not v:IsA("TextButton") or table.find(self.Properties.ActionTypes, v.Name) then continue end
 

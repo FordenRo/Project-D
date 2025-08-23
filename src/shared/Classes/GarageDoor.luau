@@ -29,7 +29,7 @@ export type GarageDoor = typeof(setmetatable(
 function GarageDoor.new(instance: Model)
 	local self: GarageDoor = setmetatable({}, GarageDoor) :: any
 
-	self.Instance = instance
+	self.Instance = instance :: any
 
 	self.Parts = {}
 	for _, v in self.Instance.Parts:GetChildren() do

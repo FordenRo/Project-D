@@ -107,7 +107,7 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	local lastTab = self.CurrentTab
 	self.CurrentTab = tab
 
-	for _, button: TabBarButton in self.Instance.Window.TabBar.Container:GetChildren() do
+	for _, button in self.Instance.Window.TabBar.Container:GetChildren() :: { TabBarButton } do
 		if not button:IsA("TextButton") then continue end
 
 		button.TabLabel.Title.TextTransparency = 0.5

@@ -40,14 +40,14 @@ function InitializeVariables(self: ClientTire)
 	self.RayParams.FilterDescendantsInstances = { self.Vehicle.Instance }
 	self.RayParams.FilterType = Enum.RaycastFilterType.Exclude
 	self.Material = ""
-	self.SmokePart = self.Wheel.Instance:FindFirstChild("SmokePart")
-	self.Collision = self.Wheel.Instance:FindFirstChild("Collision")
-	self.CollisionModel = self.Wheel.Instance:FindFirstChild("CollisionModel")
+	self.SmokePart = self.Wheel.Instance:FindFirstChild("SmokePart") :: any
+	self.Collision = self.Wheel.Instance:FindFirstChild("Collision") :: any
+	self.CollisionModel = self.Wheel.Instance:FindFirstChild("CollisionModel") :: any
 	self.FlexCollision = self.Collision
 	self.FlexCollisionGravComp = self.FlexCollision:FindFirstChild("#GRAVCOMP")
 	self.ObjectGravComp = self.Wheel.Instance:FindFirstChild("#GRAVCOMP")
-	self.TrailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart")
-	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition")
+	self.TrailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart") :: any
+	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition") :: any
 	self.CurrentSound = nil
 	self.CurrentSmoke = nil
 	self.CurrentWheelSmoke = nil
@@ -108,7 +108,7 @@ function Initialize(self: ClientTire)
 				end
 			end
 		end
-		for _, v in self.Wheel.Instance:FindFirstChild("WheelSmokePart"):GetChildren() do
+		for _, v in (self.Wheel.Instance:FindFirstChild("WheelSmokePart") :: Instance):GetChildren() do
 			if string.find(v.Name, "Local_") then continue end
 			if v:IsA("ParticleEmitter") then
 				local effectType = (string.find(v.Name, "road") and "road")

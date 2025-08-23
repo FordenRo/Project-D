@@ -21,7 +21,7 @@ export type Slider = typeof(setmetatable(
 function Slider.new(instance: Frame)
 	local self: Slider = setmetatable({}, Slider) :: any
 
-	self.Instance = instance
+	self.Instance = instance :: any
 	self.Progress = 0
 	self._currentProgress = 0
 

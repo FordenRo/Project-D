@@ -63,7 +63,7 @@ function PlayerStatsHandler.GetPlayerCash(self: PlayerStatsHandler, player: Play
 	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):GetAsync(player.UserId) or 5000000
 end
 
-function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player, cash: number)
+function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player & any, cash: number)
 	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):SetAsync(player.UserId, cash)
 	player.leaderstats.Cash.Value = AbbreviateNumber(cash)
 end
@@ -72,7 +72,7 @@ function PlayerStatsHandler.GetPlayerLaps(self: PlayerStatsHandler, player: Play
 	return DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`):GetAsync(player.UserId) or 0
 end
 
-function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Player)
+function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Player & any)
 	local laps = DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
 		:IncrementAsync(player.UserId)
 	player.leaderstats.Laps.Value = AbbreviateNumber(laps)

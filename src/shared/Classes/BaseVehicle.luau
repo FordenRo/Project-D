@@ -16,7 +16,7 @@ function BaseVehicle.new(instance: Instance)
 		assert(
 			ReplicatedStorage.Shared.Vehicle.Tunes:FindFirstChild(instance.Name),
 			"Tune not found for vehicle: " .. instance.Name
-		)
+		) :: any
 	) :: VehicleTypes.Tune
 
 	InitializeVariables(self)

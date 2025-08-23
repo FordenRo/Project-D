@@ -82,7 +82,7 @@ end
 
 -- Hides character for a while
 function HideCharacter(self: ClientVehicle)
-	for _, v in player.Character:GetDescendants() do
+	for _, v in (player.Character :: Model):GetDescendants() do
 		if not v:IsA("BasePart") then continue end
 
 		v.Transparency = 1
@@ -219,7 +219,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 		end
 	end
 
-	for _, wheel in self.Wheels :: { VehicleTypes.BaseWheel } do
+	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		wheel:Destroy()
 	end
 

@@ -88,7 +88,7 @@ function VehicleHandler.UpdatePlayerVehicleInfo(self: VehicleHandler, player: Pl
 
 	local baseTune = require(ReplicatedStorage.Shared.Vehicle.Tunes[vehicle.Instance.Name]) :: VehicleTypes.Tune
 	local tune = {}
-	for k, v in vehicle.Tune do
+	for k, v in vehicle.Tune :: any do
 		if v ~= baseTune[k] then tune[k] = v end
 	end
 	playerVehInfo.Tune = tune

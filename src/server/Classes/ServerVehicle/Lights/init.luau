@@ -8,7 +8,7 @@ local LIGHT_POWER = {
 	Off = 0,
 	Low = 0.5,
 	High = 1,
-} :: { LightsState: number }
+} :: { { LightsState: number } }
 
 local LIGHT_TYPES = {
 	"Front",
@@ -37,7 +37,7 @@ function ServerLights.new(vehicle: VehicleTypes.BaseVehicle)
 
 	self._cons = {}
 	self._typesBrightness = {}
-	self.Headlights = {}
+	self.Headlights = {} :: any
 
 	for _, lightType in LIGHT_TYPES do
 		local model = self.Vehicle.Instance.Body.Lights:FindFirstChild(lightType)
@@ -67,7 +67,7 @@ function setTypeBrightness(self: ServerLights, type: string, brightness: boolean
 	end
 
 	if self._typesBrightness[type] == brightness then return end
-	self._typesBrightness[type] = brightness
+	self._typesBrightness[type] = brightness :: number
 
 	for k, v in self.Headlights[type] do
 		v:SetBrightness(brightness)

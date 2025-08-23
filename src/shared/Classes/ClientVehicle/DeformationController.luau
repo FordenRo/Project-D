@@ -159,7 +159,7 @@ function DeformationController.BlowEngine(self: DeformationController)
 	engineBlowTexture:Destroy()
 
 	-- Show smoke
-	for _, smokePart: Part in self.DeformModel.BlowSmokeParts:GetChildren() do
+	for _, smokePart in self.DeformModel.BlowSmokeParts:GetChildren() do
 		local emitter = smokePart:FindFirstChildOfClass("ParticleEmitter")
 		if not emitter then continue end
 

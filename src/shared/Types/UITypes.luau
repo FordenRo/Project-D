@@ -31,7 +31,7 @@ type TabModule = any & { new: (instance: ScrollingFrame) -> TabModule, Destroy: 
 export type MainWindow = {
 	__index: MainWindow,
 	_TabPositions: { [ScrollingFrame]: number },
-	_TabModules: { TabModule },
+	_TabModules: { [string]: TabModule },
 	_cons: { RBXScriptConnection },
 	CurrentTab: string?,
 	Visible: boolean,

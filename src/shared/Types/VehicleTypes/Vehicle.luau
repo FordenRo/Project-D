@@ -22,6 +22,7 @@ export type BaseVehicle = {
 				Brake: Model?,
 			},
 		},
+		Misc: Model,
 	},
 	Plugins: { [string]: any },
 	Wheels: { BaseWheel },
@@ -223,6 +224,7 @@ export type ClientWheel = {
 	Trackers: { ABS: number, TCS: number, ESC: number },
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
+	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 
@@ -362,6 +364,8 @@ export type VehicleInterface = {
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & {
 		Cursor: Frame,
+		Speedometer: Frame,
+		Tires: Frame,
 	},
 	Speedometer: VehicleSpeedometer,
 	SpeedEffect: SpeedEffect,
@@ -374,10 +378,11 @@ export type VehicleInterface = {
 export type Headlight = {
 	__index: Headlight,
 	_conn: RBXScriptConnection,
+	_task: thread,
 	_lightBrightness: number,
 	_currentBrightness: number,
 	Instance: BasePart,
-	Light: Light,
+	Light: Light?,
 	Enabled: boolean,
 	Brightness: number,
 	DisabledColor: Color3,

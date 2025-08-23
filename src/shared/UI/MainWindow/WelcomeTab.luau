@@ -17,7 +17,7 @@ export type WelcomeTab = typeof(setmetatable(
 function WelcomeTab.new(instance: ScrollingFrame)
 	local self: WelcomeTab = setmetatable({}, WelcomeTab) :: any
 
-	self.Instance = instance
+	self.Instance = instance :: any
 
 	local string = ""
 	for k, v in GameConfig.Welcome do

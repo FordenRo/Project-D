@@ -15,23 +15,23 @@ function ClientLights.new(vehicle: VehicleTypes.ServerVehicle)
 	self.Vehicle = vehicle
 	self.State = "Off"
 	self.TurnState = "Off"
-	self._RE = self.Vehicle.Instance:WaitForChild("LightsRE")
+	self._RE = self.Vehicle.Instance:WaitForChild("LightsRE") :: RemoteEvent
 
 	self._cons = {
 		InputContext.Lights.Pressed:Connect(function()
-			self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off"
+			self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
 			self._RE:FireServer("State", self.State)
 		end),
 		InputContext.LeftTurnSignal.Pressed:Connect(function()
-			self.TurnState = self.TurnState ~= "Left" and "Left" or "Off"
+			self.TurnState = self.TurnState ~= "Left" and "Left" or "Off" :: any
 			self._RE:FireServer("TurnState", self.TurnState)
 		end),
 		InputContext.RightTurnSignal.Pressed:Connect(function()
-			self.TurnState = self.TurnState ~= "Right" and "Right" or "Off"
+			self.TurnState = self.TurnState ~= "Right" and "Right" or "Off" :: any
 			self._RE:FireServer("TurnState", self.TurnState)
 		end),
 		InputContext.Hazards.Pressed:Connect(function()
-			self.TurnState = self.TurnState ~= "Both" and "Both" or "Off"
+			self.TurnState = self.TurnState ~= "Both" and "Both" or "Off" :: any
 			self._RE:FireServer("TurnState", self.TurnState)
 		end),
 	}

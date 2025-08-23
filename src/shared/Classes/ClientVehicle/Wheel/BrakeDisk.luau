@@ -24,7 +24,7 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 	self.Instance.Parent = self._serverInstance
 	MakeWeld(self.Instance, self._serverInstance)
 
-	self.Sound = self._serverSound:Clone()
+	self.Sound = self._serverSound:Clone() :: any
 	self.Sound.Volume = 0
 	self.Sound.Parent = self._serverSound
 
@@ -47,9 +47,9 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 end
 
 function Update(self: ClientBrakeDisk, deltaTime: number)
-	local GlobalTemperature = game.Workspace:GetAttribute("GlobalTemperature")
+	local GlobalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 
-	local inBrake = self.Wheel.Vehicle.Brake > 0 or self.Wheel.Vehicle.PBrake
+	local inBrake = self.Wheel.Vehicle.Brake :: number > 0 or self.Wheel.Vehicle.PBrake
 	local rotSpeed = self.Wheel.Instance.AssemblyAngularVelocity.Magnitude / 360
 	self.Sound.Playing = true
 	if inBrake then

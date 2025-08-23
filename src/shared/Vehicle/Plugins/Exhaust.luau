@@ -29,7 +29,7 @@ function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
 	local self: Exhaust = setmetatable({}, Exhaust) :: any
 
 	self.Vehicle = vehicle
-	self.Exhaust = self.Vehicle.Instance.Misc:FindFirstChild("Exhaust")
+	self.Exhaust = self.Vehicle.Instance.Misc:FindFirstChild("Exhaust") :: any
 
 	if not self.Exhaust then
 		warn(self.Vehicle.Instance.Name .. ".Misc.Exhaust not found, exhaust plugin wouldn't work")

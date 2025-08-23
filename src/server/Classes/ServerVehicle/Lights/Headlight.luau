@@ -18,7 +18,7 @@ function Headlight.new(instance: BasePart)
 	self._currentBrightness = 0
 	self.Brightness = 0
 	self.DisabledColor = self.Instance.Color
-	self.EnabledColor = self.Light and self.Light.Color or self.Instance:GetAttribute("Color")
+	self.EnabledColor = self.Light and self.Light.Color or self.Instance:GetAttribute("Color") :: Color3
 
 	if self.Light then
 		self.Light.Brightness = 0

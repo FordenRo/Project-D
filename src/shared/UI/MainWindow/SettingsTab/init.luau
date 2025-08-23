@@ -24,7 +24,7 @@ export type SettingsTab = typeof(setmetatable(
 function SettingsTab.new(instance: ScrollingFrame)
 	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
 
-	self.Instance = instance
+	self.Instance = instance :: any
 	self._cons = {}
 
 	local settingInstance = self.Instance.Setting
@@ -65,7 +65,7 @@ function SettingsTab.new(instance: ScrollingFrame)
 				table.insert(properties.ActionTypes, inputBinding.Name)
 			end
 
-			local setting = Setting.new(settingInstance:Clone(), properties)
+			local setting = Setting.new(settingInstance:Clone(), properties :: any)
 			local actionOrder = table.find(actionsOrder, inputAction.Name)
 			setting.Instance.LayoutOrder = actionOrder
 

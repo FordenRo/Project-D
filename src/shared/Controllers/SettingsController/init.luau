@@ -7,7 +7,7 @@ SettingsController.__index = SettingsController
 
 export type SettingsController = typeof(setmetatable(
 	{} :: {
-		Settings: { [keyof<typeof(SettingsInfo)>]: number | boolean | Enum.KeyCode },
+		Settings: { [string]: number | boolean | Enum.KeyCode },
 	},
 	SettingsController
 ))
@@ -35,11 +35,9 @@ end
 
 function SettingsController.GetSettings(self: SettingsController) return table.clone(self.Settings) end
 
-function SettingsController.GetSetting(self: SettingsController, name: keyof<typeof(SettingsInfo)>)
-	return self.Settings[name]
-end
+function SettingsController.GetSetting(self: SettingsController, name: string) return self.Settings[name] end
 
-function SettingsController.GetSettingInfo(self: SettingsController, name: keyof<typeof(SettingsInfo)>)
+function SettingsController.GetSettingInfo(self: SettingsController, name: string)
 	local info = table.clone(SettingsInfo)[name]
 	info.Value = self:GetSetting(name)
 	return info
@@ -55,7 +53,7 @@ end
 
 function SettingsController.SetSetting(
 	self: SettingsController,
-	name: keyof<typeof(SettingsInfo)>,
+	name: string,
 	value: number | boolean | Enum.KeyCode
 )
 	self.Settings[name] = value
