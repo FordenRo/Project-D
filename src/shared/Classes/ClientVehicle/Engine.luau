@@ -1,6 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -751,7 +752,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 		end
 	end
 
-	UpdateHealth(self, deltaTime / 60)
+	deltaTime /= 60
+	UpdateHealth(self, deltaTime)
+	UpdateTemperature(self, deltaTime)
 end
 
 function UpdateHealth(self: Engine, deltaTime: number)
@@ -768,6 +771,23 @@ function UpdateHealth(self: Engine, deltaTime: number)
 
 	if self.Health <= 0 then
 		self.Health = 0
+		self.Vehicle.IsOn = false
+		self.Broken = true
+		self.Vehicle.DeformationController:BlowEngine()
+	end
+end
+
+function UpdateTemperature(self: Engine, deltaTime: number)
+	if not self.Vehicle.Tune.Engine or self.Broken then return end
+
+	local kW = self.Horsepower / 1.35962
+	local heat = kW * Lerp(1, 2, self.Vehicle.RPM / self.Vehicle.Tune.Redline) / 120
+	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
+	local cooling = tDelta * 0.015
+	cooling += (self.Vehicle.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
+	self.Temperature += (heat - cooling) * deltaTime
+
+	if self.Temperature > self.Vehicle.Tune.EngineBurnTemp then
 		self.Vehicle.IsOn = false
 		self.Broken = true
 		self.Vehicle.DeformationController:BlowEngine()

@@ -141,23 +141,6 @@ function UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if self.Fuel <= 0 then self.IsOn = false end
 end
 
-function UpdateTemp(self: ClientVehicle, deltaTime: number)
-	if not self.Tune.Engine or self.Engine.Broken then return end
-
-	local kW = self.Engine.Horsepower / 1.35962
-	local heat = kW * Lerp(1, 2, self.RPM / self.Tune.Redline) / 120
-	local tDelta = self.Engine.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
-	local cooling = tDelta * 0.015
-	cooling += (self.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
-	self.Engine.Temperature += (heat - cooling) * deltaTime
-
-	if self.Engine.Temperature > self.Tune.EngineBurnTemp then
-		self.IsOn = false
-		self.Engine.Broken = true
-		self.DeformationController:BlowEngine()
-	end
-end
-
 -- TODO: Flip function
 
 function ReplicateVariables(self: ClientVehicle)
@@ -181,7 +164,6 @@ function Update(self: ClientVehicle, deltaTime: number)
 	UpdateTransmission(self)
 	self.Engine:Update(deltaTime)
 	UpdateFuel(self, deltaTime)
-	UpdateTemp(self, deltaTime)
 	ReplicateVariables(self)
 end
 
