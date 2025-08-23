@@ -75,7 +75,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 	if self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio == 0 then spLimit = 0 end -- Prevents [nan] from dividing by 0
 
 	--Flywheel/clutch-dumping
-	local flywheelEnergy = math.max((self.Vehicle.RPM - wheelRPM) * self.Vehicle.Tune.DumpMult, 0)
+	local flywheelEnergy = (self.Vehicle.RPM - wheelRPM)
+		* self.Vehicle.Tune.DumpMult
 		* (1 - self.Vehicle.Clutch)
 		* 1.356
 		* Units.Torque_nm
@@ -490,8 +491,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 	--Update Wheels
 	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
 		--Apply Power
-		local on = 1
-		if not self.Vehicle.IsOn then on = 0 end
 		local throt = self.Vehicle.Throttle
 		local brake = self.Vehicle.Brake
 		local clutch = 1
@@ -716,7 +715,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 			wheel.Trackers.TCS = 1 - tqTCS
 
 			--Update Forces
-			local tqOUT = (tq * 1.356 * Units.Torque_nm * throt * tqTCS * on * clutch) + (flywheelEnergy / drWCount)
+			local tqOUT = (tq * 1.356 * Units.Torque_nm * throt * tqTCS * clutch)
+				+ (math.max(flywheelEnergy, 0) / drWCount)
 			-- convert lb-ft to nm to roblox stuff
 			-- if it reaches an absurdly high number, set it to 0 to try and prevent physics death
 
@@ -737,15 +737,17 @@ function Engine.Update(self: Engine, deltaTime: number)
 				-- Brake when the engine has broken
 				wheel.Instance.BV.MotorMaxTorque = 2000
 			else
+				local torque = self.Vehicle.Tune.EBrakeForce
+						* math.min(self.Vehicle.RPM / self.Vehicle.Tune.Redline, 0.9)
+						* (1 - throt)
+						* clutch
+					- math.min(flywheelEnergy, 0) / drWCount
 				if wheel.IsFront then
-					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
-						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
-						+ (self.Vehicle.PBrakeForce.Front * PBrakeV)
+					torque += self.Vehicle.BrakeForce.Front * brake * tqABS + self.Vehicle.PBrakeForce.Front * PBrakeV
 				else
-					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
-						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
-						+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
+					torque += self.Vehicle.BrakeForce.Rear * brake * tqABS + self.Vehicle.PBrakeForce.Rear * PBrakeV
 				end
+				wheel.Instance.BV.MotorMaxTorque = torque
 			end
 		else --luaint edit
 			wheel.Instance.AV.MotorMaxTorque = 0
