@@ -53,7 +53,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 		table.clear(touchedPoints)
 		table.clear(touchedParts)
 
-		local hitVelocity = self.Vehicle.Instance.Body["#Weight"].AssemblyLinearVelocity - self.Vehicle.Velocity
+		local hitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - self.Vehicle.Velocity
 		local force = hitVelocity.Magnitude
 		if force < 1 then return end
 

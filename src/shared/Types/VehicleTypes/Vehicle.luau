@@ -10,7 +10,7 @@ export type BaseVehicle = {
 			Flip: AlignOrientation,
 		},
 		Body: Model & {
-			["#Weight"]: BasePart,
+			WeightPart: Part,
 			Collider: Model,
 			Sounds: Model,
 			Lights: Model & {
@@ -58,6 +58,7 @@ export type BaseVehicle = {
 	Mileage: number,
 	-- Misc
 	Center: CFrame,
+	WeightPart: Part,
 	TCS: boolean,
 	TCSActive: boolean,
 	ABS: boolean,

@@ -50,9 +50,9 @@ function Exhaust.new(vehicle: VehicleTypes.ServerVehicle)
 
 	self.Weld = Instance.new("Weld")
 	self.Weld.Part0 = self.Exhaust
-	self.Weld.Part1 = self.Vehicle.Instance.Body["#Weight"]
+	self.Weld.Part1 = self.Vehicle.WeightPart
 	self.Weld.C0 = CFrame.new(0, 0, 0)
-	self.Weld.C1 = self.Vehicle.Instance.Body["#Weight"].CFrame:Inverse() * self.Exhaust.CFrame
+	self.Weld.C1 = self.Vehicle.WeightPart.CFrame:Inverse() * self.Exhaust.CFrame
 	self.Weld.Parent = self.Exhaust
 
 	RunService.Heartbeat:Connect(function() Update(self) end)

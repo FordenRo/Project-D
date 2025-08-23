@@ -92,22 +92,21 @@ function UpdateRotation(self: CameraPlugin, input: InputObject)
 end
 
 function Update(self: CameraPlugin, deltaTime: number)
-	local weightB = self.Vehicle.Instance.Body["#Weight"]
 	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 
-	local heightOffset = weightB.CFrame.UpVector * 7
+	local heightOffset = self.Vehicle.WeightPart.CFrame.UpVector * 7
 	local offset = Vector3.new()
-	local lookOffset = weightB.CFrame.UpVector * 4
+	local lookOffset = self.Vehicle.WeightPart.CFrame.UpVector * 4
 	local angles = Vector3.new()
 
 	local distance = self.Distance
 	if sideVelocity.Magnitude > 10 then
 		distance -= self.Distance * 0.2 * math.abs(self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)) ^ 1.5
-		offset -= (sideVelocity.Unit + Vector3.yAxis * weightB.CFrame.LookVector.Y) * distance
+		offset -= (sideVelocity.Unit + Vector3.yAxis * self.Vehicle.WeightPart.CFrame.LookVector.Y) * distance
 	elseif self.Vehicle.Gear == -1 then
-		offset += weightB.CFrame.LookVector * distance
+		offset += self.Vehicle.WeightPart.CFrame.LookVector * distance
 	else
-		offset -= weightB.CFrame.LookVector * distance
+		offset -= self.Vehicle.WeightPart.CFrame.LookVector * distance
 	end
 
 	local bumping = Vector3.yAxis * math.clamp(self.Vehicle.Acceleration.Y, -40, 40) * 0.07
@@ -119,8 +118,8 @@ function Update(self: CameraPlugin, deltaTime: number)
 	end
 
 	angles += Vector3.yAxis * self.Vehicle.AngularVelocity.Y * 0.07
-	angles += Vector3.new(1, 0, 1) * weightB.AssemblyAngularVelocity.Unit * math.clamp(
-		weightB.AssemblyAngularVelocity.Magnitude,
+	angles += Vector3.new(1, 0, 1) * self.Vehicle.WeightPart.AssemblyAngularVelocity.Unit * math.clamp(
+		self.Vehicle.WeightPart.AssemblyAngularVelocity.Magnitude,
 		-2,
 		2
 	) * 0.1
@@ -133,16 +132,16 @@ function Update(self: CameraPlugin, deltaTime: number)
 		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
 	end
 
-	local cameraDirection = weightB.CFrame:VectorToWorldSpace(
-		self.CameraCFrame:VectorToWorldSpace(weightB.CFrame:VectorToObjectSpace(self.Offset.Unit))
+	local cameraDirection = self.Vehicle.WeightPart.CFrame:VectorToWorldSpace(
+		self.CameraCFrame:VectorToWorldSpace(self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(self.Offset.Unit))
 	)
 	local rotatedOffset = self.Offset.Magnitude * cameraDirection
 
-	local right = weightB.CFrame.RightVector:Dot(rotatedOffset)
+	local right = self.Vehicle.WeightPart.CFrame.RightVector:Dot(rotatedOffset)
 	if math.abs(right) < 0.2 then right = 1 end
 
 	local sideOffset = math.sign(right)
-		* weightB.CFrame.RightVector
+		* self.Vehicle.WeightPart.CFrame.RightVector
 		* distance
 		* 0.5
 		* math.clamp(MapToRange(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1), 0, 1)
@@ -150,8 +149,8 @@ function Update(self: CameraPlugin, deltaTime: number)
 	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
 
 	Camera.CFrame = CFrame.lookAt(
-		weightB.Position + rotatedOffset + self.Bumping + heightOffset + sideOffset,
-		weightB.Position + self.LookOffset + self.Bumping,
+		self.Vehicle.WeightPart.Position + rotatedOffset + self.Bumping + heightOffset + sideOffset,
+		self.Vehicle.WeightPart.Position + self.LookOffset + self.Bumping,
 		self.Vehicle.Center.UpVector
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
 end

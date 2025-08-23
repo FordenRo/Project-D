@@ -510,7 +510,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 			and self.Vehicle.ESC
 			and (self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6)) > self.Vehicle.Tune.ESCSpeed
 		then
-			local g = self.Vehicle.Instance.Body["#Weight"].CFrame:VectorToObjectSpace(
+			local g = self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(
 				self.Vehicle.Acceleration
 					/ Units.Velocity_mdivs
 					/ (

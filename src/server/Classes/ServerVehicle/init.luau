@@ -112,37 +112,41 @@ function ApplyWeight(self: ServerVehicle)
 		centerR = centerR / countR
 		local center = centerR:Lerp(centerF, self.Tune.WeightDist / 100)
 
-		--Create Weight Brick
-		local weightB = Instance.new("Part")
-		weightB.Name = "#Weight"
-		weightB.Anchored = true
-		weightB.CanCollide = false
-		weightB.BrickColor = BrickColor.new("Really black")
-		weightB.TopSurface = Enum.SurfaceType.Smooth
-		weightB.BottomSurface = Enum.SurfaceType.Smooth
+		--Create Weight Part
+		local weightPart = Instance.new("Part")
+		weightPart.Name = "WeightPart"
+		weightPart.Anchored = true
+		weightPart.CanCollide = false
+		weightPart.BrickColor = BrickColor.new("Really black")
+		weightPart.TopSurface = Enum.SurfaceType.Smooth
+		weightPart.BottomSurface = Enum.SurfaceType.Smooth
 		if self.Tune.WBVisible then
-			weightB.Transparency = 0.75
+			weightPart.Transparency = 0.75
 		else
-			weightB.Transparency = 1
+			weightPart.Transparency = 1
 		end
 
-		weightB.Size = Vector3.new(self.Tune.WeightBSize[1], self.Tune.WeightBSize[2], self.Tune.WeightBSize[3])
-			/ Units.Length_mm
-		local tdensity = (self.Tune.Weight * Units.Mass_kg - mass) / (weightB.Size.X * weightB.Size.Y * weightB.Size.Z) --fixed by denkodin
-		weightB.CustomPhysicalProperties = PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)
+		weightPart.Size = Vector3.new(
+			self.Tune.WeightPartSize[1],
+			self.Tune.WeightPartSize[2],
+			self.Tune.WeightPartSize[3]
+		) / Units.Length_mm
+		local tdensity = (self.Tune.Weight * Units.Mass_kg - mass)
+			/ (weightPart.Size.X * weightPart.Size.Y * weightPart.Size.Z) --fixed by denkodin
+		weightPart.CustomPhysicalProperties = PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)
 		--Real life mass in pounds, converted to kg minus existing roblox mass converted to kg, divided by volume of the weight brick in cubic meters, divided by the density of water
-		weightB.CFrame = (self.Instance.DriveSeat.CFrame - self.Instance.DriveSeat.Position + center)
+		weightPart.CFrame = (self.Instance.DriveSeat.CFrame - self.Instance.DriveSeat.Position + center)
 			* CFrame.new(0, self.Tune.CGHeight, 0)
-		weightB.Parent = self.Instance.Body
+		weightPart.Parent = self.Instance.Body
 
 		--Density Cap
-		if weightB.CustomPhysicalProperties.Density >= 100 then
+		if weightPart.CustomPhysicalProperties.Density >= 100 then
 			warn(
 				"\n\t [VEHICLE]: Density too high for specified volume."
 					.. "\n\t Current Density:\t"
 					.. math.ceil(tdensity)
 					.. "\n\t Max Density:\t"
-					.. math.ceil(weightB.CustomPhysicalProperties.Density)
+					.. math.ceil(weightPart.CustomPhysicalProperties.Density)
 					.. "\n\t Increase weight brick size to compensate."
 			)
 		end

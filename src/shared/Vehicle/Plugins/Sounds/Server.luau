@@ -31,7 +31,7 @@ function SoundHandler.new(vehicle: VehicleTypes.ServerVehicle)
 		instance.Name = name
 		instance.SoundId = sound.SoundId
 		instance.Parent = sound.Parent and self.Vehicle.Instance.Body.Sounds:FindFirstChild(sound.Parent)
-			or self.Vehicle.Instance.Body["#Weight"]
+			or self.Vehicle.WeightPart
 		cachedSound.Instance = instance
 		table.insert(self.Sounds, cachedSound)
 	end

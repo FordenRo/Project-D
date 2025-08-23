@@ -153,8 +153,8 @@ end
 
 function Update(self: ClientVehicle, deltaTime: number)
 	self.Center = self:GetCenter()
-	self.Velocity = self.Instance.Body["#Weight"].AssemblyLinearVelocity
-	self.AngularVelocity = self.Instance.Body["#Weight"].AssemblyAngularVelocity
+	self.Velocity = self.WeightPart.AssemblyLinearVelocity
+	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
 	self._OldVelocity = self.Velocity
 	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime

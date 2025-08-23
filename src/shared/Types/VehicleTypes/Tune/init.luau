@@ -21,8 +21,8 @@ export type Tune = {
 
 	--- Total weight (in kilograms, under Earth's gravity, including wheel and suspension weight)
 	Weight: number,
-	--- Size of weight brick in milimeters. You can find how to convert studs to milimeters inside the Units module. { width, height, length }
-	WeightBSize: { number },
+	--- Size of weight part in milimeters. You can find how to convert studs to milimeters inside the Units module. { width, height, length }
+	WeightPartSize: { number },
 	--- Weight distribution (0 - on rear wheels, 100 - on front wheels, can be <0 or >100)
 	WeightDist: number,
 	--- Center of gravity height (studs relative to average of all wheels)

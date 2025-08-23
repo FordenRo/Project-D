@@ -33,7 +33,7 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle)
 		instance.Name = name .. "_Local"
 		instance.SoundId = sound.SoundId
 		instance.Parent = sound.Parent and self.Vehicle.Instance.Body.Sounds:FindFirstChild(sound.Parent)
-			or self.Vehicle.Instance.Body["#Weight"]
+			or self.Vehicle.WeightPart
 		cachedSound.Instance = instance
 		cachedSound.ServerInstance = instance.Parent:FindFirstChild(name) :: Sound
 		cachedSound.ServerInstance.SoundId = ""
