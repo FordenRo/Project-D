@@ -81,11 +81,11 @@ function ClientWheel.Update(self: ClientWheel, data: VehicleTypes.ClientWheelSha
 end
 
 function ClientWheel.Destroy(self: ClientWheel)
-	if self.Instance["#AV"] then
-		self.Instance["#AV"].MotorMaxTorque = 0
-		self.Instance["#AV"].AngularVelocity = 0
+	if self.Instance.AV then
+		self.Instance.AV.MotorMaxTorque = 0
+		self.Instance.AV.AngularVelocity = 0
 	end
-	if self.Instance["#BV"] then
+	if self.Instance.BV then
 		local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
 		if ParkingGearEnabled then
 			self.Vehicle.Gear = -2
@@ -93,9 +93,9 @@ function ClientWheel.Destroy(self: ClientWheel)
 			self.Vehicle.PBrake = true
 		end
 		if self.IsFront then
-			self.Instance["#BV"].MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Front or 0
+			self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Front or 0
 		else
-			self.Instance["#BV"].MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
+			self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
 		end
 	end
 

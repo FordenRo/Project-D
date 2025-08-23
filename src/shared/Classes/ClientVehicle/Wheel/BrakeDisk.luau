@@ -53,10 +53,9 @@ function Update(self: ClientBrakeDisk, deltaTime: number)
 	local rotSpeed = self.Wheel.Instance.AssemblyAngularVelocity.Magnitude / 360
 	self.Sound.Playing = true
 	if inBrake then
-		self.Temperature += self.Wheel.Instance["#BV"].MotorMaxTorque * rotSpeed * deltaTime
-		self.Volume =
-			Lerp(self.Volume, self.Wheel.Instance["#BV"].MotorMaxTorque * rotSpeed ^ 0.8 / 5000, deltaTime * 5)
-		self.Sound.PitchEffect.Octave = 0.9 + self.Wheel.Instance["#BV"].MotorMaxTorque * rotSpeed ^ 0.8 / 1000
+		self.Temperature += self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed * deltaTime
+		self.Volume = Lerp(self.Volume, self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 5000, deltaTime * 5)
+		self.Sound.PitchEffect.Octave = 0.9 + self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 1000
 	else
 		self.Volume = Lerp(self.Volume, 0, deltaTime * 5)
 	end

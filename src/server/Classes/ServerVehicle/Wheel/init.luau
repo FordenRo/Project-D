@@ -406,7 +406,7 @@ function Initialize(self: ServerWheel)
 	AV.Attachment1 = Instance.new("Attachment")
 	AV.Attachment1.Name = "AB"
 	AV.Attachment1.Parent = self.Instance
-	AV.Name = "#AV"
+	AV.Name = "AV"
 	AV.AngularVelocity = 0
 	AV.MotorMaxTorque = 0
 
@@ -419,7 +419,7 @@ function Initialize(self: ServerWheel)
 	BV.Attachment1 = Instance.new("Attachment")
 	BV.Attachment1.Name = "BB"
 	BV.Attachment1.Parent = self.Instance
-	BV.Name = "#BV"
+	BV.Name = "BV"
 	BV.AngularVelocity = 0
 	if self.IsFront then
 		BV.MotorMaxTorque = (self.Vehicle.Tune.PBrakeForce * 9.80665 * Units.Force_N) * self.Vehicle.Tune.PBrakeBias

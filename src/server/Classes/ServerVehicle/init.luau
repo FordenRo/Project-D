@@ -269,20 +269,20 @@ function InitializeDriveSeat(self: ServerVehicle)
 
 			for _, wheel in self.Instance.Wheels:GetChildren() do
 				-- Apply handbrake
-				if wheel:FindFirstChild("#BV") and self.Tune.ExitBrake then
+				if wheel:FindFirstChild("BV") and self.Tune.ExitBrake then
 					if string.find(wheel.Name, "F") then
-						wheel["#BV"].MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
+						wheel.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
 							* self.Tune.PBrakeBias
 					else
-						wheel["#BV"].MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
+						wheel.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
 							* (1 - self.Tune.PBrakeBias)
 					end
 				end
 
 				-- Remove wheel force
-				if wheel:FindFirstChild("#AV") then
-					wheel["#AV"].MotorMaxTorque = 0
-					wheel["#AV"].AngularVelocity = 0
+				if wheel:FindFirstChild("AV") then
+					wheel.AV.MotorMaxTorque = 0
+					wheel.AV.AngularVelocity = 0
 				end
 
 				-- Readjust steering

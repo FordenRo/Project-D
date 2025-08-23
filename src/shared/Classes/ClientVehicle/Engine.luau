@@ -713,40 +713,40 @@ function Engine.Update(self: Engine, deltaTime: number)
 			-- if it reaches an absurdly high number, set it to 0 to try and prevent physics death
 
 			if wheel.Instance.Name == "RR" then
-				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * RRdiffMult
+				wheel.Instance.AV.MotorMaxTorque = tqOUT * RRdiffMult
 			elseif wheel.Instance.Name == "RL" then
-				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * RLdiffMult
+				wheel.Instance.AV.MotorMaxTorque = tqOUT * RLdiffMult
 			elseif wheel.Instance.Name == "FR" then
-				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * FRdiffMult
+				wheel.Instance.AV.MotorMaxTorque = tqOUT * FRdiffMult
 			elseif wheel.Instance.Name == "FL" then
-				wheel.Instance["#AV"].MotorMaxTorque = tqOUT * FLdiffMult
+				wheel.Instance.AV.MotorMaxTorque = tqOUT * FLdiffMult
 			else
-				wheel.Instance["#AV"].MotorMaxTorque = tqOUT
+				wheel.Instance.AV.MotorMaxTorque = tqOUT
 			end
-			wheel.Instance["#AV"].AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
+			wheel.Instance.AV.AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
 
 			if self.Broken then
 				-- Brake when the engine has broken
-				wheel.Instance["#BV"].MotorMaxTorque = 2000
+				wheel.Instance.BV.MotorMaxTorque = 2000
 			else
 				if wheel.IsFront then
-					wheel.Instance["#BV"].MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
+					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
 						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
 						+ (self.Vehicle.PBrakeForce.Front * PBrakeV)
 				else
-					wheel.Instance["#BV"].MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
+					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
 						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
 						+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
 				end
 			end
 		else --luaint edit
-			wheel.Instance["#AV"].MotorMaxTorque = 0
-			wheel.Instance["#AV"].AngularVelocity = 0
+			wheel.Instance.AV.MotorMaxTorque = 0
+			wheel.Instance.AV.AngularVelocity = 0
 			if wheel.IsFront then
-				wheel.Instance["#BV"].MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
+				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
 					+ (self.Vehicle.PBrakeForce.Front * PBrakeV)
 			else
-				wheel.Instance["#BV"].MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
+				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
 					+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
 			end
 		end
