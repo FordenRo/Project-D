@@ -28,7 +28,7 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 
 	self.Throttle = 0
 	self.Brake = 0
-	self.Clutch = 0
+	self.Clutch = false
 	self.Steering = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.MouseSteerOn = false
@@ -36,9 +36,9 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle)
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
 	Context.CS.Enabled = self.Vehicle.Tune.CSEnabled
+	Context.Enabled = true
 
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
-	Context.Enabled = true
 
 	InitializeConnections(self)
 

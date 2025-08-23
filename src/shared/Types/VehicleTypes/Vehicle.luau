@@ -157,7 +157,7 @@ export type InputController = {
 	Vehicle: ClientVehicle,
 	Throttle: number,
 	Brake: number,
-	Clutch: number,
+	Clutch: boolean,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
 	Steering: number,
