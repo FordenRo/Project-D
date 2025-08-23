@@ -16,6 +16,8 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 	self.GoalRPM = 0
 	self.CanStall = false
 	self.Broken = false
+	self.Health = 1
+	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self._LastOffTime = 0
 
 	self.Boost = 0

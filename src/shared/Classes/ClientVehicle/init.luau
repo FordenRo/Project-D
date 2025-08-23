@@ -146,12 +146,12 @@ function UpdateTemp(self: ClientVehicle, deltaTime: number)
 
 	local kW = self.Engine.Horsepower / 1.35962
 	local heat = kW * Lerp(1, 2, self.RPM / self.Tune.Redline) / 120
-	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
+	local tDelta = self.Engine.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
 	local cooling = tDelta * 0.015
 	cooling += (self.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
-	self.Temperature += (heat - cooling) * deltaTime
+	self.Engine.Temperature += (heat - cooling) * deltaTime
 
-	if self.Temperature > self.Tune.EngineBurnTemp then
+	if self.Engine.Temperature > self.Tune.EngineBurnTemp then
 		self.IsOn = false
 		self.Engine.Broken = true
 		self.DeformationController:BlowEngine()
@@ -164,14 +164,14 @@ function UpdateHealth(self: ClientVehicle, deltaTime: number)
 	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
 	damage += (math.max(self.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
 	damage += self.Tune.HotDamage * math.clamp(
-		MapToRange(self.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
+		MapToRange(self.Engine.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
 		0,
 		1
 	) ^ 1.5
-	self.EngineHealth -= damage * deltaTime
+	self.Engine.Health -= damage * deltaTime
 
-	if self.EngineHealth <= 0 then
-		self.EngineHealth = 0
+	if self.Engine.Health <= 0 then
+		self.Engine.Health = 0
 		self.IsOn = false
 		self.Engine.Broken = true
 		self.DeformationController:BlowEngine()

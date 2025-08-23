@@ -83,7 +83,7 @@ end
 function VehicleHandler.UpdatePlayerVehicleInfo(self: VehicleHandler, player: Player, vehicle: VehicleTypes.BaseVehicle)
 	local playerVehInfo = self:GetPlayerVehicleInfo(player, vehicle.ID)
 	playerVehInfo.Fuel = vehicle.Fuel
-	playerVehInfo.EngineHealth = vehicle.EngineHealth
+	playerVehInfo.EngineHealth = vehicle.Engine.Health
 	playerVehInfo.Mileage = vehicle.Mileage
 
 	local baseTune = require(ReplicatedStorage.Shared.Vehicle.Tunes[vehicle.Instance.Name]) :: VehicleTypes.Tune

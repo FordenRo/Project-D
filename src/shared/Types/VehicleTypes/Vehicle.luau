@@ -33,8 +33,6 @@ export type BaseVehicle = {
 	Dirt: number,
 	Fuel: number,
 	ID: string,
-	EngineHealth: number,
-	Temperature: number,
 	FanSpeed: number,
 	Horning: boolean,
 	-- Transmission
@@ -125,6 +123,8 @@ export type Engine = {
 	Broken: boolean,
 	GoalRPM: number,
 	CanStall: boolean,
+	Health: number,
+	Temperature: number,
 
 	Boost: number,
 	BoostTurbo: number,

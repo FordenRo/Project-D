@@ -186,14 +186,14 @@ function TempUpdate(self: Speedometer)
 		self.Instance.TempIcon.Icon.ImageColor3 = color
 	end
 
-	local rot = (self.Vehicle.Temperature - 60) / (self.Vehicle.Tune.EngineBurnTemp - 65) * 60
+	local rot = (self.Vehicle.Engine.Temperature - 60) / (self.Vehicle.Tune.EngineBurnTemp - 65) * 60
 	self.Instance.Temp.CanvasGroup.FG.Rotation = 180 - math.clamp(rot, 0, 60)
 
-	if self.Vehicle.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5) < 0.3 then
+	if self.Vehicle.Engine.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5) < 0.3 then
 		setColor(
 			Color3.new(1, 1, 1):Lerp(
 				Color3.new(1, 0, 0),
-				math.clamp(1 - (self.Vehicle.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5)) / 0.3, 0, 1)
+				math.clamp(1 - (self.Vehicle.Engine.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5)) / 0.3, 0, 1)
 			)
 		)
 	else
@@ -214,12 +214,12 @@ function UpdateIcons(self: Speedometer)
 
 	-- Check
 	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Engine.Broken) and Color3.new(1, 0, 0)
-		or self.Vehicle.EngineHealth < 0.3 and Color3.new(1, 0.5, 0)
+		or self.Vehicle.Engine.Health < 0.3 and Color3.new(1, 0.5, 0)
 		or Color3.new()
 	self.Instance.Check.ImageTransparency = (
 		self.Vehicle.Starting
 		or self.Vehicle.Engine.Broken
-		or self.Vehicle.EngineHealth < 0.3
+		or self.Vehicle.Engine.Health < 0.3
 	)
 			and 0.2
 		or 0.8
