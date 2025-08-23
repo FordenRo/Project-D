@@ -121,6 +121,7 @@ export type Engine = {
 	__index: Engine,
 	_LastOnTime: number,
 	_LastOffTime: number,
+	_RevLimiting: boolean,
 	Vehicle: ClientVehicle,
 	Broken: boolean,
 	GoalRPM: number,

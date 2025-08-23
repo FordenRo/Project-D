@@ -22,6 +22,7 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self._LastOnTime = 0
 	self._LastOffTime = 0
+	self._RevLimiting = false
 
 	self.Boost = 0
 	self.BoostTurbo = 0
@@ -140,14 +141,12 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Rev limiter/speed limiter
-	-- TODO: CHECK THIS!
-	local revLimiting = false -- (Forden) If error, then place in a class variable
 	if self.Vehicle.RPM >= self.Vehicle.Tune.Redline then
-		revLimiting = true
+		self._RevLimiting = true
 	elseif self.Vehicle.RPM < goalMax - self.Vehicle.Tune.RevBounce then
-		revLimiting = false
+		self._RevLimiting = false
 	end
-	if revLimiting then self.Vehicle.Throttle = self.Vehicle.Tune.IdleThrottle / 100 end
+	if self._RevLimiting then self.Vehicle.Throttle = self.Vehicle.Tune.IdleThrottle / 100 end
 
 	local limit = (self.Vehicle.Gear < 0 and self.Vehicle.Tune.ReverseSpeed or self.Vehicle.Tune.SpeedLimit)
 	if limit > 0 then
@@ -331,7 +330,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		and (
 			self.Vehicle.Starting
 			or (self.Vehicle.Tune.RemoveCreep and self.Vehicle.RPM < self.Vehicle.Tune.IdleRPM + (self.Vehicle.Tune.IdlePadding or 0) and self.Vehicle.InputController.Throttle < 0.1)
-			or (revLimiting and self.Vehicle.Tune.OverRev == false)
+			or (self._RevLimiting and self.Vehicle.Tune.OverRev == false)
 		)
 	then
 		self.Vehicle.Clutch = 1
