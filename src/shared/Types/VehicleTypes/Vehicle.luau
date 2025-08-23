@@ -124,6 +124,7 @@ export type Engine = {
 	Broken: boolean,
 	GoalRPM: number,
 	CanStall: boolean,
+	FuelSuppy: number,
 	Health: number,
 	Temperature: number,
 

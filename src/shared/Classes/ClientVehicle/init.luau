@@ -129,14 +129,19 @@ function UpdateWheels(self: ClientVehicle)
 	self.ESCActive = false
 end
 
--- TODO: При низком количестве топлива, сбрасывать обороты, имитировать захлебывание двигателя
--- TODO: Проверить работу
 function UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
 
 	local kW = self.Engine.Horsepower * 1.35962
 	local consumption = self.Tune.BSFC * kW / 3600 / 1000 / self.Tune.FuelDensity * deltaTime
 	self.Fuel = math.max(0, self.Fuel - consumption)
+
+	local fuelSupply = self.Engine.FuelSuppy + deltaTime * 3
+	if self.Fuel / self.Tune.FuelCapacity < 0.05 then
+		local delta = 1 - self.Fuel / self.Tune.FuelCapacity / 0.05
+		fuelSupply -= math.abs(math.noise(tick() / 3 % 1000)) ^ 0.6 * delta * 10 * deltaTime
+	end
+	self.Engine.FuelSuppy = math.clamp(fuelSupply, 0, 1)
 
 	if self.Fuel <= 0 then self.IsOn = false end
 end
