@@ -247,7 +247,11 @@ function Engine.Update(self: Engine, deltaTime: number)
 		self.Vehicle.IsOn = false
 	end
 
-	if self.Vehicle.RPM > self.Vehicle.Tune.IgnitionMinRPM and (tick() - self._LastOnTime > 0.2) then
+	if
+		self.Vehicle.RPM > self.Vehicle.Tune.IgnitionMinRPM
+		and (tick() - self._LastOnTime > 0.2)
+		and not self.Broken
+	then
 		self.Vehicle.IsOn = true
 	end
 
