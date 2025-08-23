@@ -33,6 +33,9 @@ export type ServerVehicle = Vehicle.ServerVehicle
 export type InputController = Vehicle.InputController
 export type Engine = Vehicle.Engine
 
+--- Vehicle configuration
+---
+--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
 export type Tune = Tune.Tune
 export type PlayerVehicle = PlayerVehicle.PlayerVehicle
 export type PlayerVehicleInfo = PlayerVehicle.PlayerVehicleInfo

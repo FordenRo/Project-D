@@ -4,76 +4,36 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
-Tune.TransModes = { "Manual" } --[[
-	[Modes]
-		"Auto"		: Automatic shifting
-		"Semi"		: Clutchless manual shifting, dual clutch transmission
-		"Manual"	: Manual shifting with clutch
+Tune.TransModes = { "Manual" }
+Tune.ClutchType = "Clutch"
 
-		>Include within brackets
-			eg: {"Semi"} or {"Auto", "Manual"}
-	>First mode is default mode
-]]
+Tune.ClutchEngage = 10
+Tune.SpeedEngage = 40
 
-Tune.ClutchType = "Clutch" --[[
-	[Types]
-		"Clutch"			: Standard clutch, recommended
-		"TorqueConverter"	: Torque converter, keeps RPM up
-		"CVT"				: Continously Variable Transmission
-]]
+Tune.TQLock = false
+Tune.RPMEngage = 3500
 
---[[Transmission]]
---Transmission Settings
-Tune.ClutchEngage = 10 -- How fast engagement is (0 = instant, 99 = super slow)
-Tune.SpeedEngage = 40 -- Speed the clutch fully engages at (Based on km/h)
+Tune.CVTRPM = 7000
+Tune.CVTMaxRatio = 6
+Tune.CVTMinRatio = 1
 
---Torque Converter:
-Tune.TQLock = false -- Torque converter starts locking at a certain RPM
-Tune.RPMEngage = 3500 -- Keeps RPMs to this level until passed
+Tune.AutoShiftMode = "Speed"
+Tune.AutoShiftType = "DCT"
+Tune.AutoUpThresh = -200
+Tune.AutoDownThresh = 1400
 
---CVT:
-Tune.CVTRPM = 7000 -- RPM that the CVT wants to keep at full throttle.
-Tune.CVTMaxRatio = 6 -- The gear ratio that the CVT cannot go over.
-Tune.CVTMinRatio = 1 -- The gear ratio that the CVT cannot go under.
+Tune.ShiftThrot = 100
 
---Automatic Settings
-Tune.AutoShiftMode = "Speed" --[[
-	[Modes]
-		"Speed"		: Shifts based on wheel speed
-		"RPM"		: Shifts based on RPM										]]
-Tune.AutoShiftType = "DCT" --[[
-	[Types]
-		"Rev"		: Clutch engages fully once RPM reached			(AC6C V1)
-		"DCT"		: Clutch engages after a set time has passed	(AC6.81T)	]]
-Tune.AutoUpThresh = -200 -- Automatic upshift point 	(relative to peak RPM, positive = Over-rev)
-Tune.AutoDownThresh = 1400 -- Automatic downshift point (relative to peak RPM, positive = Under-rev)
+Tune.ShiftUpTime = 0.2
+Tune.ShiftDnTime = 0.1
 
---Automatic: Revmatching
-Tune.ShiftThrot = 100 -- Throttle level when shifting down to revmatch, 0 - 100%
-
---Automatic: DCT
-Tune.ShiftUpTime = 0.2 -- Time required to shift into next gear, from a lower gear to a higher one.
-Tune.ShiftDnTime = 0.1 -- Time required to shift into next gear, from a higher gear to a lower one.
-
---Gear Ratios
---You can tune the gears in the engine graphs by switching G_TunerType inside Desmos
-Tune.FinalDrive = 4.38
 Tune.Ratios = {
-	--[[Park]]
-	--0			, --"0" enables the parking gear, "--0" disables.
-	--[[Reverse]]
 	3.2,
-	--[[Neutral]]
 	0,
-	--[[ 1 ]]
 	3.6,
-	--[[ 2 ]]
 	2,
-	--[[ 3 ]]
 	1.3,
-	--[[ 4 ]]
 	1,
-	--[[ 5 ]]
 	0.82,
 }
 

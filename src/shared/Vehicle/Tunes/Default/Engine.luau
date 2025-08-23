@@ -4,107 +4,92 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
--- *USE THE GRAPH BELOW TO PROPERLY TUNE THE ENGINE.*
--- https://www.desmos.com/calculator/cqhgbm0vlt
+Tune.CustomEngineCalculations = false
 
--- To import engines prior to 1.7, consult the README.
-
-Tune.CustomEngineCalculations = false -- Enables the use of the CustomEngine module. Even if enabled, please do not remove the default engine values.
-
--- Naturally Aspirated Engine
 Tune.Engine = true
 
-Tune.HPLimit = 0 -- The horsepower limit of the engine (set to 0 to turn off).
+Tune.HPLimit = 0
 
--- Temperature
-Tune.OperatingEngineTemp = 100 -- The temperature at which the engine operating normally
-Tune.EngineBurnTemp = 120 -- The temperature at which the engine will explode
-Tune.EngineMaterialFactor = 2.5 -- The factor
-Tune.HeatGain = 4 -- Raw heat gain per kW per second (unaffected by engine material) at 50% of redline
-Tune.RedlineHeatRejection = 1.25 -- Heat gain multiplier at redline (excluding rpm effect). Think of this as "inefficiency" of cumbustion
-Tune.IdleHeatRejection = 1.5 -- Heat gain multiplier at idle (excluding rpm effect). Think of this as "inefficiency" of cumbustion
-Tune.FanAirSpeed = 15 -- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
-Tune.CoolingFactor = 0.02 -- Think of this as a size of radiator + efficiency variable
-Tune.EfficientCombustionRPM = 2000 -- RPM at which the engine is most efficient
+Tune.OperatingEngineTemp = 100
+Tune.EngineBurnTemp = 120
+Tune.EngineMaterialFactor = 2.5
+Tune.HeatGain = 4
+Tune.RedlineHeatRejection = 1.25
+Tune.IdleHeatRejection = 1.5
+Tune.FanAirSpeed = 15
+Tune.CoolingFactor = 0.02
+Tune.EfficientCombustionRPM = 2000
 
--- Electric Engine
 Tune.Electric = false
 
-Tune.E_Torque = 1050 -- The amount of electric torque in lb-ft.
-Tune.E_TransitionRPM = 4600 -- When the torque begins decaying.
+Tune.E_Torque = 1050
+Tune.E_TransitionRPM = 4600
 
-Tune.E_Redline = 20000 -- The maximum RPM of the electric motor.
-Tune.E_RedlineTorque = 205 -- How much torque is made at the maximum RPM.
+Tune.E_Redline = 20000
+Tune.E_RedlineTorque = 205
 
-Tune.E_Curve = 0.84 -- The shape of the curve between TransitionRPM and the redline.
+Tune.E_Curve = 0.84
 
--- Turbocharger
-Tune.Turbochargers = 0 -- Number of turbochargers in the engine, set to 0 for no turbochargers
+Tune.Turbochargers = 0
 
-Tune.T_Boost = 8.7 -- The maximum amount of boost of one turbocharger in PSI.
-Tune.T_PeakRPM = 5020 -- When the turbo reaches maximum boost.
+Tune.T_Boost = 8.7
+Tune.T_PeakRPM = 5020
 
-Tune.T_IdleBoost = 1.2 -- How much boost is made at idle.
-Tune.T_Curve = 0.2 -- The shape of the boost curve between idle and PeakRPM.
+Tune.T_IdleBoost = 1.2
+Tune.T_Curve = 0.2
 
-Tune.T_Efficiency = 5 -- How much torque is made with 1 PSI.
+Tune.T_Efficiency = 5
 
-Tune.T_Size = 9.1 -- Turbo size, larger = less boost from horsepower
-Tune.T_SpoolIncrease = 0.06 -- Throttle response of the turbo. (Higher = more responsive, ranges from 0 to 1)
-Tune.T_SpoolDecrease = 0.03 -- Throttle response of the turbo. (Higher = more responsive, ranges from 0 to 1)
+Tune.T_Size = 9.1
+Tune.T_SpoolIncrease = 0.06
+Tune.T_SpoolDecrease = 0.03
 
--- Supercharger
-Tune.Superchargers = 0 -- Number of superchargers in the engine, Set to 0 for no superchargers
+Tune.Superchargers = 0
 
-Tune.S_Boost = 8 -- The maximum amount of boost of one supercharger in PSI.
-Tune.S_PeakRPM = 5500 -- When the supercharger reaches its maximum boost.
+Tune.S_Boost = 8
+Tune.S_PeakRPM = 5500
 
-Tune.S_IdleBoost = 6.1 -- The amount of boost at idle.
-Tune.S_IdleCurve = 0.31 -- The shape of the boost curve between idle and PeakRPM.
+Tune.S_IdleBoost = 6.1
+Tune.S_IdleCurve = 0.31
 
-Tune.S_RedlineBoost = 5.6 -- The amount of boost at redline.
-Tune.S_RedlineCurve = 0.187 -- The shape of the boost curve between PeakRPM and redline.
+Tune.S_RedlineBoost = 5.6
+Tune.S_RedlineCurve = 0.187
 
-Tune.S_Efficiency = 4.34 -- How much torque is made with 1 PSI.
+Tune.S_Efficiency = 4.34
 
-Tune.S_Response = 0.1 -- Throttle response of the supercharger. (Higher = more responsive, ranges from 0 to 1)
+Tune.S_Response = 0.1
 
--- Ignition
-Tune.IgnitionRPM = 2000 -- This is how high the engine revs for the ignition.
-Tune.IgnitionAccel = 60 -- The acceleration of the RPM while starting the car.
-Tune.IgnitionMinRPM = 800 -- The minimum RPM required to start the car.
+Tune.IgnitionRPM = 2000
+Tune.IgnitionAccel = 60
+Tune.IgnitionMinRPM = 800
 
--- Throttle and brake input
-Tune.ThrotAccel = 0.1 -- Throttle acceleration, applied per tick (recommended values between 0.1 to 0.3)
-Tune.ThrotDecel = 0.1 -- Throttle deceleration, applied per tick (recommended values between 0.05 to 0.1)
-Tune.BrakeAccel = 0.1 -- Brake acceleration, applied per tick
-Tune.BrakeDecel = 0.1 -- Brake deceleration, applied per tick
+Tune.ThrotAccel = 0.1
+Tune.ThrotDecel = 0.1
+Tune.BrakeAccel = 0.1
+Tune.BrakeDecel = 0.1
 
--- Engine speed
-Tune.RevBounce = 200 -- RPM kickback from redline
-Tune.OverRev = true -- Set to true to allow the RPM to go above redline
+Tune.RevBounce = 200
+Tune.OverRev = true
 
-Tune.RevAccel = 180 -- RPM acceleration when clutch is on (this should be higher than RevDecay and RevDecayRPM)
-Tune.RevDecay = 30 -- RPM decay when clutch is on
-Tune.RevDecayRPM = 60 -- RPM decay from engine speed
+Tune.RevAccel = 180
+Tune.RevDecay = 30
+Tune.RevDecayRPM = 60
 
-Tune.Flywheel = 600 -- Flywheel weight (higher = faster response, lower = more stable RPM)
-Tune.DumpMult = 1.0 -- Flywheel energy multiplier when dumping the clutch (keep at 1.0 for the best result).
+Tune.Flywheel = 600
+Tune.DumpMult = 1.0
 
-Tune.IdleThrottle = 5 -- Percent throttle with no input. (in percent)
-Tune.IdleDamping = 4800 -- Damping of idle in RPM. This will change that actual idle RPM at higher values.
-Tune.IdlePadding = 800 -- Added on top of IdleRPM to account for IdleDamping
-Tune.RemoveCreep = false -- Tries to remove the natural creep of the chassis by applying clutch if there is no input throttle and if the RPM is below idle.
+Tune.IdleThrottle = 5
+Tune.IdleDamping = 4800
+Tune.IdlePadding = 800
+Tune.RemoveCreep = false
 
-Tune.InclineComp = 1.0 -- Torque compensation multiplier for inclines (applies gradient from 0-90 degrees)
+Tune.InclineComp = 1.0
 
--- Options for a limited slip differential (LuaInt)
--- *You can set all of these values to 0 to achieve an open differential.
-Tune.FDiffPower = 20 -- 0 - 100				Higher values yield more wheel lock-up under throttle, more stability (Front wheels, only if driven)
-Tune.FDiffCoast = 60 -- 0 - 100				Higher values yield more wheel lock-up when off throttle, more stability (Front wheels, only if driven)
-Tune.FDiffPreload = 40 -- 0 - 100				Higher values will make the wheels generally lock up faster in any environment (Front wheels, only if driven)
-Tune.RDiffPower = 20 -- 0 - 100				(Rear wheels, only if driven)
-Tune.RDiffCoast = 60 -- 0 - 100				(Rear wheels, only if driven)
-Tune.RDiffPreload = 40 -- 0 - 100				(Rear wheels, only if driven)
+Tune.FDiffPower = 20
+Tune.FDiffCoast = 60
+Tune.FDiffPreload = 40
+Tune.RDiffPower = 20
+Tune.RDiffCoast = 60
+Tune.RDiffPreload = 40
 
 return Tune
