@@ -736,22 +736,17 @@ function Engine.Update(self: Engine, deltaTime: number)
 			end
 			wheel.Instance.AV.AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
 
-			if self.Broken then
-				-- Brake when the engine has broken
-				wheel.Instance.BV.MotorMaxTorque = 2000
+			local torque = self.Vehicle.Tune.EBrakeForce
+					* math.min(self.Vehicle.RPM / self.Vehicle.Tune.Redline, 0.5)
+					* (1 - throt)
+					* clutch
+				- math.min(flywheelEnergy, 0) / drWCount
+			if wheel.IsFront then
+				torque += self.Vehicle.BrakeForce.Front * brake * tqABS + self.Vehicle.PBrakeForce.Front * PBrakeV
 			else
-				local torque = self.Vehicle.Tune.EBrakeForce
-						* math.min(self.Vehicle.RPM / self.Vehicle.Tune.Redline, 0.9)
-						* (1 - throt)
-						* clutch
-					- math.min(flywheelEnergy, 0) / drWCount
-				if wheel.IsFront then
-					torque += self.Vehicle.BrakeForce.Front * brake * tqABS + self.Vehicle.PBrakeForce.Front * PBrakeV
-				else
-					torque += self.Vehicle.BrakeForce.Rear * brake * tqABS + self.Vehicle.PBrakeForce.Rear * PBrakeV
-				end
-				wheel.Instance.BV.MotorMaxTorque = torque
+				torque += self.Vehicle.BrakeForce.Rear * brake * tqABS + self.Vehicle.PBrakeForce.Rear * PBrakeV
 			end
+			wheel.Instance.BV.MotorMaxTorque = torque
 		else --luaint edit
 			wheel.Instance.AV.MotorMaxTorque = 0
 			wheel.Instance.AV.AngularVelocity = 0
