@@ -119,6 +119,7 @@ export type ClientVehicle = {
 
 export type Engine = {
 	__index: Engine,
+	_LastOnTime: number,
 	_LastOffTime: number,
 	Vehicle: ClientVehicle,
 	Broken: boolean,

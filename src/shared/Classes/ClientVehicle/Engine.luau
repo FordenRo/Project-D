@@ -20,6 +20,7 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Health = 1
 	self.FuelSuppy = 0
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self._LastOnTime = 0
 	self._LastOffTime = 0
 
 	self.Boost = 0
@@ -108,7 +109,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 		self.Vehicle.Brake = self.Vehicle.InputController.Brake
 	end
 
-	if not self.Vehicle.IsOn then
+	if self.Vehicle.IsOn then
+		self._LastOnTime = tick()
+	else
 		self._LastOffTime = tick()
 		if self.Vehicle.AutoClutch then self.Vehicle.Clutch = 1 end
 		self.Vehicle.Throttle = 0
@@ -215,7 +218,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 			0,
 			math.max(self.Vehicle.Tune.IgnitionRPM, wheelRPM)
 		)
-		self.Vehicle.IsOn = self.GoalRPM > self.Vehicle.Tune.IgnitionMinRPM
 	end
 
 	--Set RPM
@@ -238,6 +240,10 @@ function Engine.Update(self: Engine, deltaTime: number)
 		and self.Vehicle.Tune.Stall
 	then
 		self.Vehicle.IsOn = false
+	end
+
+	if self.Vehicle.RPM > self.Vehicle.Tune.IgnitionMinRPM and (tick() - self._LastOnTime > 0.2) then
+		self.Vehicle.IsOn = true
 	end
 
 	--Clutch
