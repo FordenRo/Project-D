@@ -759,6 +759,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	deltaTime /= 60
 	UpdateHealth(self, deltaTime)
 	UpdateTemperature(self, deltaTime)
+	UpdateFuel(self, deltaTime)
 end
 
 function UpdateHealth(self: Engine, deltaTime: number)
@@ -796,6 +797,23 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 		self.Broken = true
 		self.Vehicle.DeformationController:BlowEngine()
 	end
+end
+
+function UpdateFuel(self: Engine, deltaTime: number)
+	if not self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric or not self.Vehicle.IsOn then return end
+
+	local kW = self.Horsepower * 1.35962
+	local consumption = self.Vehicle.Tune.BSFC * kW / 3600 / 1000 / self.Vehicle.Tune.FuelDensity * deltaTime
+	self.Vehicle.Fuel = math.max(0, self.Vehicle.Fuel - consumption)
+
+	local fuelSupply = self.FuelSuppy + deltaTime * 3
+	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.05 then
+		local delta = 1 - self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity / 0.05
+		fuelSupply -= math.abs(math.noise(tick() / 3 % 1000)) ^ 0.6 * delta * 10 * deltaTime
+	end
+	self.FuelSuppy = math.clamp(fuelSupply, 0, 1)
+
+	if self.Vehicle.Fuel <= 0 then self.Vehicle.IsOn = false end
 end
 
 function Engine.Destroy(self: Engine) end
