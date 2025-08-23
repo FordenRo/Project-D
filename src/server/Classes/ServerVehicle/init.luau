@@ -146,6 +146,8 @@ function ApplyWeight(self: ServerVehicle)
 					.. "\n\t Increase weight brick size to compensate."
 			)
 		end
+
+		self.WeightPart = weightPart
 	else
 		--Existing Weight Is Too Massive
 		warn(

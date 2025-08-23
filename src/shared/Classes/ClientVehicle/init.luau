@@ -27,14 +27,13 @@ type ClientVehicle = VehicleTypes.ClientVehicle
 function ClientVehicle.new(instance: Instance)
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
-	self.InputController = InputController.new(self)
-
 	Initialize(self)
 
 	self.Engine = Engine.new(self)
+	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
-	self.Interface = VehicleInterface.new(self)
 	self.Lights = Lights.new(self)
+	self.Interface = VehicleInterface.new(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
 	self._task = task.spawn(function()
@@ -69,6 +68,7 @@ function InitializeVariables(self: ClientVehicle)
 	self._DriveWheelSpeed = 0
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
+	self.WeightPart = self.Instance.Body.WeightPart
 end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.InitializeWheels(self, Wheel) end

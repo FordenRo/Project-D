@@ -67,7 +67,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.Mileage = 0
 	-- Misc
 	self.Center = CFrame.new()
-	self.WeightPart = self.Instance.Body.WeightPart
 	self.TCS = self.Tune.TCSEnabled
 	self.TCSActive = false
 	self.ABS = self.Tune.ABSEnabled
