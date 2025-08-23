@@ -534,9 +534,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 						escVector = escVector * escBias
 					end
 
-					tqESC = ((wheel.Instance.Name == "FL" or wheel.Instance.Name == "RL") and 1 or -1)
-						* math.sign(diff)
-						* escVector
+					tqESC = (wheel.IsRight and -1 or 1) * math.sign(diff) * escVector
 					throt = throt + (math.max(tqESC, 0) - throt) * (self.Vehicle.Tune.ESCThrottle / 100)
 					brake = brake + (-math.min(tqESC, 0) - brake) * (self.Vehicle.Tune.ESCBrake / 100)
 				end

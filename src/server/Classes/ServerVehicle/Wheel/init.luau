@@ -232,7 +232,7 @@ function Initialize(self: ServerWheel)
 			--(Avxnturador) adds spring offset
 			if self.IsFront then
 				local aOff = self.Vehicle.Tune.FSpringOffset
-				if self.Instance.Name == "FL" then
+				if not self.IsRight then
 					sf1.Position = Vector3.new(
 						fDistX - fSLX + aOff[1],
 						-fDistY + fSLY + aOff[2],
@@ -251,7 +251,7 @@ function Initialize(self: ServerWheel)
 				end
 			else
 				local aOff = self.Vehicle.Tune.RSpringOffset
-				if self.Instance.Name == "RL" then
+				if self.IsRight then
 					sf1.Position = Vector3.new(
 						rDistX - rSLX + aOff[1],
 						-rDistY + rSLY + aOff[2],

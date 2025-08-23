@@ -200,6 +200,7 @@ export type BaseWheel = {
 	},
 	Vehicle: BaseVehicle,
 	BrakeDisk: BaseBrakeDisk,
+	IsRight: boolean,
 	IsFront: boolean,
 	IsDriven: boolean,
 
