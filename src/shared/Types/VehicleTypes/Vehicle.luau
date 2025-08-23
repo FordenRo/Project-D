@@ -28,7 +28,6 @@ export type BaseVehicle = {
 	Tune: Tune.Tune,
 	Lights: BaseLights,
 	Starting: boolean,
-	Broken: boolean,
 	Occupant: Player?,
 	Dirt: number,
 	Fuel: number,
@@ -47,24 +46,6 @@ export type BaseVehicle = {
 	RPM: number,
 	Shifting: boolean,
 	AutoClutch: boolean,
-	-- Boost
-	Boost: number,
-	BoostTurbo: number,
-	BoostSuper: number,
-	-- Horsepower
-	HpNatural: number,
-	HpElectric: number,
-	HpTurbo: number,
-	HpSuper: number,
-	HpBoosted: number,
-	Horsepower: number,
-	-- Torque
-	TqNatural: number,
-	TqElectric: number,
-	TqTurbo: number,
-	TqSuper: number,
-	TqBoosted: number,
-	Torque: number,
 	-- Inputs
 	Throttle: number,
 	Brake: number,
@@ -115,23 +96,19 @@ export type ClientVehicle = {
 	__index: ClientVehicle,
 	_cons: { RBXScriptConnection },
 	_task: thread,
-	_LastInputWasGamepad: boolean,
 	_MaxSpin: number,
 	InputController: InputController,
 	DeformationController: DeformationController,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
-	Engine: any,
+	Engine: Engine,
 	Controls: Controls.VehicleControls,
 	Interface: VehicleInterface,
 	-- Transmission
-	_GoalRPM: number,
 	_ShiftUp: boolean,
 	_ShiftDown: boolean,
 	_ClutchPressing: boolean,
 	_DriveWheelSpeed: number,
-	_LastOffTime: number,
-	_CanStall: boolean,
 	-- Velocity
 	_OldVelocity: Vector3,
 
@@ -139,6 +116,39 @@ export type ClientVehicle = {
 	InitializeWheels: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
+
+export type Engine = {
+	__index: Engine,
+	_LastOffTime: number,
+	Vehicle: ClientVehicle,
+	Broken: boolean,
+	GoalRPM: number,
+	CanStall: boolean,
+
+	Boost: number,
+	BoostTurbo: number,
+	BoostSuper: number,
+
+	Horsepower: number,
+	HpNatural: number,
+	HpElectric: number,
+	HpTurbo: number,
+	HpSuper: number,
+	HpBoosted: number,
+
+	Torque: number,
+	TqNatural: number,
+	TqElectric: number,
+	TqTurbo: number,
+	TqSuper: number,
+	TqBoosted: number,
+
+	CustomEngine: any,
+
+	new: (vehicle: ClientVehicle) -> Engine,
+	Update: (self: Engine, deltaTime: number) -> (),
+	Destroy: (self: Engine) -> (),
+}
 
 export type InputController = {
 	__index: InputController,

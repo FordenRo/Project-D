@@ -4,13 +4,13 @@ local RunService = game:GetService("RunService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
+local Engine = require(script.Engine)
 local InputController = require(script.InputController)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local Lights = require(script.Lights)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local ReplicationVars = require(script.ReplicationVars)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local UpdateEngine = require(script.UpdateEngine)
 local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -31,9 +31,17 @@ function ClientVehicle.new(instance: Instance)
 
 	Initialize(self)
 
+	self.Engine = Engine.new(self)
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
 	self.Lights = Lights.new(self)
+
+	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
+	self._task = task.spawn(function()
+		while task.wait(1 / 8) do
+			SlowUpdate(self)
+		end
+	end)
 
 	return self
 end
@@ -43,13 +51,6 @@ function Initialize(self: ClientVehicle)
 	HideCharacter(self)
 	self:InitializeWheels()
 	InitializePlugins(self)
-
-	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
-	self._task = task.spawn(function()
-		while task.wait(1 / 8) do
-			SlowUpdate(self)
-		end
-	end)
 end
 
 function InitializeVariables(self: ClientVehicle)
@@ -65,10 +66,7 @@ function InitializeVariables(self: ClientVehicle)
 	self._ShiftUp = false
 	self._ShiftDown = false
 	self._ClutchPressing = false
-	self._GoalRPM = 0
 	self._DriveWheelSpeed = 0
-	self._CanStall = false
-	self._LastOffTime = tick()
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
 end
@@ -136,7 +134,7 @@ end
 function UpdateFuel(self: ClientVehicle, deltaTime: number)
 	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
 
-	local kW = self.Horsepower * 1.35962
+	local kW = self.Engine.Horsepower * 1.35962
 	local consumption = self.Tune.BSFC * kW / 3600 / 1000 / self.Tune.FuelDensity * deltaTime
 	self.Fuel = math.max(0, self.Fuel - consumption)
 
@@ -144,9 +142,9 @@ function UpdateFuel(self: ClientVehicle, deltaTime: number)
 end
 
 function UpdateTemp(self: ClientVehicle, deltaTime: number)
-	if not self.Tune.Engine or self.Broken then return end
+	if not self.Tune.Engine or self.Engine.Broken then return end
 
-	local kW = self.Horsepower / 1.35962
+	local kW = self.Engine.Horsepower / 1.35962
 	local heat = kW * Lerp(1, 2, self.RPM / self.Tune.Redline) / 120
 	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
 	local cooling = tDelta * 0.015
@@ -155,7 +153,7 @@ function UpdateTemp(self: ClientVehicle, deltaTime: number)
 
 	if self.Temperature > self.Tune.EngineBurnTemp then
 		self.IsOn = false
-		self.Broken = true
+		self.Engine.Broken = true
 		self.DeformationController:BlowEngine()
 	end
 end
@@ -175,7 +173,7 @@ function UpdateHealth(self: ClientVehicle, deltaTime: number)
 	if self.EngineHealth <= 0 then
 		self.EngineHealth = 0
 		self.IsOn = false
-		self.Broken = true
+		self.Engine.Broken = true
 		self.DeformationController:BlowEngine()
 	end
 end
@@ -192,7 +190,6 @@ end
 
 function Update(self: ClientVehicle, deltaTime: number)
 	self.Center = self:GetCenter()
-	self.Boost = self.BoostTurbo + self.BoostSuper
 	self.Velocity = self.Instance.Body["#Weight"].AssemblyLinearVelocity
 	self.AngularVelocity = self.Instance.Body["#Weight"].AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
@@ -202,7 +199,7 @@ function Update(self: ClientVehicle, deltaTime: number)
 	UpdateWheels(self)
 	UpdateSteering(self, deltaTime)
 	UpdateTransmission(self)
-	UpdateEngine(self, deltaTime)
+	self.Engine:Update(deltaTime)
 	UpdateFuel(self, deltaTime)
 	UpdateTemp(self, deltaTime)
 	UpdateHealth(self, deltaTime)
@@ -226,6 +223,7 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 		wheel:Destroy()
 	end
 
+	self.Engine:Destroy()
 	self.InputController:Destroy()
 	self.Interface:Destroy()
 	self.Lights:Destroy()

@@ -37,7 +37,6 @@ function InitializeVariables(self: BaseVehicle)
 
 	self.IsOn = self.Tune.AutoStart and (self.Tune.Engine or self.Tune.Electric)
 	self.Starting = false
-	self.Broken = false
 	self.Occupant = nil
 	self.Fuel = self.Tune.FuelCapacity
 	self.EngineHealth = 1
@@ -57,24 +56,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.RPM = 0
 	self.Shifting = false
 	self.AutoClutch = false
-	-- Boost
-	self.Boost = 0
-	self.BoostTurbo = 0
-	self.BoostSuper = 0
-	-- Horsepower
-	self.HpNatural = 0
-	self.HpElectric = 0
-	self.HpTurbo = 0
-	self.HpSuper = 0
-	self.HpBoosted = 0
-	self.Horsepower = 0
-	-- Torque
-	self.TqNatural = 0
-	self.TqElectric = 0
-	self.TqTurbo = 0
-	self.TqSuper = 0
-	self.TqBoosted = 0
-	self.Torque = 0
 	-- Inputs
 	self.Throttle = 0
 	self.Brake = 0

@@ -154,7 +154,7 @@ function BoostUpdate(self: Speedometer)
 	if not (self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers) then return end
 
 	local max = self.Vehicle.Tune.S_Boost + self.Vehicle.Tune.T_Boost
-	local rot = self.Vehicle.Boost / max * 45
+	local rot = self.Vehicle.Engine.Boost / max * 45
 	self.Instance.Boost.Rotation = math.clamp(180 - rot / 2, 180 - 45 / 2, 180 + 45 / 2)
 	self.Instance.Boost.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 45)
 end
@@ -213,12 +213,12 @@ function UpdateIcons(self: Speedometer)
 	self.Instance.Battery.ImageTransparency = (not self.Vehicle.IsOn or self.Vehicle.Starting) and 0.2 or 0.8
 
 	-- Check
-	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Broken) and Color3.new(1, 0, 0)
+	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Engine.Broken) and Color3.new(1, 0, 0)
 		or self.Vehicle.EngineHealth < 0.3 and Color3.new(1, 0.5, 0)
 		or Color3.new()
 	self.Instance.Check.ImageTransparency = (
 		self.Vehicle.Starting
-		or self.Vehicle.Broken
+		or self.Vehicle.Engine.Broken
 		or self.Vehicle.EngineHealth < 0.3
 	)
 			and 0.2

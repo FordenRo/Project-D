@@ -59,8 +59,8 @@ function Update(self: InputController, deltaTime: number)
 		or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) and Enum.MouseBehavior.LockCurrentPosition
 		or Enum.MouseBehavior.Default
 
-	Context.Horn.Enabled = self.IsOn
-	Context.Ignition.Enabled = not self.Broken
+	Context.Horn.Enabled = self.Vehicle.IsOn
+	Context.Ignition.Enabled = not self.Vehicle.Engine.Broken
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
 	Context.ControllerSteering.Enabled = not self.MouseSteerOn
