@@ -52,7 +52,10 @@ function Engine.Update(self: Engine, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 
 	local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
-	local wheelRPM = self.Vehicle._DriveWheelSpeed * self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio
+	local wheelRPM = self.Vehicle._DriveWheelSpeed
+		* self.Vehicle.CurrentRatio
+		* self.Vehicle.FinalDriveRatio
+		* math.sign(self.Vehicle.Gear)
 
 	--CVT
 	local CVTRatio
