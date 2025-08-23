@@ -19,6 +19,7 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 	self.CanStall = false
 	self.Broken = false
 	self.Health = 1
+	self.FuelSuppy = 0
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self._LastOffTime = 0
 
@@ -184,6 +185,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 			)
 		)
 	end
+
+	-- Apply fuel supply
+	self.Vehicle.Throttle *= self.FuelSuppy
 
 	if (self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric) and not self.Vehicle.Starting then
 		self.GoalRPM = math.clamp(

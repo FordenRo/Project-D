@@ -38,7 +38,7 @@ function InitializeVariables(self: BaseVehicle)
 	self.IsOn = false
 	self.Starting = false
 	self.Occupant = nil
-	self.Fuel = self.Tune.FuelCapacity
+	self.Fuel = 1
 	self.FanSpeed = 0
 	self.Dirt = 0
 	self.Plugins = {}
