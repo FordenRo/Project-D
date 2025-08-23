@@ -158,26 +158,6 @@ function UpdateTemp(self: ClientVehicle, deltaTime: number)
 	end
 end
 
-function UpdateHealth(self: ClientVehicle, deltaTime: number)
-	if not self.Tune.Engine or self.Tune.Electric or not self.IsOn then return end
-
-	local damage = self.Tune.RPMDamage * (self.RPM / self.Tune.Redline) ^ 2 / 3600
-	damage += (math.max(self.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
-	damage += self.Tune.HotDamage * math.clamp(
-		MapToRange(self.Engine.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
-		0,
-		1
-	) ^ 1.5
-	self.Engine.Health -= damage * deltaTime
-
-	if self.Engine.Health <= 0 then
-		self.Engine.Health = 0
-		self.IsOn = false
-		self.Engine.Broken = true
-		self.DeformationController:BlowEngine()
-	end
-end
-
 -- TODO: Flip function
 
 function ReplicateVariables(self: ClientVehicle)
@@ -202,7 +182,6 @@ function Update(self: ClientVehicle, deltaTime: number)
 	self.Engine:Update(deltaTime)
 	UpdateFuel(self, deltaTime)
 	UpdateTemp(self, deltaTime)
-	UpdateHealth(self, deltaTime)
 	ReplicateVariables(self)
 end
 

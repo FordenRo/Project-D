@@ -1,6 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -748,6 +749,28 @@ function Engine.Update(self: Engine, deltaTime: number)
 					+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
 			end
 		end
+	end
+
+	UpdateHealth(self, deltaTime / 60)
+end
+
+function UpdateHealth(self: Engine, deltaTime: number)
+	if not self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric or not self.Vehicle.IsOn then return end
+
+	local damage = self.Vehicle.Tune.RPMDamage * (self.Vehicle.RPM / self.Vehicle.Tune.Redline) ^ 2 / 3600
+	damage += (math.max(self.Vehicle.RPM - self.Vehicle.Tune.Redline, 0) / 1000) ^ self.Vehicle.Tune.RedlineDamageCurve * self.Vehicle.Tune.RedlineDamage
+	damage += self.Vehicle.Tune.HotDamage * math.clamp(
+		MapToRange(self.Temperature, self.Vehicle.Tune.OperatingEngineTemp, self.Vehicle.Tune.EngineBurnTemp),
+		0,
+		1
+	) ^ 1.5
+	self.Health -= damage * deltaTime
+
+	if self.Health <= 0 then
+		self.Health = 0
+		self.Vehicle.IsOn = false
+		self.Broken = true
+		self.Vehicle.DeformationController:BlowEngine()
 	end
 end
 
