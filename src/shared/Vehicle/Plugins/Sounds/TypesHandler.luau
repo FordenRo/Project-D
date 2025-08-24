@@ -53,33 +53,36 @@ end
 function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostTurbo
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+		+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostTurbo
 
-	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostTurbo
+	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
 end
 
 function SoundTypesHandler.Super(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if sound.Instance.Playing == false then sound.Instance.Playing = true end
 
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostSuper
+	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+		+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostSuper
 
-	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostSuper
+	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostSuper
 end
 
 function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if
-		(self.Vehicle.BoostTurbo - sound.Sensitivity < self._PrevBoostTurbo)
+		(self.Vehicle.Engine.BoostTurbo - sound.Sensitivity < self._PrevBoostTurbo)
 		and (tick() - self._LastBOV > 1)
 		and self.Vehicle.Throttle < 0.8
 	then
 		self._UpdateBOV = true
-		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.BoostTurbo
+		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+			+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostTurbo
 
-		sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.BoostTurbo
+		sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
 		sound.Instance.TimePosition = 0
 		sound.Instance.Playing = true
 	end
-	self._PrevBoostTurbo = self.Vehicle.BoostTurbo
+	self._PrevBoostTurbo = self.Vehicle.Engine.BoostTurbo
 end
 
 function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
