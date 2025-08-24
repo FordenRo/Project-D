@@ -138,7 +138,7 @@ function UpdateMileage(self: ClientVehicle, deltaTime: number)
 		speed += wheel.Instance.AssemblyAngularVelocity.Magnitude * (wheel.Instance.Size.Y / 2)
 		count += 1
 	end
-	self.Mileage += speed / count * deltaTime
+	self.Mileage += speed / count * (Units.Length_mm / 1000) * deltaTime
 end
 
 -- TODO: Flip function
