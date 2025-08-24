@@ -19,11 +19,13 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 		{
 			Unit = "KM",
 			Scaling = (Units.Length_mm / 1000) * 3.6,
+			MileageScaling = 1000,
 			MaxSpeed = 0,
 		},
 		{
 			Unit = "MI",
 			Scaling = (Units.Length_mm / 1000) * 2.23693629,
+			MileageScaling = 1609.344,
 			MaxSpeed = 0,
 		},
 	}
@@ -153,7 +155,7 @@ function TachUpdate(self: Speedometer)
 end
 
 function MileageUpdate(self: Speedometer)
-	local mileage = self.Vehicle.Mileage * self.Units[self.CurrentUnit].Scaling
+	local mileage = self.Vehicle.Mileage / self.Units[self.CurrentUnit].MileageScaling
 	self.Instance.Mileage.Mileage.Text =
 		string.format("%06.1f", mileage):gsub("^0+", '<font transparency="0.5">%0</font>')
 end

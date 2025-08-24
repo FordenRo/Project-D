@@ -55,6 +55,7 @@ export type BaseVehicle = {
 	AngularVelocity: Vector3,
 	AverageRotSpeed: number,
 	Acceleration: Vector3,
+	--- Mileage in meters
 	Mileage: number,
 	-- Misc
 	Center: CFrame,
@@ -149,6 +150,7 @@ export type Engine = {
 
 	new: (vehicle: ClientVehicle) -> Engine,
 	Update: (self: Engine, deltaTime: number) -> (),
+	AsTable: (self: Engine) -> { [string]: any },
 	Destroy: (self: Engine) -> (),
 }
 
@@ -335,7 +337,14 @@ export type VehicleSpeedometer = {
 	Vehicle: ClientVehicle,
 	Instance: Frame & any,
 	CurrentUnit: number,
-	Units: { { Unit: string, Scaling: number, MaxSpeed: number } },
+	Units: {
+		{
+			Unit: string,
+			Scaling: number,
+			MileageScaling: number,
+			MaxSpeed: number,
+		}
+	},
 
 	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
 	Destroy: (self: VehicleSpeedometer) -> (),
