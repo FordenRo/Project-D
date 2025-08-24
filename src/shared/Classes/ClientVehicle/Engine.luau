@@ -751,7 +751,7 @@ function UpdateHealth(self: Engine, deltaTime: number)
 		MapToRange(self.Temperature, self.Vehicle.Tune.OperatingEngineTemp, self.Vehicle.Tune.EngineBurnTemp),
 		0,
 		1
-	) ^ 1.5
+	) ^ 1.5 / 3600
 	self.Health = math.max(self.Health - damage * deltaTime, 0)
 
 	if self.Health == 0 then
