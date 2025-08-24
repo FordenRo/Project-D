@@ -2,6 +2,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Headlight = require(script.Headlight)
+local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
+local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local LIGHT_POWER = {
@@ -54,7 +56,14 @@ function ServerLights.new(vehicle: VehicleTypes.BaseVehicle)
 	end
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function() Update(self) end))
-	table.insert(self._cons, self._RE.OnServerEvent:Connect(function(_, k: string, v: any) self[k] = v end))
+	table.insert(
+		self._cons,
+		self._RE.OnServerEvent:Connect(function(_, buf: buffer)
+			local data = Serialization.Deserialize(LightPacket, buf)
+			self.State = data.State
+			self.TurnState = data.TurnState
+		end)
+	)
 
 	return self
 end

@@ -424,6 +424,7 @@ export type ClientLights = {
 	_cons: { RBXScriptConnection },
 
 	new: (vehicle: ClientVehicle) -> ClientLights,
+	Replicate: (self: ClientLights) -> (),
 } & BaseLights
 
 export type ServerLights = {
