@@ -1,6 +1,6 @@
-local ServerScriptService = game:GetService("ServerScriptService")
+local DataStoreService = game:GetService("DataStoreService")
 
-local DatastoreHandler = require(ServerScriptService.Server.Handlers.DatastoreHandler)
+local PlaytimeDataStore = DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime")
 
 local PlaytimeHandler = {}
 PlaytimeHandler.__index = PlaytimeHandler
@@ -28,7 +28,7 @@ end
 
 function PlaytimeHandler.OnPlayerAdded(self: PlaytimeHandler, player: Player)
 	self._JoinedTime[player] = tick()
-	self._PlayerPlaytime[player] = DatastoreHandler:GetPlayerPlaytime(player)
+	self._PlayerPlaytime[player] = PlaytimeDataStore:GetAsync(player.UserId) or 0
 
 	local playtimeValue = (player:FindFirstChild("leaderstats") :: Folder):FindFirstChild("Hours") :: IntValue
 	task.spawn(function()
@@ -45,7 +45,7 @@ function PlaytimeHandler.OnPlayerAdded(self: PlaytimeHandler, player: Player)
 end
 
 function PlaytimeHandler.OnPlayerRemoving(self: PlaytimeHandler, player: Player)
-	DatastoreHandler:SetPlayerPlaytime(player, self:GetPlayerPlaytime(player))
+	PlaytimeDataStore:SetAsync(player.UserId, math.floor(self:GetPlayerPlaytime(player)))
 	self._JoinedTime[player] = nil
 	self._PlayerPlaytime[player] = nil
 end
