@@ -25,6 +25,7 @@ export type BaseVehicle = {
 		Misc: Model,
 	},
 	Plugins: { [string]: any },
+	Engine: EngineTable,
 	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
 	Lights: BaseLights,
@@ -176,7 +177,6 @@ export type EngineTable = {
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
-	Engine: EngineTable,
 
 	new: (instance: Instance) -> ServerVehicle,
 	InitializeWheels: (self: ServerVehicle) -> (),
