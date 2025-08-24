@@ -15,7 +15,7 @@ Tune.TireMarkTransparency = 0.9
 
 Tune.TireFMinTemp = 8
 Tune.TireFMaxTemp = 100
-Tune.TireFMaxFriction = 1.4
+Tune.TireFMaxFriction = 1.35
 Tune.TireFColdStats = { 0.38, 11.7, 0.32 }
 Tune.TireFHotStats = { 0.96, 18.3, 1.05 }
 Tune.TireFDirtLoss = 0.1
@@ -25,7 +25,7 @@ Tune.TireFSpeedStress = 0.04
 
 Tune.TireRMinTemp = 8
 Tune.TireRMaxTemp = 100
-Tune.TireRMaxFriction = 1.4
+Tune.TireRMaxFriction = 1.35
 Tune.TireRColdStats = { 0.38, 11.7, 0.32 }
 Tune.TireRHotStats = { 0.96, 18.3, 1.05 }
 Tune.TireRDirtLoss = 0.1

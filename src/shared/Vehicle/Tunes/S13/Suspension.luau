@@ -10,19 +10,19 @@ Tune.FSusStiffness = 2.7
 Tune.FSusDamping = 1.7
 Tune.FSwayBar = 2.2
 
-Tune.FSusLength = 1.2
-Tune.FPreCompress = 0.3
+Tune.FSusLength = 1.25
+Tune.FPreCompress = 0.2
 Tune.FExtensionLim = 0.4
-Tune.FCompressLim = 0.6
+Tune.FCompressLim = 0.2
 
 Tune.RSusStiffness = 2.8
 Tune.RSusDamping = 1.5
 Tune.RSwayBar = 2.2
 
-Tune.RSusLength = 1.2
-Tune.RPreCompress = 0.3
+Tune.RSusLength = 1.15
+Tune.RPreCompress = 0.2
 Tune.RExtensionLim = 0.4
-Tune.RCompressLim = 0.6
+Tune.RCompressLim = 0.2
 
 Tune.FSusAngle = 80
 Tune.FWsBoneLen = 4

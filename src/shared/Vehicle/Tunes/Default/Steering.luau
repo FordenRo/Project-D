@@ -18,7 +18,7 @@ Tune.MinSteer = 40
 Tune.MinSteerSpeed = 50
 Tune.MSteerExp = 1
 
-Tune.CSEnabled = true
+Tune.CSEnabled = false
 Tune.CSAmt = 30
 Tune.CSSteerThresh = 10
 Tune.CSSpeedThresh = 10
@@ -26,8 +26,8 @@ Tune.CSSpeedThresh = 10
 Tune.SteerSmoothing = 1
 Tune.PowerSteeringType = "Old"
 
-Tune.SteerD = 1000
-Tune.SteerP = 20000
+Tune.SteerD = 600
+Tune.SteerP = 30000
 Tune.SteerMaxTorque = 20000
 
 Tune.FWSteer = "None"

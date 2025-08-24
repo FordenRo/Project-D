@@ -4,8 +4,8 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
-Tune.FCamber = -0.6
-Tune.RCamber = -0.9
+Tune.FCamber = -2.4
+Tune.RCamber = -1.4
 Tune.FCaster = 4
 Tune.RCaster = 0
 Tune.FToe = 0
@@ -18,9 +18,9 @@ Tune.AxleSize = 1.5
 Tune.AxleDensity = 0.1
 Tune.CustomSuspensionDensity = 0
 
-Tune.BrakeForce = 700
+Tune.BrakeForce = 900
 Tune.BrakeBias = 0.6
-Tune.PBrakeForce = 300
+Tune.PBrakeForce = 400
 Tune.PBrakeBias = 0
 Tune.EBrakeForce = 500
 Tune.ExitBrake = false
