@@ -43,7 +43,10 @@ end
 
 function ClientWheel.Update(self: ClientWheel, data: VehicleTypes.ClientWheelSharedData)
 	-- Wheel speeds
-	table.insert(self._WheelSpeeds, self.Instance.AssemblyAngularVelocity.Magnitude)
+	table.insert(
+		self._WheelSpeeds,
+		self.Instance.CFrame:VectorToObjectSpace(self.Instance.AssemblyAngularVelocity).X * (self.IsRight and 1 or -1)
+	)
 	if #self._WheelSpeeds > 8 then table.remove(self._WheelSpeeds, 1) end
 	local avg = 0
 	local avgCount = 0

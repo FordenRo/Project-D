@@ -49,9 +49,9 @@ end
 
 function Initialize(self: ServerTire)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
-		local caster = string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.FCaster
+		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster
 			or self.Vehicle.Tune.RCaster
-		caster = (self.Wheel.Instance.Name == "FR" or self.Wheel.Instance.Name == "RR") and -caster or caster
+		caster = self.Wheel.IsRight and -caster or caster
 
 		local smokePart = self.Wheel.Instance:FindFirstChild("SmokePart") or self.Wheel.Instance.Arm:Clone()
 		smokePart.Name = "SmokePart"
@@ -365,7 +365,7 @@ function Replicate(
 	local wear = (temperature - 40)
 		/ (
 			(
-				string.find(self.Wheel.Instance.Name, "F") and self.Vehicle.Tune.TireFMaxTemp
+				self.Wheel.IsFront and self.Vehicle.Tune.TireFMaxTemp
 				or self.Vehicle.Tune.TireRMaxTemp
 			) - 40
 		)

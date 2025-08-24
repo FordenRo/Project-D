@@ -119,11 +119,12 @@ export type ClientVehicle = {
 
 export type Engine = {
 	__index: Engine,
+	_LastOnTime: number,
 	_LastOffTime: number,
+	_RevLimiting: boolean,
 	Vehicle: ClientVehicle,
 	Broken: boolean,
 	GoalRPM: number,
-	CanStall: boolean,
 	FuelSuppy: number,
 	Health: number,
 	Temperature: number,
@@ -200,6 +201,7 @@ export type BaseWheel = {
 	},
 	Vehicle: BaseVehicle,
 	BrakeDisk: BaseBrakeDisk,
+	IsRight: boolean,
 	IsFront: boolean,
 	IsDriven: boolean,
 

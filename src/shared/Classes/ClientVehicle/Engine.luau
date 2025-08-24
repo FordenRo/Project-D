@@ -16,12 +16,13 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 
 	self.Vehicle = vehicle
 	self.GoalRPM = 0
-	self.CanStall = false
 	self.Broken = false
 	self.Health = 1
 	self.FuelSuppy = 0
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self._LastOnTime = 0
 	self._LastOffTime = 0
+	self._RevLimiting = false
 
 	self.Boost = 0
 	self.BoostTurbo = 0
@@ -52,9 +53,12 @@ function Engine.Update(self: Engine, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 
 	local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
-	local wheelRPM = self.Vehicle._DriveWheelSpeed * self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio
+	local wheelRPM = self.Vehicle._DriveWheelSpeed
+		* self.Vehicle.CurrentRatio
+		* self.Vehicle.FinalDriveRatio
+		* math.sign(self.Vehicle.Gear)
 
-	--CVT
+	-- CVT
 	local CVTRatio
 	if self.Vehicle.Tune.ClutchType == "CVT" then
 		CVTRatio = math.clamp(
@@ -65,19 +69,20 @@ function Engine.Update(self: Engine, deltaTime: number)
 		)
 	end
 
-	--Update ratio
+	-- Update ratio
 	self.Vehicle.CurrentRatio = self.Vehicle.Tune.ClutchType == "CVT" and CVTRatio
 		or self.Vehicle.Tune.Ratios[self.Vehicle.Gear + 2 + (ParkingGearEnabled and 1 or 0)]
 	local spLimit = self.Vehicle.Tune.Redline / (self.Vehicle.FinalDriveRatio * self.Vehicle.CurrentRatio)
 	if self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio == 0 then spLimit = 0 end -- Prevents [nan] from dividing by 0
 
-	--Flywheel/clutch-dumping
-	local flywheelEnergy = math.max((self.Vehicle.RPM - wheelRPM) * self.Vehicle.Tune.DumpMult, 0)
+	-- Flywheel/clutch-dumping
+	local flywheelEnergy = (self.Vehicle.RPM - wheelRPM)
+		* self.Vehicle.Tune.DumpMult
 		* (1 - self.Vehicle.Clutch)
 		* 1.356
 		* Units.Torque_nm
 
-	--Determine RPM
+	-- Determine RPM
 	local revMin = 0
 	local goalMin = 0
 	local goalMax = self.Vehicle.Tune.Redline
@@ -109,7 +114,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 		self.Vehicle.Brake = self.Vehicle.InputController.Brake
 	end
 
-	if not self.Vehicle.IsOn then
+	if self.Vehicle.IsOn then
+		self._LastOnTime = tick()
+	else
 		self._LastOffTime = tick()
 		if self.Vehicle.AutoClutch then self.Vehicle.Clutch = 1 end
 		self.Vehicle.Throttle = 0
@@ -134,14 +141,12 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Rev limiter/speed limiter
-	-- TODO: CHECK THIS!
-	local revLimiting = false -- (Forden) If error, then place in a class variable
 	if self.Vehicle.RPM >= self.Vehicle.Tune.Redline then
-		revLimiting = true
+		self._RevLimiting = true
 	elseif self.Vehicle.RPM < goalMax - self.Vehicle.Tune.RevBounce then
-		revLimiting = false
+		self._RevLimiting = false
 	end
-	if revLimiting then self.Vehicle.Throttle = self.Vehicle.Tune.IdleThrottle / 100 end
+	if self._RevLimiting then self.Vehicle.Throttle = self.Vehicle.Tune.IdleThrottle / 100 end
 
 	local limit = (self.Vehicle.Gear < 0 and self.Vehicle.Tune.ReverseSpeed or self.Vehicle.Tune.SpeedLimit)
 	if limit > 0 then
@@ -207,6 +212,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 			goalMin,
 			goalMax
 		)
+
+		if not self.Vehicle.IsOn then self.GoalRPM = 0 end
 	end
 
 	-- Starting
@@ -216,10 +223,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 			0,
 			math.max(self.Vehicle.Tune.IgnitionRPM, wheelRPM)
 		)
-		self.Vehicle.IsOn = self.GoalRPM > self.Vehicle.Tune.IgnitionMinRPM
 	end
 
-	--Set RPM
+	-- Set RPM
 	local aRPM = math.max(
 		(self.GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Vehicle.Clutch)
 			+ self.GoalRPM * self.Vehicle.Clutch,
@@ -235,22 +241,26 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	if
 		self.Vehicle.RPM <= (self.Vehicle.Tune.IdleRPM / 4)
-		and self.CanStall
 		and (tick() - self._LastOffTime >= 0.2)
 		and self.Vehicle.Tune.Stall
 	then
 		self.Vehicle.IsOn = false
 	end
 
-	--Clutch
+	if
+		self.Vehicle.RPM > self.Vehicle.Tune.IgnitionMinRPM
+		and (tick() - self._LastOnTime > 0.2)
+		and not self.Broken
+	then
+		self.Vehicle.IsOn = true
+	end
+
+	-- Clutch
 	if self.Vehicle.Shifting or (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2)) then
 		self.Vehicle._ClutchPressing = true
 		self.Vehicle.Clutch = 1
-		self.CanStall = false
 	end
 
-	-- TODO: CHECK THIS!
-	-- (Forden) If error, then place in a class variable
 	local clutchModulate = 0
 	if self.Vehicle.Tune.Clutch then
 		if self.Vehicle.AutoClutch then
@@ -308,9 +318,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 				self.Vehicle.Clutch = 0
 			end
 		end
-		self.CanStall = (self.Vehicle.Clutch <= 0.01) or self.CanStall
 	else
-		self.CanStall = false
 		if not self.Vehicle._ClutchPressing and not self.Vehicle.Shifting then
 			self.Vehicle.Clutch = 0
 		else
@@ -324,7 +332,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		and (
 			self.Vehicle.Starting
 			or (self.Vehicle.Tune.RemoveCreep and self.Vehicle.RPM < self.Vehicle.Tune.IdleRPM + (self.Vehicle.Tune.IdlePadding or 0) and self.Vehicle.InputController.Throttle < 0.1)
-			or (revLimiting and self.Vehicle.Tune.OverRev == false)
+			or (self._RevLimiting and self.Vehicle.Tune.OverRev == false)
 		)
 	then
 		self.Vehicle.Clutch = 1
@@ -481,12 +489,10 @@ function Engine.Update(self: Engine, deltaTime: number)
 	local iComp = self.Vehicle.Center.LookVector.Y * cGrav * math.sign(self.Vehicle.Gear)
 	outTorque = outTorque * math.max(1, (1 + iComp))
 
-	--Update Wheels
+	-- Update Wheels
 	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
-		--Apply Power
-		local on = 1
-		if not self.Vehicle.IsOn then on = 0 end
-		local throt = self.Vehicle.Throttle
+		-- Apply Power
+		local throttle = self.Vehicle.Throttle
 		local brake = self.Vehicle.Brake
 		local clutch = 1
 		if
@@ -504,11 +510,11 @@ function Engine.Update(self: Engine, deltaTime: number)
 			)
 		then
 			clutch = 0
-		end --for some reason, the car still creeps forward when starting the car if i don't do this
-		local tq = outTorque
+		end
+		local wheelTorque = outTorque
 
-		--Apply ESC
-		local tqESC = 0
+		-- Apply ESC
+		local torqueESC = 0
 		if
 			not (wheel.Instance.Name == "F" or wheel.Instance.Name == "R")
 			and self.Vehicle.ESC
@@ -533,21 +539,19 @@ function Engine.Update(self: Engine, deltaTime: number)
 						escVector = escVector * escBias
 					end
 
-					tqESC = ((wheel.Instance.Name == "FL" or wheel.Instance.Name == "RL") and 1 or -1)
-						* math.sign(diff)
-						* escVector
-					throt = throt + (math.max(tqESC, 0) - throt) * (self.Vehicle.Tune.ESCThrottle / 100)
-					brake = brake + (-math.min(tqESC, 0) - brake) * (self.Vehicle.Tune.ESCBrake / 100)
+					torqueESC = (wheel.IsRight and -1 or 1) * math.sign(diff) * escVector
+					throttle = throttle + (math.max(torqueESC, 0) - throttle) * (self.Vehicle.Tune.ESCThrottle / 100)
+					brake = brake + (-math.min(torqueESC, 0) - brake) * (self.Vehicle.Tune.ESCBrake / 100)
 				end
 			end
 		end
-		self.Vehicle.ESCActive = tqESC ~= 0 or self.Vehicle.ESCActive
-		wheel.Trackers.ESC = tqESC
+		self.Vehicle.ESCActive = torqueESC ~= 0 or self.Vehicle.ESCActive
+		wheel.Trackers.ESC = torqueESC
 
-		--Apply ABS
-		local tqABS = 1
+		-- Apply ABS
+		local torqueABS = 1
 		if self.Vehicle.ABS and brake > 0 then
-			tqABS = 1
+			torqueABS = 1
 				- (
 					math.min(
 						math.max(
@@ -563,19 +567,19 @@ function Engine.Update(self: Engine, deltaTime: number)
 					) * (1 - (self.Vehicle.Tune.ABSLimit / 100))
 				)
 		end
-		self.Vehicle.ABSActive = tqABS < 1 or self.Vehicle.ABSActive
-		wheel.Trackers.ABS = 1 - tqABS
+		self.Vehicle.ABSActive = torqueABS < 1 or self.Vehicle.ABSActive
+		wheel.Trackers.ABS = 1 - torqueABS
 
-		local PBrakeV = 0
+		local PBrake = 0
 		if self.Vehicle.PBrake == true or self.Vehicle.Gear == -2 then
-			PBrakeV = 1
+			PBrake = 1
 		else
-			PBrakeV = 0
+			PBrake = 0
 		end
 
 		-- Apply Power
 		if wheel.IsDriven then
-			--Differential/Torque-Vectoring
+			-- Differential/Torque-Vectoring
 			local RRdiffMult = 1
 			local RLdiffMult = 1
 			local FRdiffMult = 1
@@ -681,17 +685,17 @@ function Engine.Update(self: Engine, deltaTime: number)
 				end
 			end
 
-			--Apply torque split
+			-- Apply torque split
 			-- This takes the total amount of torque alotted to the front or rear wheels, then divides it by how many wheels there are
 			local bias = (self.Vehicle.Tune.Config == "AWD" and (self.Vehicle.Tune.TorqueVector + 1) / 2)
 				or (self.Vehicle.Tune.Config == "FWD" and 0)
 				or 1
-			tq = wheel.IsFront and (tq * (1 - bias)) / fWCount or (tq * bias) / rWCount
+			wheelTorque = wheel.IsFront and (wheelTorque * (1 - bias)) / fWCount or (wheelTorque * bias) / rWCount
 
-			--Apply TCS
-			local tqTCS = 1
-			if self.Vehicle.TCS and throt > self.Vehicle.Tune.IdleThrottle / 100 then
-				tqTCS = 1
+			-- Apply TCS
+			local torqueTCS = 1
+			if self.Vehicle.TCS and throttle > self.Vehicle.Tune.IdleThrottle / 100 then
+				torqueTCS = 1
 					- (
 						math.min(
 							math.max(
@@ -708,50 +712,46 @@ function Engine.Update(self: Engine, deltaTime: number)
 						) * (1 - (self.Vehicle.Tune.TCSLimit / 100))
 					)
 			end
-			self.Vehicle.TCSActive = tqTCS < 1 or self.Vehicle.TCSActive
-			wheel.Trackers.TCS = 1 - tqTCS
+			self.Vehicle.TCSActive = torqueTCS < 1 or self.Vehicle.TCSActive
+			wheel.Trackers.TCS = 1 - torqueTCS
 
-			--Update Forces
-			local tqOUT = (tq * 1.356 * Units.Torque_nm * throt * tqTCS * on * clutch) + (flywheelEnergy / drWCount)
-			-- convert lb-ft to nm to roblox stuff
-			-- if it reaches an absurdly high number, set it to 0 to try and prevent physics death
+			-- Update Forces
+			local outWheelTorque = (wheelTorque * 1.356 * Units.Torque_nm * throttle * torqueTCS * clutch)
+				+ (math.max(flywheelEnergy, 0) / drWCount)
 
 			if wheel.Instance.Name == "RR" then
-				wheel.Instance.AV.MotorMaxTorque = tqOUT * RRdiffMult
+				wheel.Instance.AV.MotorMaxTorque = outWheelTorque * RRdiffMult
 			elseif wheel.Instance.Name == "RL" then
-				wheel.Instance.AV.MotorMaxTorque = tqOUT * RLdiffMult
+				wheel.Instance.AV.MotorMaxTorque = outWheelTorque * RLdiffMult
 			elseif wheel.Instance.Name == "FR" then
-				wheel.Instance.AV.MotorMaxTorque = tqOUT * FRdiffMult
+				wheel.Instance.AV.MotorMaxTorque = outWheelTorque * FRdiffMult
 			elseif wheel.Instance.Name == "FL" then
-				wheel.Instance.AV.MotorMaxTorque = tqOUT * FLdiffMult
+				wheel.Instance.AV.MotorMaxTorque = outWheelTorque * FLdiffMult
 			else
-				wheel.Instance.AV.MotorMaxTorque = tqOUT
+				wheel.Instance.AV.MotorMaxTorque = outWheelTorque
 			end
 			wheel.Instance.AV.AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
 
-			if self.Broken then
-				-- Brake when the engine has broken
-				wheel.Instance.BV.MotorMaxTorque = 2000
+			local torque = self.Vehicle.Tune.EBrakeForce
+					* math.min(self.Vehicle.RPM / self.Vehicle.Tune.Redline, 0.5)
+					* (1 - throttle)
+					* clutch
+				- math.min(flywheelEnergy, 0) / drWCount
+			if wheel.IsFront then
+				torque += self.Vehicle.BrakeForce.Front * brake * torqueABS + self.Vehicle.PBrakeForce.Front * PBrake
 			else
-				if wheel.IsFront then
-					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
-						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
-						+ (self.Vehicle.PBrakeForce.Front * PBrakeV)
-				else
-					wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
-						+ (self.Vehicle.Tune.EBrakeForce * clutch * ((1 - throt) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
-						+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
-				end
+				torque += self.Vehicle.BrakeForce.Rear * brake * torqueABS + self.Vehicle.PBrakeForce.Rear * PBrake
 			end
-		else --luaint edit
+			wheel.Instance.BV.MotorMaxTorque = torque
+		else
 			wheel.Instance.AV.MotorMaxTorque = 0
 			wheel.Instance.AV.AngularVelocity = 0
 			if wheel.IsFront then
-				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * tqABS)
-					+ (self.Vehicle.PBrakeForce.Front * PBrakeV)
+				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * torqueABS)
+					+ (self.Vehicle.PBrakeForce.Front * PBrake)
 			else
-				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * tqABS)
-					+ (self.Vehicle.PBrakeForce.Rear * PBrakeV)
+				wheel.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * torqueABS)
+					+ (self.Vehicle.PBrakeForce.Rear * PBrake)
 			end
 		end
 	end
