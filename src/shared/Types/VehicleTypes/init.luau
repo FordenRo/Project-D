@@ -32,6 +32,7 @@ export type DeformationController = Vehicle.DeformationController
 export type ServerVehicle = Vehicle.ServerVehicle
 export type InputController = Vehicle.InputController
 export type Engine = Vehicle.Engine
+export type EngineTable = Vehicle.EngineTable
 
 --- Vehicle configuration
 ---

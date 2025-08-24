@@ -123,11 +123,36 @@ export type Engine = {
 	_LastOnTime: number,
 	_LastOffTime: number,
 	_RevLimiting: boolean,
-	Vehicle: ClientVehicle,
-	Broken: boolean,
-	GoalRPM: number,
+	_GoalRPM: number,
 	_FuelSupply: number,
+	Vehicle: ClientVehicle,
+
+	new: (vehicle: ClientVehicle) -> Engine,
+	Update: (self: Engine, deltaTime: number) -> (),
+	AsTable: (self: Engine) -> EngineTable,
+	Destroy: (self: Engine) -> (),
+} & EngineTable
+
+export type InputController = {
+	__index: InputController,
+	_cons: { RBXScriptConnection },
+	_RawThrottle: number,
+	_RawBrake: number,
+	Vehicle: ClientVehicle,
+	Throttle: number,
+	Brake: number,
+	Clutch: boolean,
+	MousePosition: Vector2,
+	MouseSteerOn: boolean,
+	Steering: number,
+
+	new: (vehicle: ClientVehicle) -> InputController,
+	Destroy: (self: InputController) -> (),
+}
+
+export type EngineTable = {
 	Health: number,
+	Broken: boolean,
 	Temperature: number,
 
 	Boost: number,
@@ -147,32 +172,11 @@ export type Engine = {
 	TqTurbo: number,
 	TqSuper: number,
 	TqBoosted: number,
-
-	new: (vehicle: ClientVehicle) -> Engine,
-	Update: (self: Engine, deltaTime: number) -> (),
-	AsTable: (self: Engine) -> { [string]: any },
-	Destroy: (self: Engine) -> (),
-}
-
-export type InputController = {
-	__index: InputController,
-	_cons: { RBXScriptConnection },
-	_RawThrottle: number,
-	_RawBrake: number,
-	Vehicle: ClientVehicle,
-	Throttle: number,
-	Brake: number,
-	Clutch: boolean,
-	MousePosition: Vector2,
-	MouseSteerOn: boolean,
-	Steering: number,
-
-	new: (vehicle: ClientVehicle) -> InputController,
-	Destroy: (self: InputController) -> (),
 }
 
 export type ServerVehicle = {
 	__index: ServerVehicle,
+	Engine: EngineTable,
 
 	new: (instance: Instance) -> ServerVehicle,
 	InitializeWheels: (self: ServerVehicle) -> (),

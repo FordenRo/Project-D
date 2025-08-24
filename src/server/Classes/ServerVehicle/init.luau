@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
+local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -19,6 +20,7 @@ function ServerVehicle.new(instance: Instance)
 	Initialize(self)
 
 	self.Lights = Lights.new(self)
+	self.Engine = table.clone(EngineTable)
 
 	self._Remote.OnServerEvent:Connect(function(_, data: { [string]: any })
 		for k, v in data do

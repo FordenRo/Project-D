@@ -1,6 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local EngineTable = require(script.Parent.EngineTable)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -12,35 +13,14 @@ Engine.__index = Engine
 type Engine = VehicleTypes.Engine
 
 function Engine.new(vehicle: VehicleTypes.ClientVehicle)
-	local self: Engine = setmetatable({}, Engine) :: any
+	local self: Engine = setmetatable(table.clone(EngineTable), Engine) :: any
 
 	self.Vehicle = vehicle
-	self.GoalRPM = 0
-	self.Broken = false
-	self.Health = 1
-	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self._GoalRPM = 0
 	self._FuelSupply = 0
 	self._LastOnTime = 0
 	self._LastOffTime = 0
 	self._RevLimiting = false
-
-	self.Boost = 0
-	self.BoostTurbo = 0
-	self.BoostSuper = 0
-
-	self.Horsepower = 0
-	self.HpNatural = 0
-	self.HpElectric = 0
-	self.HpTurbo = 0
-	self.HpSuper = 0
-	self.HpBoosted = 0
-
-	self.Torque = 0
-	self.TqNatural = 0
-	self.TqElectric = 0
-	self.TqTurbo = 0
-	self.TqSuper = 0
-	self.TqBoosted = 0
 
 	return self
 end
@@ -195,7 +175,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	self.Vehicle.Throttle *= self._FuelSupply
 
 	if (self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric) and not self.Vehicle.Starting then
-		self.GoalRPM = math.clamp(
+		self._GoalRPM = math.clamp(
 			self.Vehicle.RPM
 				- (self.Vehicle.Tune.RevDecay * deltaTime)
 				+ (self.Vehicle.Tune.RevAccel * self.Vehicle.Throttle * deltaTime)
@@ -213,13 +193,13 @@ function Engine.Update(self: Engine, deltaTime: number)
 			goalMax
 		)
 
-		if not self.Vehicle.IsOn then self.GoalRPM = 0 end
+		if not self.Vehicle.IsOn then self._GoalRPM = 0 end
 	end
 
 	-- Starting
 	if self.Vehicle.Starting then
-		self.GoalRPM = math.clamp(
-			self.GoalRPM + self.Vehicle.Tune.IgnitionAccel * deltaTime,
+		self._GoalRPM = math.clamp(
+			self._GoalRPM + self.Vehicle.Tune.IgnitionAccel * deltaTime,
 			0,
 			math.max(self.Vehicle.Tune.IgnitionRPM, wheelRPM)
 		)
@@ -227,8 +207,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Set RPM
 	local aRPM = math.max(
-		(self.GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Vehicle.Clutch)
-			+ self.GoalRPM * self.Vehicle.Clutch,
+		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Vehicle.Clutch)
+			+ self._GoalRPM * self.Vehicle.Clutch,
 		revMin
 	)
 	local clutchP = math.min(math.abs(aRPM - self.Vehicle.RPM) / (self.Vehicle.Tune.Flywheel * deltaTime), 0.9)
