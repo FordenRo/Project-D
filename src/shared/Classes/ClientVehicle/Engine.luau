@@ -230,7 +230,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	if
 		self.Vehicle.RPM > self.Vehicle.Tune.IgnitionMinRPM
 		and (tick() - self._LastOnTime > 0.2)
-		and not self.Broken
+		and self.Health > 0
 	then
 		self.Vehicle.IsOn = true
 	end
@@ -752,18 +752,16 @@ function UpdateHealth(self: Engine, deltaTime: number)
 		0,
 		1
 	) ^ 1.5
-	self.Health -= damage * deltaTime
+	self.Health = math.max(self.Health - damage * deltaTime, 0)
 
-	if self.Health <= 0 then
-		self.Health = 0
+	if self.Health == 0 then
 		self.Vehicle.IsOn = false
-		self.Broken = true
 		self.Vehicle.DeformationController:BlowEngine()
 	end
 end
 
 function UpdateTemperature(self: Engine, deltaTime: number)
-	if not self.Vehicle.Tune.Engine or self.Broken then return end
+	if not self.Vehicle.Tune.Engine or self.Health == 0 then return end
 
 	local kW = self.Horsepower / 1.35962
 	local heat = kW * Lerp(1, 2, self.Vehicle.RPM / self.Vehicle.Tune.Redline) / 120
@@ -772,11 +770,7 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 	cooling += (self.Vehicle.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
 	self.Temperature += (heat - cooling) * deltaTime
 
-	if self.Temperature > self.Vehicle.Tune.EngineBurnTemp then
-		self.Vehicle.IsOn = false
-		self.Broken = true
-		self.Vehicle.DeformationController:BlowEngine()
-	end
+	if self.Temperature > self.Vehicle.Tune.EngineBurnTemp then self.Health = 0 end
 end
 
 function UpdateFuel(self: Engine, deltaTime: number)
@@ -784,7 +778,7 @@ function UpdateFuel(self: Engine, deltaTime: number)
 
 	local kW = self.Horsepower * 1.35962
 	local consumption = self.Vehicle.Tune.BSFC * kW / 3600 / 1000 / self.Vehicle.Tune.FuelDensity * deltaTime
-	self.Vehicle.Fuel = math.max(0, self.Vehicle.Fuel - consumption)
+	self.Vehicle.Fuel = math.max(self.Vehicle.Fuel - consumption, 0)
 
 	local fuelSupply = self._FuelSupply + deltaTime * 3
 	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.05 then
@@ -793,7 +787,7 @@ function UpdateFuel(self: Engine, deltaTime: number)
 	end
 	self._FuelSupply = math.clamp(fuelSupply, 0, 1)
 
-	if self.Vehicle.Fuel <= 0 then self.Vehicle.IsOn = false end
+	if self.Vehicle.Fuel == 0 then self.Vehicle.IsOn = false end
 end
 
 function Engine.Destroy(self: Engine) end

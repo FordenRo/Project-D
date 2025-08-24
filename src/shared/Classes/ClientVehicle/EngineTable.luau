@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local EngineTable: VehicleTypes.EngineTable = {
-	Broken = false,
 	Health = 1,
 	Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number,
 

@@ -223,14 +223,10 @@ function UpdateIcons(self: Speedometer)
 	self.Instance.Battery.ImageTransparency = (not self.Vehicle.IsOn or self.Vehicle.Starting) and 0.2 or 0.8
 
 	-- Check
-	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Engine.Broken) and Color3.new(1, 0, 0)
+	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Engine.Health == 0) and Color3.new(1, 0, 0)
 		or self.Vehicle.Engine.Health < 0.3 and Color3.new(1, 0.5, 0)
 		or Color3.new()
-	self.Instance.Check.ImageTransparency = (
-		self.Vehicle.Starting
-		or self.Vehicle.Engine.Broken
-		or self.Vehicle.Engine.Health < 0.3
-	)
+	self.Instance.Check.ImageTransparency = (self.Vehicle.Starting or (self.Vehicle.Engine.Health :: number) < 0.3)
 			and 0.2
 		or 0.8
 

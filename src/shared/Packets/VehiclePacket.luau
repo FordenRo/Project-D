@@ -13,7 +13,6 @@ return Serialization.Packet({
 	Steering = Serialization.Percent16,
 	Engine = Serialization.Packet({
 		Health = Serialization.Percent16,
-		Broken = Serialization.Boolean,
 		Temperature = Serialization.MappedNumber8(0, 150),
 
 		BoostTurbo = Serialization.Float32,

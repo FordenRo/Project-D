@@ -153,7 +153,6 @@ export type InputController = {
 
 export type EngineTable = {
 	Health: number,
-	Broken: boolean,
 	Temperature: number,
 
 	Boost: number,

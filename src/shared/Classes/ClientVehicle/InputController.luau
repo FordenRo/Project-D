@@ -60,7 +60,7 @@ function Update(self: InputController, deltaTime: number)
 		or Enum.MouseBehavior.Default
 
 	Context.Horn.Enabled = self.Vehicle.IsOn
-	Context.Ignition.Enabled = not self.Vehicle.Engine.Broken
+	Context.Ignition.Enabled = self.Vehicle.Engine.Health :: number > 0
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
 	Context.ControllerSteering.Enabled = not self.MouseSteerOn
