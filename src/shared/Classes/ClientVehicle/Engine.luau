@@ -18,8 +18,8 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle)
 	self.GoalRPM = 0
 	self.Broken = false
 	self.Health = 1
-	self.FuelSuppy = 0
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self._FuelSupply = 0
 	self._LastOnTime = 0
 	self._LastOffTime = 0
 	self._RevLimiting = false
@@ -192,7 +192,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Apply fuel supply
-	self.Vehicle.Throttle *= self.FuelSuppy
+	self.Vehicle.Throttle *= self._FuelSupply
 
 	if (self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric) and not self.Vehicle.Starting then
 		self.GoalRPM = math.clamp(
@@ -806,12 +806,12 @@ function UpdateFuel(self: Engine, deltaTime: number)
 	local consumption = self.Vehicle.Tune.BSFC * kW / 3600 / 1000 / self.Vehicle.Tune.FuelDensity * deltaTime
 	self.Vehicle.Fuel = math.max(0, self.Vehicle.Fuel - consumption)
 
-	local fuelSupply = self.FuelSuppy + deltaTime * 3
+	local fuelSupply = self._FuelSupply + deltaTime * 3
 	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.05 then
 		local delta = 1 - self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity / 0.05
 		fuelSupply -= math.abs(math.noise(tick() / 3 % 1000)) ^ 0.6 * delta * 10 * deltaTime
 	end
-	self.FuelSuppy = math.clamp(fuelSupply, 0, 1)
+	self._FuelSupply = math.clamp(fuelSupply, 0, 1)
 
 	if self.Vehicle.Fuel <= 0 then self.Vehicle.IsOn = false end
 end
