@@ -127,6 +127,18 @@ function UpdateWheels(self: ClientVehicle)
 	self.ESCActive = false
 end
 
+function UpdateMileage(self: ClientVehicle, deltaTime: number)
+	local speed = 0
+	local count = 0
+	for _, wheel in self.Wheels do
+		if not wheel.IsFront then continue end
+
+		speed += wheel.Instance.AssemblyAngularVelocity.Magnitude * (wheel.Instance.Size.Y / 2)
+		count += 1
+	end
+	self.Mileage += speed * (Units.Length_mm / 1000) / 1000 / count * deltaTime
+end
+
 -- TODO: Flip function
 
 function ReplicateVariables(self: ClientVehicle)
@@ -143,12 +155,12 @@ function Update(self: ClientVehicle, deltaTime: number)
 	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
 	self._OldVelocity = self.Velocity
-	self.Mileage += self.Velocity.Magnitude * (Units.Length_mm / 1000) / 1000 * deltaTime
 
 	UpdateWheels(self)
 	UpdateSteering(self, deltaTime)
 	UpdateTransmission(self)
 	self.Engine:Update(deltaTime)
+	UpdateMileage(self, deltaTime)
 	ReplicateVariables(self)
 end
 
