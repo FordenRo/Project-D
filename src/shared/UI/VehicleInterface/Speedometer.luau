@@ -103,7 +103,15 @@ function GearUpdate(self: Speedometer)
 end
 
 function SpeedUpdate(self: Speedometer)
-	local speed = self.Vehicle.Velocity.Magnitude * self.Units[self.CurrentUnit].Scaling
+	local speed = 0
+	local count = 0
+	for _, wheel in self.Vehicle.Wheels do
+		if not wheel.IsFront then continue end
+
+		speed += wheel.Instance.AssemblyAngularVelocity.Magnitude * (wheel.Instance.Size.Y / 2)
+		count += 1
+	end
+	speed = speed / count * self.Units[self.CurrentUnit].Scaling
 	self.Instance.Speed.Speed.Text = string.format("%03d", speed):gsub("^0+", '<font transparency="0.5">%0</font>')
 end
 
