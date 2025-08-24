@@ -3,9 +3,12 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
+local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
+local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -22,10 +25,28 @@ function ServerVehicle.new(instance: Instance)
 	self.Lights = Lights.new(self)
 	self.Engine = table.clone(EngineTable)
 
-	self._Remote.OnServerEvent:Connect(function(_, data: { [string]: any })
-		for k, v in data do
-			self[k] = v
+	self._Remote.OnServerEvent:Connect(function(_, data: buffer)
+		for k, v in Serialization.Deserialize(VehiclePacket, data) do
+			if k == "Flags" then
+				self.IsOn, self.Starting, self.Shifting, self.Horning = FlagsUtils.FlagsToBools(v)
+			else
+				self[k] = v
+			end
 		end
+
+		local x = self.RPM / 1000
+		self.Engine.Boost = self.Engine.BoostTurbo + self.Engine.BoostSuper
+
+		self.Engine.TqTurbo = self.Engine.BoostTurbo * self.Tune.T_Efficiency
+		self.Engine.TqSuper = self.Engine.BoostSuper * self.Tune.S_Efficiency
+		self.Engine.TqBoosted = self.Engine.TqTurbo + self.Engine.TqSuper
+		self.Engine.Torque = self.Engine.TqNatural + self.Engine.TqElectric + self.Engine.TqBoosted
+
+		self.Engine.HpNatural = self.Engine.TqNatural * x / 5.252
+		self.Engine.HpTurbo = self.Engine.TqTurbo * x / 5.252
+		self.Engine.HpSuper = self.Engine.TqSuper * x / 5.252
+		self.Engine.HpBoosted = self.Engine.HpTurbo + self.Engine.HpSuper
+		self.Engine.Horsepower = self.Engine.Torque * x / 5.252
 	end)
 
 	return self

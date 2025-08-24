@@ -5,13 +5,15 @@ local RunService = game:GetService("RunService")
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
+local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local InputController = require(script.InputController)
 local Lights = require(script.Lights)
-local ReplicationVars = require(script.ReplicationVars)
+local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
+local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -35,8 +37,8 @@ function ClientVehicle.new(instance: Instance)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
 	self._task = task.spawn(function()
-		while task.wait(1 / 8) do
-			SlowUpdate(self)
+		while task.wait(1 / 30) do
+			Replicate(self)
 		end
 	end)
 
@@ -141,12 +143,12 @@ end
 
 -- TODO: Flip function
 
-function ReplicateVariables(self: ClientVehicle)
-	local data = {}
-	for _, var in ReplicationVars do
-		data[var] = self[var]
-	end
-	self._Remote:FireServer(data)
+function Replicate(self: ClientVehicle)
+	local data = table.clone(self)
+	data.Flags = FlagsUtils.BoolsToFlags(self.IsOn, self.Starting, self.Shifting, self.Horning)
+
+	local buf = Serialization.Serialize(VehiclePacket, data)
+	self._Remote:FireServer(buf)
 end
 
 function Update(self: ClientVehicle, deltaTime: number)
@@ -161,11 +163,7 @@ function Update(self: ClientVehicle, deltaTime: number)
 	UpdateTransmission(self)
 	self.Engine:Update(deltaTime)
 	UpdateMileage(self, deltaTime)
-	ReplicateVariables(self)
 end
-
--- TODO
-function SlowUpdate(self: ClientVehicle) end
 
 function ClientVehicle.Destroy(self: ClientVehicle)
 	--Remove Flip Force
