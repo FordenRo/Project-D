@@ -35,8 +35,6 @@ export type Tune = {
 	--- Texture to apply when the engine blowns
 	EngineBlowTexture: string,
 	EngineBlowOpacity: number,
-	--- Texture to apply on dirt
-	DirtTexture: string,
 
 	--- Maximum speed limit in km/h (0 or less for no limiter)
 	SpeedLimit: number,

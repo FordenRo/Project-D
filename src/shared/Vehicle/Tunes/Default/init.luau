@@ -13,7 +13,6 @@ Tune.GravComp = 35
 
 Tune.EngineBlowTexture = "rbxassetid://131488880080508"
 Tune.EngineBlowOpacity = 0.3
-Tune.DirtTexture = "rbxassetid://129422656076701"
 
 Tune.SpeedLimit = 0
 Tune.ReverseSpeed = 0
