@@ -34,7 +34,11 @@ for k, v in assets do
 end
 
 for k, v in controllers do
-	screen:SetCurrentAsset(v.Name)
+	local overrides = {
+		InterfaceController = "Initializing UI",
+		VehicleController = "Spawning vehicles",
+	}
+	screen:SetCurrentAsset(overrides[v.Name] or "Initializing scripts")
 	local success, err = pcall(function() require(v) end)
 	screen:SetProgress((#assets + k) / count)
 
