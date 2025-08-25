@@ -11,9 +11,6 @@ Tune.CGHeight = 0.1
 Tune.WBVisible = false
 Tune.GravComp = 35
 
-Tune.EngineBlowTexture = "rbxassetid://131488880080508"
-Tune.EngineBlowOpacity = 0.3
-
 Tune.SpeedLimit = 0
 Tune.ReverseSpeed = 0
 Tune.SLimitGradient = 2

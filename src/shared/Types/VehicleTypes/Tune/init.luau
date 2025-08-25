@@ -32,10 +32,6 @@ export type Tune = {
 	--- Desired gravitational force in Roblox units. (35 is the default. Set to 0 to use workspace.Gravity instead)
 	GravComp: number,
 
-	--- Texture to apply when the engine blowns
-	EngineBlowTexture: string,
-	EngineBlowOpacity: number,
-
 	--- Maximum speed limit in km/h (0 or less for no limiter)
 	SpeedLimit: number,
 	--- Maximum reverse speed limit

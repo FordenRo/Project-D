@@ -1,8 +1,10 @@
 --!strict
+local AssetService = game:GetService("AssetService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
 local EngineTable = require(script.Parent.EngineTable)
+local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -768,12 +770,17 @@ function Blow(self: Engine)
 		end)
 	end
 
-	-- local engineBlowTexture =
-	-- 	AssetService:CreateEditableImageAsync(Content.fromAssetId(self.Vehicle.Tune.EngineBlowTexture))
-	-- ImageUtils.SetImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
+	task.spawn(function()
+		for meshPart, texture in self.Vehicle.Textures do
+			local blowTextureId = meshPart:GetAttribute("EngineBlowTexture")
+			if typeof(blowTextureId) ~= "string" then continue end
 
-	-- self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
-	-- engineBlowTexture:Destroy()
+			local blowTexture = AssetService:CreateEditableImageAsync(Content.fromUri(blowTextureId))
+			ImageUtils.SetImageAlpha(blowTexture, 0.3)
+			texture:DrawImage(Vector2.zero, blowTexture, Enum.ImageCombineType.AlphaBlend)
+			blowTexture:Destroy()
+		end
+	end)
 
 	-- Show smoke
 	for _, smokePart in deformation.BlowSmokeParts:GetChildren() do
