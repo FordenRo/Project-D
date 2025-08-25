@@ -20,10 +20,12 @@ for k, v in ReplicatedStorage.Vehicles:GetChildren() do
 	table.insert(assets, { Name = `Vehicles/{v.Name}`, Instance = v })
 end
 
-local count = 0
-for k, v in assets do
-	count += 1
+local controllers = {}
+for k, v in ReplicatedStorage.Shared.Controllers:GetChildren() do
+	if v:IsA("ModuleScript") then table.insert(controllers, v) end
 end
+
+local count = #controllers + #assets
 
 for k, v in assets do
 	screen:SetCurrentAsset(v.Name)
@@ -31,8 +33,14 @@ for k, v in assets do
 	screen:SetProgress(k / count)
 end
 
-for _, controller in ReplicatedStorage.Shared.Controllers:GetChildren() do
-	if controller:IsA("ModuleScript") then task.spawn(function() local _ = require(controller) :: any end) end
+for k, v in controllers do
+	screen:SetCurrentAsset(v.Name)
+	local success, err = pcall(function() require(v) end)
+	screen:SetProgress((#assets + k) / count)
+
+	if not success then warn(`Error loading {v.Name}: {err}`) end
 end
+
+task.wait(1)
 
 screen:Destroy()

@@ -23,7 +23,7 @@ export type LoadingScreen = typeof(setmetatable(
 	LoadingScreen
 ))
 
-function LoadingScreen.new()
+function LoadingScreen.new(): LoadingScreen
 	local self: LoadingScreen = setmetatable({}, LoadingScreen) :: any
 
 	self.Instance = ReplicatedFirst.LoadingScreen:Clone()
