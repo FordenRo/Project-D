@@ -14,6 +14,10 @@ export type BaseVehicle = {
 		Body: Model & {
 			WeightPart: Part,
 			Collider: MeshPart,
+			Deformation: Model & {
+				EngineBlow: Part,
+				BlowSmokeParts: Model,
+			},
 			Sounds: Model,
 			Lights: Model & {
 				Front: Model,
@@ -82,15 +86,6 @@ export type BaseVehicle = {
 export type DeformationController = {
 	__index: DeformationController,
 	Vehicle: ClientVehicle,
-	DeformModel: Model & {
-		Body: MeshPart,
-		EngineBlow: Part,
-		BlowSmokeParts: Model,
-	},
-	ColliderModel: Model,
-	Body: MeshPart,
-	BodyMesh: EditableMesh,
-	BodyTexture: EditableImage,
 	ScratchTexture: EditableImage,
 
 	new: (vehicle: ClientVehicle) -> DeformationController,
@@ -103,6 +98,9 @@ export type ClientVehicle = {
 	_task: thread,
 	_MaxSpin: number,
 	IsDriven: boolean,
+	MeshParts: { MeshPart },
+	Meshes: { [MeshPart]: EditableMesh },
+	Textures: { [MeshPart]: EditableImage },
 	InputController: InputController,
 	DeformationController: DeformationController,
 	BrakeForce: { Front: number, Rear: number },

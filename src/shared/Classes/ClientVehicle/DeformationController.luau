@@ -21,12 +21,6 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 
 	self.Vehicle = Vehicle
 
-	self.DeformModel = (self.Vehicle.Instance.Body :: any).Deform
-	self.ColliderModel = (self.Vehicle.Instance.Body :: any).Collider
-	self.Body = self.DeformModel.Body
-	self.BodyTexture = AssetService:CreateEditableImageAsync(self.Body.TextureContent)
-	self.BodyMesh = CreateEditableMesh(self.Body)
-	self.Body.TextureContent = Content.fromObject(self.BodyTexture)
 	self.ScratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 
 	-- local touchedPoints = {}

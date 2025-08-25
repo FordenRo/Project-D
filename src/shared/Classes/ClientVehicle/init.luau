@@ -1,8 +1,10 @@
+local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
+local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
@@ -26,6 +28,21 @@ type ClientVehicle = VehicleTypes.ClientVehicle
 
 function ClientVehicle.new(instance: Instance)
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
+
+	self.MeshParts = {}
+	self.Meshes = {}
+	self.Textures = {}
+	for _, v in self.Instance.Body.Deformation:GetChildren() do
+		if not v:IsA("MeshPart") then continue end
+
+		local texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+		local mesh = CreateEditableMesh(v)
+		v.TextureContent = Content.fromObject(texture)
+
+		self.Meshes[v] = mesh
+		self.Textures[v] = texture
+		table.insert(self.MeshParts, v)
+	end
 
 	InitializeSeats(self)
 
