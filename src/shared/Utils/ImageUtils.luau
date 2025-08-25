@@ -1,3 +1,4 @@
+--!native
 local AssetService = game:GetService("AssetService")
 
 local ImageUtils = {}

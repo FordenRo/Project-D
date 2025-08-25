@@ -15,25 +15,39 @@ DeformationController.__index = DeformationController
 
 type DeformationController = VehicleTypes.DeformationController
 
+-- Compile scratch textures
+local scratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+local compiledScratchTextures = {}
+for i = 1, 10 do
+	local image = ImageUtils.CopyImage(scratchTexture)
+	ImageUtils.SetImageAlpha(image, i)
+	compiledScratchTextures[i] = image
+end
+
 function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): DeformationController
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = Vehicle
 
-	local scratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 	local collider = self.Vehicle.Instance.Body.Collider
 	local colliderMesh = CreateEditableMesh(collider)
 
+	local lastTouch = 0
 	local touchingParts = {}
 	local touchingPoints = {}
-	self.Vehicle.Instance.Body.Collider.Touched:Connect(function(touchingPart: BasePart)
+	collider.Touched:Connect(function(touchingPart: BasePart)
+		if tick() - lastTouch < 1 / 5 then return end
 		if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
 		if touchingPart:IsDescendantOf(player.Character) then return end
+		lastTouch = tick()
 
 		debug.profilebegin("CheckColliding")
 		local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
+		local directionToPart = (touchingPart.Position - collider.Position).Unit
 		for _, vertexId in colliderMesh:GetVertices() do
 			local position = colliderMesh:GetPosition(vertexId)
+			if directionToPart:Dot(position.Unit) > 0.5 then continue end
+
 			local worldPosition = collider.CFrame:PointToWorldSpace(position / meshScale)
 			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
 				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
@@ -46,6 +60,8 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 				center += colliderMesh:GetPosition(vertexId)
 			end
 			center /= #vertices
+			if directionToPart:Dot(center.Unit) > 0.5 then continue end
+
 			local worldPosition = collider.CFrame:PointToWorldSpace(center / meshScale)
 			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
 				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
@@ -58,7 +74,6 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 	local lastVelocity = Vector3.zero
 	RunService.PreSimulation:Connect(function() lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity end)
 
-	local canDeform = true
 	RunService.PostSimulation:Connect(function()
 		if #touchingPoints == 0 then return end
 
@@ -88,25 +103,20 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 			hitVelocities[meshPart] = meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
 		end
 
-		repeat
-			task.wait()
-		until canDeform
-		canDeform = false
-
 		for meshPart, mesh in self.Vehicle.Meshes do
 			local meshScale = mesh:GetSize() / meshPart.Size
 			local hitCenter = hitCenters[meshPart] * meshScale
 			local hitVelocity = hitVelocities[meshPart] * meshScale
-			local closestPointDistance = (
-				(select(2, mesh:FindClosestPointOnSurface(hitCenter)) :: Vector3 - hitCenter) / meshScale
+			local closestVertexDistance = (
+				(mesh:GetPosition(mesh:FindClosestVertex(hitCenter)) - hitCenter) / meshScale
 			).Magnitude
 
 			-- Apply scratch texture
 			debug.profilebegin("DrawScratch")
 			local texture = self.Vehicle.Textures[meshPart]
-			if texture and closestPointDistance < 1 then
-				local scratch = ImageUtils.CopyImage(scratchTexture)
-				ImageUtils.SetImageAlpha(scratch, math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.1, 1))
+			if texture and closestVertexDistance < 1 then
+				local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.1, 1)
+				local scratch = compiledScratchTextures[math.round(alpha * 10)]
 
 				local size = meshScale * 2
 				local projection = {
@@ -129,6 +139,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 
 			-- Deform
 			debug.profilebegin("Deform")
+			if worldHitVelocity.Magnitude > 10 and closestVertexDistance < 3 then
 				local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
 				for k, vertexId in vertices do
 					local position = mesh:GetPosition(vertexId)
