@@ -26,12 +26,4 @@ export type SoundData = {
 	Volume: number,
 }
 
-export type ServerSoundData = SoundData & {
-	Instance: Sound,
-}
-
-export type ClientSoundData = ServerSoundData & {
-	ServerInstance: Sound?,
-}
-
 return {}

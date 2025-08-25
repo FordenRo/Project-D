@@ -12,6 +12,7 @@ local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local InputController = require(script.InputController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local SoundController = require(script.SoundController)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
@@ -53,6 +54,9 @@ function ClientVehicle.new(instance: Instance)
 
 	InitializeSeats(self)
 
+	self.Engine = Engine.new(self)
+
+	SoundController.new(self)
 	Exhaust.new(self)
 	self.Lights = Lights.new(self)
 
@@ -72,7 +76,6 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 	self:InitializeWheels()
 	InitializePlugins(self)
 
-	self.Engine = Engine.new(self)
 	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)

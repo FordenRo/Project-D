@@ -4,15 +4,14 @@ local RunService = game:GetService("RunService")
 local SoundTypesHandler = require(script.TypesHandler)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-if not RunService:IsClient() then return require(script.Server) end
-
 local SoundController = {}
 SoundController.__index = SoundController
 
 export type SoundController = typeof(setmetatable(
 	{} :: {
+		_conn: RBXScriptConnection,
 		Vehicle: VehicleTypes.ClientVehicle,
-		Sounds: { VehicleTypes.ClientSoundData },
+		Sounds: { SoundTypesHandler.CachedSoundData },
 		SoundTypesHandler: SoundTypesHandler.SoundTypesHandler,
 	},
 	SoundController
@@ -26,32 +25,25 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle)
 	self.SoundTypesHandler = SoundTypesHandler.new(vehicle)
 
 	for name, sound in self.Vehicle.Tune.Sounds do
-		local cachedSound = sound :: VehicleTypes.ClientSoundData
+		local cachedSound = sound :: SoundTypesHandler.CachedSoundData
 		local instance = Instance.new("Sound")
 		instance.Playing = false
 		instance.Volume = 0
-		instance.Name = name .. "_Local"
 		instance.SoundId = sound.SoundId
 		instance.Parent = sound.Parent and self.Vehicle.Instance.Body.Sounds:FindFirstChild(sound.Parent)
 			or self.Vehicle.WeightPart
 		cachedSound.Instance = instance
-		cachedSound.ServerInstance = instance.Parent:FindFirstChild(name) :: Sound
-		cachedSound.ServerInstance.SoundId = ""
 		table.insert(self.Sounds, cachedSound)
 	end
 
-	RunService.Heartbeat:Connect(function() Update(self) end)
+	self._conn = RunService.Heartbeat:Connect(function() Update(self) end)
+	self.Vehicle.Instance.Destroying:Once(function() self:Destroy() end)
 
 	return self
 end
 
 function Update(self: SoundController) self.SoundTypesHandler:HandleSounds(self.Sounds) end
 
-function SoundController.Destroy(self: SoundController)
-	for _, sound in self.Sounds do
-		sound.Instance:Destroy()
-		if sound.ServerInstance then sound.ServerInstance.SoundId = sound.SoundId end
-	end
-end
+function SoundController.Destroy(self: SoundController) self._conn:Disconnect() end
 
 return SoundController

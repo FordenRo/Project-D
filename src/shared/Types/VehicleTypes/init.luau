@@ -4,10 +4,6 @@ local SoundData = require(script.SoundData)
 local Tune = require(script.Tune)
 local Vehicle = require(script.Vehicle)
 
-export type SoundData = SoundData.SoundData
-export type ServerSoundData = SoundData.ServerSoundData
-export type ClientSoundData = SoundData.ClientSoundData
-
 export type VehicleControls = Controls.VehicleControls
 export type VehicleInterface = Vehicle.VehicleInterface
 export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
@@ -33,6 +29,7 @@ export type ServerVehicle = Vehicle.ServerVehicle
 export type InputController = Vehicle.InputController
 export type Engine = Vehicle.Engine
 export type EngineTable = Vehicle.EngineTable
+export type SoundData = SoundData.SoundData
 
 --- Vehicle configuration
 ---
