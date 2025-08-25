@@ -102,6 +102,7 @@ export type ClientVehicle = {
 	_cons: { RBXScriptConnection },
 	_task: thread,
 	_MaxSpin: number,
+	IsDriven: boolean,
 	InputController: InputController,
 	DeformationController: DeformationController,
 	BrakeForce: { Front: number, Rear: number },

@@ -38,6 +38,8 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 
 	if not asDriver then return end
 
+	self.IsDriven = true
+
 	InitializeVariables(self)
 	HideCharacter(self)
 	self:InitializeWheels()
