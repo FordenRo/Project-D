@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Default = require(ReplicatedStorage.Shared.Vehicle.Tunes.Default)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
@@ -29,5 +30,11 @@ Tune.Sounds = {
 		TransitionStart = 100,
 	},
 }
+
+for k, v in Default.Sounds do
+	if Tune.Sounds[k] then continue end
+
+	Tune.Sounds[k] = v
+end
 
 return Tune
