@@ -110,7 +110,10 @@ function SpeedUpdate(self: Speedometer)
 	for _, wheel in self.Vehicle.Wheels do
 		if not wheel.IsFront then continue end
 
-		speed += wheel.Instance.AssemblyAngularVelocity.Magnitude * (wheel.Instance.Size.Y / 2)
+		speed += math.abs(
+			wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X
+				* (wheel.Instance.Size.Y / 2)
+		)
 		count += 1
 	end
 	speed = speed / count * self.Units[self.CurrentUnit].Scaling

@@ -228,7 +228,10 @@ function UpdateMileage(self: ClientVehicle, deltaTime: number)
 	for _, wheel in self.Wheels do
 		if not wheel.IsFront then continue end
 
-		speed += wheel.Instance.AssemblyAngularVelocity.Magnitude * (wheel.Instance.Size.Y / 2)
+		speed += math.abs(
+			wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X
+				* (wheel.Instance.Size.Y / 2)
+		)
 		count += 1
 	end
 	self.Mileage += speed / count * (Units.Length_mm / 1000) * deltaTime
