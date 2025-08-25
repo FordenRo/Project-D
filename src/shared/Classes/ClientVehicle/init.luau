@@ -35,12 +35,18 @@ function ClientVehicle.new(instance: Instance)
 	for _, v in self.Instance.Body.Deformation:GetChildren() do
 		if not v:IsA("MeshPart") then continue end
 
-		local texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+		local texture
+		if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
+			texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+		end
+
 		local mesh = CreateEditableMesh(v)
-		v.TextureContent = Content.fromObject(texture)
+		if texture then
+			v.TextureContent = Content.fromObject(texture)
+			self.Textures[v] = texture
+		end
 
 		self.Meshes[v] = mesh
-		self.Textures[v] = texture
 		table.insert(self.MeshParts, v)
 	end
 
