@@ -48,6 +48,13 @@ Tune.Sounds = {
 		BaseVolume = 0.7,
 		BasePlaybackSpeed = 1,
 	},
+	EngineBlow = {
+		Type = "EngineBlow",
+		SoundId = "rbxassetid://2648563122",
+		Parent = "Engine",
+		BaseVolume = 0.8,
+		BasePlaybackSpeed = 1.4,
+	},
 }
 
 return Tune

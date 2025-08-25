@@ -101,6 +101,17 @@ function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: VehicleTypes
 	end
 end
 
+function SoundTypesHandler.EngineBlow(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
+	if self.Vehicle.Engine.Health == 0 then
+		if sound.Instance:GetAttribute("Played") then return end
+
+		sound.Instance:SetAttribute("Played", true)
+		sound.Instance.Volume = sound.BaseVolume
+		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+		sound.Instance.Playing = true
+	end
+end
+
 function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: VehicleTypes.ServerSoundData)
 	if self.Vehicle.FanSpeed > 0 then
 		if not sound.Instance.Playing then sound.Instance.Playing = true end
