@@ -107,24 +107,30 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 	-- end)
 
 	-- Dirt update
-	local _lastDirt = 0
+	local affectedTextures = {}
 	for meshPart, texture in self.Vehicle.Textures do
 		local dirtTextureId = meshPart:GetAttribute("DirtTexture")
 		if typeof(dirtTextureId) ~= "string" then continue end
 
-		task.spawn(function()
-			while true do
-				task.wait(1)
-				local dirt = math.floor(self.Vehicle.Dirt ^ 0.7 * 20) / 20
-				if dirt - _lastDirt > 0.01 then
+		affectedTextures[texture] = dirtTextureId
+	end
+
+	local _lastDirt = 0
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			local dirt = math.floor(self.Vehicle.Dirt ^ 0.7 * 20) / 20
+			if dirt - _lastDirt > 0.01 then
+				for texture, dirtTextureId in affectedTextures do
 					local dirtTexture = AssetService:CreateEditableImageAsync(Content.fromUri(dirtTextureId))
 					ImageUtils.SetImageAlpha(dirtTexture, dirt - _lastDirt)
 					texture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
-					_lastDirt = dirt
+					task.wait(1 / 30)
 				end
+				_lastDirt = dirt
 			end
-		end)
-	end
+		end
+	end)
 
 	return self
 end
