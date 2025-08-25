@@ -26,7 +26,7 @@ export type Settings = {
 	Apply: (self: Settings) -> (),
 } & BaseWindow.BaseWindow
 
-function Settings.new()
+function Settings.new(): Settings
 	local self: Settings = setmetatable(BaseWindow.new(ScreenGui:Clone()), Settings) :: any
 
 	self.Controls = DatastoreController:GetControls()

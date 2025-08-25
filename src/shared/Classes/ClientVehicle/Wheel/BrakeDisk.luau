@@ -12,7 +12,7 @@ ClientBrakeDisk.__index = ClientBrakeDisk
 
 type ClientBrakeDisk = VehicleTypes.ClientBrakeDisk
 
-function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart)
+function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart): ClientBrakeDisk
 	local self: ClientBrakeDisk = setmetatable(BaseBrakeDisk.new(wheel, instance), ClientBrakeDisk) :: any
 
 	self._serverInstance = self.Instance

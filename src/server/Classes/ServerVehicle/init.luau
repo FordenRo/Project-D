@@ -17,7 +17,7 @@ ServerVehicle.__index = ServerVehicle
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
-function ServerVehicle.new(instance: Instance)
+function ServerVehicle.new(instance: Instance): ServerVehicle
 	local self: ServerVehicle = setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
 	Initialize(self)

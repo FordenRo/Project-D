@@ -8,7 +8,7 @@ ServerBrakeDisk.__index = ServerBrakeDisk
 
 type ServerBrakeDisk = VehicleTypes.ServerBrakeDisk
 
-function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart)
+function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): ServerBrakeDisk
 	local self: ServerBrakeDisk = setmetatable(BaseBrakeDisk.new(wheel, instance), ServerBrakeDisk) :: any
 
 	self._conn = self._Remote.OnServerEvent:Connect(function(_, ...) Update(self, ...) end)

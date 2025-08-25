@@ -15,7 +15,7 @@ Engine.__index = Engine
 
 type Engine = VehicleTypes.Engine
 
-function Engine.new(vehicle: VehicleTypes.ClientVehicle)
+function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: Engine = setmetatable(table.clone(EngineTable), Engine) :: any
 
 	self.Vehicle = vehicle

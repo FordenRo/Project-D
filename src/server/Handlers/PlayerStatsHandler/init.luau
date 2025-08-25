@@ -19,7 +19,7 @@ export type PlayerStatsHandler = typeof(setmetatable(
 	PlayerStatsHandler
 ))
 
-function PlayerStatsHandler.new()
+function PlayerStatsHandler.new(): PlayerStatsHandler
 	local self: PlayerStatsHandler = setmetatable({}, PlayerStatsHandler) :: any
 
 	self.PlaytimeHandler = PlaytimeHandler.new()

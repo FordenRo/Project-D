@@ -26,7 +26,7 @@ export type BaseWindow = {
 	Destroy: (self: BaseWindow) -> (),
 }
 
-function BaseWindow.new(instance: ScreenGui)
+function BaseWindow.new(instance: ScreenGui): BaseWindow
 	local self: BaseWindow = setmetatable({}, BaseWindow) :: any
 
 	self.Instance = instance

@@ -13,7 +13,7 @@ export type PlaytimeHandler = typeof(setmetatable(
 	PlaytimeHandler
 ))
 
-function PlaytimeHandler.new()
+function PlaytimeHandler.new(): PlaytimeHandler
 	local self: PlaytimeHandler = setmetatable({}, PlaytimeHandler) :: any
 
 	self._JoinedTime = {}

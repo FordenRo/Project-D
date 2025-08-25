@@ -14,7 +14,7 @@ export type WelcomeTab = typeof(setmetatable(
 	WelcomeTab
 ))
 
-function WelcomeTab.new(instance: ScrollingFrame)
+function WelcomeTab.new(instance: ScrollingFrame): WelcomeTab
 	local self: WelcomeTab = setmetatable({}, WelcomeTab) :: any
 
 	self.Instance = instance :: any

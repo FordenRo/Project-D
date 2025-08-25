@@ -18,7 +18,7 @@ export type SoundTypesHandler = typeof(setmetatable(
 
 export type CachedSoundData = VehicleTypes.SoundData & { Instance: Sound }
 
-function SoundTypesHandler.new(vehicle: VehicleTypes.ClientVehicle)
+function SoundTypesHandler.new(vehicle: VehicleTypes.ClientVehicle): SoundTypesHandler
 	local self: SoundTypesHandler = setmetatable({}, SoundTypesHandler) :: any
 
 	self.Vehicle = vehicle

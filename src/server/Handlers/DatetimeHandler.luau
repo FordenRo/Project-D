@@ -14,7 +14,7 @@ DatetimeHandler.__index = DatetimeHandler
 
 export type DatetimeHandler = typeof(setmetatable({} :: {}, DatetimeHandler))
 
-function DatetimeHandler.new()
+function DatetimeHandler.new(): DatetimeHandler
 	local self: DatetimeHandler = setmetatable({}, DatetimeHandler) :: any
 
 	Lighting.ClockTime = 12

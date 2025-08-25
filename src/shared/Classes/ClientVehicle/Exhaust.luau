@@ -27,17 +27,13 @@ export type Exhaust = typeof(setmetatable(
 	Exhaust
 ))
 
-function Exhaust.new(vehicle: VehicleTypes.ClientVehicle)
+function Exhaust.new(vehicle: VehicleTypes.ClientVehicle): Exhaust
 	local self: Exhaust = setmetatable({}, Exhaust) :: any
 
 	self.Vehicle = vehicle
 	self.Exhaust = self.Vehicle.Instance.Body:FindFirstChild("Exhaust") :: any
 
-	if not self.Exhaust then
-		warn(self.Vehicle.Instance.Name .. ".Misc.Exhaust not found, exhaust wouldn't work")
-		return
-	end
-
+	assert(self.Exhaust, self.Vehicle.Instance.Name .. ".Misc.Exhaust not found")
 	assert(
 		self.Exhaust:FindFirstChild("Attachment"),
 		self.Vehicle.Instance.Name .. ".Misc.Exhaust.Attachment not found"

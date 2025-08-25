@@ -17,7 +17,7 @@ local remoteFunction = Instance.new("RemoteFunction")
 remoteFunction.Name = "VehicleRF"
 remoteFunction.Parent = ReplicatedStorage
 
-function VehicleHandler.new()
+function VehicleHandler.new(): VehicleHandler
 	local self: VehicleHandler = setmetatable({}, VehicleHandler) :: any
 
 	for _, vehicle in CollectionService:GetTagged("Vehicle") do

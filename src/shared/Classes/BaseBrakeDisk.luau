@@ -8,7 +8,7 @@ BaseBrakeDisk.__index = BaseBrakeDisk
 
 type BaseBrakeDisk = VehicleTypes.BaseBrakeDisk
 
-function BaseBrakeDisk.new(wheel: VehicleTypes.BaseWheel, instance: BasePart)
+function BaseBrakeDisk.new(wheel: VehicleTypes.BaseWheel, instance: BasePart): BaseBrakeDisk
 	local self: BaseBrakeDisk = setmetatable({}, BaseBrakeDisk) :: any
 
 	self.Instance = instance

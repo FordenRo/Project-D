@@ -18,7 +18,7 @@ export type Slider = typeof(setmetatable(
 	Slider
 ))
 
-function Slider.new(instance: Frame)
+function Slider.new(instance: Frame): Slider
 	local self: Slider = setmetatable({}, Slider) :: any
 
 	self.Instance = instance :: any

@@ -8,7 +8,7 @@ CarService.__index = CarService
 
 type CarServiceClient = CarServiceTypes.CarServiceClient
 
-function CarService.new(instance: Model)
+function CarService.new(instance: Model): CarServiceClient
 	local self: CarServiceClient = setmetatable({}, CarService) :: any
 
 	self.Instance = instance :: any

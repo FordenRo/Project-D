@@ -13,7 +13,7 @@ ServerWheel.__index = ServerWheel
 
 type ServerWheel = VehicleTypes.ServerWheel
 
-function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart)
+function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart): ServerWheel
 	local self: ServerWheel = setmetatable(BaseWheel.new(vehicle, instance), ServerWheel) :: any
 
 	Initialize(self)

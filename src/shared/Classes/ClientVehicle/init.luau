@@ -28,7 +28,7 @@ ClientVehicle.__index = ClientVehicle
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
-function ClientVehicle.new(instance: Instance)
+function ClientVehicle.new(instance: Instance): ClientVehicle
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
 	self.MeshParts = {}

@@ -7,7 +7,7 @@ export type PlayerStatsController = typeof(setmetatable({} :: {}, PlayerStatsCon
 
 local remoteFunction = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
 
-function PlayerStatsController.new()
+function PlayerStatsController.new(): PlayerStatsController
 	local self: PlayerStatsController = setmetatable({}, PlayerStatsController) :: any
 
 	return self

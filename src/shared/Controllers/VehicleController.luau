@@ -19,7 +19,7 @@ export type VehicleController = typeof(setmetatable(
 
 local remoteFunction = ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
 
-function VehicleController.new()
+function VehicleController.new(): VehicleController
 	local self: VehicleController = setmetatable({}, VehicleController) :: any
 
 	self.DrivenVehicle = nil

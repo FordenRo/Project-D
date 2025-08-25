@@ -9,7 +9,7 @@ InterfaceController.__index = InterfaceController
 
 type InterfaceController = UITypes.InterfaceController
 
-function InterfaceController.new()
+function InterfaceController.new(): InterfaceController
 	local self: InterfaceController = setmetatable({}, InterfaceController) :: any
 
 	self.Interface = Interface.new(self)

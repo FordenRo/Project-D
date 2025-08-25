@@ -28,7 +28,7 @@ export type VehicleItem = {
 	Deselect: (self: VehicleItem) -> (),
 }
 
-function VehicleItem.new(instance: TextButton, name: string)
+function VehicleItem.new(instance: TextButton, name: string): VehicleItem
 	local self: VehicleItem = setmetatable({}, VehicleItem) :: any
 
 	local tune = require(ReplicatedStorage.Shared.Vehicle.Tunes[name]) :: VehicleTypes.Tune

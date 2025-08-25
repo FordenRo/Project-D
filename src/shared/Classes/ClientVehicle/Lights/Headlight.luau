@@ -7,7 +7,7 @@ Headlight.__index = Headlight
 
 type Headlight = VehicleTypes.Headlight
 
-function Headlight.new(instance: BasePart)
+function Headlight.new(instance: BasePart): Headlight
 	local self: Headlight = setmetatable({}, Headlight) :: any
 
 	self.Instance = instance

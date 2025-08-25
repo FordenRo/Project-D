@@ -21,7 +21,7 @@ export type SettingsTab = typeof(setmetatable(
 	SettingsTab
 ))
 
-function SettingsTab.new(instance: ScrollingFrame)
+function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
 
 	self.Instance = instance :: any

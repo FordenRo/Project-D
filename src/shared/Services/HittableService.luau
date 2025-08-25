@@ -18,7 +18,7 @@ local registeredParts: { [BasePart]: HitCallback } = {}
 local hittableRE
 local isServer = RunService:IsServer()
 
-function HittableService.new()
+function HittableService.new(): HittableService
 	local self: HittableService = setmetatable({}, HittableService) :: any
 
 	if isServer then

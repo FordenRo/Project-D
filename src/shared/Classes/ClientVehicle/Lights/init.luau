@@ -28,7 +28,7 @@ ClientLights.__index = ClientLights
 
 type ClientLights = VehicleTypes.ClientLights
 
-function ClientLights.new(vehicle: VehicleTypes.ClientVehicle)
+function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 	local self: ClientLights = setmetatable({}, ClientLights) :: any
 
 	self.Vehicle = vehicle

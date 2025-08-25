@@ -8,7 +8,7 @@ CarServiceHandler.__index = CarServiceHandler
 
 export type CarServiceHandler = typeof(setmetatable({}, CarServiceHandler))
 
-function CarServiceHandler.new()
+function CarServiceHandler.new(): CarServiceHandler
 	local self: CarServiceHandler = setmetatable({}, CarServiceHandler) :: any
 
 	for _, v in CollectionService:GetTagged("CarService") do

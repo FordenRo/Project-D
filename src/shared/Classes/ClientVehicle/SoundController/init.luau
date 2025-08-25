@@ -17,7 +17,7 @@ export type SoundController = typeof(setmetatable(
 	SoundController
 ))
 
-function SoundController.new(vehicle: VehicleTypes.ClientVehicle)
+function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundController
 	local self: SoundController = setmetatable({}, SoundController) :: any
 
 	self.Vehicle = vehicle

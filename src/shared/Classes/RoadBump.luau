@@ -19,7 +19,7 @@ export type RoadBump = typeof(setmetatable(
 	RoadBump
 ))
 
-function RoadBump.new(instance: Instance)
+function RoadBump.new(instance: Instance): RoadBump
 	local self: RoadBump = setmetatable({}, RoadBump) :: any
 
 	self.bump = instance:WaitForChild("Bump") :: any

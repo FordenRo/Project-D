@@ -10,7 +10,7 @@ ClientWheel.__index = ClientWheel
 
 type ClientWheel = VehicleTypes.ClientWheel
 
-function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart)
+function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart): ClientWheel
 	local self: ClientWheel = setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
 	self.Trackers = {

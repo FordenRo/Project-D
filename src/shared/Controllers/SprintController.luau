@@ -16,7 +16,7 @@ export type SprintController = typeof(setmetatable(
 	SprintController
 ))
 
-function SprintController.new()
+function SprintController.new(): SprintController
 	local self: SprintController = setmetatable({}, SprintController) :: any
 
 	player.CharacterAdded:Connect(function() self.Humanoid = player.Character:WaitForChild("Humanoid") end)

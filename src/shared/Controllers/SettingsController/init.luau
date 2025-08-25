@@ -12,7 +12,7 @@ export type SettingsController = typeof(setmetatable(
 	SettingsController
 ))
 
-function SettingsController.new()
+function SettingsController.new(): SettingsController
 	local self: SettingsController = setmetatable({}, SettingsController) :: any
 
 	self.Settings = {}

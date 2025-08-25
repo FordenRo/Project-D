@@ -18,7 +18,7 @@ export type ServerLights = typeof(setmetatable(
 	ServerLights
 ))
 
-function ServerLights.new(vehicle: VehicleTypes.ServerVehicle)
+function ServerLights.new(vehicle: VehicleTypes.ServerVehicle): ServerLights
 	local self: ServerLights = setmetatable({}, ServerLights) :: any
 
 	self.Vehicle = vehicle

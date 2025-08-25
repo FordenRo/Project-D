@@ -18,7 +18,7 @@ ClientTire.__index = ClientTire
 
 type ClientTire = VehicleTypes.ClientWheelTire
 
-function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart)
+function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart): ClientTire
 	local self: ClientTire = setmetatable({}, ClientTire) :: any
 
 	self.Wheel = wheel

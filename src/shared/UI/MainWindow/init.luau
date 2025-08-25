@@ -23,7 +23,7 @@ type TabBarButton = TextButton & {
 
 type MainWindow = UITypes.MainWindow
 
-function MainWindow.new()
+function MainWindow.new(): MainWindow
 	local self: MainWindow = setmetatable({}, MainWindow) :: any
 
 	self.Instance = ReplicatedStorage.UI.MainWindow:Clone()

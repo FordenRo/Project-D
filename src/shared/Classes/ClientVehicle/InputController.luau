@@ -17,7 +17,7 @@ InputController.__index = InputController
 
 type InputController = VehicleTypes.InputController
 
-function InputController.new(vehicle: VehicleTypes.ClientVehicle)
+function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputController
 	local self: InputController = setmetatable({}, InputController) :: any
 
 	self.Vehicle = vehicle

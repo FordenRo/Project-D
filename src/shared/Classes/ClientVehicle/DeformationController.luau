@@ -15,7 +15,7 @@ DeformationController.__index = DeformationController
 
 type DeformationController = VehicleTypes.DeformationController
 
-function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
+function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): DeformationController
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = Vehicle

@@ -9,7 +9,7 @@ ServerTire.__index = ServerTire
 
 type ServerTire = VehicleTypes.ServerWheelTire
 
-function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart)
+function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): ServerTire
 	local self: ServerTire = setmetatable({}, ServerTire) :: any
 
 	self.Wheel = wheel
@@ -49,8 +49,7 @@ end
 
 function Initialize(self: ServerTire)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
-		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster
-			or self.Vehicle.Tune.RCaster
+		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster or self.Vehicle.Tune.RCaster
 		caster = self.Wheel.IsRight and -caster or caster
 
 		local smokePart = self.Wheel.Instance:FindFirstChild("SmokePart") or self.Wheel.Instance.Arm:Clone()
@@ -363,12 +362,7 @@ function Replicate(
 	) + smokePart.CFrame:VectorToObjectSpace(self.Wheel.Instance.AssemblyLinearVelocity) * deltaTime
 
 	local wear = (temperature - 40)
-		/ (
-			(
-				self.Wheel.IsFront and self.Vehicle.Tune.TireFMaxTemp
-				or self.Vehicle.Tune.TireRMaxTemp
-			) - 40
-		)
+		/ ((self.Wheel.IsFront and self.Vehicle.Tune.TireFMaxTemp or self.Vehicle.Tune.TireRMaxTemp) - 40)
 	wear = math.clamp(wear, 0, 1)
 
 	self.Instance.Color = Color3.fromHSV(0, 0, wear * 0.2)

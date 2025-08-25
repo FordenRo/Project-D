@@ -29,7 +29,7 @@ export type Garage = {
 	SelectStoreVehicle: (self: Garage, name: string?) -> (),
 } & BaseWindow.BaseWindow
 
-function Garage.new()
+function Garage.new(): Garage
 	local self: Garage = setmetatable(BaseWindow.new(ScreenGui:Clone()), Garage) :: any
 
 	self.CurrentTab = nil
