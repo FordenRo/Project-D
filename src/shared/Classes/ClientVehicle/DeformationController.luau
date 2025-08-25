@@ -30,6 +30,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 		if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
 		if touchingPart:IsDescendantOf(player.Character) then return end
 
+		debug.profilebegin("CheckColliding")
 		local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
 		for _, vertexId in colliderMesh:GetVertices() do
 			local position = colliderMesh:GetPosition(vertexId)
@@ -51,6 +52,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 			end
 		end
 		table.insert(touchingParts, touchingPart)
+		debug.profileend()
 	end)
 
 	local lastVelocity = Vector3.zero
@@ -68,6 +70,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 		local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - lastVelocity
 		if worldHitVelocity.Magnitude < 1 then return end
 
+		debug.profilebegin("Deformation")
 		local worldHitCenter = Vector3.zero
 		for _, point in touchedPoints do
 			worldHitCenter += point
@@ -99,6 +102,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 			).Magnitude
 
 			-- Apply scratch texture
+			debug.profilebegin("DrawScratch")
 			local texture = self.Vehicle.Textures[meshPart]
 			if texture and closestPointDistance < 1 then
 				local scratch = ImageUtils.CopyImage(scratchTexture)
@@ -121,11 +125,10 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 				texture:DrawImageProjected(mesh, projection, config)
 				scratch:Destroy()
 			end
-
-			task.wait()
+			debug.profileend()
 
 			-- Deform
-			if worldHitVelocity.Magnitude > 10 and closestPointDistance < 3 then
+			debug.profilebegin("Deform")
 				local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
 				for k, vertexId in vertices do
 					local position = mesh:GetPosition(vertexId)
@@ -139,9 +142,9 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 					mesh:SetPosition(vertexId, position + offset)
 				end
 			end
-			task.wait()
+			debug.profileend()
 		end
-		canDeform = true
+		debug.profileend()
 	end)
 
 	-- Dirt update
@@ -159,12 +162,14 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 			task.wait(1)
 			local dirt = math.floor(self.Vehicle.Dirt ^ 0.7 * 20) / 20
 			if dirt - _lastDirt > 0.01 then
+				debug.profilebegin("DrawDirt")
 				for texture, dirtTextureId in affectedTextures do
 					local dirtTexture = AssetService:CreateEditableImageAsync(Content.fromUri(dirtTextureId))
 					ImageUtils.SetImageAlpha(dirtTexture, dirt - _lastDirt)
 					texture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
 					task.wait(1 / 30)
 				end
+				debug.profileend()
 				_lastDirt = dirt
 			end
 		end
