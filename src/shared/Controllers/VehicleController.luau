@@ -27,16 +27,36 @@ function VehicleController.new()
 	for _, vehicle in CollectionService:GetTagged("Vehicle") do
 		if not vehicle:IsDescendantOf(game.Workspace) then continue end
 
-		ClientVehicle.new(vehicle)
+		registerVehicle(self, ClientVehicle.new(vehicle))
 	end
 
 	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle)
 		if not vehicle:IsDescendantOf(game.Workspace) then return end
 
-		ClientVehicle.new(vehicle)
+		registerVehicle(self, ClientVehicle.new(vehicle))
 	end)
 
 	return self
+end
+
+function registerVehicle(self: VehicleController, vehicle: VehicleTypes.ClientVehicle)
+	vehicle.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		local humanoid = vehicle.Instance.DriveSeat.Occupant
+		if not humanoid then return end
+
+		local character = humanoid.Parent
+		if not character then return end
+
+		local seatedPlayer = Players:GetPlayerFromCharacter(character)
+		if not seatedPlayer then return end
+
+		if player == seatedPlayer then
+			self.DrivenVehicle = vehicle
+			vehicle.Instance.DriveSeat
+				:GetPropertyChangedSignal("Occupant")
+				:Once(function() self.DrivenVehicle = nil end)
+		end
+	end)
 end
 
 function VehicleController.GetVehicles(self: VehicleController): { VehicleTypes.PlayerVehicle }
