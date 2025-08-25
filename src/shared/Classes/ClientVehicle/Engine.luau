@@ -1,5 +1,6 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
 
 local EngineTable = require(script.Parent.EngineTable)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
@@ -742,6 +743,54 @@ function Engine.Update(self: Engine, deltaTime: number)
 	UpdateFuel(self, deltaTime)
 end
 
+function Blow(self: Engine)
+	local deformation = self.Vehicle.Instance.Body.Deformation
+	for meshPart, mesh in self.Vehicle.Meshes do
+		local meshScale = mesh:GetSize() / meshPart.Size
+		local position = deformation.EngineBlow.Position
+		position = meshPart.CFrame:PointToObjectSpace(position) * meshScale
+		local radius = deformation.EngineBlow.Size.X / 2 * meshScale.Magnitude
+
+		task.spawn(function()
+			local vertices = mesh:FindVerticesWithinSphere(position, radius)
+			for k, vertexId in vertices do
+				local vertexPosition = mesh:GetPosition(vertexId)
+				local direction = position - vertexPosition
+				local distance = (position - vertexPosition).Magnitude
+				local distanceMul = (radius - distance) / radius ^ 0.5
+				local offset = direction
+					* math.noise(vertexPosition.X, vertexPosition.Y, vertexPosition.Z)
+					* distanceMul
+					* 0.05
+				mesh:SetPosition(vertexId, vertexPosition + offset)
+				if k % 2 == 0 then task.wait() end
+			end
+		end)
+	end
+
+	-- local engineBlowTexture =
+	-- 	AssetService:CreateEditableImageAsync(Content.fromAssetId(self.Vehicle.Tune.EngineBlowTexture))
+	-- ImageUtils.SetImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
+
+	-- self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
+	-- engineBlowTexture:Destroy()
+
+	-- Show smoke
+	for _, smokePart in deformation.BlowSmokeParts:GetChildren() do
+		local emitter = smokePart:FindFirstChildOfClass("ParticleEmitter")
+		if not emitter then continue end
+
+		emitter.Enabled = true
+
+		local tween = TweenService:Create(emitter, TweenInfo.new(30), { Rate = 0 })
+		tween.Completed:Once(function()
+			emitter.Enabled = false
+			tween:Destroy()
+		end)
+		task.delay(90, function() tween:Play() end)
+	end
+end
+
 function UpdateHealth(self: Engine, deltaTime: number)
 	if not self.Vehicle.Tune.Engine or self.Vehicle.Tune.Electric or not self.Vehicle.IsOn then return end
 
@@ -756,7 +805,7 @@ function UpdateHealth(self: Engine, deltaTime: number)
 
 	if self.Health == 0 then
 		self.Vehicle.IsOn = false
-		self.Vehicle.DeformationController:BlowEngine()
+		Blow(self)
 	end
 end
 

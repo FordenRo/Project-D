@@ -124,48 +124,4 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 	return self
 end
 
-function DeformationController.BlowEngine(self: DeformationController)
-	local meshScale = self.BodyMesh:GetSize() / self.Body.Size
-	local position = self.DeformModel.EngineBlow.Position
-	position = self.Body.CFrame:PointToObjectSpace(position) * meshScale
-	local radius = self.DeformModel.EngineBlow.Size.X / 2 * meshScale.Magnitude
-
-	task.spawn(function()
-		local vertices = self.BodyMesh:FindVerticesWithinSphere(position, radius)
-		for k, vertexId in vertices do
-			local vertexPosition = self.BodyMesh:GetPosition(vertexId)
-			local direction = position - vertexPosition
-			local distance = (position - vertexPosition).Magnitude
-			local distanceMul = (radius - distance) / radius ^ 0.5
-			local offset = direction
-				* math.noise(vertexPosition.X, vertexPosition.Y, vertexPosition.Z)
-				* distanceMul
-				* 0.05
-			self.BodyMesh:SetPosition(vertexId, vertexPosition + offset)
-			if k % 2 == 0 then task.wait() end
-		end
-	end)
-
-	local engineBlowTexture = AssetService:CreateEditableImageAsync(self.Vehicle.Tune.EngineBlowTexture)
-	ImageUtils.SetImageAlpha(engineBlowTexture, self.Vehicle.Tune.EngineBlowOpacity)
-
-	self.BodyTexture:DrawImage(Vector2.zero, engineBlowTexture, Enum.ImageCombineType.AlphaBlend)
-	engineBlowTexture:Destroy()
-
-	-- Show smoke
-	for _, smokePart in self.DeformModel.BlowSmokeParts:GetChildren() do
-		local emitter = smokePart:FindFirstChildOfClass("ParticleEmitter")
-		if not emitter then continue end
-
-		emitter.Enabled = true
-
-		local tween = TweenService:Create(emitter, TweenInfo.new(10), { Rate = 0 })
-		tween.Completed:Once(function()
-			emitter.Enabled = false
-			tween:Destroy()
-		end)
-		task.delay(20, function() tween:Play() end)
-	end
-end
-
 return DeformationController
