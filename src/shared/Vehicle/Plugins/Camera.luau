@@ -118,11 +118,13 @@ function Update(self: CameraPlugin, deltaTime: number)
 	end
 
 	angles += Vector3.yAxis * self.Vehicle.AngularVelocity.Y * 0.07
-	angles += Vector3.new(1, 0, 1) * self.Vehicle.WeightPart.AssemblyAngularVelocity.Unit * math.clamp(
-		self.Vehicle.WeightPart.AssemblyAngularVelocity.Magnitude,
-		-2,
-		2
-	) * 0.1
+	if self.Vehicle.AngularVelocity.Magnitude > 0 then
+		angles += Vector3.new(1, 0, 1) * self.Vehicle.AngularVelocity.Unit * math.clamp(
+			self.Vehicle.AngularVelocity.Magnitude,
+			-2,
+			2
+		) * 0.1
+	end
 
 	self.Offset = self.Offset:Lerp(offset, deltaTime * 3)
 	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
