@@ -51,9 +51,10 @@ function ClientVehicle.new(instance: Instance)
 		table.insert(self.MeshParts, v)
 	end
 
-	Exhaust.new(self)
-
 	InitializeSeats(self)
+
+	Exhaust.new(self)
+	self.Lights = Lights.new(self)
 
 	return self
 end
@@ -74,7 +75,6 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 	self.Engine = Engine.new(self)
 	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
-	self.Lights = Lights.new(self)
 	self.Interface = VehicleInterface.new(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))

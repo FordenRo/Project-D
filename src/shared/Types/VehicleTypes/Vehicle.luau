@@ -34,7 +34,6 @@ export type BaseVehicle = {
 	Engine: EngineTable,
 	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
-	Lights: BaseLights,
 	Starting: boolean,
 	Driver: Player?,
 	Passengers: { [VehicleSeat]: Player },
@@ -101,6 +100,7 @@ export type ClientVehicle = {
 	MeshParts: { MeshPart },
 	Meshes: { [MeshPart]: EditableMesh },
 	Textures: { [MeshPart]: EditableImage },
+	Lights: ClientLights,
 	InputController: InputController,
 	DeformationController: DeformationController,
 	BrakeForce: { Front: number, Rear: number },
@@ -411,30 +411,18 @@ export type Headlight = {
 	Destroy: (self: Headlight) -> (),
 }
 
-export type BaseLights = {
-	_RE: RemoteEvent,
-	Vehicle: BaseVehicle,
-	State: "Off" | "Low" | "High",
-	TurnState: "Off" | "Left" | "Right" | "Both",
-
-	Destroy: (self: BaseLights) -> (),
-}
-
 export type ClientLights = {
 	__index: ClientLights,
 	_cons: { RBXScriptConnection },
+	_RE: RemoteEvent,
+	_typesBrightness: { [string]: number },
+	Vehicle: ClientVehicle,
+	Headlights: { [string]: { Headlight } },
+	State: string,
+	TurnState: string,
 
 	new: (vehicle: ClientVehicle) -> ClientLights,
-	Replicate: (self: ClientLights) -> (),
-} & BaseLights
-
-export type ServerLights = {
-	__index: ServerLights,
-	_typesBrightness: { [string]: number },
-	_cons: { RBXScriptConnection },
-	Headlights: Headlight,
-
-	new: (vehicle: ServerVehicle) -> ServerLights,
-} & BaseLights
+	Destroy: (self: ClientLights) -> (),
+}
 
 return {}

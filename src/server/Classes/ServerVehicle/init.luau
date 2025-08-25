@@ -22,8 +22,8 @@ function ServerVehicle.new(instance: Instance)
 
 	Initialize(self)
 
-	self.Lights = Lights.new(self)
 	self.Engine = table.clone(EngineTable)
+	Lights.new(self)
 
 	self._Remote.OnServerEvent:Connect(function(_, data: buffer)
 		for k, v in Serialization.Deserialize(VehiclePacket, data) do

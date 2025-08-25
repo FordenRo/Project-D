@@ -6,6 +6,8 @@ local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
+local InputContext = ReplicatedStorage.Input.Vehicle
+
 local LIGHT_POWER = {
 	Off = 0,
 	Low = 0.5,
@@ -21,23 +23,39 @@ local LIGHT_TYPES = {
 	"Brake",
 }
 
-local ServerLights = {}
-ServerLights.__index = ServerLights
+local ClientLights = {}
+ClientLights.__index = ClientLights
 
-type ServerLights = VehicleTypes.ServerLights
+type ClientLights = VehicleTypes.ClientLights
 
-function ServerLights.new(vehicle: VehicleTypes.BaseVehicle)
-	local self: ServerLights = setmetatable({}, ServerLights) :: any
+function ClientLights.new(vehicle: VehicleTypes.ClientVehicle)
+	local self: ClientLights = setmetatable({}, ClientLights) :: any
 
 	self.Vehicle = vehicle
 	self.State = "Off"
 	self.TurnState = "Off"
 
-	self._RE = Instance.new("RemoteEvent")
-	self._RE.Name = "LightsRE"
-	self._RE.Parent = self.Vehicle.Instance
+	self._RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
 
-	self._cons = {}
+	self._cons = {
+		InputContext.Lights.Pressed:Connect(function()
+			self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
+			Replicate(self)
+		end),
+		InputContext.LeftTurnSignal.Pressed:Connect(function()
+			self.TurnState = self.TurnState ~= "Left" and "Left" or "Off" :: any
+			Replicate(self)
+		end),
+		InputContext.RightTurnSignal.Pressed:Connect(function()
+			self.TurnState = self.TurnState ~= "Right" and "Right" or "Off" :: any
+			Replicate(self)
+		end),
+		InputContext.Hazards.Pressed:Connect(function()
+			self.TurnState = self.TurnState ~= "Both" and "Both" or "Off" :: any
+			Replicate(self)
+		end),
+	}
+
 	self._typesBrightness = {}
 	self.Headlights = {} :: any
 
@@ -58,7 +76,9 @@ function ServerLights.new(vehicle: VehicleTypes.BaseVehicle)
 	table.insert(self._cons, RunService.Heartbeat:Connect(function() Update(self) end))
 	table.insert(
 		self._cons,
-		self._RE.OnServerEvent:Connect(function(_, buf: buffer)
+		self._RE.OnClientEvent:Connect(function(buf: buffer)
+			if self.Vehicle.IsDriven then return end
+
 			local data = Serialization.Deserialize(LightPacket, buf)
 			self.State = data.State
 			self.TurnState = data.TurnState
@@ -68,7 +88,7 @@ function ServerLights.new(vehicle: VehicleTypes.BaseVehicle)
 	return self
 end
 
-function setTypeBrightness(self: ServerLights, type: string, brightness: boolean | number)
+function setTypeBrightness(self: ClientLights, type: string, brightness: boolean | number)
 	if brightness == true then
 		brightness = 1
 	elseif brightness == false then
@@ -83,7 +103,9 @@ function setTypeBrightness(self: ServerLights, type: string, brightness: boolean
 	end
 end
 
-function Update(self: ServerLights)
+function Replicate(self: ClientLights) self._RE:FireServer(Serialization.Serialize(LightPacket, self)) end
+
+function Update(self: ClientLights)
 	setTypeBrightness(self, "Rear", self.Vehicle.Brake > 0.5 and 1 or self.State ~= "Off" and 0.5 or 0)
 	setTypeBrightness(self, "Brake", self.Vehicle.Brake > 0.5)
 	setTypeBrightness(self, "Reverse", self.Vehicle.Gear == -1)
@@ -100,10 +122,10 @@ function Update(self: ServerLights)
 	)
 end
 
-function ServerLights.Destroy(self: ServerLights)
+function ClientLights.Destroy(self: ClientLights)
 	for _, v in self._cons do
 		v:Disconnect()
 	end
 end
 
-return ServerLights
+return ClientLights
