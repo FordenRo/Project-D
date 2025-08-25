@@ -20,7 +20,7 @@ local scratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://10712
 local compiledScratchTextures = {}
 for i = 1, 10 do
 	local image = ImageUtils.CopyImage(scratchTexture)
-	ImageUtils.SetImageAlpha(image, i)
+	ImageUtils.SetImageAlpha(image, i / 10)
 	compiledScratchTextures[i] = image
 end
 
