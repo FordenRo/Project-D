@@ -28,4 +28,6 @@ function WelcomeTab.new(instance: ScrollingFrame): WelcomeTab
 	return self
 end
 
+function WelcomeTab.Destroy(self: WelcomeTab) end
+
 return WelcomeTab

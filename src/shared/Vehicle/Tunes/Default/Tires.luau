@@ -35,11 +35,11 @@ Tune.TireRSpeedStress = 0.04
 
 Tune.TireFlexDebug = false
 
-Tune.TireFPressureForce = 17
+Tune.TireFPressureForce = 24
 Tune.TireFThickness = 50
 Tune.TireFWeight = 9
 
-Tune.TireRPressureForce = 17
+Tune.TireRPressureForce = 24
 Tune.TireRThickness = 50
 Tune.TireRWeight = 9
 
