@@ -1,15 +1,14 @@
 local AssetService = game:GetService("AssetService")
--- local Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
--- local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
--- local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
+local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
--- local player = Players.LocalPlayer
+local player = Players.LocalPlayer
 
 local DeformationController = {}
 DeformationController.__index = DeformationController
@@ -21,90 +20,129 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle)
 
 	self.Vehicle = Vehicle
 
-	self.ScratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+	local scratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+	local collider = self.Vehicle.Instance.Body.Collider
+	local colliderMesh = CreateEditableMesh(collider)
 
-	-- local touchedPoints = {}
-	-- local touchedParts = {}
-	-- for _, part in self.ColliderModel:GetChildren() do
-	-- 	if not part:IsA("BasePart") then continue end
+	local touchingParts = {}
+	local touchingPoints = {}
+	self.Vehicle.Instance.Body.Collider.Touched:Connect(function(touchingPart: BasePart)
+		if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
+		if touchingPart:IsDescendantOf(player.Character) then return end
 
-	-- 	part.Touched:Connect(function(hitPart)
-	-- 		if hitPart:IsDescendantOf(self.Vehicle.Instance) then return end
-	-- 		if hitPart:IsDescendantOf(player.Character) then return end
+		local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
+		for _, vertexId in colliderMesh:GetVertices() do
+			local position = colliderMesh:GetPosition(vertexId)
+			local worldPosition = collider.CFrame:PointToWorldSpace(position / meshScale)
+			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
+				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
+			end
+		end
+		for _, faceId in colliderMesh:GetFaces() do
+			local vertices = colliderMesh:GetFaceVertices(faceId)
+			local center = Vector3.zero
+			for _, vertexId in vertices do
+				center += colliderMesh:GetPosition(vertexId)
+			end
+			center /= #vertices
+			local worldPosition = collider.CFrame:PointToWorldSpace(center / meshScale)
+			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
+				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
+			end
+		end
+		table.insert(touchingParts, touchingPart)
+	end)
 
-	-- 		table.insert(touchedPoints, part.Position)
-	-- 		table.insert(touchedParts, hitPart)
-	-- 	end)
-	-- end
+	local lastVelocity = Vector3.zero
+	RunService.PreSimulation:Connect(function() lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity end)
 
-	-- local canDeform = true
-	-- local meshScale = self.BodyMesh:GetSize() / self.Body.Size
-	-- RunService.PostSimulation:Connect(function()
-	-- 	if #touchedPoints == 0 then return end
+	local canDeform = true
+	RunService.PostSimulation:Connect(function()
+		if #touchingPoints == 0 then return end
 
-	-- 	local points = table.clone(touchedPoints)
-	-- 	local parts = table.clone(touchedParts)
-	-- 	table.clear(touchedPoints)
-	-- 	table.clear(touchedParts)
+		local touchedPoints = table.clone(touchingPoints)
+		local touchedParts = table.clone(touchingParts)
+		table.clear(touchingPoints)
+		table.clear(touchingParts)
 
-	-- 	local hitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - self.Vehicle.Velocity
-	-- 	local force = hitVelocity.Magnitude
-	-- 	if force < 1 then return end
+		local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - lastVelocity
+		if worldHitVelocity.Magnitude < 1 then return end
 
-	-- 	local hitCenter = Vector3.new()
-	-- 	for _, point in points do
-	-- 		hitCenter += point
-	-- 	end
-	-- 	hitCenter /= #points
+		local worldHitCenter = Vector3.zero
+		for _, point in touchedPoints do
+			worldHitCenter += point
+		end
+		worldHitCenter /= #touchedPoints
 
-	-- 	HittableService:Hit(parts, hitCenter, hitVelocity / #parts)
+		HittableService:Hit(touchedParts, worldHitCenter, worldHitVelocity)
 
-	-- 	repeat
-	-- 		task.wait()
-	-- 	until canDeform
+		local hitCenters = {}
+		for _, meshPart in self.Vehicle.MeshParts do
+			hitCenters[meshPart] = meshPart.CFrame:PointToObjectSpace(worldHitCenter)
+		end
+		local hitVelocities = {}
+		for _, meshPart in self.Vehicle.MeshParts do
+			hitVelocities[meshPart] = meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
+		end
 
-	-- 	canDeform = false
-	-- 	hitCenter = self.Body.CFrame:PointToObjectSpace(hitCenter) * meshScale
-	-- 	local direction = hitVelocity.Unit
-	-- 	local relativeDirection = self.Body.CFrame:VectorToObjectSpace(direction)
+		repeat
+			task.wait()
+		until canDeform
+		canDeform = false
 
-	-- 	local scratch = ImageUtils.CopyImage(self.ScratchTexture)
-	-- 	ImageUtils.SetImageAlpha(scratch, math.clamp(force / 150 ^ 0.7, 0, 1))
+		for meshPart, mesh in self.Vehicle.Meshes do
+			local meshScale = mesh:GetSize() / meshPart.Size
+			local hitCenter = hitCenters[meshPart] * meshScale
+			local hitVelocity = hitVelocities[meshPart] * meshScale
+			local closestPointDistance = (
+				(select(2, mesh:FindClosestPointOnSurface(hitCenter)) :: Vector3 - hitCenter) / meshScale
+			).Magnitude
 
-	-- 	local size = Vector3.one * 5
-	-- 	local projection = {
-	-- 		Position = hitCenter,
-	-- 		Direction = relativeDirection,
-	-- 		Size = size,
-	-- 		Up = Vector3.yAxis,
-	-- 	}
-	-- 	local config = {
-	-- 		AlphaBlendType = Enum.ImageAlphaType.Default,
-	-- 		ColorBlendType = Enum.ImageCombineType.AlphaBlend,
-	-- 		Decal = scratch,
-	-- 		FadeAngle = 0,
-	-- 		BlendIntensity = 0,
-	-- 	}
-	-- 	self.BodyTexture:DrawImageProjected(self.BodyMesh, projection, config)
-	-- 	scratch:Destroy()
+			-- Apply scratch texture
+			local texture = self.Vehicle.Textures[meshPart]
+			if texture and closestPointDistance < 1 then
+				local scratch = ImageUtils.CopyImage(scratchTexture)
+				ImageUtils.SetImageAlpha(scratch, math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.1, 1))
 
-	-- 	if force > 10 then
-	-- 		local hitVertexId = self.BodyMesh:FindClosestVertex(hitCenter)
-	-- 		local hitPosition = self.BodyMesh:GetPosition(hitVertexId)
-	-- 		local vertices = self.BodyMesh:FindVerticesWithinSphere(hitPosition, 3)
-	-- 		for k, vertexId in vertices do
-	-- 			local vertexPosition = self.BodyMesh:GetPosition(vertexId)
-	-- 			local distance = (hitPosition - vertexPosition).Magnitude
-	-- 			local distanceMul = (3 - distance) / 3 ^ 2
-	-- 			local offset = relativeDirection * force / 40 ^ 0.7 * distanceMul
-	-- 			offset += offset * math.random() * 0.1
-	-- 			self.BodyMesh:SetPosition(vertexId, vertexPosition + offset)
-	-- 			if k % 2 == 0 then task.wait() end
-	-- 		end
-	-- 	end
+				local size = meshScale * 2
+				local projection = {
+					Position = hitCenter,
+					Direction = hitVelocity.Unit,
+					Size = size,
+					Up = Vector3.yAxis,
+				}
+				local config = {
+					AlphaBlendType = Enum.ImageAlphaType.Default,
+					ColorBlendType = Enum.ImageCombineType.AlphaBlend,
+					Decal = scratch,
+					FadeAngle = 0,
+					BlendIntensity = 0,
+				}
+				texture:DrawImageProjected(mesh, projection, config)
+				scratch:Destroy()
+			end
 
-	-- 	canDeform = true
-	-- end)
+			task.wait()
+
+			-- Deform
+			if worldHitVelocity.Magnitude > 10 and closestPointDistance < 3 then
+				local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
+				for k, vertexId in vertices do
+					local position = mesh:GetPosition(vertexId)
+					local distance = ((hitCenter - position) / meshScale).Magnitude
+					if distance > 3 then continue end
+
+					local distanceMul = (3 - distance) / 3 ^ 2
+					local offset = hitVelocity.Unit * hitVelocity.Magnitude ^ 0.7 * 0.1 * distanceMul
+					offset += offset * math.random() * 0.1
+
+					mesh:SetPosition(vertexId, position + offset)
+				end
+			end
+			task.wait()
+		end
+		canDeform = true
+	end)
 
 	-- Dirt update
 	local affectedTextures = {}
