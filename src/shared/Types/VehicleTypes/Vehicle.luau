@@ -11,7 +11,7 @@ export type BaseVehicle = {
 		},
 		Body: Model & {
 			WeightPart: Part,
-			Collider: Model,
+			Collider: MeshPart,
 			Sounds: Model,
 			Lights: Model & {
 				Front: Model,

@@ -93,15 +93,13 @@ function MakeGravity(self: ServerVehicle)
 end
 
 function MakeCollider(self: ServerVehicle)
-	for _, part in self.Instance.Body.Collider:GetChildren() do
-		for _, wheel in self.Instance.Wheels:GetChildren() do
-			if not wheel:IsA("BasePart") then continue end
+	for _, wheel in self.Instance.Wheels:GetChildren() do
+		if not wheel:IsA("BasePart") then continue end
 
-			local constraint = Instance.new("NoCollisionConstraint")
-			constraint.Part0 = part
-			constraint.Part1 = wheel
-			constraint.Parent = wheel
-		end
+		local constraint = Instance.new("NoCollisionConstraint")
+		constraint.Part0 = self.Instance.Body.Collider
+		constraint.Part1 = wheel
+		constraint.Parent = wheel
 	end
 end
 
