@@ -27,7 +27,21 @@ type ClientVehicle = VehicleTypes.ClientVehicle
 function ClientVehicle.new(instance: Instance)
 	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
-	Initialize(self)
+	InitializeSeats(self)
+
+	return self
+end
+
+function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
+	if seatedPlayer ~= player then return end
+	togglePrompts(self, false)
+
+	if not asDriver then return end
+
+	InitializeVariables(self)
+	HideCharacter(self)
+	self:InitializeWheels()
+	InitializePlugins(self)
 
 	self.Engine = Engine.new(self)
 	self.InputController = InputController.new(self)
@@ -41,15 +55,63 @@ function ClientVehicle.new(instance: Instance)
 			Replicate(self)
 		end
 	end)
-
-	return self
 end
 
-function Initialize(self: ClientVehicle)
-	InitializeVariables(self)
-	HideCharacter(self)
-	self:InitializeWheels()
-	InitializePlugins(self)
+function Leaved(self: ClientVehicle, leavedPlayer: Player, asDriver: boolean)
+	if leavedPlayer ~= player then return end
+	togglePrompts(self, true)
+end
+
+function togglePrompts(self: ClientVehicle, enabled: boolean)
+	for _, seat in self.Instance.Seats:GetChildren() do
+		if not seat:IsA("VehicleSeat") then continue end
+
+		seat.ProximityPrompt.Enabled = enabled
+	end
+
+	self.Instance.DriveSeat.ProximityPrompt.Enabled = enabled
+end
+
+function InitializeSeats(self: ClientVehicle)
+	for _, seat in self.Instance.Seats:GetChildren() do
+		if not seat:IsA("VehicleSeat") then continue end
+
+		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+			if seat.Occupant then
+				local character = seat.Occupant.Parent
+				if not character then return end
+
+				local seatedPlayer = Players:GetPlayerFromCharacter(character)
+				if not seatedPlayer then return end
+
+				self.Passengers[seat] = seatedPlayer
+				Seated(self, seatedPlayer, false)
+			else
+				local leavedPlayer = self.Passengers[seat]
+				self.Passengers[seat] = nil
+				Leaved(self, leavedPlayer, false)
+			end
+		end)
+	end
+
+	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		if self.Instance.DriveSeat.Occupant then
+			local character = self.Instance.DriveSeat.Occupant.Parent
+			if not character then return end
+
+			local seatedPlayer = Players:GetPlayerFromCharacter(character)
+			if not seatedPlayer then return end
+
+			self.Driver = seatedPlayer
+			Seated(self, seatedPlayer, true)
+		else
+			if not self.Driver then return end
+
+			local leavedPlayer = self.Driver
+			self.Driver = nil
+			Leaved(self, leavedPlayer, true)
+		end
+	end)
 end
 
 function InitializeVariables(self: ClientVehicle)

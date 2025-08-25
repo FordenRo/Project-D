@@ -8,7 +8,9 @@ export type BaseVehicle = {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
 			Flip: AlignOrientation,
+			ProximityPrompt: ProximityPrompt,
 		},
+		Seats: Model,
 		Body: Model & {
 			WeightPart: Part,
 			Collider: MeshPart,
@@ -30,7 +32,8 @@ export type BaseVehicle = {
 	Tune: Tune.Tune,
 	Lights: BaseLights,
 	Starting: boolean,
-	Occupant: Player?,
+	Driver: Player?,
+	Passengers: { [VehicleSeat]: Player },
 	Dirt: number,
 	Fuel: number,
 	ID: string,

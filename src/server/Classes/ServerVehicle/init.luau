@@ -61,7 +61,7 @@ function Initialize(self: ServerVehicle)
 	CreateFlip(self)
 	Finalize(self)
 	InitializePlugins(self)
-	RemoveCharacterWeight(self)
+	InitializeSeats(self)
 	InitializeDriveSeat(self)
 end
 
@@ -210,6 +210,7 @@ end
 
 function Finalize(self: ServerVehicle)
 	ModelWeld(self.Instance.Body, self.Instance.DriveSeat)
+	ModelWeld(self.Instance.Seats, self.Instance.DriveSeat)
 
 	-- Unanchor
 	for _, v in self.Instance:GetDescendants() do
@@ -224,98 +225,121 @@ function InitializePlugins(self: ServerVehicle)
 	end
 end
 
-function RemoveCharacterWeight(self: ServerVehicle)
-	--Get Seats
-	local Seats = {}
-	for _, v in self.Instance:GetDescendants() do
-		if v:IsA("VehicleSeat") or v:IsA("Seat") then
-			local seat = {}
-			seat.Seat = v
-			seat.Parts = {}
-			table.insert(Seats, seat)
-		end
-	end
+function InitializeSeats(self: ServerVehicle)
+	for _, seat in self.Instance.Seats:GetChildren() do
+		if not seat:IsA("VehicleSeat") then continue end
 
-	-- Store Physical Properties/Remove Mass Function
-	local function handleCharacter(character, tbl)
-		for _, v in character:GetDescendants() do
-			if v:IsA("BasePart") then
-				table.insert(tbl, { v, v.Massless })
-				v.Massless = true
-			end
-		end
-	end
+		InitializeSeat(self, seat)
 
-	-- Initialize Seats
-	for _, v in Seats do
-		v.Seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-			local occupant = v.Seat.Occupant and v.Seat.Occupant.Parent
-			if occupant then
-				handleCharacter(occupant, v.Parts)
+		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+			if seat.Occupant then
+				local character = seat.Occupant.Parent
+				if not character then return end
+
+				local player = Players:GetPlayerFromCharacter(character)
+				if not player then return end
+
+				self.Passengers[seat] = player
 			else
-				for _, entry in v.Parts do
-					entry[1].Massless = entry[2]
-				end
-				table.clear(v.Parts)
+				self.Passengers[seat] = nil
 			end
 		end)
 	end
 end
 
+function InitializeSeat(self: ServerVehicle, seat: VehicleSeat)
+	local prompt = Instance.new("ProximityPrompt")
+	prompt.ObjectText = "Vehicle"
+	prompt.ActionText = "Enter"
+	prompt.KeyboardKeyCode = Enum.KeyCode.F
+	prompt.MaxActivationDistance = 6
+	prompt.RequiresLineOfSight = false
+	prompt.Parent = seat
+
+	prompt.Triggered:Connect(function(player: Player)
+		if seat.Occupant then return end
+
+		local character = player.Character
+		if not character then return end
+
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if not humanoid then return end
+
+		seat:Sit(humanoid)
+	end)
+
+	local masslessTable = {}
+	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		prompt.Enabled = seat.Occupant ~= nil
+
+		if seat.Occupant then
+			local character = seat.Occupant.Parent
+			if not character then return end
+
+			for _, v in character:GetDescendants() do
+				if not v:IsA("BasePart") then continue end
+
+				masslessTable[v] = v.Massless
+				v.Massless = true
+			end
+			return
+		end
+
+		for k, v in masslessTable do
+			k.Massless = v
+		end
+		table.clear(masslessTable)
+	end)
+end
+
 function InitializeDriveSeat(self: ServerVehicle)
-	-- Driver Sit
-	self.Instance.DriveSeat.ChildAdded:Connect(function(child)
-		if child.Name == "SeatWeld" and child:IsA("Weld") then
-			local player = Players:GetPlayerFromCharacter(child.Part1.Parent)
+	InitializeSeat(self, self.Instance.DriveSeat)
+
+	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
+		if self.Instance.DriveSeat.Occupant then
+			local player = Players:GetPlayerFromCharacter(self.Instance.DriveSeat.Occupant)
 			if not player then return end
 
 			self.Instance.DriveSeat:SetNetworkOwner(player)
-
-			-- local clone = interface:Clone()
-			-- clone.Parent = player.PlayerGui
+			self.Driver = player
+			return
 		end
-	end)
 
-	-- Driver Leave
-	self.Instance.DriveSeat.ChildRemoved:Connect(function(child)
-		if child.Name == "SeatWeld" and child:IsA("Weld") then
-			if not self.Instance.DriveSeat.Parent then return end
+		self.Driver = nil
 
-			-- Remove Flip Force
-			if self.Instance.DriveSeat:FindFirstChild("Flip") then
-				if self.Tune.FlipType == "New" then
-					self.Instance.DriveSeat.Flip.Enabled = false
+		-- Remove Flip Force
+		if self.Instance.DriveSeat:FindFirstChild("Flip") then
+			if self.Tune.FlipType == "New" then
+				self.Instance.DriveSeat.Flip.Enabled = false
+			else
+				self.Instance.DriveSeat.Flip.MaxTorque = 0
+			end
+		end
+
+		for _, wheel in self.Wheels do
+			-- Apply handbrake
+			if self.Tune.ExitBrake then
+				if wheel.IsFront then
+					wheel.Instance.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
+						* self.Tune.PBrakeBias
 				else
-					self.Instance.DriveSeat.Flip.MaxTorque = 0
+					wheel.Instance.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
+						* (1 - self.Tune.PBrakeBias)
 				end
 			end
 
-			for _, wheel in self.Instance.Wheels:GetChildren() do
-				-- Apply handbrake
-				if wheel:FindFirstChild("BV") and self.Tune.ExitBrake then
-					if string.find(wheel.Name, "F") then
-						wheel.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
-							* self.Tune.PBrakeBias
-					else
-						wheel.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
-							* (1 - self.Tune.PBrakeBias)
-					end
-				end
+			-- Remove wheel force
+			wheel.Instance.AV.MotorMaxTorque = 0
+			wheel.Instance.AV.AngularVelocity = 0
 
-				-- Remove wheel force
-				if wheel:FindFirstChild("AV") then
-					wheel.AV.MotorMaxTorque = 0
-					wheel.AV.AngularVelocity = 0
-				end
-
-				-- Readjust steering
-				if wheel.Arm:FindFirstChild("Steer") then
-					if self.Tune.PowerSteeringType == "New" then
-						wheel.Arm.Steer.Attachment0.Orientation = Vector3.new(0, -wheel.Base.Rotate.CurrentAngle, 0)
-					else
-						wheel.Arm.Steer.CFrame = wheel.Base.CFrame
-							* CFrame.Angles(0, math.rad(wheel.Base.Rotate.CurrentAngle), 0)
-					end
+			-- Readjust steering
+			if wheel.Instance.Arm:FindFirstChild("Steer") then
+				if self.Tune.PowerSteeringType == "New" then
+					wheel.Instance.Arm.Steer.Attachment0.Orientation =
+						Vector3.new(0, -wheel.Instance.Base.Rotate.CurrentAngle, 0)
+				else
+					wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
+						* CFrame.Angles(0, math.rad(wheel.Instance.Base.Rotate.CurrentAngle), 0)
 				end
 			end
 		end

@@ -1,6 +1,6 @@
 local MakeWeld = require(script.Parent.MakeWeld)
 
-function ModelWeld(a, b)
+function ModelWeld(a: BasePart | Model, b: BasePart)
 	if a:IsA("BasePart") then
 		MakeWeld(b, a, "Weld")
 	elseif a:IsA("Model") then
