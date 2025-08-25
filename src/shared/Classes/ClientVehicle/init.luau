@@ -7,6 +7,7 @@ local BaseVehicle = require(script.Parent.BaseVehicle)
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
+local Exhaust = require(script.Exhaust)
 local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local InputController = require(script.InputController)
 local Lights = require(script.Lights)
@@ -49,6 +50,8 @@ function ClientVehicle.new(instance: Instance)
 		self.Meshes[v] = mesh
 		table.insert(self.MeshParts, v)
 	end
+
+	Exhaust.new(self)
 
 	InitializeSeats(self)
 
