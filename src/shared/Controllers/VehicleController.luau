@@ -22,33 +22,21 @@ local remoteFunction = ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunc
 function VehicleController.new()
 	local self: VehicleController = setmetatable({}, VehicleController) :: any
 
-	for _, vehicle in CollectionService:GetTagged("Vehicle") do
-		self:RegisterVehicle(vehicle)
-	end
-
 	self.DrivenVehicle = nil
 
-	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle) self:RegisterVehicle(vehicle) end)
+	for _, vehicle in CollectionService:GetTagged("Vehicle") do
+		if not vehicle:IsDescendantOf(game.Workspace) then continue end
+
+		ClientVehicle.new(vehicle)
+	end
+
+	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle)
+		if not vehicle:IsDescendantOf(game.Workspace) then return end
+
+		ClientVehicle.new(vehicle)
+	end)
 
 	return self
-end
-
-function VehicleController.RegisterVehicle(self: VehicleController, vehicle: Instance)
-	if not vehicle:IsDescendantOf(game.Workspace) then return end
-
-	local seat = vehicle:WaitForChild("DriveSeat") :: VehicleSeat
-
-	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		if seat.Occupant then
-			local seatedPlayer = Players:GetPlayerFromCharacter(seat.Occupant.Parent)
-			if seatedPlayer == player then self.DrivenVehicle = ClientVehicle.new(vehicle) end
-		else
-			if self.DrivenVehicle and (self.DrivenVehicle.Instance :: Instance) == vehicle then
-				self.DrivenVehicle:Destroy()
-				self.DrivenVehicle = nil
-			end
-		end
-	end)
 end
 
 function VehicleController.GetVehicles(self: VehicleController): { VehicleTypes.PlayerVehicle }
