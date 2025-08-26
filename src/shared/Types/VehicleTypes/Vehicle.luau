@@ -80,6 +80,7 @@ export type BaseVehicle = {
 	new: (instance: Instance) -> BaseVehicle,
 	GetCenter: (self: BaseVehicle) -> CFrame,
 	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
+	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
 }
 
 export type DeformationController = {

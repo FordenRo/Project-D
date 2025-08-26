@@ -35,43 +35,24 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.Meshes = {}
 	self.Textures = {}
 
-	do -- Initialize meshes and textures
-		local taskCount = 0
-		for _, v in self.Instance.Body:GetDescendants() do
-			if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
-
-			task.spawn(function()
-				local texture
-				if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
-					texture = AssetService:CreateEditableImageAsync(v.TextureContent)
-				end
-
-				local mesh = CreateEditableMesh(v)
-				if texture then
-					v.TextureContent = Content.fromObject(texture)
-					self.Textures[v] = texture
-				end
-
-				self.Meshes[v] = mesh
-				table.insert(self.MeshParts, v)
-
-				taskCount -= 1
-			end)
-			taskCount += 1
-		end
-
-		repeat
-			task.wait()
-		until taskCount == 0
-	end
-
+	InitializeVariables(self)
 	InitializeSeats(self)
+	InitializeBody(self)
 
 	self.Engine = Engine.new(self)
+	self:InitializeWheels()
 
 	SoundController.new(self)
 	Exhaust.new(self)
 	self.Lights = Lights.new(self)
+
+	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
+	table.insert(self._cons, self._Remote.OnClientEvent:Connect(function(buf) Replicate(self, buf) end))
+	self._task = task.spawn(function()
+		while task.wait(1 / 30) do
+			Replicate(self)
+		end
+	end)
 
 	return self
 end
@@ -84,21 +65,12 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 
 	self.IsDriven = true
 
-	InitializeVariables(self)
 	HideCharacter(self)
-	self:InitializeWheels()
 	InitializePlugins(self)
 
 	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
 	self.Interface = VehicleInterface.new(self)
-
-	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
-	self._task = task.spawn(function()
-		while task.wait(1 / 30) do
-			Replicate(self)
-		end
-	end)
 end
 
 function Leaved(self: ClientVehicle, leavedPlayer: Player, asDriver: boolean)
@@ -114,6 +86,36 @@ function togglePrompts(self: ClientVehicle, enabled: boolean)
 	end
 
 	self.Instance.DriveSeat.ProximityPrompt.Enabled = enabled
+end
+
+function InitializeBody(self: ClientVehicle)
+	local taskCount = 0
+	for _, v in self.Instance.Body:GetDescendants() do
+		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
+
+		task.spawn(function()
+			local texture
+			if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
+				texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+			end
+
+			local mesh = CreateEditableMesh(v)
+			if texture then
+				v.TextureContent = Content.fromObject(texture)
+				self.Textures[v] = texture
+			end
+
+			self.Meshes[v] = mesh
+			table.insert(self.MeshParts, v)
+
+			taskCount -= 1
+		end)
+		taskCount += 1
+	end
+
+	repeat
+		task.wait()
+	until taskCount == 0
 end
 
 function InitializeSeats(self: ClientVehicle)
@@ -252,12 +254,15 @@ end
 
 -- TODO: Flip function
 
-function Replicate(self: ClientVehicle)
-	local data = table.clone(self)
-	data.Flags = FlagsUtils.BoolsToFlags(self.IsOn, self.Starting, self.Shifting, self.Horning)
+function Replicate(self: ClientVehicle, buf: buffer?)
+	if self.IsDriven then
+		local data = table.clone(self)
+		data.Flags = FlagsUtils.BoolsToFlags(self.IsOn, self.Starting, self.Shifting, self.Horning)
 
-	local buf = Serialization.Serialize(VehiclePacket, data)
-	self._Remote:FireServer(buf)
+		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, data))
+	elseif buf then
+		self:_Replicate(buf)
+	end
 end
 
 function Update(self: ClientVehicle, deltaTime: number)
@@ -266,6 +271,8 @@ function Update(self: ClientVehicle, deltaTime: number)
 	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
 	self._OldVelocity = self.Velocity
+
+	if not self.IsDriven then return end
 
 	UpdateWheels(self)
 	UpdateSteering(self, deltaTime)

@@ -25,28 +25,14 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 	self.Engine = table.clone(EngineTable)
 	Lights.new(self)
 
-	self._Remote.OnServerEvent:Connect(function(_, data: buffer)
-		for k, v in Serialization.Deserialize(VehiclePacket, data) do
-			if k == "Flags" then
-				self.IsOn, self.Starting, self.Shifting, self.Horning = FlagsUtils.FlagsToBools(v)
-			else
-				self[k] = v
-			end
+	self._Remote.OnServerEvent:Connect(function(sender: Player, buf: buffer)
+		self:_Replicate(buf)
+
+		for _, player in Players:GetPlayers() do
+			if player == sender then continue end
+
+			self._Remote:FireClient(player, buf)
 		end
-
-		local x = self.RPM / 1000
-		self.Engine.Boost = self.Engine.BoostTurbo + self.Engine.BoostSuper
-
-		self.Engine.TqTurbo = self.Engine.BoostTurbo * self.Tune.T_Efficiency
-		self.Engine.TqSuper = self.Engine.BoostSuper * self.Tune.S_Efficiency
-		self.Engine.TqBoosted = self.Engine.TqTurbo + self.Engine.TqSuper
-		self.Engine.Torque = self.Engine.TqNatural + self.Engine.TqElectric + self.Engine.TqBoosted
-
-		self.Engine.HpNatural = self.Engine.TqNatural * x / 5.252
-		self.Engine.HpTurbo = self.Engine.TqTurbo * x / 5.252
-		self.Engine.HpSuper = self.Engine.TqSuper * x / 5.252
-		self.Engine.HpBoosted = self.Engine.HpTurbo + self.Engine.HpSuper
-		self.Engine.Horsepower = self.Engine.Torque * x / 5.252
 	end)
 
 	return self
