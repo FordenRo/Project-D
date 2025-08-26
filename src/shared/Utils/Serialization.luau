@@ -34,7 +34,7 @@
 --]]
 local Serialization = {}
 
-local BIG_BUFFER_SIZE = 1000000 -- "Serialize" and "DeltaSerialize" will fail if resulting buffer size is larger than this value
+local BIG_BUFFER_SIZE = 2 ^ 20 -- "Serialize" and "DeltaSerialize" will fail if resulting buffer size is larger than this value
 
 local SIZE_8 = 2 ^ 8 - 1
 local SIZE_16 = 2 ^ 16 - 1
@@ -256,7 +256,7 @@ Serialization.Float64 = table.freeze({
 	Des = function(b: buffer, offset: number): (number, number) return buffer.readf64(b, offset), offset + 8 end,
 })
 
---- Has dynamic size, from 1 to 4 bytes
+--- `Size` - `1 byte`
 Serialization.State = function(states: { string })
 	return table.freeze({
 		Name = "State",
@@ -264,28 +264,10 @@ Serialization.State = function(states: { string })
 			local index = table.find(states, value)
 			assert(index, `State not found`)
 
-			if #states > SIZE_32 then
-				error(`States amount is too long`)
-			elseif #states > SIZE_16 then
-				buffer.writeu32(b, offset, index)
-				return offset + 4
-			elseif #states > SIZE_8 then
-				buffer.writeu16(b, offset, index)
-				return offset + 2
-			else
-				buffer.writeu8(b, offset, index)
-				return offset + 1
-			end
+			buffer.writeu8(b, offset, index)
+			return offset + 1
 		end,
-		Des = function(b: buffer, offset: number): (string, number)
-			if #states > SIZE_16 then
-				return states[buffer.readu32(b, offset)], offset + 4
-			elseif #states > SIZE_8 then
-				return states[buffer.readu16(b, offset)], offset + 2
-			else
-				return states[buffer.readu8(b, offset)], offset + 1
-			end
-		end,
+		Des = function(b: buffer, offset: number): (string, number) return states[buffer.readu8(b, offset)], offset + 1 end,
 	})
 end
 
