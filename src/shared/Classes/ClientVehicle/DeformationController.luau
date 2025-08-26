@@ -16,12 +16,24 @@ DeformationController.__index = DeformationController
 type DeformationController = VehicleTypes.DeformationController
 
 -- Compile scratch textures
-local scratchTexture = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 local compiledScratchTextures = {}
-for i = 1, 10 do
-	local image = ImageUtils.CopyImage(scratchTexture)
-	ImageUtils.SetImageAlpha(image, i / 10)
-	compiledScratchTextures[i] = image
+do
+	local taskCount = 0
+	local initialImage = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+	for i = 1, 10 do
+		task.spawn(function()
+			local image = ImageUtils.CopyImage(initialImage)
+			ImageUtils.SetImageAlpha(image, i / 10)
+			compiledScratchTextures[i] = image
+			taskCount -= 1
+		end)
+		taskCount += 1
+	end
+
+	repeat
+		task.wait()
+	until taskCount == 0
+	initialImage:Destroy()
 end
 
 function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): DeformationController
@@ -160,28 +172,39 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 
 	-- Compile dirt textures
 	local compiledDirtTextures = {}
-	for meshPart, texture in self.Vehicle.Textures do
-		local dirtTextureId = meshPart:GetAttribute("DirtTexture")
-		if typeof(dirtTextureId) ~= "string" then continue end
+	do
+		local taskCount = 0
+		for meshPart, texture in self.Vehicle.Textures do
+			local dirtTextureId = meshPart:GetAttribute("DirtTexture")
+			if typeof(dirtTextureId) ~= "string" then continue end
 
-		local image = AssetService:CreateEditableImageAsync(Content.fromUri(dirtTextureId))
-		ImageUtils.SetImageAlpha(image, 0.05)
-		compiledDirtTextures[texture] = image
+			task.spawn(function()
+				local image = AssetService:CreateEditableImageAsync(dirtTextureId)
+				ImageUtils.SetImageAlpha(image, 0.05)
+				compiledDirtTextures[texture] = image
+				taskCount -= 1
+			end)
+			taskCount += 1
+		end
+
+		repeat
+			task.wait()
+		until taskCount == 0
 	end
 
 	-- Dirt update
-	local _lastDirt = 0
 	task.spawn(function()
+		local lastDirt = 0
 		while true do
 			task.wait(1)
 			local dirt = math.floor(self.Vehicle.Dirt ^ 0.7 * 20) / 20
-			if dirt - _lastDirt > 0.01 then
+			if dirt - lastDirt > 0.01 then
 				debug.profilebegin("DrawDirt")
 				for texture, dirtTexture in compiledDirtTextures do
 					texture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
 				end
 				debug.profileend()
-				_lastDirt = dirt
+				lastDirt = dirt
 			end
 		end
 	end)
