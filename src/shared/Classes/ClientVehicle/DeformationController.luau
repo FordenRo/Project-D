@@ -106,6 +106,18 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 
 		HittableService:Hit(touchedParts, worldHitCenter, worldHitVelocity)
 
+		-- Play sound
+		local attachment = Instance.new("Attachment")
+		attachment.Parent = game.Workspace
+		attachment.Position = worldHitCenter
+
+		local sound = ReplicatedStorage.Vehicle.Impact:Clone()
+		sound.Ended:Once(function() attachment:Destroy() end)
+		sound.Volume = math.clamp(worldHitVelocity.Magnitude / 50, 0, 0.8)
+		sound.Distortion.Level = math.clamp(worldHitVelocity.Magnitude / 100, 0.2, 0.9)
+		sound.Playing = true
+		sound.Parent = attachment
+
 		local hitCenters = {}
 		for _, meshPart in self.Vehicle.MeshParts do
 			hitCenters[meshPart] = meshPart.CFrame:PointToObjectSpace(worldHitCenter)
