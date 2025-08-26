@@ -26,7 +26,7 @@ end
 function Replicate(self: ServerBrakeDisk, sender: Player, buf: buffer)
 	for _, player in Players:GetPlayers() do
 		if player == sender then continue end
-		if not player.Character or (player.Character:GetPivot().Position - self.Instance.Position).Magnitude > 50 then
+		if not player.Character or (player.Character:GetPivot().Position - self.Instance.Position).Magnitude > 100 then
 			self._RE:FireClient(player)
 			continue
 		end

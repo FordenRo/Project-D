@@ -306,8 +306,9 @@ export type ClientBrakeDisk = {
 	_startColor: Color3,
 	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
-	Temperature: number,
+	Vehicle: ClientVehicle,
 	Wheel: ClientWheel,
+	Temperature: number,
 	Sound: Sound & {
 		PitchEffect: PitchShiftSoundEffect,
 	},

@@ -17,6 +17,7 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 
 	self.Instance = instance
 	self.Wheel = wheel
+	self.Vehicle = self.Wheel.Vehicle
 	self.Volume = 0
 	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self._startColor = self.Instance.Color
@@ -38,17 +39,20 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 
 	self._cons = {
 		RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end),
-		self._RE.OnClientEvent:Connect(function(...) Replicate(self, ...) end),
+		self._RE.OnClientEvent:Connect(function(buf) Replicate(self, buf) end),
 	}
 	self._task = task.spawn(function()
-		while task.wait(1 / 30) do
+		while true do
+			task.wait(1 / 20)
+			if not self.Vehicle.IsDriven then continue end
+
 			local data = {
 				Temperature = self.Temperature,
 				Color = self.Instance.Color,
 				Volume = self.Volume,
 				Pitch = self.Sound.PitchEffect.Octave,
 			}
-			self._RE:FireServer(self.Temperature, Serialization.Serialize(BrakeDiskPacket, data))
+			self._RE:FireServer(Serialization.Serialize(BrakeDiskPacket, data))
 		end
 	end)
 
@@ -56,7 +60,7 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 end
 
 function Update(self: ClientBrakeDisk, deltaTime: number)
-	if not self.Wheel.Vehicle.IsDriven then return end
+	if not self.Vehicle.IsDriven then return end
 
 	local GlobalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 
@@ -73,6 +77,10 @@ function Update(self: ClientBrakeDisk, deltaTime: number)
 	self.Temperature = Lerp(self.Temperature, GlobalTemperature, deltaTime * 0.3)
 	self.Sound.Volume = self.Volume
 
+	updateColor(self)
+end
+
+function updateColor(self: ClientBrakeDisk)
 	local colorDelta = math.clamp(MapToRange(self.Temperature, 80, 200), 0, 1)
 	self.Instance.Color = self._startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
 end
@@ -88,10 +96,10 @@ function Replicate(self: ClientBrakeDisk, buf: buffer?)
 
 	self.Volume = data.Volume
 	self.Temperature = data.Temperature
-	self.Instance.Color = data.Color
 	self.Sound.PitchEffect.Octave = data.Pitch
 	self.Sound.Volume = self.Volume
 	self.Sound.Playing = true
+	updateColor(self)
 end
 
 function ClientBrakeDisk.Destroy(self: ClientBrakeDisk)
