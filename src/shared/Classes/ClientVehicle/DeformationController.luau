@@ -2,6 +2,7 @@ local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
@@ -222,6 +223,59 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 	end)
 
 	return self
+end
+
+function DeformationController.BlowEngine(self: DeformationController)
+	local deformation = self.Vehicle.Instance.Body.Deformation
+	for meshPart, mesh in self.Vehicle.Meshes do
+		local meshScale = mesh:GetSize() / meshPart.Size
+		local position = deformation.EngineBlow.Position
+		position = meshPart.CFrame:PointToObjectSpace(position) * meshScale
+		local radius = deformation.EngineBlow.Size.X / 2 * meshScale.Magnitude
+
+		task.spawn(function()
+			local vertices = mesh:FindVerticesWithinSphere(position, radius)
+			for k, vertexId in vertices do
+				local vertexPosition = mesh:GetPosition(vertexId)
+				local direction = position - vertexPosition
+				local distance = (position - vertexPosition).Magnitude
+				local distanceMul = (radius - distance) / radius ^ 0.5
+				local offset = direction
+					* math.noise(vertexPosition.X, vertexPosition.Y, vertexPosition.Z)
+					* distanceMul
+					* 0.05
+				mesh:SetPosition(vertexId, vertexPosition + offset)
+				if k % 2 == 0 then task.wait() end
+			end
+		end)
+	end
+
+	task.spawn(function()
+		for meshPart, texture in self.Vehicle.Textures do
+			local blowTextureId = meshPart:GetAttribute("EngineBlowTexture")
+			if typeof(blowTextureId) ~= "string" then continue end
+
+			local blowTexture = AssetService:CreateEditableImageAsync(Content.fromUri(blowTextureId))
+			ImageUtils.SetImageAlpha(blowTexture, 0.3)
+			texture:DrawImage(Vector2.zero, blowTexture, Enum.ImageCombineType.AlphaBlend)
+			blowTexture:Destroy()
+		end
+	end)
+
+	-- Show smoke
+	for _, smokePart in deformation.BlowSmokeParts:GetChildren() do
+		local emitter = smokePart:FindFirstChildOfClass("ParticleEmitter")
+		if not emitter then continue end
+
+		emitter.Enabled = true
+
+		local tween = TweenService:Create(emitter, TweenInfo.new(30), { Rate = 0 })
+		tween.Completed:Once(function()
+			emitter.Enabled = false
+			tween:Destroy()
+		end)
+		task.delay(90, function() tween:Play() end)
+	end
 end
 
 return DeformationController
