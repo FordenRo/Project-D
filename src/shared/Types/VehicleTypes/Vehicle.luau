@@ -207,7 +207,7 @@ export type BaseWheel = {
 		},
 	},
 	Vehicle: BaseVehicle,
-	BrakeDisk: BaseBrakeDisk,
+	BrakeDisk: ClientBrakeDisk | ServerBrakeDisk,
 	IsRight: boolean,
 	IsFront: boolean,
 	IsDriven: boolean,
@@ -299,41 +299,34 @@ export type ServerWheelTire = {
 	new: (wheel: ServerWheel, instance: BasePart) -> ServerWheelTire,
 }
 
-export type BaseBrakeDisk = {
-	__index: BaseBrakeDisk,
-	_Remote: UnreliableRemoteEvent,
+export type ClientBrakeDisk = {
+	__index: ClientBrakeDisk,
+	_cons: { RBXScriptConnection },
+	_task: thread,
+	_startColor: Color3,
+	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
-	Wheel: BaseWheel,
 	Temperature: number,
+	Wheel: ClientWheel,
 	Sound: Sound & {
 		PitchEffect: PitchShiftSoundEffect,
 	},
-
-	new: (wheel: BaseWheel, instance: BasePart) -> BaseBrakeDisk,
-}
-
-export type ClientBrakeDisk = {
-	__index: ClientBrakeDisk,
-	_conn: RBXScriptConnection,
-	_task: thread,
-	_serverInstance: BasePart,
-	_serverSound: Sound,
-	_startColor: Color3,
 	Volume: number,
-	Wheel: ClientWheel,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
 	Destroy: (self: ClientBrakeDisk) -> (),
-} & BaseBrakeDisk
+}
 
 export type ServerBrakeDisk = {
 	__index: ServerBrakeDisk,
 	_conn: RBXScriptConnection,
+	_RE: UnreliableRemoteEvent,
 	Wheel: ServerWheel,
+	Instance: BasePart,
 
 	new: (wheel: ServerWheel, instance: BasePart) -> ServerBrakeDisk,
 	Destroy: (self: ServerBrakeDisk) -> (),
-} & BaseBrakeDisk
+}
 
 export type VehicleSpeedometer = {
 	__index: VehicleSpeedometer,
