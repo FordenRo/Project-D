@@ -34,22 +34,35 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.MeshParts = {}
 	self.Meshes = {}
 	self.Textures = {}
-	for _, v in self.Instance.Body:GetDescendants() do
-		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
 
-		local texture
-		if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
-			texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+	do -- Initialize meshes and textures
+		local taskCount = 0
+		for _, v in self.Instance.Body:GetDescendants() do
+			if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
+
+			task.spawn(function()
+				local texture
+				if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
+					texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+				end
+
+				local mesh = CreateEditableMesh(v)
+				if texture then
+					v.TextureContent = Content.fromObject(texture)
+					self.Textures[v] = texture
+				end
+
+				self.Meshes[v] = mesh
+				table.insert(self.MeshParts, v)
+
+				taskCount -= 1
+			end)
+			taskCount += 1
 		end
 
-		local mesh = CreateEditableMesh(v)
-		if texture then
-			v.TextureContent = Content.fromObject(texture)
-			self.Textures[v] = texture
-		end
-
-		self.Meshes[v] = mesh
-		table.insert(self.MeshParts, v)
+		repeat
+			task.wait()
+		until taskCount == 0
 	end
 
 	InitializeSeats(self)
