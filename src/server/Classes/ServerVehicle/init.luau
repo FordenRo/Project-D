@@ -3,12 +3,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
-local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
-local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -59,7 +56,7 @@ end
 
 function MakeGravity(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
-		if not v:IsA("BasePart") then continue end
+		if not v:IsA("BasePart") or v.Massless then continue end
 
 		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH") or Instance.new("Attachment")
 		attachment.Name = "#GRAVCOMP_ATTACH"
@@ -71,10 +68,6 @@ function MakeGravity(self: ServerVehicle)
 		force.Force =
 			Vector3.new(0, self.Tune.GravComp > 0 and v.Mass * (workspace.Gravity - self.Tune.GravComp) or 0, 0)
 		force.Parent = v
-		if v.Massless then
-			force:Destroy()
-			attachment:Destroy()
-		end
 	end
 end
 
@@ -95,7 +88,7 @@ function ApplyWeight(self: ServerVehicle)
 	local mass = 0
 
 	for _, v in self.Instance:GetDescendants() do
-		if v:IsA("BasePart") and not v.Massless then mass = mass + v:GetMass() end
+		if v:IsA("BasePart") and not v.Massless then mass = mass + v.Mass end
 	end
 
 	if mass * Units.Mass_kg < self.Tune.Weight * 0.453592 then
