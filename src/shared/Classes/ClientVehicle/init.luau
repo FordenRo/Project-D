@@ -60,7 +60,10 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
 
-	self.IsDriven = asDriver and seatedPlayer == player
+	if asDriver then
+		self.IsDriven = true
+		self._DrivenChangedEvent:Fire(true)
+	end
 	if not self.IsDriven then return end
 
 	HideCharacter(self)
@@ -74,6 +77,11 @@ end
 function Leaved(self: ClientVehicle, leavedPlayer: Player, asDriver: boolean)
 	if leavedPlayer ~= player then return end
 	togglePrompts(self, true)
+
+	if asDriver then
+		self.IsDriven = false
+		self._DrivenChangedEvent:Fire(false)
+	end
 end
 
 function togglePrompts(self: ClientVehicle, enabled: boolean)
@@ -174,6 +182,8 @@ function InitializeVariables(self: ClientVehicle)
 	self._DriveWheelSpeed = 0
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0
+	self._DrivenChangedEvent = Instance.new("BindableEvent")
+	self.DrivenChanged = self._DrivenChangedEvent.Event
 	self.WeightPart = self.Instance.Body.WeightPart
 end
 
