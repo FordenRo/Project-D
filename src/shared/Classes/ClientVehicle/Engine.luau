@@ -16,6 +16,7 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: Engine = setmetatable(table.clone(EngineTable), Engine) :: any
 
 	self.Vehicle = vehicle
+	self.DriveshaftStress = 0
 	self._GoalRPM = 0
 	self._FuelSupply = 0
 	self._LastOnTime = 0
@@ -61,6 +62,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		* (1 - self.Vehicle.Clutch)
 		* 1.356
 		* Units.Torque_nm
+	self.DriveshaftStress = math.abs(flywheelEnergy / 5000) ^ 1.2
 
 	-- Determine RPM
 	local revMin = 0
@@ -752,6 +754,7 @@ function UpdateHealth(self: Engine, deltaTime: number)
 		0,
 		1
 	) ^ 1.5 / 3600
+	damage += self.DriveshaftStress * self.Vehicle.Tune.DriveshaftDamage
 	self.Health = math.max(self.Health - damage * deltaTime, 0)
 
 	if self.Health == 0 then

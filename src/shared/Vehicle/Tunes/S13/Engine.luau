@@ -45,6 +45,7 @@ Tune.RPMDamage = 0.6
 Tune.HotDamage = 2.6
 Tune.RedlineDamage = 0.06
 Tune.RedlineDamageCurve = 2.4
+Tune.DriveshaftDamage = 0.01
 
 Tune.Electric = false
 

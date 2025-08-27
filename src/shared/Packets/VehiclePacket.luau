@@ -18,6 +18,7 @@ return Serialization.Packet({
 	Engine = Serialization.Packet({
 		Health = Serialization.Percent(6),
 		Temperature = Serialization.MappedNumber(0, 130, 7),
+		DriveshaftStress = Serialization.MappedNumber(0, 2, 5),
 
 		BoostTurbo = Serialization.Float,
 		BoostSuper = Serialization.Float,

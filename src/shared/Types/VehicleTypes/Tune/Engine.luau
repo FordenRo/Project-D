@@ -70,6 +70,8 @@ export type Type = {
 	RedlineDamage: number,
 	--- The shape of the redline damage curve
 	RedlineDamageCurve: number,
+	--- Damage at high driveshaft stress per second
+	DriveshaftDamage: number,
 
 	--- Electric Engine
 	---

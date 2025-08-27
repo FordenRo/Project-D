@@ -157,6 +157,7 @@ export type InputController = {
 export type EngineTable = {
 	Health: number,
 	Temperature: number,
+	DriveshaftStress: number,
 
 	Boost: number,
 	BoostTurbo: number,
@@ -386,7 +387,7 @@ export type VehicleInterface = {
 			Car: CanvasGroup & {
 				Tires: Frame,
 				Brakes: Frame,
-				Transmission: CanvasGroup,
+				Driveshaft: CanvasGroup & { Front: Frame, Rear: Frame },
 			},
 		},
 	},

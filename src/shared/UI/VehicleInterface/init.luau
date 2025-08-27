@@ -68,7 +68,7 @@ function UpdateDebug(self: VehicleInterface)
 	car.Driveshaft.GroupColor3 = Color3.fromHSV(0, math.clamp(self.Vehicle.Engine.DriveshaftStress, 0, 1), 1)
 
 	local info = self.Instance.Debug.Info
-	info.Health.Text = string.format("Health: %.3f", self.Vehicle.Engine.Health)
+	info.Health.Text = string.format("Health: %.1f %%", self.Vehicle.Engine.Health * 100)
 	info.Temperature.Text = string.format("Temperature: %.1f °C", self.Vehicle.Engine.Temperature)
 end
 
