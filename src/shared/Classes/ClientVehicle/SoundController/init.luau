@@ -25,7 +25,7 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 	self.SoundTypesHandler = SoundTypesHandler.new(vehicle)
 
 	for name, sound in self.Vehicle.Tune.Sounds do
-		local cachedSound = sound :: SoundTypesHandler.CachedSoundData
+		local cachedSound = table.clone(sound) :: SoundTypesHandler.CachedSoundData
 		local instance = Instance.new("Sound")
 		instance.Playing = false
 		instance.Volume = 0

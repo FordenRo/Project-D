@@ -61,6 +61,7 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 	togglePrompts(self, false)
 
 	self.IsDriven = asDriver and seatedPlayer == player
+	if not self.IsDriven then return end
 
 	HideCharacter(self)
 	InitializePlugins(self)
