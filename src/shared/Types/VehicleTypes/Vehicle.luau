@@ -424,12 +424,15 @@ export type ClientLights = {
 	_cons: { RBXScriptConnection },
 	_RE: RemoteEvent,
 	_typesBrightness: { [string]: number },
+	_lastToggleTime: number,
 	Vehicle: ClientVehicle,
 	Headlights: { [string]: { Headlight } },
-	State: string,
-	TurnState: string,
+	State: "Low" | "High" | "Off",
+	TurnState: "Left" | "Right" | "Both" | "Off",
 
 	new: (vehicle: ClientVehicle) -> ClientLights,
+	ToggleLights: (self: ClientLights) -> (),
+	ToggleTurnState: (self: ClientLights, state: "Left" | "Right" | "Both") -> (),
 	Destroy: (self: ClientLights) -> (),
 }
 

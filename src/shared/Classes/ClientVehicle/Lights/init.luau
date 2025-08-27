@@ -37,33 +37,7 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 
 	self._RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
 
-	local _lastInputTime = tick()
-	local function processInput()
-		if tick() - _lastInputTime < 0.2 then return end
-		_lastInputTime = tick()
-		task.defer(Replicate, self)
-		return true
-	end
-
-	self._cons = {
-		InputContext.Lights.Pressed:Connect(function()
-			if not processInput() then return end
-			self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
-		end),
-		InputContext.LeftTurnSignal.Pressed:Connect(function()
-			if not processInput() then return end
-			self.TurnState = self.TurnState ~= "Left" and "Left" or "Off" :: any
-		end),
-		InputContext.RightTurnSignal.Pressed:Connect(function()
-			if not processInput() then return end
-			self.TurnState = self.TurnState ~= "Right" and "Right" or "Off" :: any
-		end),
-		InputContext.Hazards.Pressed:Connect(function()
-			if not processInput() then return end
-			self.TurnState = self.TurnState ~= "Both" and "Both" or "Off" :: any
-		end),
-	}
-
+	self._lastToggleTime = tick()
 	self._typesBrightness = {}
 	self.Headlights = {} :: any
 
@@ -81,19 +55,35 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 		end
 	end
 
-	table.insert(self._cons, RunService.Heartbeat:Connect(function() Update(self) end))
-	table.insert(
-		self._cons,
+	self._cons = {
 		self._RE.OnClientEvent:Connect(function(buf: buffer)
 			if self.Vehicle.IsDriven then return end
 
 			local data = Serialization.Deserialize(LightPacket, buf)
 			self.State = data.State
 			self.TurnState = data.TurnState
-		end)
-	)
+		end),
+		RunService.Heartbeat:Connect(function() Update(self) end),
+	}
 
 	return self
+end
+
+function processInput(self: ClientLights)
+	if tick() - self._lastToggleTime < 0.2 then return end
+	self._lastToggleTime = tick()
+	task.defer(Replicate, self)
+	return true
+end
+
+function ClientLights.ToggleLights(self: ClientLights)
+	if not processInput(self) then return end
+	self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
+end
+
+function ClientLights.ToggleTurnState(self: ClientLights, turnState: "Left" | "Right" | "Both")
+	if not processInput(self) then return end
+	self.TurnState = self.TurnState ~= turnState and turnState or "Off"
 end
 
 function setTypeBrightness(self: ClientLights, type: string, brightness: boolean | number)

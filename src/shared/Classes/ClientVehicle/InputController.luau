@@ -199,6 +199,11 @@ function InitializeConnections(self: InputController)
 			local humanoid = (player.Character :: Model):FindFirstChildWhichIsA("Humanoid") :: Humanoid
 			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
 		end,
+
+		Lights = function() self.Vehicle.Lights:ToggleLights() end,
+		LeftTurnSignal = function() self.Vehicle.Lights:ToggleTurnState("Left") end,
+		RightTurnSignal = function() self.Vehicle.Lights:ToggleTurnState("Right") end,
+		Hazards = function() self.Vehicle.Lights:ToggleTurnState("Both") end,
 	}
 
 	for k, v in onChangeActions do
