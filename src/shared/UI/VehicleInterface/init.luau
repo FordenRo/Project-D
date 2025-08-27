@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -29,7 +30,14 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.CursorInstance = self.Instance.Cursor
 	self._cursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
-	self._conn = RunService.Heartbeat:Connect(function() UpdateTires(self) end)
+	self.Instance.Debug.Visible = RunService:IsStudio()
+	if self.Instance.Debug.Visible then
+		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Config ~= "RWD"
+		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Config ~= "FWD"
+
+		self._conn = RunService.Heartbeat:Connect(function() UpdateDebug(self) end)
+	end
+
 	RunService:BindToRenderStep("CursorUpdate", Enum.RenderPriority.Camera.Value - 1, function() UpdateCursor(self) end)
 
 	return self
@@ -46,28 +54,26 @@ function UpdateCursor(self: VehicleInterface)
 	end
 end
 
-function UpdateTires(self: VehicleInterface)
-	for _, wheel in self.Vehicle.Wheels do
-		local tireUI = self.Instance.Tires[wheel.Instance.Name]
-		tireUI.First.Second.Size = UDim2.new(
-			1,
-			0,
-			math.clamp(
-				1
-					- (wheel.Tire.Temperature - 40)
-						/ ((wheel.IsFront and wheel.Vehicle.Tune.TireFMaxTemp or wheel.Vehicle.Tune.TireRMaxTemp) - 40),
-				0,
-				1
-			),
-			0
-		)
-		tireUI.BackgroundColor3 = Color3.fromHSV(0, wheel.Tire.Stress, 1)
-		tireUI.BackgroundTransparency = 0.8 - 0.3 * wheel.Tire.Stress
+function UpdateDebug(self: VehicleInterface)
+	local car = self.Instance.Debug.Car
+	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
+		local tireFill = car.Tires:FindFirstChild(wheel.Instance.Name).Fill :: Frame
+		tireFill.Size = UDim2.fromScale(1, wheel.Tire.Health)
+		tireFill.BackgroundColor3 = Color3.fromHSV(0, wheel.Tire.Stress, 1)
+
+		local brakeFill = car.Brakes:FindFirstChild(wheel.Instance.Name).Fill :: Frame
+		brakeFill.BackgroundColor3 =
+			Color3.fromHSV(0, math.clamp(MapToRange(wheel.BrakeDisk.Temperature, 80, 200), 0, 1), 1)
 	end
+	car.Driveshaft.GroupColor3 = Color3.fromHSV(0, math.clamp(self.Vehicle.Engine.DriveshaftStress, 0, 1), 1)
+
+	local info = self.Instance.Debug.Info
+	info.Health.Text = string.format("Health: %.3f", self.Vehicle.Engine.Health)
+	info.Temperature.Text = string.format("Temperature: %.1f °C", self.Vehicle.Engine.Temperature)
 end
 
 function VehicleInterface.Destroy(self: VehicleInterface)
-	self._conn:Disconnect()
+	if self._conn then self._conn:Disconnect() end
 	self.Speedometer:Destroy()
 	self.Instance:Destroy()
 	RunService:UnbindFromRenderStep("CursorUpdate")
