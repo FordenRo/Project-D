@@ -92,11 +92,7 @@ end
 
 function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 	for k, v in Serialization.Deserialize(VehiclePacket, buf) do
-		if k == "Flags" then
-			self.IsOn, self.Starting, self.Shifting, self.Horning = FlagsUtils.FlagsToBools(v)
-		else
-			self[k] = v
-		end
+		self[k] = v
 	end
 
 	local x = self.RPM / 1000

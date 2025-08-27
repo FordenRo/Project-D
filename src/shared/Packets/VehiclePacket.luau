@@ -3,23 +3,26 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 return Serialization.Packet({
-	Dirt = Serialization.Percent8,
-	Fuel = Serialization.Percent16,
-	Clutch = Serialization.Percent8,
-	Gear = Serialization.Int8,
-	RPM = Serialization.MappedNumber16(0, 20000),
-	Throttle = Serialization.Percent8,
-	Brake = Serialization.Percent8,
-	Steering = Serialization.Percent16,
+	IsOn = Serialization.Boolean,
+	Starting = Serialization.Boolean,
+	Shifting = Serialization.Boolean,
+	Horning = Serialization.Boolean,
+	Dirt = Serialization.Percent(5),
+	Fuel = Serialization.Percent(6),
+	Clutch = Serialization.Percent(3),
+	Gear = Serialization.Int(3),
+	RPM = Serialization.MappedNumber(0, 15000, 10),
+	Throttle = Serialization.Percent(3),
+	Brake = Serialization.Percent(3),
+	Steering = Serialization.Percent(8),
 	Engine = Serialization.Packet({
-		Health = Serialization.Percent16,
-		Temperature = Serialization.MappedNumber8(0, 150),
+		Health = Serialization.Percent(6),
+		Temperature = Serialization.MappedNumber(0, 130, 7),
 
-		BoostTurbo = Serialization.Float32,
-		BoostSuper = Serialization.Float32,
+		BoostTurbo = Serialization.Float,
+		BoostSuper = Serialization.Float,
 
-		TqNatural = Serialization.Float32,
-		TqElectric = Serialization.Float32,
+		TqNatural = Serialization.Float,
+		TqElectric = Serialization.Float,
 	}),
-	Flags = Serialization.Uint8,
 })

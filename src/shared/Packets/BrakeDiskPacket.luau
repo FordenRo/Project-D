@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 return Serialization.Packet({
-	Temperature = Serialization.MappedNumber8(0, 300),
-	Volume = Serialization.Percent8,
-	Pitch = Serialization.MappedNumber8(0, 5),
+	Temperature = Serialization.MappedNumber(0, 300, 6),
+	Volume = Serialization.Percent(6),
+	Pitch = Serialization.MappedNumber(0.9, 3, 6),
 })

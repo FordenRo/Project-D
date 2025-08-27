@@ -8,7 +8,6 @@ local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditable
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local Exhaust = require(script.Exhaust)
-local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local InputController = require(script.InputController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -256,10 +255,7 @@ end
 
 function Replicate(self: ClientVehicle, buf: buffer?)
 	if self.IsDriven then
-		local data = table.clone(self)
-		data.Flags = FlagsUtils.BoolsToFlags(self.IsOn, self.Starting, self.Shifting, self.Horning)
-
-		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, data))
+		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, self))
 	elseif buf then
 		self:_Replicate(buf)
 	end
