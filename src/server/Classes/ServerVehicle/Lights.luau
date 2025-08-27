@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
@@ -29,14 +30,21 @@ function ServerLights.new(vehicle: VehicleTypes.ServerVehicle): ServerLights
 	self._RE.Name = "_LightsRE"
 	self._RE.Parent = self.Vehicle.Instance
 
-	self._conn = self._RE.OnServerEvent:Connect(function(_, buf: buffer)
-		local data = Serialization.Deserialize(LightPacket, buf)
-		self.State = data.State
-		self.TurnState = data.TurnState
-		self._RE:FireAllClients(buf)
-	end)
+	self._conn = self._RE.OnServerEvent:Connect(function(...) Replicate(self, ...) end)
 
 	return self
+end
+
+function Replicate(self: ServerLights, sender: Player, buf: buffer)
+	for k, v in Serialization.Deserialize(LightPacket, buf) do
+		self[k] = v
+	end
+	for _, player in Players:GetPlayers() do
+		if player == sender then continue end
+		if not player.Character then self._RE:FireClient(player) end
+
+		self._RE:FireClient(player, buf)
+	end
 end
 
 function ServerLights.Destroy(self: ServerLights) self._conn:Disconnect() end

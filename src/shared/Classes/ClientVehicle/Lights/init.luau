@@ -37,22 +37,30 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 
 	self._RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
 
+	local _lastInputTime = tick()
+	local function processInput()
+		if tick() - _lastInputTime < 0.2 then return end
+		_lastInputTime = tick()
+		task.defer(Replicate, self)
+		return true
+	end
+
 	self._cons = {
 		InputContext.Lights.Pressed:Connect(function()
+			if not processInput() then return end
 			self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
-			Replicate(self)
 		end),
 		InputContext.LeftTurnSignal.Pressed:Connect(function()
+			if not processInput() then return end
 			self.TurnState = self.TurnState ~= "Left" and "Left" or "Off" :: any
-			Replicate(self)
 		end),
 		InputContext.RightTurnSignal.Pressed:Connect(function()
+			if not processInput() then return end
 			self.TurnState = self.TurnState ~= "Right" and "Right" or "Off" :: any
-			Replicate(self)
 		end),
 		InputContext.Hazards.Pressed:Connect(function()
+			if not processInput() then return end
 			self.TurnState = self.TurnState ~= "Both" and "Both" or "Off" :: any
-			Replicate(self)
 		end),
 	}
 
@@ -103,7 +111,19 @@ function setTypeBrightness(self: ClientLights, type: string, brightness: boolean
 	end
 end
 
-function Replicate(self: ClientLights) self._RE:FireServer(Serialization.Serialize(LightPacket, self)) end
+function Replicate(self: ClientLights, buf: buffer?)
+	if self.Vehicle.IsDriven then
+		self._RE:FireServer(Serialization.Serialize(LightPacket, self))
+	elseif buf then
+		for k, v in Serialization.Deserialize(LightPacket, buf) do
+			self[k] = v
+		end
+	else
+		for _, v in LIGHT_TYPES do
+			setTypeBrightness(self, v, false)
+		end
+	end
+end
 
 function Update(self: ClientLights)
 	setTypeBrightness(self, "Rear", self.Vehicle.Brake > 0.5 and 1 or self.State ~= "Off" and 0.5 or 0)
