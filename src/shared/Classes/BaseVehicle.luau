@@ -44,7 +44,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.Fuel = self.Tune.FuelCapacity
 	self.FanSpeed = 0
 	self.Dirt = 0
-	self.Plugins = {}
 	self.Wheels = {}
 	self.Horning = false
 	-- Transmission
@@ -91,6 +90,15 @@ end
 
 function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 	for k, v in Serialization.Deserialize(VehiclePacket, buf) do
+		if k == "Engine" then
+			for ek, ev in v do
+				self[k][ek] = ev
+			end
+			continue
+		elseif k == "Fuel" then
+			self[k] = v * self.Tune.FuelCapacity
+		end
+
 		self[k] = v
 	end
 
