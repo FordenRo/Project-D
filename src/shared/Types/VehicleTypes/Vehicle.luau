@@ -14,6 +14,11 @@ export type BaseVehicle = {
 		Body: Model & {
 			WeightPart: Part,
 			Collider: MeshPart,
+			Aerodynamics: Model & {
+				Drag: Part,
+				FDownforce: Part,
+				RDownforce: Part,
+			},
 			Deformation: Model & {
 				EngineBlow: Part,
 				BlowSmokeParts: Model,

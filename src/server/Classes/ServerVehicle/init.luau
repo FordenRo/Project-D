@@ -36,7 +36,7 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 end
 
 function Initialize(self: ServerVehicle)
-	RemoveMass(self)
+	RemoveMassAndForces(self)
 	MakeCollider(self)
 	self:InitializeWheels()
 	ApplyWeight(self)
@@ -48,9 +48,12 @@ function Initialize(self: ServerVehicle)
 	InitializeDriveSeat(self)
 end
 
-function RemoveMass(self: ServerVehicle)
+function RemoveMassAndForces(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
-		if v:IsA("BasePart") then v.Massless = true end
+		if v:IsA("BasePart") then
+			v.Massless = true
+			v.EnableFluidForces = false
+		end
 	end
 end
 

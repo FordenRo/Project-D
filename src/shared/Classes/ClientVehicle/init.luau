@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Aerodynamics = require(script.Aerodynamics)
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
@@ -71,6 +72,7 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 
 	self.InputController = InputController.new(self)
 	self.DeformationController = DeformationController.new(self)
+	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end
 
