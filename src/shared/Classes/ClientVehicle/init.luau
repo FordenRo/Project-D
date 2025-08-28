@@ -58,43 +58,67 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	return self
 end
 
-function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
+function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | Seat)
+	if seat :: any == self.Instance.DriveSeat then
+		self.Driver = seatedPlayer
+	else
+		self.Passengers[seat] = seatedPlayer
+	end
+
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
 
-	if asDriver then
-		self.IsDriven = true
-		self._DrivenChangedEvent:Fire(true)
-	end
-	if not self.IsDriven then return end
-
-	InitializePlugins(self)
+	if seat :: any ~= self.Instance.DriveSeat then return end
+	self.IsDriven = true
+	self._DrivenChangedEvent:Fire(true)
 
 	self.InputController = InputController.new(self)
-	self.DeformationController = DeformationController.new(self)
 	self.CameraController = CameraController.new(self)
+	self.DeformationController = DeformationController.new(self)
 	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end
 
-function Leaved(self: ClientVehicle, leavedPlayer: Player, asDriver: boolean)
+function Leaved(self: ClientVehicle, leavedPlayer: Player, seat: VehicleSeat | Seat)
+	if seat :: any == self.Instance.DriveSeat then
+		self.Driver = nil
+	else
+		self.Passengers[seat] = nil
+	end
+
 	if leavedPlayer ~= player then return end
 	togglePrompts(self, true)
 
-	if asDriver then
-		self.IsDriven = false
-		self._DrivenChangedEvent:Fire(false)
-	end
+	if seat :: any ~= self.Instance.DriveSeat then return end
+	self.IsDriven = false
+	self._DrivenChangedEvent:Fire(false)
+
+	self.InputController:Destroy()
+	self.CameraController:Destroy()
+	self.Interface:Destroy()
+end
+
+function ClientVehicle.Leave(self: ClientVehicle)
+	local humanoid = player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
+	local seat = humanoid.SeatPart
+	if not seat then return end
+
+	local RE = seat._SeatRE :: RemoteEvent
+	RE:FireServer()
+
+	RE.OnClientEvent:Wait()
+	player.Character:PivotTo(CFrame.new(((seat :: any).LeavePosition :: Attachment).WorldPosition))
 end
 
 function togglePrompts(self: ClientVehicle, enabled: boolean)
-	for _, seat in self.Instance.Seats:GetChildren() do
-		if not seat:IsA("VehicleSeat") then continue end
+	local seats = self.Instance.Seats:GetChildren()
+	table.insert(seats, self.Instance.DriveSeat)
 
-		seat.ProximityPrompt.Enabled = enabled
+	for _, seat in seats do
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
+
+		(seat.PromptAttachment.ProximityPrompt :: ProximityPrompt).Enabled = enabled
 	end
-
-	self.Instance.DriveSeat.ProximityPrompt.Enabled = enabled
 end
 
 function InitializeBody(self: ClientVehicle)
@@ -128,8 +152,11 @@ function InitializeBody(self: ClientVehicle)
 end
 
 function InitializeSeats(self: ClientVehicle)
-	for _, seat in self.Instance.Seats:GetChildren() do
-		if not seat:IsA("VehicleSeat") then continue end
+	local seats = self.Instance.Seats:GetChildren()
+	table.insert(seats, self.Instance.DriveSeat)
+
+	for _, seat in seats do
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
 
 		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
 			if seat.Occupant then
@@ -139,34 +166,13 @@ function InitializeSeats(self: ClientVehicle)
 				local seatedPlayer = Players:GetPlayerFromCharacter(character)
 				if not seatedPlayer then return end
 
-				self.Passengers[seat] = seatedPlayer
-				Seated(self, seatedPlayer, false)
+				Seated(self, seatedPlayer, seat)
 			else
-				local leavedPlayer = self.Passengers[seat]
-				self.Passengers[seat] = nil
-				Leaved(self, leavedPlayer, false)
+				local leavedPlayer = seat == self.Instance.DriveSeat and self.Driver or self.Passengers[seat]
+				Leaved(self, leavedPlayer, seat)
 			end
 		end)
 	end
-
-	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		if self.Instance.DriveSeat.Occupant then
-			local character = self.Instance.DriveSeat.Occupant.Parent
-			if not character then return end
-
-			local seatedPlayer = Players:GetPlayerFromCharacter(character)
-			if not seatedPlayer then return end
-
-			self.Driver = seatedPlayer
-			Seated(self, seatedPlayer, true)
-		else
-			if not self.Driver then return end
-
-			local leavedPlayer = self.Driver
-			self.Driver = nil
-			Leaved(self, leavedPlayer, true)
-		end
-	end)
 end
 
 function InitializeVariables(self: ClientVehicle)
@@ -191,13 +197,6 @@ function InitializeVariables(self: ClientVehicle)
 end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
-
-function InitializePlugins(self: ClientVehicle)
-	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
-		local pluginClass = require(plugin) :: any
-		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
-	end
-end
 
 -- TODO: Drivetrain Initialize
 
@@ -298,10 +297,6 @@ function ClientVehicle.Destroy(self: ClientVehicle)
 	self.InputController:Destroy()
 	self.Interface:Destroy()
 	self.Lights:Destroy()
-
-	for _, plugin in self.Plugins do
-		plugin:Destroy()
-	end
 
 	for _, conn in self._cons do
 		conn:Disconnect()

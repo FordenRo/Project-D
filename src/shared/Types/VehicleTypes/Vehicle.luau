@@ -35,13 +35,12 @@ export type BaseVehicle = {
 		},
 		Misc: Model,
 	},
-	Plugins: { [string]: any },
 	Engine: EngineTable,
 	Wheels: { BaseWheel },
 	Tune: Tune.Tune,
 	Starting: boolean,
 	Driver: Player?,
-	Passengers: { [VehicleSeat]: Player },
+	Passengers: { [VehicleSeat | Seat]: Player },
 	Dirt: number,
 	Fuel: number,
 	ID: string,
@@ -127,6 +126,7 @@ export type ClientVehicle = {
 
 	new: (instance: Instance) -> ClientVehicle,
 	InitializeWheels: (self: ClientVehicle) -> (),
+	Leave: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
 

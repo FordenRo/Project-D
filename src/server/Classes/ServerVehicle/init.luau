@@ -43,9 +43,7 @@ function Initialize(self: ServerVehicle)
 	MakeGravity(self)
 	CreateFlip(self)
 	Finalize(self)
-	InitializePlugins(self)
 	InitializeSeats(self)
-	InitializeDriveSeat(self)
 end
 
 function RemoveMassAndForces(self: ServerVehicle)
@@ -200,93 +198,17 @@ function Finalize(self: ServerVehicle)
 	end
 end
 
-function InitializePlugins(self: ServerVehicle)
-	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
-		local pluginClass = require(plugin) :: any
-		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
+function Seated(self: ServerVehicle, player: Player, seat: VehicleSeat | Seat)
+	if seat :: any == self.Instance.DriveSeat then
+		self.Driver = player
+		self.Instance.DriveSeat:SetNetworkOwner(player)
+	else
+		self.Passengers[seat] = player
 	end
 end
 
-function InitializeSeats(self: ServerVehicle)
-	for _, seat in self.Instance.Seats:GetChildren() do
-		if not seat:IsA("VehicleSeat") then continue end
-
-		InitializeSeat(self, seat)
-
-		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-			if seat.Occupant then
-				local character = seat.Occupant.Parent
-				if not character then return end
-
-				local player = Players:GetPlayerFromCharacter(character)
-				if not player then return end
-
-				self.Passengers[seat] = player
-			else
-				self.Passengers[seat] = nil
-			end
-		end)
-	end
-end
-
-function InitializeSeat(self: ServerVehicle, seat: VehicleSeat)
-	local prompt = Instance.new("ProximityPrompt")
-	prompt.ObjectText = "Vehicle"
-	prompt.ActionText = "Enter"
-	prompt.KeyboardKeyCode = Enum.KeyCode.F
-	prompt.MaxActivationDistance = 6
-	prompt.RequiresLineOfSight = false
-	prompt.Parent = seat
-
-	prompt.Triggered:Connect(function(player: Player)
-		if seat.Occupant then return end
-
-		local character = player.Character
-		if not character then return end
-
-		local humanoid = character:FindFirstChildOfClass("Humanoid")
-		if not humanoid then return end
-
-		seat:Sit(humanoid)
-	end)
-
-	local masslessTable = {}
-	seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		prompt.Enabled = seat.Occupant ~= nil
-
-		if seat.Occupant then
-			local character = seat.Occupant.Parent
-			if not character then return end
-
-			for _, v in character:GetDescendants() do
-				if not v:IsA("BasePart") then continue end
-
-				masslessTable[v] = v.Massless
-				v.Massless = true
-			end
-			return
-		end
-
-		for k, v in masslessTable do
-			k.Massless = v
-		end
-		table.clear(masslessTable)
-	end)
-end
-
-function InitializeDriveSeat(self: ServerVehicle)
-	InitializeSeat(self, self.Instance.DriveSeat)
-
-	self.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		if self.Instance.DriveSeat.Occupant then
-			local player = Players:GetPlayerFromCharacter(self.Instance.DriveSeat.Occupant)
-			if not player then return end
-
-			self.Instance.DriveSeat:SetNetworkOwner(player)
-			self.Driver = player
-			return
-		end
-
+function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
+	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = nil
 
 		-- Remove Flip Force
@@ -325,7 +247,82 @@ function InitializeDriveSeat(self: ServerVehicle)
 				end
 			end
 		end
-	end)
+	else
+		self.Passengers[seat] = nil
+	end
+end
+
+function InitializeSeats(self: ServerVehicle)
+	local seats = self.Instance.Seats:GetChildren()
+	table.insert(seats, self.Instance.DriveSeat)
+
+	for _, seat in seats do
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
+
+		local prompt = Instance.new("ProximityPrompt")
+		prompt.ObjectText = "Vehicle"
+		prompt.ActionText = "Enter"
+		prompt.KeyboardKeyCode = Enum.KeyCode.F
+		prompt.MaxActivationDistance = 6
+		prompt.RequiresLineOfSight = false
+		prompt.Parent = seat.PromptAttachment
+
+		prompt.Triggered:Connect(function(player: Player)
+			if seat.Occupant then return end
+
+			local character = player.Character
+			if not character then return end
+
+			local humanoid = character:FindFirstChildOfClass("Humanoid")
+			if not humanoid then return end
+
+			seat:Sit(humanoid)
+		end)
+
+		local RE = Instance.new("RemoteEvent")
+		RE.Name = "_SeatRE"
+		RE.Parent = seat
+
+		RE.OnServerEvent:Connect(function(player: Player)
+			if not player.Character then return end
+			local humanoid = player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
+
+			local seatWeld = humanoid.SeatPart:FindFirstChild("SeatWeld") :: Weld
+			seatWeld:Destroy()
+
+			player.Character:PivotTo(CFrame.new(((seat :: any).LeavePosition :: Attachment).WorldPosition))
+			RE:FireClient(player)
+		end)
+
+		local masslessTable = {}
+		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
+			prompt.Enabled = seat.Occupant ~= nil
+
+			if seat.Occupant then
+				local character = seat.Occupant.Parent
+				if not character then return end
+
+				local player = Players:GetPlayerFromCharacter(character)
+				if not player then return end
+
+				Seated(self, player, seat)
+
+				for _, v in character:GetDescendants() do
+					if not v:IsA("BasePart") then continue end
+
+					masslessTable[v] = v.Massless
+					v.Massless = true
+				end
+			else
+				Leaved(self, seat)
+
+				for k, v in masslessTable do
+					k.Massless = v
+				end
+				table.clear(masslessTable)
+			end
+		end)
+	end
 end
 
 -- TODO: Driver mental breakdown bruh

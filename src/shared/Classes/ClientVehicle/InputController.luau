@@ -195,10 +195,7 @@ function InitializeConnections(self: InputController)
 		CS = function() self.Vehicle.CS = not self.Vehicle.CS end,
 		ShiftDown = function() self.Vehicle._ShiftDown = true end,
 		ShiftUp = function() self.Vehicle._ShiftUp = true end,
-		Leave = function()
-			local humanoid = (player.Character :: Model):FindFirstChildWhichIsA("Humanoid") :: Humanoid
-			humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-		end,
+		Leave = function() self.Vehicle:Leave() end,
 
 		Lights = function() self.Vehicle.Lights:ToggleLights() end,
 		LeftTurnSignal = function() self.Vehicle.Lights:ToggleTurnState("Left") end,
