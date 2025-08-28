@@ -16,7 +16,6 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: Engine = setmetatable(table.clone(EngineTable), Engine) :: any
 
 	self.Vehicle = vehicle
-	self.DriveshaftStress = 0
 	self._GoalRPM = 0
 	self._FuelSupply = 0
 	self._LastOnTime = 0
