@@ -225,6 +225,7 @@ function InputController.Destroy(self: InputController)
 	self._RawThrottle = 0
 	self.Steering = 0
 
+	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = true
 end
 
