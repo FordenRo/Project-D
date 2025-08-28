@@ -67,16 +67,19 @@ function Initialize(self: Aerodynamics)
 	-- Forces
 	local dragForce = Instance.new("VectorForce")
 	dragForce.Attachment0 = dragAttach
+	dragForce.Force = Vector3.zero
 	dragForce.RelativeTo = Enum.ActuatorRelativeTo.World
 	dragForce.Parent = self.Vehicle.Instance.Body.Aerodynamics.Drag
 
 	local fDownforce = Instance.new("VectorForce")
 	fDownforce.Attachment0 = fDownforceAttach
+	fDownforce.Force = Vector3.zero
 	fDownforce.RelativeTo = Enum.ActuatorRelativeTo.World
 	fDownforce.Parent = self.Vehicle.Instance.Body.Aerodynamics.FDownforce
 
 	local rDownforce = Instance.new("VectorForce")
 	rDownforce.Attachment0 = rDownforceAttach
+	rDownforce.Force = Vector3.zero
 	rDownforce.RelativeTo = Enum.ActuatorRelativeTo.World
 	rDownforce.Parent = self.Vehicle.Instance.Body.Aerodynamics.RDownforce
 
