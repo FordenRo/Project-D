@@ -6,33 +6,19 @@ local UserInputService = game:GetService("UserInputService")
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-if not RunService:IsClient() then return nil end
-
 local Camera = game.Workspace.CurrentCamera
 
 local MAX_DISTANCE = 32
 local MIN_DISTANCE = 16
 local FOV = Camera.FieldOfView
 
-local CameraPlugin = {}
-CameraPlugin.__index = CameraPlugin
+local CameraController = {}
+CameraController.__index = CameraController
 
-export type CameraPlugin = typeof(setmetatable(
-	{} :: {
-		_LastCameraRotation: number,
-		Vehicle: VehicleTypes.ClientVehicle,
-		Distance: number,
-		Offset: Vector3,
-		LookOffset: Vector3,
-		Angles: Vector3,
-		Bumping: Vector3,
-		CameraCFrame: CFrame,
-	},
-	CameraPlugin
-))
+type CameraController = VehicleTypes.CameraController
 
-function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
-	local self: CameraPlugin = setmetatable({}, CameraPlugin) :: any
+function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraController
+	local self: CameraController = setmetatable({}, CameraController) :: any
 
 	self.Vehicle = vehicle
 	self.Distance = 22
@@ -67,12 +53,12 @@ function CameraPlugin.new(vehicle: VehicleTypes.ClientVehicle)
 	return self
 end
 
-function UpdateZoom(self: CameraPlugin, input: InputObject)
+function UpdateZoom(self: CameraController, input: InputObject)
 	self.Distance -= input.Position.Z * 0.4
 	self.Distance = math.clamp(self.Distance, MIN_DISTANCE, MAX_DISTANCE)
 end
 
-function UpdateRotation(self: CameraPlugin, input: InputObject)
+function UpdateRotation(self: CameraController, input: InputObject)
 	if
 		not (
 			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
@@ -91,7 +77,7 @@ function UpdateRotation(self: CameraPlugin, input: InputObject)
 	self._LastCameraRotation = tick()
 end
 
-function Update(self: CameraPlugin, deltaTime: number)
+function Update(self: CameraController, deltaTime: number)
 	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 
 	local heightOffset = self.Vehicle.WeightPart.CFrame.UpVector * 7
@@ -130,6 +116,10 @@ function Update(self: CameraPlugin, deltaTime: number)
 	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
 	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
 
+	assert(self.Offset == self.Offset, "Offset IS NAN")
+	assert(self.LookOffset == self.LookOffset, "LookOffset IS NAN")
+	assert(self.Angles == self.Angles, "Angles IS NAN")
+
 	if self.Vehicle.Velocity.Magnitude > 10 and tick() - self._LastCameraRotation > 2 then
 		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
 	end
@@ -157,7 +147,7 @@ function Update(self: CameraPlugin, deltaTime: number)
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
 end
 
-function CameraPlugin.Destroy(self: CameraPlugin)
+function CameraController.Destroy(self: CameraController)
 	RunService:UnbindFromRenderStep("CameraUpdate")
 	ContextActionService:UnbindAction("CameraZoom")
 	ContextActionService:UnbindAction("CameraRotation")
@@ -165,4 +155,4 @@ function CameraPlugin.Destroy(self: CameraPlugin)
 	Camera.CameraType = Enum.CameraType.Custom
 end
 
-return CameraPlugin
+return CameraController

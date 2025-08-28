@@ -111,6 +111,7 @@ export type ClientVehicle = {
 	DrivenChanged: RBXScriptSignal<boolean>,
 	InputController: InputController,
 	DeformationController: DeformationController,
+	CameraController: CameraController,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: Engine,
@@ -128,6 +129,20 @@ export type ClientVehicle = {
 	InitializeWheels: (self: ClientVehicle) -> (),
 	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
+
+export type CameraController = {
+	_LastCameraRotation: number,
+	Vehicle: ClientVehicle,
+	Distance: number,
+	Offset: Vector3,
+	LookOffset: Vector3,
+	Angles: Vector3,
+	Bumping: Vector3,
+	CameraCFrame: CFrame,
+
+	new: (vehicle: ClientVehicle) -> CameraController,
+	Destroy: (self: CameraController) -> (),
+}
 
 export type Engine = {
 	__index: Engine,
