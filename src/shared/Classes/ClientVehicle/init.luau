@@ -68,7 +68,6 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, asDriver: boolean)
 	end
 	if not self.IsDriven then return end
 
-	HideCharacter(self)
 	InitializePlugins(self)
 
 	self.InputController = InputController.new(self)
@@ -197,15 +196,6 @@ function InitializePlugins(self: ClientVehicle)
 	for _, plugin in ReplicatedStorage.Shared.Vehicle.Plugins:GetChildren() do
 		local pluginClass = require(plugin) :: any
 		if pluginClass and pluginClass.new then self.Plugins[plugin.Name] = pluginClass.new(self) end
-	end
-end
-
--- Hides character for a while
-function HideCharacter(self: ClientVehicle)
-	for _, v in (player.Character :: Model):GetDescendants() do
-		if not v:IsA("BasePart") then continue end
-
-		v.Transparency = 1
 	end
 end
 
