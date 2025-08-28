@@ -1,17 +1,13 @@
-local HapticService = game:GetService("HapticService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local MaterialGroups = require(script.MaterialGroups)
+local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local TirePacket = require(ReplicatedStorage.Shared.Packets.TirePacket)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-
-local isVibrationSupported = HapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1)
-UserInputService.GamepadConnected:Connect(
-	function() isVibrationSupported = HapticService:IsVibrationSupported(Enum.UserInputType.Gamepad1) end
-)
 
 local ClientTire = {}
 ClientTire.__index = ClientTire
@@ -26,483 +22,391 @@ function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart): Cl
 	self.Instance = instance
 
 	Initialize(self)
-	self._Remote = self.Instance:WaitForChild("_Remote") :: UnreliableRemoteEvent
+
+	self._RE = self.Instance:WaitForChild("_RE") :: UnreliableRemoteEvent
+
+	self._task = task.spawn(function()
+		while true do
+			local deltaTime = task.wait(1 / 30)
+			Update(self, deltaTime)
+			if self.Vehicle.IsDriven then Replicate(self) end
+		end
+	end)
+	self._cons = {
+		RunService.Heartbeat:Connect(function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end),
+		self._RE.OnClientEvent:Connect(function(buf) Replicate(self, buf) end),
+	}
 
 	return self
 end
 
 function InitializeVariables(self: ClientTire)
-	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self.Stress = 0
 	self.Dirt = 0
-	self.Ray = nil
+	self.Health = 1
+	self.TrailStress = 0
+	self.Material = ""
+	self._LastMaterial = ""
+	self.SmokePart = self.Wheel.Instance.SmokePart :: any
+	self.Collision = self.Wheel.Instance.Collision :: any
+	self.TrailAttachmentPart = self.Wheel.Instance.TrailAttachmentPart :: any
+
 	self.RayParams = RaycastParams.new()
 	self.RayParams.FilterDescendantsInstances = { self.Vehicle.Instance }
 	self.RayParams.FilterType = Enum.RaycastFilterType.Exclude
-	self.Material = ""
-	self.SmokePart = self.Wheel.Instance:FindFirstChild("SmokePart") :: any
-	self.Collision = self.Wheel.Instance:FindFirstChild("Collision") :: any
-	self.CollisionModel = self.Wheel.Instance:FindFirstChild("CollisionModel") :: any
-	self.FlexCollision = self.Collision
-	self.FlexCollisionGravComp = self.FlexCollision:FindFirstChild("#GRAVCOMP")
-	self.ObjectGravComp = self.Wheel.Instance:FindFirstChild("#GRAVCOMP")
-	self.TrailAttachmentPart = self.Wheel.Instance:FindFirstChild("TrailAttachmentPart") :: any
-	self.FlexCollisionAlignPosition = self.FlexCollision:FindFirstChild("AlignPosition") :: any
-	self.CurrentSound = nil
-	self.CurrentSmoke = nil
-	self.CurrentWheelSmoke = nil
-	self.CurrentTrail = nil
-	self.TrailStress = 0
-	self.Trails = {
-		road = {},
-		dirt = {},
-		snow = {},
-		sand = {},
-	}
-	self._deltaTime = 0
-	self.Sounds = {}
-	self.Smokes = {}
-	self.WheelSmokes = {}
-	-- Tremolo
 end
 
 function Initialize(self: ClientTire)
-	InitializeVariables(self)
+	self.WearInstance = self.Instance:Clone()
+	self.WearInstance:ClearAllChildren()
+	self.WearInstance.Transparency = 1
+	self.WearInstance.Color = Color3.new()
+	self.WearInstance.Material = Enum.Material.Rock
+	self.WearInstance.Size *= 1.006
+	self.WearInstance.Parent = self.Instance
+	MakeWeld(self.WearInstance, self.Instance)
 
-	if self.Vehicle.Tune.TireSmokeEffects == "Local" or self.Vehicle.Tune.TireSmokeEffects == "All" then
-		for _, v in self.SmokePart:GetChildren() do
-			if string.find(v.Name, "Local_") then continue end
-			if v:IsA("Trail") or v:IsA("ParticleEmitter") or v:IsA("Sound") then
-				local effectType = (string.find(v.Name, "road") and "road")
-					or (string.find(v.Name, "sand") and "sand")
-					or (string.find(v.Name, "dirt") and "dirt")
-					or (string.find(v.Name, "snow") and "snow")
-				local effect = v
-				if self.Vehicle.Tune.TireSmokeEffects == "Local" then
-					v.Name = "Local_" .. v.Name
-				else
-					local new = self.SmokePart:FindFirstChild("Local_" .. v.Name) or v:Clone()
-					new.Name = "Local_" .. v.Name
-					new.Parent = self.SmokePart
-					effect = new
-					if v:IsA("Trail") then
-						v:SetAttribute("data", v.Lifetime)
-						v.Lifetime = 0
-					elseif v:IsA("ParticleEmitter") then
-						v:SetAttribute("data", v.Lifetime)
-						v.Lifetime = NumberRange.new(0)
-					else
-						v:SetAttribute("data", v.SoundId)
-						v.SoundId = ""
-					end
-				end
-				if v:IsA("Trail") then
-					self.Trails[effectType][math.round(
-						(v:GetAttribute("stress") :: number) * self.Vehicle.Tune.TireMarkTransparencyLevels
-					)] =
-						effect
-				elseif v:IsA("ParticleEmitter") then
-					self.Smokes[effectType] = effect
-				elseif v:IsA("Sound") then
-					self.Sounds[effectType] = effect
-				end
-			end
-		end
-		for _, v in (self.Wheel.Instance:FindFirstChild("WheelSmokePart") :: Instance):GetChildren() do
-			if string.find(v.Name, "Local_") then continue end
-			if v:IsA("ParticleEmitter") then
-				local effectType = (string.find(v.Name, "road") and "road")
-					or (string.find(v.Name, "sand") and "sand")
-					or (string.find(v.Name, "dirt") and "dirt")
-					or (string.find(v.Name, "snow") and "snow")
-				local effect = v
-				if self.Vehicle.Tune.TireSmokeEffects == "Local" then
-					v.Name = "Local_" .. v.Name
-				else
-					local new = self.Wheel.Instance.WheelSmokePart:FindFirstChild("Local_" .. v.Name) or v:Clone()
-					new.Name = "Local_" .. v.Name
-					new.Parent = self.Wheel.Instance.WheelSmokePart
-					effect = new
-					v:SetAttribute("data", v.Lifetime)
-					v.Lifetime = NumberRange.new(0)
-				end
-				self.WheelSmokes[effectType] = effect
-			end
-		end
+	self.DirtInstance = self.Instance:Clone()
+	self.DirtInstance:ClearAllChildren()
+	self.DirtInstance.Transparency = 1
+	self.DirtInstance.Color = Color3.new(0.6, 0.3, 0)
+	self.DirtInstance.Size *= 1.003
+	self.DirtInstance.Material = Enum.Material.Rock
+	self.DirtInstance.Parent = self.Instance
+	MakeWeld(self.DirtInstance, self.Instance)
+
+	self.WheelDirtInstances = {}
+	for k, v in self.Wheel.Instance.Parts:GetChildren() do
+		if not v:IsA("BasePart") or v.Name == "Tire" then continue end
+
+		local instance = v:Clone()
+		instance:ClearAllChildren()
+		instance.Transparency = 1
+		instance.Color = Color3.new(0.6, 0.3, 0)
+		instance.Material = Enum.Material.Rock
+		instance.Size *= 1.003
+		instance.Parent = v
+		MakeWeld(instance, v)
+		table.insert(self.WheelDirtInstances, instance)
 	end
 
-	task.spawn(function()
-		while true do
-			Update(self, task.wait(1 / 30))
-			SmokeUpdate(self)
+	InitializeVariables(self)
+
+	local trailAttachment1 = Instance.new("Attachment")
+	trailAttachment1.Name = "TrailAttachment1"
+	trailAttachment1.Parent = self.TrailAttachmentPart
+
+	local trailAttachment2 = Instance.new("Attachment")
+	trailAttachment2.Name = "TrailAttachment2"
+	trailAttachment2.Parent = self.TrailAttachmentPart
+
+	local trailColors = {
+		Road = ColorSequence.new(Color3.new(0, 0, 0)),
+		Snow = ColorSequence.new(Color3.fromRGB(205, 250, 255)),
+		Sand = ColorSequence.new(Color3.fromRGB(255, 241, 136)),
+		Dirt = ColorSequence.new(Color3.fromRGB(255, 173, 102)),
+	}
+
+	self.Sounds = {}
+	self.Emitters = {}
+	self.Trails = {}
+	for k, v in MaterialGroups do
+		local sound = ReplicatedStorage.Vehicle.Sounds.Tires:FindFirstChild(k):Clone()
+		sound.Parent = self.SmokePart
+		self.Sounds[k] = sound
+
+		local emitter = ReplicatedStorage.Vehicle.Effects.Tires:FindFirstChild(k):Clone()
+		emitter.Parent = self.SmokePart
+		self.Emitters[k] = emitter
+
+		self.Trails[k] = {}
+		for i = 1, self.Vehicle.Tune.TireMarkTransparencyLevels do
+			local trail = Instance.new("Trail")
+			trail.Transparency = NumberSequence.new(self.Vehicle.Tune.TireMarkTransparency)
+			trail.Texture = "rbxassetid://14987871952"
+			trail.TextureMode = Enum.TextureMode.Static
+			trail.Lifetime = 20
+			trail.Enabled = false
+			trail.Attachment0 = trailAttachment1
+			trail.Attachment1 = trailAttachment2
+			trail.Color = trailColors[k]
+			trail.Parent = self.SmokePart
+			self.Trails[k][i] = trail
 		end
-	end)
-	RunService.Heartbeat:Connect(function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end)
+	end
+end
+
+function Replicate(self: ClientTire, buf: buffer?)
+	if self.Vehicle.IsDriven then
+		self._RE:FireServer(Serialization.Serialize(TirePacket, self))
+	elseif buf then
+		local data = Serialization.Deserialize(TirePacket, buf)
+		for k, v in data do
+			self[k] = v
+		end
+	else
+		if self.CurrentTrail then
+			for _, trail in self.CurrentTrail do
+				trail.Enabled = false
+			end
+		end
+		if self.CurrentEmitter then self.CurrentEmitter.Enabled = false end
+	end
 end
 
 function FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
-	self._deltaTime = deltaTime
-	if self.Wheel.IsFront then
-		self.FlexCollisionAlignPosition.MaxForce = self.Vehicle.Tune.TireFPressureForce
-			* (100 + (self.FlexCollision.Position - self.Wheel.Instance.Position).Magnitude ^ 2 * 10000)
-	else
-		self.FlexCollisionAlignPosition.MaxForce = self.Vehicle.Tune.TireRPressureForce
-			* (100 + (self.FlexCollision.Position - self.Wheel.Instance.Position).Magnitude ^ 2 * 10000)
-	end
-end
+	if not self.Vehicle.IsDriven then return end
 
-function SmokeUpdate(self: ClientTire)
-	local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
-	self._Remote:FireServer(
-		self.Material,
-		smokeStress,
-		self.Ray and self.Ray.Normal,
-		self.Temperature,
-		self.Dirt,
-		self._deltaTime
-	)
+	local pressureForce = self.Wheel.IsFront and self.Vehicle.Tune.TireFPressureForce
+		or self.Vehicle.Tune.TireRPressureForce
+	self.Collision.AlignPosition.MaxForce = pressureForce
+		* (100 + (self.Collision.Position - self.Wheel.Instance.Position).Magnitude ^ 2 * 10000)
 end
 
 function Update(self: ClientTire, deltaTime: number)
-	local stress = 0
-	local count = 0
-
-	local rotSpeed = math.abs(self.Wheel.Instance.AssemblyAngularVelocity:Dot(self.SmokePart.CFrame.RightVector))
-	local lateralDiff = math.abs(self.Wheel.Instance.AssemblyLinearVelocity:Dot(self.Wheel.Instance.CFrame.RightVector))
-		/ self.Wheel.Instance.AssemblyLinearVelocity.Magnitude
-	local rotLinearSpeed = rotSpeed * (self.Wheel.Instance.Size.Y / 2)
-	local speed = self.Vehicle.Velocity.Magnitude
-	local diff = math.abs(rotLinearSpeed - speed)
-
-	local ray = nil -- Assuming they are the same material
-	local materialType = ""
 	local materialChanged = false
 
-	local innerRay = game.Workspace:Raycast(
+	-- Inner
+	local ray = game.Workspace:Raycast(
 		self.Wheel.Instance.Position,
 		(
-			((self.Wheel.Instance.Arm :: any).CFrame * CFrame.new(
+			(self.Wheel.Instance.Arm.CFrame * CFrame.new(
 				-self.Wheel.Instance.Size.X / 2,
 				-self.Wheel.Instance.Size.Y / 2,
 				0
 			)).Position - self.Wheel.Instance.Position
 		) * 1.1,
 		self.RayParams
-	)
-	local outerRay = game.Workspace:Raycast(
-		self.Wheel.Instance.Position,
-		(
-			((self.Wheel.Instance.Arm :: any).CFrame * CFrame.new(
-				self.Wheel.Instance.Size.X / 2,
-				-self.Wheel.Instance.Size.Y / 2,
-				0
-			)).Position - self.Wheel.Instance.Position
-		) * 1.1,
-		self.RayParams
-	)
-	ray = innerRay or outerRay
-	if ray then
-		for k, v in MaterialGroups do
-			if table.find(v, ray.Material.Name) then
-				materialType = k
+	) -- Outer
+		or game.Workspace:Raycast(
+			self.Wheel.Instance.Position,
+			(
+				(self.Wheel.Instance.Arm.CFrame * CFrame.new(
+					self.Wheel.Instance.Size.X / 2,
+					-self.Wheel.Instance.Size.Y / 2,
+					0
+				)).Position - self.Wheel.Instance.Position
+			) * 1.1,
+			self.RayParams
+		)
+
+	if self.Vehicle.IsDriven then
+		local rotSpeed = math.abs(self.Wheel.Instance.AssemblyAngularVelocity:Dot(self.SmokePart.CFrame.RightVector))
+		local rotLinearSpeed = rotSpeed * (self.Wheel.Instance.Size.Y / 2)
+		local speed = self.Vehicle.Velocity.Magnitude
+		local diff = math.abs(rotLinearSpeed - speed)
+
+		if ray then
+			for k, v in MaterialGroups do
+				if not table.find(v, ray.Material.Name) then continue end
+
+				self.Material = k
 				break
 			end
+			if self._LastMaterial ~= self.Material then materialChanged = true end
 		end
-		self.Ray = ray
-		if self.Material ~= materialType then materialChanged = true end
-		self.Material = materialType
-	end
 
-	--Slip
-	local vstress = (
-		math.max(ray and diff / 20 or 0, ray and materialType ~= "road" and materialType ~= "" and rotSpeed / 50 or 0)
-		+ (self.Wheel.IsFront and self.Vehicle.Tune.TireFSpeedStress or self.Vehicle.Tune.TireRSpeedStress)
-			* (rotLinearSpeed / (Units.Velocity_mdivs / 3.6) / 100)
-	)
-	if ray and materialType ~= "road" and materialType ~= "" then
-		local random = Random.new():NextNumber() * speed
-		if random > 20 then
-			self.Wheel.Instance.AssemblyLinearVelocity += Vector3.new(
-				0,
-				math.random(0, self.Vehicle.Tune.TireDirtBumps),
-				0
-			) * math.min(speed / 100, 5)
+		-- Slip
+		local vstress = (
+			math.max(
+				ray and diff / 20 or 0,
+				ray and self.Material ~= "Road" and self.Material ~= "" and rotSpeed / 50 or 0
+			) + self.Vehicle.Tune.TireSpeedStress * (rotLinearSpeed / (Units.Velocity_mdivs / 3.6) / 100)
+		)
+
+		if ray and self.Material ~= "Road" and self.Material ~= "" then
+			local random = Random.new():NextNumber() * speed
+			if random > 20 then
+				self.Wheel.Instance.AssemblyLinearVelocity += Vector3.new(
+					0,
+					math.random(0, self.Vehicle.Tune.TireDirtBumps),
+					0
+				) * math.min(speed / 100, 5)
+			end
 		end
-	end
-	if vstress > 0.05 * (60 / (1 / deltaTime)) and vstress > self.Stress then
-		self.Stress = math.min(self.Stress + 0.05 * (60 / (1 / deltaTime)), math.min(vstress, 1))
-	else
-		self.Stress = math.max(self.Stress - 0.05 * (60 / (1 / deltaTime)), vstress)
-	end
 
-	-- Update dirt
-	if materialType ~= "road" and materialType ~= "" then
-		self.Dirt = Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
-		self.Vehicle.Dirt += math.min(rotSpeed * 0.0002 * deltaTime, 1)
-	else
-		self.Dirt = Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
-	end
+		if vstress > 0.05 * (60 / (1 / deltaTime)) and vstress > self.Stress then
+			self.Stress = math.min(self.Stress + 0.05 * (60 / (1 / deltaTime)), math.min(vstress, 1))
+		else
+			self.Stress = math.max(self.Stress - 0.05 * (60 / (1 / deltaTime)), vstress)
+		end
 
-	-- Apply friction
-	local materialHeatFactor = materialType ~= "road" and 0.01 or 1
-	local currentPhysicalProperties = self.Wheel.Instance.CurrentPhysicalProperties
-	local coldLoss = 0
-	local heatLoss = 0
-	local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
-	if self.Wheel.IsFront then
-		self.Temperature = math.clamp(
-			self.Temperature
-				+ (
-						self.Stress
-							* (self.Vehicle.Tune.TireFHeating + self.Vehicle.Tune.TireFCooling)
-							* materialHeatFactor
-						- self.Vehicle.Tune.TireFCooling
-					)
-					* (60 / (1 / deltaTime)),
-			globalTemperature,
-			self.Vehicle.Tune.TireFMaxTemp
-		)
-	else
-		self.Temperature = math.clamp(
-			self.Temperature
-				+ (
-						self.Stress
-							* (self.Vehicle.Tune.TireRHeating + self.Vehicle.Tune.TireRCooling)
-							* materialHeatFactor
-						- self.Vehicle.Tune.TireRCooling
-					)
-					* (60 / (1 / deltaTime)),
-			globalTemperature,
-			self.Vehicle.Tune.TireRMaxTemp
-		)
-	end
-	coldLoss = self.Wheel.IsFront
-			and (self.Vehicle.Tune.TireFColdStats[1] * (1 / (math.exp(
-				self.Vehicle.Tune.TireFColdStats[2] * (self.Temperature / 100 - self.Vehicle.Tune.TireFColdStats[3])
-			) + 1)))
-		or (
-			self.Vehicle.Tune.TireRColdStats[1]
-			* (
-				1
-				/ (
-					math.exp(
-						self.Vehicle.Tune.TireRColdStats[2]
-							* (self.Temperature / 100 - self.Vehicle.Tune.TireRColdStats[3])
-					) + 1
-				)
+		-- Update dirt
+		if self.Material ~= "Road" and self.Material ~= "" then
+			self.Dirt = Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
+			self.Vehicle.Dirt = math.clamp(math.min(rotSpeed * 0.0002 * deltaTime, 1), 0, 1)
+		else
+			self.Dirt = Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
+		end
+
+		-- Apply friction
+		local materialHeatFactor = self.Material ~= "Road" and 0.01 or 1
+		local currentPhysicalProperties = self.Wheel.Instance.CurrentPhysicalProperties
+		self.Health =
+			math.clamp(self.Health - self.Stress * materialHeatFactor * self.Vehicle.Tune.TireDamage * deltaTime, 0, 1)
+
+		local loss = (1 - self.Health) ^ 2 * self.Vehicle.Tune.TireWearLoss + self.Dirt * self.Vehicle.Tune.TireDirtLoss
+		local density
+		local friction
+		if self.Wheel.IsFront then
+			density = math.round(
+				(
+					((self.Vehicle.Tune.FWheelWeight - self.Vehicle.Tune.TireFWeight) * Units.Mass_kg)
+					/ (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
+				) * 1000
+			) / 1000
+			friction = math.round(math.clamp(self.Vehicle.Tune.TireFMaxFriction - loss, 0, 2) * 1000) / 1000
+		else
+			density = math.round(
+				(
+					((self.Vehicle.Tune.RWheelWeight - self.Vehicle.Tune.TireRWeight) * Units.Mass_kg)
+					/ (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
+				) * 1000
+			) / 1000
+			friction = math.round(math.clamp(self.Vehicle.Tune.TireRMaxFriction - loss, 0, 2) * 1000) / 1000
+		end
+
+		if
+			math.round(currentPhysicalProperties.Friction * 1000) / 1000 ~= friction
+			or math.round(currentPhysicalProperties.Density * 1000) / 1000 ~= density
+		then
+			self.Wheel.Instance.CustomPhysicalProperties = PhysicalProperties.new(
+				density,
+				friction,
+				currentPhysicalProperties.Elasticity,
+				currentPhysicalProperties.FrictionWeight,
+				currentPhysicalProperties.ElasticityWeight
 			)
-		)
-	heatLoss = self.Wheel.IsFront
-			and (self.Vehicle.Tune.TireFHotStats[1] * (-(1 / (math.exp(
-				self.Vehicle.Tune.TireFHotStats[2] * (self.Temperature / 100 - self.Vehicle.Tune.TireFHotStats[3])
-			) + 1)) + 1))
-		or (
-			self.Vehicle.Tune.TireRHotStats[1]
-			* (
-				-(
-					1
-					/ (
-						math.exp(
-							self.Vehicle.Tune.TireRHotStats[2]
-								* (self.Temperature / 100 - self.Vehicle.Tune.TireRHotStats[3])
-						) + 1
-					)
-				) + 1
+		end
+
+		if ray and self.Material == "Sand" then
+			self.Wheel.Instance:ApplyImpulseAtPosition(
+				-self.Wheel.Instance.AssemblyLinearVelocity * self.Vehicle.Tune.TireSandForce * deltaTime,
+				self.Wheel.Instance.Position
 			)
-		)
-	local density = math.round(
-		(
-			((self.Vehicle.Tune.FWheelWeight - self.Vehicle.Tune.TireFWeight) * Units.Mass_kg)
-			/ (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
-		) * 1000
-	) / 1000
-	local friction = math.round(
-		math.clamp(
-			self.Vehicle.Tune.TireFMaxFriction - coldLoss - heatLoss - self.Dirt * self.Vehicle.Tune.TireFDirtLoss,
-			0,
-			2
-		) * 1000
-	) / 1000
-	if not self.Wheel.IsFront then
-		density = math.round(
+		end
+
+		-- Tire flex
+		local flexDensity = math.round(
 			(
-				((self.Vehicle.Tune.RWheelWeight - self.Vehicle.Tune.TireRWeight) * Units.Mass_kg)
-				/ (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
+				(
+					(self.Wheel.IsFront and self.Vehicle.Tune.TireFWeight or self.Vehicle.Tune.TireRWeight)
+					* Units.Mass_kg
+				) / (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
 			) * 1000
 		) / 1000
-		friction = math.round(
-			math.clamp(
-				self.Vehicle.Tune.TireRMaxFriction - coldLoss - heatLoss - self.Dirt * self.Vehicle.Tune.TireRDirtLoss,
-				0,
-				2
-			) * 1000
-		) / 1000
-	end
-	if
-		math.round(currentPhysicalProperties.Friction * 1000) / 1000 ~= friction
-		or math.round(currentPhysicalProperties.Density * 1000) / 1000 ~= density
-	then
-		self.Wheel.Instance.CustomPhysicalProperties = PhysicalProperties.new(
-			density,
-			friction,
-			currentPhysicalProperties.Elasticity,
-			currentPhysicalProperties.FrictionWeight,
-			currentPhysicalProperties.ElasticityWeight
-		)
-	end
-	if ray and materialType == "sand" then
-		self.Wheel.Instance:ApplyImpulseAtPosition(
-			-self.Wheel.Instance.AssemblyLinearVelocity * self.Vehicle.Tune.TireSandForce * deltaTime,
-			self.Wheel.Instance.Position
-		)
-	end
-
-	-- Update haptic values
-	stress += self.Stress
-	count += 1
-
-	-- Tire flex
-	local flexDensity = math.round(
-		(
-			((self.Wheel.IsFront and self.Vehicle.Tune.TireFWeight or self.Vehicle.Tune.TireRWeight) * Units.Mass_kg)
-			/ (math.pi * (self.Wheel.Instance.Size.Y / 2) ^ 2 * self.Wheel.Instance.Size.X)
-		) * 1000
-	) / 1000
-	local flexCurrentPhysicalProperties = self.FlexCollision.CurrentPhysicalProperties
-	if
-		math.round(flexCurrentPhysicalProperties.Density * 1000) / 1000 ~= flexDensity
-		or currentPhysicalProperties.Friction ~= flexCurrentPhysicalProperties.Friction
-		or currentPhysicalProperties.Elasticity ~= flexCurrentPhysicalProperties.Elasticity
-		or currentPhysicalProperties.FrictionWeight ~= flexCurrentPhysicalProperties.FrictionWeight
-		or currentPhysicalProperties.ElasticityWeight ~= flexCurrentPhysicalProperties.ElasticityWeight
-	then
-		self.FlexCollision.CustomPhysicalProperties = PhysicalProperties.new(
-			flexDensity,
-			currentPhysicalProperties.Friction,
-			currentPhysicalProperties.Elasticity,
-			currentPhysicalProperties.FrictionWeight,
-			currentPhysicalProperties.ElasticityWeight
-		)
-	end
-	if self.FlexCollisionGravComp then
-		self.FlexCollisionGravComp.Force = Vector3.new(
+		local flexCurrentPhysicalProperties = self.Collision.CurrentPhysicalProperties
+		if
+			math.round(flexCurrentPhysicalProperties.Density * 1000) / 1000 ~= flexDensity
+			or currentPhysicalProperties.Friction ~= flexCurrentPhysicalProperties.Friction
+			or currentPhysicalProperties.Elasticity ~= flexCurrentPhysicalProperties.Elasticity
+			or currentPhysicalProperties.FrictionWeight ~= flexCurrentPhysicalProperties.FrictionWeight
+			or currentPhysicalProperties.ElasticityWeight ~= flexCurrentPhysicalProperties.ElasticityWeight
+		then
+			self.Collision.CustomPhysicalProperties = PhysicalProperties.new(
+				flexDensity,
+				currentPhysicalProperties.Friction,
+				currentPhysicalProperties.Elasticity,
+				currentPhysicalProperties.FrictionWeight,
+				currentPhysicalProperties.ElasticityWeight
+			)
+		end
+		self.Collision["#GRAVCOMP"].Force = Vector3.new(
 			0,
 			self.Vehicle.Tune.GravComp > 0
-					and self.FlexCollision.Mass * (game.Workspace.Gravity - self.Vehicle.Tune.GravComp)
+					and self.Collision.Mass * (game.Workspace.Gravity - self.Vehicle.Tune.GravComp)
 				or 0,
 			0
 		)
-	end
-	if self.ObjectGravComp then
-		self.ObjectGravComp.Force = Vector3.new(
-			0,
-			self.Vehicle.Tune.GravComp > 0
-					and self.Wheel.Instance.Mass * (game.Workspace.Gravity - self.Vehicle.Tune.GravComp)
-				or 0,
-			0
-		)
+	else
+		if self.Material ~= self._LastMaterial then materialChanged = true end
 	end
 
-	-- Smoke
-	if self.Vehicle.Tune.TireSmokeEffects == "Local" or self.Vehicle.Tune.TireSmokeEffects == "All" then
-		-- Set sounds and smoke
-		local currentSound = self.CurrentSound
-		local currentSmoke = self.CurrentSmoke
-		local currentWheelSmoke = self.CurrentWheelSmoke
-		if materialChanged then
-			if currentSound then currentSound.Playing = false end
-			if currentSmoke then currentSmoke.Enabled = false end
-			currentSound = self.Sounds[materialType]
-			currentSmoke = self.Smokes[materialType]
-			currentWheelSmoke = self.WheelSmokes[materialType]
-			self.CurrentSound = currentSound
-			self.CurrentSmoke = currentSmoke
-			self.CurrentWheelSmoke = currentWheelSmoke
-		end
+	self._LastMaterial = self.Material
 
-		-- Set Trails
-		local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
-		local trailStress = math.floor(smokeStress ^ 3 * self.Vehicle.Tune.TireMarkTransparencyLevels)
-		if self.Trails[materialType] then
-			for i = 1, (trailStress > self.TrailStress and trailStress or self.TrailStress) do
-				self.Trails[materialType][i].Enabled = trailStress >= i
-			end
-		end
-		if materialChanged and self.CurrentTrail then
-			for i = 1, self.Vehicle.Tune.TireMarkTransparencyLevels do
-				self.CurrentTrail[i].Enabled = false
-			end
-		end
-		self.CurrentTrail = self.Trails[materialType]
-		self.TrailStress = trailStress
-
-		-- Run effects
-		if currentSound then
-			-- Sound
-			if not currentSound.Playing then
-				currentSound.TimePosition = Random.new():NextNumber() * currentSound.TimeLength --avoid overlapping sounds
-			end
-			currentSound.Playing = true
-			currentSound.Volume = smokeStress ^ 3 * 1.4
-			currentSound.PlaybackSpeed = 1.6 - 0.5 * smokeStress
-			local tremolo = currentSound:GetAttribute("HasTremolo") and currentSound.TremoloSoundEffect
-			if tremolo then tremolo.Depth = lateralDiff end
-		end
-		if currentSmoke then
-			-- Smoke
-			currentSmoke.Enabled = true
-			currentSmoke.Rate = smokeStress ^ 10 * 100
-		end
-		if currentWheelSmoke then
-			-- Wheel smoke
-			currentWheelSmoke.Enabled = true
-			currentWheelSmoke.Rate = smokeStress ^ 10 * 200
-		end
-		local compression = 1
-		if self.Collision then
-			compression = math.clamp((self.Wheel.Instance.Position - self.Collision.Position).Magnitude / 0.1, 0, 1)
-		end
-		local trailAttachmentPart = self.TrailAttachmentPart
-		if trailAttachmentPart and smokeStress > 0.05 and self.Wheel.Instance.AssemblyLinearVelocity.Magnitude > 10 then
-			trailAttachmentPart.TrailAttachment0.Position =
-				Vector3.new(self.Wheel.Instance.Size.X / 2 - 0.2 + 0.1 * compression, 0.02, 0)
-			trailAttachmentPart.TrailAttachment1.Position =
-				Vector3.new(-self.Wheel.Instance.Size.X / 2 + 0.2 - 0.1 * compression, 0.02, 0)
-			trailAttachmentPart.AlignOrientation.CFrame = CFrame.lookAt(
-				self.SmokePart.Position,
-				(self.SmokePart.CFrame * CFrame.new(
-					0,
-					0,
-					-5 + math.min(self.Wheel.Instance.AssemblyLinearVelocity.Magnitude, 5)
-				)).Position + self.Wheel.Instance.AssemblyLinearVelocity,
-				ray and ray.Normal or self.SmokePart.CFrame.UpVector
-			)
-		end
+	-- Set sounds and smoke
+	if materialChanged then
+		if self.CurrentSound then self.CurrentSound.Playing = false end
+		if self.CurrentEmitter then self.CurrentEmitter.Enabled = false end
+		self.CurrentSound = self.Sounds[self.Material]
+		self.CurrentEmitter = self.Emitters[self.Material]
 	end
 
-	-- Haptics
+	-- Set Trails
+	local smokeStress = math.clamp(self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100, 0, 1)
+	local trailStress = math.floor(smokeStress ^ 3 * self.Vehicle.Tune.TireMarkTransparencyLevels)
+	if self.Trails[self.Material] then
+		for i = 1, (trailStress > self.TrailStress and trailStress or self.TrailStress) do
+			self.Trails[self.Material][i].Enabled = trailStress >= i
+		end
+	end
+	if materialChanged and self.CurrentTrail then
+		for _, trail in self.CurrentTrail do
+			trail.Enabled = false
+		end
+	end
+	self.CurrentTrail = self.Trails[self.Material]
+	self.TrailStress = trailStress
+
+	-- Run effects
+	if self.CurrentSound then
+		if not self.CurrentSound.Playing then
+			self.CurrentSound.TimePosition = math.random() * self.CurrentSound.TimeLength --avoid overlapping sounds
+		end
+		self.CurrentSound.Playing = true
+		self.CurrentSound.Volume = smokeStress ^ 3 * 1.4
+		self.CurrentSound.PlaybackSpeed = 1.6 - 0.5 * smokeStress
+		local tremolo = self.CurrentSound:FindFirstChildOfClass("TremoloSoundEffect") :: TremoloSoundEffect?
+		if tremolo then
+			tremolo.Depth = math.abs(
+				self.Wheel.Instance.AssemblyLinearVelocity:Dot(self.Wheel.Instance.CFrame.RightVector)
+			) / self.Wheel.Instance.AssemblyLinearVelocity.Magnitude
+		end
+	end
+	if self.CurrentEmitter then
+		self.CurrentEmitter.Enabled = true
+		self.CurrentEmitter.Rate = smokeStress ^ 10 * 100
+	end
+	local compression = 1
+	if self.Collision then
+		compression = math.clamp((self.Wheel.Instance.Position - self.Collision.Position).Magnitude / 0.1, 0, 1)
+	end
 	if
-		isVibrationSupported
-		and (
-			(
-				self.Vehicle.Tune.Haptics == "Controller"
-				or self.Vehicle.Tune.Haptics == "Both"
-					and string.find(UserInputService:GetLastInputType().Name, "Gamepad")
-			)
-			or (
-				self.Vehicle.Tune.Haptics == "Mobile"
-				or self.Vehicle.Tune.Haptics == "Both"
-					and UserInputService:GetLastInputType() == Enum.UserInputType.Touch
-			)
-		)
+		self.TrailAttachmentPart
+		and smokeStress > 0.05
+		and self.Wheel.Instance.AssemblyLinearVelocity.Magnitude > 10
 	then
-		stress /= count
-		stress = math.clamp(stress / 2, 0, 0.5)
-		HapticService:SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Small, stress)
+		self.TrailAttachmentPart.TrailAttachment1.Position =
+			Vector3.new(self.Wheel.Instance.Size.X / 2 - 0.2 + 0.1 * compression, 0.02, 0)
+		self.TrailAttachmentPart.TrailAttachment2.Position =
+			Vector3.new(-self.Wheel.Instance.Size.X / 2 + 0.2 - 0.1 * compression, 0.02, 0)
+		self.TrailAttachmentPart.AlignOrientation.CFrame = CFrame.lookAt(
+			self.SmokePart.Position,
+			(self.SmokePart.CFrame * CFrame.new(
+				0,
+				0,
+				-5 + math.min(self.Wheel.Instance.AssemblyLinearVelocity.Magnitude, 5)
+			)).Position + self.Wheel.Instance.AssemblyLinearVelocity,
+			ray and ray.Normal or self.SmokePart.CFrame.UpVector
+		)
+	end
+
+	-- Visual
+	self.Instance.Color = Color3.fromHSV(0, 0, (1 - self.Health) * 0.2)
+	self.WearInstance.Color = Color3.fromHSV(0, 0, (1 - self.Health) * 0.6)
+	self.WearInstance.Transparency = self.Health * 0.5 + 0.5
+	self.DirtInstance.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
+
+	for _, v in self.WheelDirtInstances do
+		v.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
 	end
 end
 
---TODO: Destroy function
-function ClientTire.Destroy(self: ClientTire) end
+function ClientTire.Destroy(self: ClientTire)
+	for _, v in self._cons do
+		v:Disconnect()
+	end
+	task.cancel(self._task)
+end
 
 return ClientTire

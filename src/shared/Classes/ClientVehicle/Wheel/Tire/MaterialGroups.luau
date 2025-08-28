@@ -1,5 +1,5 @@
 return {
-	road = {
+	Road = {
 		"Plastic",
 		"Slate",
 		"Concrete",
@@ -14,18 +14,18 @@ return {
 		"SmoothPlastic",
 		"Asphalt",
 	},
-	dirt = {
+	Dirt = {
 		"Grass",
 		"Mud",
 		"Ground",
 		"LeafyGrass",
 	},
-	sand = {
+	Sand = {
 		"Sand",
 		"Sandstone",
 		"Limestone",
 	},
-	snow = {
+	Snow = {
 		"Glacier",
 		"Snow",
 	},

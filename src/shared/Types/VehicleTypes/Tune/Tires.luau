@@ -16,43 +16,19 @@ export type Type = {
 	--- The transparency of the tire marks
 	TireMarkTransparency: number,
 
-	--- Minimum temperature of the front tires in celcius
-	TireFMinTemp: number,
-	--- Maximum temperature of the front tires in celcius
-	TireFMaxTemp: number,
 	--- Maximum friction of the front tires
 	TireFMaxFriction: number,
-	--- Loss, Sharpness, Offset
-	TireFColdStats: { number },
-	--- Loss, Sharpness, Offset
-	TireFHotStats: { number },
-	--- Friction loss from dirty tires
-	TireFDirtLoss: number,
-	--- Heat gain from maximum slippage
-	TireFHeating: number,
-	--- Heat loss at no slippage
-	TireFCooling: number,
-	--- Stress generated at 100 km/h
-	TireFSpeedStress: number,
-
-	--- Minimum temperature of the front tires in celcius
-	TireRMinTemp: number,
-	--- Maximum temperature of the front tires in celcius
-	TireRMaxTemp: number,
-	--- Maximum friction of the front tires
+	--- Maximum friction of the rear tires
 	TireRMaxFriction: number,
-	--- Loss, Sharpness, Offset
-	TireRColdStats: { number },
-	--- Loss, Sharpness, Offset
-	TireRHotStats: { number },
+
+	--- Damage at maximum stress per second
+	TireDamage: number,
+	--- Friction loss from weared tires
+	TireWearLoss: number,
 	--- Friction loss from dirty tires
-	TireRDirtLoss: number,
-	--- Heat gain from maximum slippage
-	TireRHeating: number,
-	--- Heat loss at no slippage
-	TireRCooling: number,
+	TireDirtLoss: number,
 	--- Stress generated at 100 km/h
-	TireRSpeedStress: number,
+	TireSpeedStress: number,
 
 	--- Debug tire flex
 	TireFlexDebug: boolean,

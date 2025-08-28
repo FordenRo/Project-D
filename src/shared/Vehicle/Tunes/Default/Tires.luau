@@ -13,25 +13,13 @@ Tune.TireSmokePollingRate = 1 / 8
 Tune.TireMarkTransparencyLevels = 5
 Tune.TireMarkTransparency = 0.9
 
-Tune.TireFMinTemp = 8
-Tune.TireFMaxTemp = 100
-Tune.TireFMaxFriction = 1.35
-Tune.TireFColdStats = { 0.38, 11.7, 0.32 }
-Tune.TireFHotStats = { 0.96, 18.3, 1.05 }
-Tune.TireFDirtLoss = 0.1
-Tune.TireFHeating = 0.012
-Tune.TireFCooling = 0
-Tune.TireFSpeedStress = 0.04
+Tune.TireFMaxFriction = 1.7
+Tune.TireRMaxFriction = 1.7
 
-Tune.TireRMinTemp = 8
-Tune.TireRMaxTemp = 100
-Tune.TireRMaxFriction = 1.35
-Tune.TireRColdStats = { 0.38, 11.7, 0.32 }
-Tune.TireRHotStats = { 0.96, 18.3, 1.05 }
-Tune.TireRDirtLoss = 0.1
-Tune.TireRHeating = 0.012
-Tune.TireRCooling = 0
-Tune.TireRSpeedStress = 0.04
+Tune.TireDamage = 0.004
+Tune.TireWearLoss = 0.5
+Tune.TireDirtLoss = 0.1
+Tune.TireSpeedStress = 0.03
 
 Tune.TireFlexDebug = false
 
