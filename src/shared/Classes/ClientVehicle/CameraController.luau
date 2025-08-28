@@ -116,17 +116,18 @@ function Update(self: CameraController, deltaTime: number)
 	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
 	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
 
-	assert(self.Offset == self.Offset, "Offset IS NAN")
-	assert(self.LookOffset == self.LookOffset, "LookOffset IS NAN")
-	assert(self.Angles == self.Angles, "Angles IS NAN")
-
 	if self.Vehicle.Velocity.Magnitude > 10 and tick() - self._LastCameraRotation > 2 then
 		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
 	end
 
-	local cameraDirection = self.Vehicle.WeightPart.CFrame:VectorToWorldSpace(
-		self.CameraCFrame:VectorToWorldSpace(self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(self.Offset.Unit))
-	)
+	local cameraDirection
+	if self.Offset.Magnitude > 0 then
+		cameraDirection = self.Vehicle.WeightPart.CFrame:VectorToWorldSpace(
+			self.CameraCFrame:VectorToWorldSpace(self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(self.Offset.Unit))
+		)
+	else
+		cameraDirection = Vector3.zero
+	end
 	local rotatedOffset = self.Offset.Magnitude * cameraDirection
 
 	local right = self.Vehicle.WeightPart.CFrame.RightVector:Dot(rotatedOffset)
