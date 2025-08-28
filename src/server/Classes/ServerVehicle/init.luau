@@ -296,7 +296,7 @@ function InitializeSeats(self: ServerVehicle)
 
 		local masslessTable = {}
 		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
-			prompt.Enabled = seat.Occupant ~= nil
+			prompt.Enabled = seat.Occupant == nil
 
 			if seat.Occupant then
 				local character = seat.Occupant.Parent

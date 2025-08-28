@@ -117,7 +117,12 @@ function togglePrompts(self: ClientVehicle, enabled: boolean)
 	for _, seat in seats do
 		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
 
-		(seat.PromptAttachment.ProximityPrompt :: ProximityPrompt).Enabled = enabled
+		local prompt = seat.PromptAttachment.ProximityPrompt :: ProximityPrompt
+		if seat.Occupant then
+			prompt.Enabled = false
+		else
+			prompt.Enabled = enabled
+		end
 	end
 end
 
