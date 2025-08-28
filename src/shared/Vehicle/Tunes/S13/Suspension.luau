@@ -7,8 +7,8 @@ local Tune = {} :: VehicleTypes.Tune
 Tune.SuspensionEnabled = true
 
 Tune.FSusStiffness = 3.2
-Tune.FSusDamping = 1.8
-Tune.FSwayBar = 4.7
+Tune.FSusDamping = 2.2
+Tune.FSwayBar = 2.8
 
 Tune.FSusLength = 1.25
 Tune.FPreCompress = 0.2
@@ -17,7 +17,7 @@ Tune.FCompressLim = 0.2
 
 Tune.RSusStiffness = 3.5
 Tune.RSusDamping = 2.4
-Tune.RSwayBar = 5.4
+Tune.RSwayBar = 3.4
 
 Tune.RSusLength = 1.15
 Tune.RPreCompress = 0.2

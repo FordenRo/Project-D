@@ -21,7 +21,7 @@ local compiledScratchTextures = {}
 do
 	local taskCount = 0
 	local initialImage = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
-	for i = 1, 10 do
+	for i = 2, 10 do
 		task.spawn(function()
 			local image = ImageUtils.CopyImage(initialImage)
 			ImageUtils.SetImageAlpha(image, i / 10)
@@ -140,7 +140,7 @@ function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): Deforma
 			debug.profilebegin("DrawScratch")
 			local texture = self.Vehicle.Textures[meshPart]
 			if texture and closestVertexDistance < 1 then
-				local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.1, 1)
+				local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.2, 1)
 				local scratch = compiledScratchTextures[math.round(alpha * 10)]
 
 				local size = meshScale * 2

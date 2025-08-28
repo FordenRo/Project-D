@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local FlagsUtils = require(ReplicatedStorage.Shared.Utils.FlagsUtils)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)

@@ -6,8 +6,6 @@ local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local InputContext = ReplicatedStorage.Input.Vehicle
-
 local LIGHT_POWER = {
 	Off = 0,
 	Low = 0.5,
