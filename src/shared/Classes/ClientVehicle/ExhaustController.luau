@@ -64,7 +64,8 @@ function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustCont
 
 	self.Motor = MakeMotor(self.Vehicle.Instance.DriveSeat, self.Instance)
 
-	RunService.Heartbeat:Connect(function() Update(self) end)
+	local con = RunService.Heartbeat:Connect(function() Update(self) end)
+	self.Vehicle.Instance.Destroying:Once(function() con:Disconnect() end)
 
 	return self
 end
