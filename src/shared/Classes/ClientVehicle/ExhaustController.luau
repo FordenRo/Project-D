@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local MakeMotor = require(ReplicatedStorage.Shared.Utils.MakeMotor)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -9,53 +10,66 @@ local player = Players.LocalPlayer
 
 local STRENGTH = 0.08
 
-local Exhaust = {}
-Exhaust.__index = Exhaust
+local ExhaustController = {}
+ExhaustController.__index = ExhaustController
 
-export type Exhaust = typeof(setmetatable(
+export type ExhaustController = typeof(setmetatable(
 	{} :: {
 		_startEmitter: {
 			Color: ColorSequence,
 			Size: NumberSequence,
 			Transparency: NumberSequence,
 		},
+		_startCFrame: CFrame,
 		Vehicle: VehicleTypes.ClientVehicle,
-		Exhaust: BasePart & { Attachment: Attachment? },
+		Instance: BasePart,
 		Emitter: ParticleEmitter,
-		Weld: Weld,
+		Motor: Motor6D,
 	},
-	Exhaust
+	ExhaustController
 ))
 
-function Exhaust.new(vehicle: VehicleTypes.ClientVehicle): Exhaust
-	local self: Exhaust = setmetatable({}, Exhaust) :: any
+function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustController
+	local self: ExhaustController = setmetatable({}, ExhaustController) :: any
 
 	self.Vehicle = vehicle
-	self.Exhaust = self.Vehicle.Instance.Body:FindFirstChild("Exhaust") :: any
 
-	assert(self.Exhaust, self.Vehicle.Instance.Name .. ".Misc.Exhaust not found")
-	assert(
-		self.Exhaust:FindFirstChild("Attachment"),
-		self.Vehicle.Instance.Name .. ".Misc.Exhaust.Attachment not found"
-	)
+	self.Instance = self.Vehicle.Instance.Body:FindFirstChild("Exhaust") :: any
+	if not self.Instance then
+		warn(`Exhaust not found in {self.Vehicle.Instance.Name}`)
+		return self
+	end
+
+	local attachment = self.Instance:FindFirstChild("Attachment")
+	if not attachment then
+		warn(`Exhaust emitter's attachment not found in {self.Vehicle.Instance.Name}`)
+		return self
+	end
+
+	self._startCFrame = self.Instance.CFrame
 
 	-- Create emitter
 	self.Emitter = ReplicatedStorage.Vehicle.ExhaustEmitter:Clone()
-	self.Emitter.Parent = self.Exhaust.Attachment
+	self.Emitter.Parent = attachment
 	self._startEmitter = {
 		Color = self.Emitter.Color,
 		Size = self.Emitter.Size,
 		Transparency = self.Emitter.Transparency,
 	}
 
-	self.Weld = self.Exhaust:GetJoints()[1] :: any
+	-- Remove welds
+	for _, v in self.Instance:GetJoints() do
+		v:Destroy()
+	end
+
+	self.Motor = MakeMotor(self.Vehicle.Instance.DriveSeat, self.Instance)
 
 	RunService.Heartbeat:Connect(function() Update(self) end)
 
 	return self
 end
 
-function Update(self: Exhaust)
+function Update(self: ExhaustController)
 	local canUpdate = (self.Vehicle.IsOn or self.Vehicle.Starting)
 		and (player.Character:GetPivot().Position - self.Vehicle.WeightPart.Position).Magnitude < 70
 
@@ -72,7 +86,7 @@ function Update(self: Exhaust)
 		math.noise(0, 0, t) * (1 - rpmDelta) * STRENGTH
 	)
 
-	self.Weld.C0 = CFrame.new(offset)
+	self.Motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
 	rpmDelta = MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM) ^ 0.5
@@ -106,4 +120,4 @@ function Update(self: Exhaust)
 	end
 end
 
-return Exhaust
+return ExhaustController
