@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 
 local Slider = require(script.Parent.Slider)
+local Tips = require(script.Parent.Tips)
 
 local player = Players.LocalPlayer
 
@@ -16,6 +17,8 @@ export type LoadingScreen = typeof(setmetatable(
 				Slider: Frame,
 				Asset: TextLabel,
 				LoadingLabel: TextLabel,
+				Version: TextLabel,
+				Tip: TextLabel,
 			},
 		},
 		Slider: Slider.Slider,
@@ -32,12 +35,15 @@ function LoadingScreen.new(): LoadingScreen
 
 	self.Slider = Slider.new(self.Instance.Content.Slider)
 
-	createLoadingLabelTask(self)
+	self.Instance.Content.Version.Text = `<font transparency="0.35" size="10">VERSION:</font> sds`
+
+	InitializeLoadingLabel(self)
+	InitializeTips(self)
 
 	return self
 end
 
-function createLoadingLabelTask(self: LoadingScreen)
+function InitializeLoadingLabel(self: LoadingScreen)
 	local t = 3
 	table.insert(
 		self._tasks,
@@ -45,6 +51,17 @@ function createLoadingLabelTask(self: LoadingScreen)
 			task.wait(1)
 			t = t < 3 and t + 1 or 0
 			self.Instance.Content.LoadingLabel.Text = "Loading" .. string.sub("...", 1, t)
+		end)
+	)
+end
+
+function InitializeTips(self: LoadingScreen)
+	table.insert(
+		self._tasks,
+		task.spawn(function()
+			local tip = Tips[math.random(1, #Tips)]
+			self.Instance.Content.Tip.Text = `<font transparency="0.4">Tip:</font> {tip}`
+			task.wait(4 + #tip / 20)
 		end)
 	)
 end
