@@ -9,7 +9,7 @@ local CameraController = require(script.CameraController)
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
-local Exhaust = require(script.Exhaust)
+local ExhaustController = require(script.ExhaustController)
 local InputController = require(script.InputController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -44,7 +44,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self:InitializeWheels()
 
 	SoundController.new(self)
-	Exhaust.new(self)
+	ExhaustController.new(self)
 	self.Lights = Lights.new(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
