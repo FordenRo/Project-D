@@ -11,6 +11,7 @@ local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local ExhaustController = require(script.ExhaustController)
 local InputController = require(script.InputController)
+local InteriorController = require(script.InteriorController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local SoundController = require(script.SoundController)
@@ -44,6 +45,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self:InitializeWheels()
 
 	SoundController.new(self)
+	InteriorController.new(self)
 	ExhaustController.new(self)
 	self.Lights = Lights.new(self)
 

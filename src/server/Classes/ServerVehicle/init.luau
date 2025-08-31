@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
+local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -21,6 +22,7 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 
 	self.Engine = table.clone(EngineTable)
 	Lights.new(self)
+	InteriorHandler.new(self)
 
 	self._Remote.OnServerEvent:Connect(function(sender: Player, buf: buffer)
 		self:_Replicate(buf)
