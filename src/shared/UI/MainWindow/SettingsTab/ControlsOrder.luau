@@ -21,6 +21,7 @@ return {
 			"Handbrake",
 			"Leave",
 			"ToggleMouseSteering",
+			"ToggleFirstPersonView",
 			"TransmissionMode",
 			"Lights",
 			"LeftTurnSignal",
