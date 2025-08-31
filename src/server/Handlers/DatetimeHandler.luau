@@ -7,7 +7,7 @@ local DAY_TEMPERATURE = 34
 local NIGHT_TEMPERATURE = 16
 
 local DAY_BRIGHTNESS = 3
-local NIGHT_BRIGHTNESS = 0.1
+local NIGHT_BRIGHTNESS = 1
 
 local DatetimeHandler = {}
 DatetimeHandler.__index = DatetimeHandler
@@ -24,10 +24,15 @@ function DatetimeHandler.new(): DatetimeHandler
 	task.spawn(function()
 		while true do
 			local deltaTime = task.wait(1 / 10)
-			Lighting.ClockTime += deltaTime / 60
+
+			if math.abs(Lighting.ClockTime - 12) > 5 then
+				Lighting.ClockTime += deltaTime / 60
+			else
+				Lighting.ClockTime += deltaTime / 120
+			end
 
 			local t = (1 - math.abs(Lighting.ClockTime - 12) / 12) ^ 2
-			Lighting.Brightness = Lerp(DAY_BRIGHTNESS, NIGHT_BRIGHTNESS, t)
+			Lighting.Brightness = Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
 			game.Workspace:SetAttribute("GlobalTemperature", Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t))
 		end
 	end)
