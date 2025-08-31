@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 
 local Aerodynamics = require(script.Aerodynamics)
 local BaseVehicle = require(script.Parent.BaseVehicle)
+local BodyController = require(script.BodyController)
 local CameraController = require(script.CameraController)
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
@@ -45,8 +46,8 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self:InitializeWheels()
 
 	SoundController.new(self)
-	InteriorController.new(self)
 	ExhaustController.new(self)
+	InteriorController.new(self)
 	self.Lights = Lights.new(self)
 
 	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
@@ -77,6 +78,7 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
 	self.DeformationController = DeformationController.new(self)
+	BodyController.new(self)
 	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end
