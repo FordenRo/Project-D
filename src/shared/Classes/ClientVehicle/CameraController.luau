@@ -1,4 +1,5 @@
 local ContextActionService = game:GetService("ContextActionService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -6,11 +7,27 @@ local UserInputService = game:GetService("UserInputService")
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
+local player = Players.LocalPlayer
 local Camera = game.Workspace.CurrentCamera
 
 local MAX_DISTANCE = 32
 local MIN_DISTANCE = 16
 local FOV = Camera.FieldOfView
+
+local VISIBLE_BODY_PARTS = {
+	"LeftUpperArm",
+	"LeftLowerArm",
+	"LeftHand",
+	"RightUpperArm",
+	"RightLowerArm",
+	"RightHand",
+	"LeftUpperLeg",
+	"LeftLowerLeg",
+	"LeftFoot",
+	"RightUpperLeg",
+	"RightLowerLeg",
+	"RightFoot",
+}
 
 local CameraController = {}
 CameraController.__index = CameraController
@@ -26,9 +43,13 @@ function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraContro
 	self.LookOffset = Vector3.new()
 	self.Angles = Vector3.new()
 	self.Bumping = Vector3.new()
+	self.FirstPerson = false
 	self._LastCameraRotation = 0
+	self._CharacterVisible = true
 	self.CameraCFrame = CFrame.new()
 	Camera.CameraType = Enum.CameraType.Scriptable
+
+	InitializeNeck(self)
 
 	RunService:BindToRenderStep(
 		"CameraUpdate",
@@ -78,6 +99,77 @@ function UpdateRotation(self: CameraController, input: InputObject)
 end
 
 function Update(self: CameraController, deltaTime: number)
+	if not player.Character then return end
+
+	if self._CharacterVisible == self.FirstPerson then
+		self._CharacterVisible = not self.FirstPerson
+		for _, v in player.Character:GetDescendants() do
+			if not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name) then continue end
+
+			v.LocalTransparencyModifier = self._CharacterVisible and 0 or 1
+		end
+	end
+
+	if self.FirstPerson then
+		UpdateFirstPerson(self, deltaTime)
+	else
+		UpdateThirdPerson(self, deltaTime)
+	end
+end
+
+function InitializeNeck(self: CameraController)
+	local neck = player.Character:FindFirstChild("Head"):FindFirstChild("Neck") :: AnimationConstraint
+	local upperTorso = player.Character:FindFirstChild("UpperTorso") :: BasePart
+	local neckRotation = Vector3.zero
+	local neckDirection = Vector3.zero
+
+	-- Run task
+	task.defer(function()
+		while true do
+			local deltaTime = RunService.PreSimulation:Wait()
+
+			local direction = self.Vehicle.WeightPart.CFrame.LookVector
+			if self.Vehicle.Velocity.Magnitude > 0 then
+				direction = direction:Lerp(
+					self.Vehicle.Velocity.Unit,
+					math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
+						* self.Vehicle.WeightPart.CFrame.LookVector:Dot(self.Vehicle.Velocity.Unit)
+						* 0.2
+				)
+			end
+
+			local rotationOffset = Vector3.new(-math.rad(10), 0, 0)
+			local steeringRotation = Vector3.yAxis * self.Vehicle.Steering * math.rad(30)
+			local angularVelocityRotation =
+				Vector3.new(self.Vehicle.AngularVelocity.X * 0.2, 0, self.Vehicle.AngularVelocity.Z * 0.4)
+
+			-- Update neck
+			neckRotation = neckRotation:Lerp(steeringRotation + angularVelocityRotation + rotationOffset, deltaTime * 3)
+			neckDirection = neckDirection:Lerp(direction, deltaTime * 3)
+			neck.Transform = upperTorso.CFrame:ToObjectSpace(
+				CFrame.lookAlong(Vector3.zero, neckDirection, self.Vehicle.WeightPart.CFrame.UpVector)
+					* CFrame.fromOrientation(neckRotation.X, -neckRotation.Y, neckRotation.Z)
+			).Rotation
+		end
+	end)
+end
+
+function UpdateFirstPerson(self: CameraController, deltaTime: number)
+	local head = player.Character:FindFirstChild("Head") :: BasePart
+
+	local bumping = Vector3.yAxis * self.Vehicle.Acceleration.Y * 0.02
+	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 4)
+
+	-- Update camera
+	Camera.FieldOfView = FOV * 1.2 + self.Vehicle.Velocity.Magnitude / 100
+	Camera.CFrame = CFrame.lookAlong(
+		head.Position + Vector3.new(0, 0.2, 0) - self.Vehicle.WeightPart.CFrame.LookVector * 0.4 + self.Bumping,
+		head.CFrame.LookVector,
+		head.CFrame.UpVector
+	) * CFrame.fromOrientation(self.Angles.X, self.Angles.Y, self.Angles.Z)
+end
+
+function UpdateThirdPerson(self: CameraController, deltaTime: number)
 	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 
 	local heightOffset = self.Vehicle.WeightPart.CFrame.UpVector * 7

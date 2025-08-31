@@ -23,6 +23,13 @@ local Info = {
 		Type = "Checkbox",
 		Default = false,
 	},
+	OneHandedSteering = {
+		Title = "One Handed Steering",
+		Category = "Gameplay",
+		Description = "Only one hand will be on the steering wheel.",
+		Type = "Checkbox",
+		Default = false,
+	},
 	ControllerDZone = {
 		Title = "Controller Deadzone",
 		Category = "Controls",

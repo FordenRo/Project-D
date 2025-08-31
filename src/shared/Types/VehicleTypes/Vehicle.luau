@@ -132,12 +132,14 @@ export type ClientVehicle = {
 
 export type CameraController = {
 	_LastCameraRotation: number,
+	_CharacterVisible: boolean,
 	Vehicle: ClientVehicle,
 	Distance: number,
 	Offset: Vector3,
 	LookOffset: Vector3,
 	Angles: Vector3,
 	Bumping: Vector3,
+	FirstPerson: boolean,
 	CameraCFrame: CFrame,
 
 	new: (vehicle: ClientVehicle) -> CameraController,

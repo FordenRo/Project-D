@@ -177,6 +177,9 @@ function InitializeConnections(self: InputController)
 			self.MouseSteerOn = not self.MouseSteerOn
 			self.Steering = 0
 		end,
+		ToggleFirstPersonView = function()
+			self.Vehicle.CameraController.FirstPerson = not self.Vehicle.CameraController.FirstPerson
+		end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then
 				if self.Vehicle.TCS and self.Vehicle.ESC then
