@@ -16,7 +16,7 @@ export type SoundTypesHandler = typeof(setmetatable(
 	SoundTypesHandler
 ))
 
-export type CachedSoundData = VehicleTypes.SoundData & { Instance: Sound }
+export type CachedSoundData = VehicleTypes.SoundData & { AudioPlayer: AudioPlayer, Played: boolean?, Type: string }
 
 function SoundTypesHandler.new(vehicle: VehicleTypes.ClientVehicle): SoundTypesHandler
 	local self: SoundTypesHandler = setmetatable({}, SoundTypesHandler) :: any
@@ -30,44 +30,40 @@ function SoundTypesHandler.new(vehicle: VehicleTypes.ClientVehicle): SoundTypesH
 end
 
 function SoundTypesHandler.Engine(self: SoundTypesHandler, sound: CachedSoundData)
-	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
-		+ (sound.RedlinePlaybackSpeed - sound.BasePlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)
+	sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed
+		+ (sound.RedlinePlaybackSpeed - sound.PlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)
 
-	sound.Instance.Volume = (self.Vehicle.IsOn and 1 or 0)
-		* (sound.BaseVolume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
+	sound.AudioPlayer.Volume = (self.Vehicle.IsOn and 1 or 0)
+		* (sound.Volume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
 		* math.clamp(1 / sound.TransitionStart * (self.Vehicle.RPM - sound.RangeStart), 0, 1)
 		* math.clamp(-1 / sound.TransitionEnd * (self.Vehicle.RPM - sound.RangeEnd), 0, 1)
 end
 
 function SoundTypesHandler.Transmission(self: SoundTypesHandler, sound: CachedSoundData)
-	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-	sound.Instance.PlaybackSpeed = sound.VariablePlaybackSpeed
+	sound.AudioPlayer.PlaybackSpeed = sound.VariablePlaybackSpeed
 		* (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))
 
-	sound.Instance.Volume = table.find(sound.Gears, self.Vehicle.Gear)
-			and (sound.ClutchVolume + ((sound.BaseVolume + sound.VariableVolume * (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))) - sound.ClutchVolume) * (1 - self.Vehicle.Clutch) + sound.ThrottleVolume * self.Vehicle.Throttle)
+	sound.AudioPlayer.Volume = table.find(sound.Gears, self.Vehicle.Gear)
+			and (sound.ClutchVolume + ((sound.Volume + sound.VariableVolume * (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))) - sound.ClutchVolume) * (1 - self.Vehicle.Clutch) + sound.ThrottleVolume * self.Vehicle.Throttle)
 		or sound.OffVolume
 end
 
 function SoundTypesHandler.Turbo(self: SoundTypesHandler, sound: CachedSoundData)
-	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
-		+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostTurbo
-
-	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
+	sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostTurbo
+	sound.AudioPlayer.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
 end
 
 function SoundTypesHandler.Super(self: SoundTypesHandler, sound: CachedSoundData)
-	if sound.Instance.Playing == false then sound.Instance.Playing = true end
+	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
-		+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostSuper
-
-	sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostSuper
+	sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed + sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostSuper
+	sound.AudioPlayer.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostSuper
 end
 
 function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: CachedSoundData)
@@ -77,58 +73,57 @@ function SoundTypesHandler.Blowoff(self: SoundTypesHandler, sound: CachedSoundDa
 		and self.Vehicle.Throttle < 0.8
 	then
 		self._UpdateBOV = true
-		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+		sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed
 			+ sound.PlaybackSpeedIncrease * self.Vehicle.Engine.BoostTurbo
 
-		sound.Instance.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
-		sound.Instance.TimePosition = 0
-		sound.Instance.Playing = true
+		sound.AudioPlayer.Volume = sound.VolumeIncrease * self.Vehicle.Engine.BoostTurbo
+		sound.AudioPlayer.TimePosition = 0
+		sound.AudioPlayer:Play()
 	end
 	self._PrevBoostTurbo = self.Vehicle.Engine.BoostTurbo
 end
 
 function SoundTypesHandler.Ignition(self: SoundTypesHandler, sound: CachedSoundData)
 	if self.Vehicle.Starting then
-		if not sound.Instance:GetAttribute("Played") then
-			sound.Instance.TimePosition = 0
-			sound.Instance.Playing = true
+		if not sound.Played then
+			sound.AudioPlayer.TimePosition = 0
+			sound.AudioPlayer:Play()
 		end
-		sound.Instance:SetAttribute("Played", true)
-		sound.Instance.Volume = sound.Volume
-		sound.Instance.PlaybackSpeed = sound.Pitch
-			+ (sound.MaxPitch - sound.Pitch) * (self.Vehicle.RPM / self.Vehicle.Tune.IgnitionRPM)
+		sound.Played = true
+		sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed
+			+ (sound.MaxPlaybackSpeed - sound.PlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.IgnitionRPM)
 	else
-		sound.Instance:SetAttribute("Played", false)
-		if sound.Instance.Playing then sound.Instance.Playing = false end
+		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
+		sound.Played = false
 	end
 end
 
 function SoundTypesHandler.EngineBlow(self: SoundTypesHandler, sound: CachedSoundData)
 	if self.Vehicle.Engine.Health == 0 then
-		if sound.Instance:GetAttribute("Played") then return end
+		if sound.Played then return end
 
-		sound.Instance:SetAttribute("Played", true)
-		sound.Instance.Volume = sound.BaseVolume
-		sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
-		sound.Instance.Playing = true
+		sound.Played = true
+		sound.AudioPlayer:Play()
 	end
 end
 
 function SoundTypesHandler.Fan(self: SoundTypesHandler, sound: CachedSoundData)
 	if self.Vehicle.FanSpeed > 0 then
-		if not sound.Instance.Playing then sound.Instance.Playing = true end
+		if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-		sound.Instance.Volume = self.Vehicle.RPM / self.Vehicle.Tune.Redline ^ 0.5 * sound.BaseVolume
-		sound.Instance.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed / 10 * sound.BasePlaybackSpeed
+		sound.AudioPlayer.Volume = self.Vehicle.RPM / self.Vehicle.Tune.Redline ^ 0.5 * sound.Volume
+		sound.AudioPlayer.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed / 10 * sound.PlaybackSpeed
 	else
-		if sound.Instance.Playing then sound.Instance.Playing = false end
+		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
 	end
 end
 
 function SoundTypesHandler.Horn(self: SoundTypesHandler, sound: CachedSoundData)
-	sound.Instance.Playing = self.Vehicle.Horning
-	sound.Instance.Volume = sound.BaseVolume
-	sound.Instance.PlaybackSpeed = sound.BasePlaybackSpeed
+	if self.Vehicle.Horning then
+		sound.AudioPlayer:Play()
+	else
+		sound.AudioPlayer:Stop()
+	end
 end
 
 function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { CachedSoundData })

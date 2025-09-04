@@ -24,15 +24,34 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 	self.Sounds = {}
 	self.SoundTypesHandler = SoundTypesHandler.new(vehicle)
 
+	local emitters = {}
+	for _, v in self.Vehicle.Instance:GetDescendants() do
+		if not v:IsA("AudioEmitter") then continue end
+
+		emitters[v.Name] = v
+	end
+
+	local folder = Instance.new("Folder")
+	folder.Name = "AudioPlayers"
+	folder.Parent = self.Vehicle.Instance
+
 	for name, sound in self.Vehicle.Tune.Sounds do
 		local cachedSound = table.clone(sound) :: SoundTypesHandler.CachedSoundData
-		local instance = Instance.new("Sound")
-		instance.Playing = false
-		instance.Volume = 0
-		instance.SoundId = sound.SoundId
-		instance.Parent = sound.Parent and self.Vehicle.Instance.Body.Sounds:FindFirstChild(sound.Parent)
-			or self.Vehicle.WeightPart
-		cachedSound.Instance = instance
+
+		local audioPlayer = Instance.new("AudioPlayer")
+		audioPlayer.Volume = sound.Volume or 1
+		audioPlayer.PlaybackSpeed = sound.PlaybackSpeed or 1
+		audioPlayer.Asset = sound.Asset
+		audioPlayer.Name = name
+		audioPlayer.Parent = folder
+
+		local wire = Instance.new("Wire")
+		wire.SourceInstance = audioPlayer
+		wire.TargetInstance = emitters[sound.Emitter]
+		wire.Parent = audioPlayer
+
+		cachedSound.Type = name
+		cachedSound.AudioPlayer = audioPlayer
 		table.insert(self.Sounds, cachedSound)
 	end
 

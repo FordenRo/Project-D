@@ -120,6 +120,7 @@ function ApplyWeight(self: ServerVehicle)
 		weightPart.Name = "WeightPart"
 		weightPart.Anchored = true
 		weightPart.CanCollide = false
+		weightPart.AudioCanCollide = false
 		weightPart.BrickColor = BrickColor.new("Really black")
 		weightPart.TopSurface = Enum.SurfaceType.Smooth
 		weightPart.BottomSurface = Enum.SurfaceType.Smooth
