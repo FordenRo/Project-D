@@ -141,6 +141,10 @@ export type Type = {
 	BrakeAccel: number,
 	--- Brake deceleration, applied per tick
 	BrakeDecel: number,
+	--- Clutch acceleration, applied per tick
+	ClutchAccel: number,
+	--- Clutch deceleration, applied per tick
+	ClutchDecel: number,
 
 	--- RPM kickback from redline
 	RevBounce: number,

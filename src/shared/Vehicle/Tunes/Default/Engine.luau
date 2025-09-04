@@ -53,14 +53,16 @@ Tune.IgnitionRPM = 2000
 Tune.IgnitionAccel = 60
 Tune.IgnitionMinRPM = 800
 
-Tune.ThrotAccel = 0.1
+Tune.ThrotAccel = 0.08
 Tune.ThrotDecel = 0.1
-Tune.BrakeAccel = 0.1
+Tune.BrakeAccel = 0.05
 Tune.BrakeDecel = 0.1
+Tune.ClutchAccel = 0.2
+Tune.ClutchDecel = 0.08
 
 Tune.RevBounce = 200
 Tune.RevAccel = 180
-Tune.RevDecay = 30
+Tune.RevDecay = 40
 Tune.RevDecayRPM = 60
 Tune.OverRev = true
 

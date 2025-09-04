@@ -196,7 +196,6 @@ function InitializeVariables(self: ClientVehicle)
 	self._cons = {}
 	self._ShiftUp = false
 	self._ShiftDown = false
-	self._ClutchPressing = false
 	self._DriveWheelSpeed = 0
 	self._OldVelocity = Vector3.new()
 	self._MaxSpin = 0

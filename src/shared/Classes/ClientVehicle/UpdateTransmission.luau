@@ -6,7 +6,7 @@ return function(self: VehicleTypes.ClientVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 	if self._ShiftUp and not self.Shifting then
 		if
-			(self.TransmissionMode == "Manual" and not self._ClutchPressing)
+			(self.TransmissionMode == "Manual" and self.InputController.Clutch < 1)
 			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self.InputController.Throttle > 0))
 			or self.Gear == #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0)
 			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
@@ -41,16 +41,10 @@ return function(self: VehicleTypes.ClientVehicle)
 		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
 		if NextGear > 3 + (ParkingGearEnabled and 1 or 0) and self.Tune.ClutchType == "CVT" then return end -- make sure it cannot go past 1st gear
 		self.Gear = math.min(self.Gear + 1, #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0))
-		if
-			self.TransmissionMode ~= "Manual"
-			or (self.TransmissionMode == "Manual" and self.Gear == 1) and self.IsOn
-		then
-			self._ClutchPressing = self.InputController.Clutch
-		end
 	end
 	if self._ShiftDown and not self.Shifting then
 		if
-			(self.TransmissionMode == "Manual" and not self._ClutchPressing)
+			(self.TransmissionMode == "Manual" and self.InputController.Clutch < 1)
 			or self.Gear == -1 - (ParkingGearEnabled and 1 or 0)
 			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
 		then
@@ -83,11 +77,5 @@ return function(self: VehicleTypes.ClientVehicle)
 		self.Shifting = false
 		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
 		self.Gear = math.max(self.Gear - 1, self.Velocity.Magnitude > 5 and -1 or -2)
-		if
-			self.TransmissionMode ~= "Manual"
-			or (self.TransmissionMode == "Manual" and self.Gear == -1) and self.IsOn
-		then
-			self._ClutchPressing = self.InputController.Clutch
-		end
 	end
 end

@@ -25,10 +25,11 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputControll
 	self._cons = {}
 	self._RawThrottle = 0
 	self._RawBrake = 0
+	self._RawClutch = 0
 
 	self.Throttle = 0
 	self.Brake = 0
-	self.Clutch = false
+	self.Clutch = 0
 	self.Steering = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.MouseSteerOn = false
@@ -101,6 +102,11 @@ function SmoothInputs(self: InputController, deltaTime: number)
 	else
 		self.Brake = math.max(self._RawBrake, self.Brake - (self.Vehicle.Tune.BrakeDecel * deltaTime))
 	end
+	if self.Clutch <= self._RawClutch then
+		self.Clutch = math.min(self._RawClutch, self.Clutch + (self.Vehicle.Tune.ClutchAccel * deltaTime))
+	else
+		self.Clutch = math.max(self._RawClutch, self.Clutch - (self.Vehicle.Tune.ClutchDecel * deltaTime))
+	end
 end
 
 function UpdateMouseInput(self: InputController)
@@ -139,10 +145,7 @@ function InitializeConnections(self: InputController)
 				self.Steering = 0
 			end
 		end,
-		Clutch = function(value)
-			self.Vehicle._ClutchPressing = value
-			self.Clutch = value
-		end,
+		Clutch = function(value) self._RawClutch = value end,
 		Handbrake = function(value)
 			if value then
 				self.Vehicle.PBrake = not self.Vehicle.PBrake

@@ -119,7 +119,6 @@ export type ClientVehicle = {
 	-- Transmission
 	_ShiftUp: boolean,
 	_ShiftDown: boolean,
-	_ClutchPressing: boolean,
 	_DriveWheelSpeed: number,
 	-- Velocity
 	_OldVelocity: Vector3,
@@ -166,10 +165,11 @@ export type InputController = {
 	_cons: { RBXScriptConnection },
 	_RawThrottle: number,
 	_RawBrake: number,
+	_RawClutch: number,
 	Vehicle: ClientVehicle,
 	Throttle: number,
 	Brake: number,
-	Clutch: boolean,
+	Clutch: number,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
 	Steering: number,

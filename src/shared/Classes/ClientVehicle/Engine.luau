@@ -104,21 +104,14 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	if
-		(
-			(
-				self.Vehicle._ClutchPressing
-				and (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2))
-			) or (self.Vehicle.InputController.Clutch and self.Vehicle.Gear ~= 0)
-		) and self.Vehicle.Tune.NeutralLimit
+		self.Vehicle.InputController.Clutch > 0
+		and (
+			(self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2))
+				and self.Vehicle.Tune.NeutralLimit
+			or self.Vehicle.Tune.NeutralLimit and self.Vehicle.Tune.LimitClutch
+		)
 	then
-		if
-			(
-				(self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2))
-				and not self.Vehicle.Tune.LimitClutch
-			) or self.Vehicle.Tune.LimitClutch
-		then
-			goalMax = self.Vehicle.Tune.NeutralRevRPM
-		end
+		goalMax = Lerp(self.Vehicle.Tune.Redline, self.Vehicle.Tune.NeutralRevRPM, self.Vehicle.InputController.Clutch)
 	end
 
 	-- Rev limiter/speed limiter
@@ -213,7 +206,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 		revMin
 	)
 	local clutchP = math.min(math.abs(aRPM - self.Vehicle.RPM) / (self.Vehicle.Tune.Flywheel * deltaTime), 0.9)
-	if self.Vehicle._ClutchPressing then clutchP = 0 end
 	self.Vehicle.RPM = aRPM * (1 - clutchP) + self.Vehicle.RPM * clutchP
 
 	if self.Vehicle.Tune.OverRev == false and self.Vehicle.RPM > self.Vehicle.Tune.Redline then
@@ -237,16 +229,15 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Clutch
-	if self.Vehicle.Shifting or (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2)) then
-		self.Vehicle._ClutchPressing = true
-		self.Vehicle.Clutch = 1
-	end
+	local forceClutch = self.Vehicle.Shifting
+		or (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -1))
+	if forceClutch then self.Vehicle.Clutch = 1 end
 
 	local clutchModulate = 0
 	if self.Vehicle.Tune.Clutch then
 		if self.Vehicle.AutoClutch then
 			if self.Vehicle.Tune.ClutchType == "Clutch" or self.Vehicle.Tune.ClutchType == "CVT" then
-				local clutchKick = (self.Vehicle._ClutchPressing and 1 or 0) * (self.Vehicle.Tune.ClutchEngage / 100)
+				local clutchKick = self.Vehicle.Clutch * (self.Vehicle.Tune.ClutchEngage / 100)
 				local ClRPMInfluence =
 					math.max(self.Vehicle.RPM * self.Vehicle.Tune.ClutchRPMMult / self.Vehicle.Tune.Redline, 0)
 				if self.Vehicle.Tune.ClutchMode == "New" then ClRPMInfluence = 0 end
@@ -287,24 +278,16 @@ function Engine.Update(self: Engine, deltaTime: number)
 			elseif self.Vehicle.Tune.ClutchType == "TorqueConverter" and not self.Vehicle.Tune.TQLock then
 				clutchModulate = math.min((self.Vehicle.RPM / self.Vehicle.Tune.Redline) * 0.7, 1)
 			end
-			if not self.Vehicle._ClutchPressing then
-				self.Vehicle.Clutch = math.min(1 - clutchModulate, 1)
+			if self.Vehicle.InputController.Clutch > 0 and not forceClutch then
+				self.Vehicle.Clutch = self.Vehicle.InputController.Clutch
 			else
-				self.Vehicle.Clutch = 1
+				self.Vehicle.Clutch = math.min(1 - clutchModulate, 1)
 			end
 		else
-			if self.Vehicle._ClutchPressing then
-				self.Vehicle.Clutch = 1
-			else
-				self.Vehicle.Clutch = 0
-			end
+			if not forceClutch then self.Vehicle.Clutch = self.Vehicle.InputController.Clutch end
 		end
 	else
-		if not self.Vehicle._ClutchPressing and not self.Vehicle.Shifting then
-			self.Vehicle.Clutch = 0
-		else
-			self.Vehicle.Clutch = 1
-		end
+		if not forceClutch then self.Vehicle.Clutch = self.Vehicle.InputController.Clutch end
 	end
 
 	-- Things that apply the clutch
@@ -475,23 +458,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		-- Apply Power
 		local throttle = self.Vehicle.Throttle
 		local brake = self.Vehicle.Brake
-		local clutch = 1
-		if
-			self.Vehicle._ClutchPressing
-			or (
-				self.Vehicle.AutoClutch
-				and (
-					self.Vehicle.Starting
-					or (
-						self.Vehicle.Tune.RemoveCreep
-						and self.Vehicle.RPM < self.Vehicle.Tune.IdleRPM + (self.Vehicle.Tune.IdlePadding or 0)
-						and self.Vehicle.InputController.Throttle < 0.1
-					)
-				)
-			)
-		then
-			clutch = 0
-		end
+		local clutch = 1 - self.Vehicle.Clutch
 		local wheelTorque = outTorque
 
 		-- Apply ESC
