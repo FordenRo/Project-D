@@ -126,6 +126,40 @@ function SoundTypesHandler.Horn(self: SoundTypesHandler, sound: CachedSoundData)
 	end
 end
 
+function SoundTypesHandler.HandbrakeOn(self: SoundTypesHandler, sound: CachedSoundData)
+	if self.Vehicle.PBrake then
+		if not sound.Played then
+			sound.AudioPlayer.TimePosition = 0
+			sound.AudioPlayer:Play()
+		end
+		sound.Played = true
+	else
+		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
+		sound.Played = false
+	end
+end
+
+function SoundTypesHandler.HandbrakeOff(self: SoundTypesHandler, sound: CachedSoundData)
+	if not self.Vehicle.PBrake then
+		if not sound.Played then
+			sound.AudioPlayer.TimePosition = 0
+			sound.AudioPlayer:Play()
+		end
+		sound.Played = true
+	else
+		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
+		sound.Played = false
+	end
+end
+
+function SoundTypesHandler.GearLever(self: SoundTypesHandler, sound: CachedSoundData)
+	if sound.LastGear ~= self.Vehicle.Gear then
+		sound.LastGear = self.Vehicle.Gear
+		sound.AudioPlayer.TimePosition = 0
+		sound.AudioPlayer:Play()
+	end
+end
+
 function SoundTypesHandler.HandleSounds(self: SoundTypesHandler, sounds: { CachedSoundData })
 	for _, sound in sounds do
 		self[sound.Type](self, sound)

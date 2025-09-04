@@ -47,6 +47,21 @@ Tune.Sounds = {
 		Volume = 0.8,
 		PlaybackSpeed = 1.4,
 	},
+	HandbrakeOn = {
+		Asset = "rbxassetid://102283939761909",
+		Emitter = "Handbrake",
+		Volume = 0.2,
+	},
+	HandbrakeOff = {
+		Asset = "rbxassetid://137904751277630",
+		Emitter = "Handbrake",
+		Volume = 0.2,
+	},
+	GearLever = {
+		Asset = "rbxassetid://125313108296442",
+		Emitter = "GearLever",
+		Volume = 0.7,
+	},
 }
 
 return Tune
