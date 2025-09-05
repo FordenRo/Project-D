@@ -92,13 +92,13 @@ function SettingsController.GetSettings(self: SettingsController) return table.c
 
 function SettingsController.GetSetting(self: SettingsController, name: string) return self.Settings[name] end
 
-function SettingsController.GetSettingInfo(self: SettingsController, name: string)
+function SettingsController.GetSettingInfo(self: SettingsController, name: string): SettingsInfo.SettingInfo
 	local info = table.clone(SettingsInfo)[name]
 	info.Value = self:GetSetting(name)
 	return info
 end
 
-function SettingsController.GetSettingInfos(self: SettingsController)
+function SettingsController.GetSettingInfos(self: SettingsController): { SettingsInfo.SettingInfo }
 	local t = table.clone(SettingsInfo)
 	for k, v in t do
 		v.Value = self:GetSetting(k)

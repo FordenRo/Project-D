@@ -37,10 +37,10 @@ do
 	initialImage:Destroy()
 end
 
-function DeformationController.new(Vehicle: VehicleTypes.ClientVehicle): DeformationController
+function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): DeformationController
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
-	self.Vehicle = Vehicle
+	self.Vehicle = vehicle
 
 	local collider = self.Vehicle.Instance.Body.Collider
 	local colliderMesh = CreateEditableMesh(collider)

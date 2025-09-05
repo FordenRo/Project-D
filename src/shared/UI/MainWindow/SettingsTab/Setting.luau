@@ -50,7 +50,7 @@ export type Setting = typeof(setmetatable(
 	Setting
 ))
 
-function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo)
+function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Setting
 	local self: Setting = setmetatable({}, Setting) :: any
 
 	self.Instance = instance :: any
@@ -81,6 +81,12 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo)
 	table.insert(self._cons, self.Instance.MouseLeave:Connect(function() self.Instance.BackgroundTransparency = 1 end))
 
 	self.Instance.Visible = true
+
+	self.Instance.Destroying:Once(function()
+		for _, v in self._cons do
+			v:Disconnect()
+		end
+	end)
 
 	return self
 end
@@ -227,12 +233,6 @@ function InitCheckbox(self: Setting)
 
 	updateCheckbox(self.Value)
 	self.Instance.Checkbox.Visible = true
-end
-
-function Setting.Destroy(self: Setting)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
 end
 
 return Setting
