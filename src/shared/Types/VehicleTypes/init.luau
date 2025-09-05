@@ -28,8 +28,11 @@ export type ServerVehicle = Vehicle.ServerVehicle
 export type InputController = Vehicle.InputController
 export type Engine = Vehicle.Engine
 export type EngineTable = Vehicle.EngineTable
-export type SoundData = SoundData.SoundData
 export type CameraController = Vehicle.CameraController
+export type SoundData = SoundData.SoundData
+export type CachedSoundData = SoundData.CachedSoundData
+export type SoundController = Vehicle.SoundController
+export type SoundTypesHandler = Vehicle.SoundTypesHandler
 
 --- Vehicle configuration
 ---

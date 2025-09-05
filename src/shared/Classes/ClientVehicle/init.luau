@@ -45,7 +45,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.Engine = Engine.new(self)
 	self:InitializeWheels()
 
-	SoundController.new(self)
+	self.SoundController = SoundController.new(self)
 	ExhaustController.new(self)
 	InteriorController.new(self)
 	self.Lights = Lights.new(self)

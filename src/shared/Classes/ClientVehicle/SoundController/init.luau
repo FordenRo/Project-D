@@ -7,22 +7,15 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local SoundController = {}
 SoundController.__index = SoundController
 
-export type SoundController = typeof(setmetatable(
-	{} :: {
-		_conn: RBXScriptConnection,
-		Vehicle: VehicleTypes.ClientVehicle,
-		Sounds: { SoundTypesHandler.CachedSoundData },
-		SoundTypesHandler: SoundTypesHandler.SoundTypesHandler,
-	},
-	SoundController
-))
+type SoundController = VehicleTypes.SoundController
 
 function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundController
 	local self: SoundController = setmetatable({}, SoundController) :: any
 
 	self.Vehicle = vehicle
 	self.Sounds = {}
-	self.SoundTypesHandler = SoundTypesHandler.new(vehicle)
+
+	local handler = SoundTypesHandler.new(vehicle)
 
 	local emitters = {}
 	for _, v in self.Vehicle.Instance:GetDescendants() do
@@ -36,7 +29,7 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 	folder.Parent = self.Vehicle.Instance
 
 	for name, sound in self.Vehicle.Tune.Sounds do
-		local cachedSound = table.clone(sound) :: SoundTypesHandler.CachedSoundData
+		local cachedSound = table.clone(sound) :: VehicleTypes.CachedSoundData
 
 		local audioPlayer = Instance.new("AudioPlayer")
 		audioPlayer.Volume = sound.Volume or 1
@@ -50,19 +43,14 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 		wire.TargetInstance = emitters[sound.Emitter]
 		wire.Parent = audioPlayer
 
-		cachedSound.Type = name
 		cachedSound.AudioPlayer = audioPlayer
-		table.insert(self.Sounds, cachedSound)
+		self.Sounds[name] = cachedSound
 	end
 
-	self._conn = RunService.Heartbeat:Connect(function() Update(self) end)
-	self.Vehicle.Instance.Destroying:Once(function() self:Destroy() end)
+	local conn = RunService.Heartbeat:Connect(function() handler:HandleSounds(self.Sounds) end)
+	self.Vehicle.Instance.Destroying:Once(function() conn:Disconnect() end)
 
 	return self
 end
-
-function Update(self: SoundController) self.SoundTypesHandler:HandleSounds(self.Sounds) end
-
-function SoundController.Destroy(self: SoundController) self._conn:Disconnect() end
 
 return SoundController

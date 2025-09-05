@@ -1,4 +1,5 @@
 local Controls = require(script.Parent.Controls)
+local SoundData = require(script.Parent.SoundData)
 local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
@@ -96,6 +97,25 @@ export type DeformationController = {
 	BlowEngine: (self: DeformationController) -> (),
 }
 
+export type SoundTypesHandler = {
+	__index: SoundTypesHandler,
+	_UpdateBOV: boolean,
+	_PrevBoostTurbo: number,
+	_LastBOV: number,
+	Vehicle: ClientVehicle,
+
+	new: (vehicle: ClientVehicle) -> SoundTypesHandler,
+	HandleSounds: (self: SoundTypesHandler, sounds: { [string]: SoundData.CachedSoundData }) -> (),
+}
+
+export type SoundController = {
+	__index: SoundController,
+	Vehicle: ClientVehicle,
+	Sounds: { [string]: SoundData.CachedSoundData },
+
+	new: (vehicle: ClientVehicle) -> SoundController,
+}
+
 export type ClientVehicle = {
 	__index: ClientVehicle,
 	_cons: { RBXScriptConnection },
@@ -109,6 +129,7 @@ export type ClientVehicle = {
 	Lights: ClientLights,
 	DrivenChanged: RBXScriptSignal<boolean>,
 	InputController: InputController,
+	SoundController: SoundController,
 	DeformationController: DeformationController,
 	CameraController: CameraController,
 	BrakeForce: { Front: number, Rear: number },
