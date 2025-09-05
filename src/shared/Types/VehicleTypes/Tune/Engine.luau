@@ -72,6 +72,8 @@ export type Type = {
 	RedlineDamageCurve: number,
 	--- Damage at high driveshaft stress per second
 	DriveshaftDamage: number,
+	--- Damage at redline when shifting without clutch
+	ClutchlessDamage: number,
 
 	--- Electric Engine
 	---
