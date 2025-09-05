@@ -3,6 +3,7 @@ local PlayerVehicle = require(script.PlayerVehicle)
 local SoundData = require(script.SoundData)
 local Tune = require(script.Tune)
 local Vehicle = require(script.Vehicle)
+local VehicleConstants = require(script.VehicleConstantsType)
 
 export type VehicleControls = Controls.VehicleControls
 export type VehicleInterface = Vehicle.VehicleInterface
@@ -38,6 +39,7 @@ export type SoundTypesHandler = Vehicle.SoundTypesHandler
 ---
 --- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
 export type Tune = Tune.Tune
+export type VehicleConstants = VehicleConstants.VehicleConstants
 export type PlayerVehicle = PlayerVehicle.PlayerVehicle
 export type PlayerVehicleInfo = PlayerVehicle.PlayerVehicleInfo
 

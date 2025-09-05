@@ -7,6 +7,7 @@ local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -68,8 +69,11 @@ function MakeGravity(self: ServerVehicle)
 		force.Name = "#GRAVCOMP"
 		force.RelativeTo = Enum.ActuatorRelativeTo.World
 		force.Attachment0 = attachment
-		force.Force =
-			Vector3.new(0, self.Tune.GravComp > 0 and v.Mass * (workspace.Gravity - self.Tune.GravComp) or 0, 0)
+		force.Force = Vector3.new(
+			0,
+			VehicleConstants.GravComp > 0 and v.Mass * (workspace.Gravity - VehicleConstants.GravComp) or 0,
+			0
+		)
 		force.Parent = v
 	end
 end
@@ -124,7 +128,7 @@ function ApplyWeight(self: ServerVehicle)
 		weightPart.BrickColor = BrickColor.new("Really black")
 		weightPart.TopSurface = Enum.SurfaceType.Smooth
 		weightPart.BottomSurface = Enum.SurfaceType.Smooth
-		if self.Tune.WBVisible then
+		if VehicleConstants.WBVisible then
 			weightPart.Transparency = 0.75
 		else
 			weightPart.Transparency = 1
@@ -167,7 +171,7 @@ end
 
 function CreateFlip(self: ServerVehicle)
 	local flipG
-	if self.Tune.FlipType == "New" then
+	if VehicleConstants.FlipType == "New" then
 		local flipAttach = Instance.new("Attachment")
 		flipAttach.Axis = Vector3.new(0, 1, 0)
 		flipAttach.Parent = self.Instance.DriveSeat
@@ -181,7 +185,7 @@ function CreateFlip(self: ServerVehicle)
 		flipG.Mode = Enum.OrientationAlignmentMode.OneAttachment
 		flipG.PrimaryAxis = Vector3.new(0, 1, 0)
 		flipG.Parent = self.Instance.DriveSeat
-	elseif self.Tune.FlipType == "Old" then
+	elseif VehicleConstants.FlipType == "Old" then
 		flipG = Instance.new("BodyGyro")
 		flipG.Name = "Flip"
 		flipG.D = 0
@@ -216,7 +220,7 @@ function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
 
 		-- Remove Flip Force
 		if self.Instance.DriveSeat:FindFirstChild("Flip") then
-			if self.Tune.FlipType == "New" then
+			if VehicleConstants.FlipType == "New" then
 				self.Instance.DriveSeat.Flip.Enabled = false
 			else
 				self.Instance.DriveSeat.Flip.MaxTorque = 0

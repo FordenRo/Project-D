@@ -7,6 +7,7 @@ local MaterialGroups = require(script.MaterialGroups)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local TirePacket = require(ReplicatedStorage.Shared.Packets.TirePacket)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ClientTire = {}
@@ -313,8 +314,7 @@ function Update(self: ClientTire, deltaTime: number)
 		end
 		self.Collision["#GRAVCOMP"].Force = Vector3.new(
 			0,
-			self.Vehicle.Tune.GravComp > 0
-					and self.Collision.Mass * (game.Workspace.Gravity - self.Vehicle.Tune.GravComp)
+			VehicleConstants.GravComp > 0 and self.Collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp)
 				or 0,
 			0
 		)

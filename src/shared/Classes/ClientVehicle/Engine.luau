@@ -5,6 +5,7 @@ local EngineTable = require(script.Parent.EngineTable)
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Engine = {}
@@ -417,7 +418,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Exit engine
 	local outTorque = self.Torque * self.Vehicle.CurrentRatio * self.Vehicle.FinalDrive
-	local cGrav = (self.Vehicle.Tune.GravComp > 0 and self.Vehicle.Tune.GravComp or game.Workspace.Gravity)
+	local cGrav = (VehicleConstants.GravComp > 0 and VehicleConstants.GravComp or game.Workspace.Gravity)
 		* self.Vehicle.Tune.InclineComp
 		/ 35
 	local iComp = self.Vehicle.Center.LookVector.Y * cGrav * math.sign(self.Vehicle.Gear)
@@ -455,7 +456,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 				self.Vehicle.Acceleration
 					/ Units.Velocity_mdivs
 					/ (
-						(self.Vehicle.Tune.GravComp > 0 and self.Vehicle.Tune.GravComp or game.Workspace.Gravity)
+						(VehicleConstants.GravComp > 0 and VehicleConstants.GravComp or game.Workspace.Gravity)
 						* (Units.Length_mm / 1000)
 					)
 			)

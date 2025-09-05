@@ -4,12 +4,7 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = {} :: VehicleTypes.Tune
 
-Tune.FlipType = "New"
-Tune.Haptics = "Controller"
-
 Tune.CGHeight = 0.1
-Tune.WBVisible = false
-Tune.GravComp = 35
 
 Tune.SpeedLimit = 0
 Tune.ReverseSpeed = 0

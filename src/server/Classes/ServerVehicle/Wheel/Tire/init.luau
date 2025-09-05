@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
+local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerTire = {}
@@ -116,8 +117,7 @@ function Initialize(self: ServerTire)
 		force.Attachment0 = attachment
 		force.Force = Vector3.new(
 			0,
-			self.Vehicle.Tune.GravComp > 0 and collision.Mass * (game.Workspace.Gravity - self.Vehicle.Tune.GravComp)
-				or 0,
+			VehicleConstants.GravComp > 0 and collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp) or 0,
 			0
 		)
 		force.Parent = collision

@@ -19,6 +19,7 @@ local SoundController = require(script.SoundController)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
+local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -290,7 +291,7 @@ end
 function ClientVehicle.Destroy(self: ClientVehicle)
 	--Remove Flip Force
 	if self.Instance.DriveSeat:FindFirstChild("Flip") then
-		if self.Tune.FlipType == "New" then
+		if VehicleConstants.FlipType == "New" then
 			self.Instance.DriveSeat.Flip.Enabled = false
 		else
 			self.Instance.DriveSeat.Flip.MaxTorque = 0

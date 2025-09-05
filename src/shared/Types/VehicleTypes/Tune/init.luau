@@ -9,15 +9,9 @@ local Transmission = require(script.Transmission)
 local Wheels = require(script.Wheels)
 
 export type TransmissionMode = Transmission.TransmissionMode
-type HapticsType = "Controller" | "Mobile" | "Both" | "None"
-type FlipType = "New" | "Old"
 
 export type Tune =
 	{
-		---  "New" uses AlignOrientation, "Old" uses BodyGyro. This really only needs to be changed for plugin compatibility.
-		FlipType: FlipType,
-		--- Device haptics
-		Haptics: HapticsType,
 		--- Display name of the vehicle
 		Title: string,
 
@@ -29,10 +23,6 @@ export type Tune =
 		WeightDist: number,
 		--- Center of gravity height (studs relative to average of all wheels)
 		CGHeight: number,
-		--- Makes the weight brick visible
-		WBVisible: boolean,
-		--- Desired gravitational force in Roblox units. (35 is the default. Set to 0 to use workspace.Gravity instead)
-		GravComp: number,
 
 		--- Maximum speed limit in km/h (0 or less for no limiter)
 		SpeedLimit: number,
