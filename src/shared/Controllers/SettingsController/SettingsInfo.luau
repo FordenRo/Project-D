@@ -30,6 +30,13 @@ local Info = {
 		Type = "Checkbox",
 		Default = false,
 	},
+	ShowInputs = {
+		Title = "Show Inputs",
+		Category = "Gameplay",
+		Description = "Show vehicle inputs in bottom right corner of screen",
+		Type = "Checkbox",
+		Default = false,
+	},
 	ControllerDZone = {
 		Title = "Controller Deadzone",
 		Category = "Controls",

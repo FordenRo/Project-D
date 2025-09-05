@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -30,14 +31,16 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.CursorInstance = self.Instance.Cursor
 	self._cursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
+	self._cons = {}
 	self.Instance.Debug.Visible = RunService:IsStudio()
 	if self.Instance.Debug.Visible then
 		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Config ~= "RWD"
 		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Config ~= "FWD"
 
-		self._conn = RunService.Heartbeat:Connect(function() UpdateDebug(self) end)
+		table.insert(self._cons, RunService.Heartbeat:Connect(function() UpdateDebug(self) end))
 	end
 
+	table.insert(self._cons, RunService.Heartbeat:Connect(function() UpdateInputs(self) end))
 	RunService:BindToRenderStep("CursorUpdate", Enum.RenderPriority.Camera.Value - 1, function() UpdateCursor(self) end)
 
 	return self
@@ -72,8 +75,22 @@ function UpdateDebug(self: VehicleInterface)
 	info.Temperature.Text = string.format("Temperature: %.1f °C", self.Vehicle.Engine.Temperature)
 end
 
+function UpdateInputs(self: VehicleInterface)
+	self.Instance.Inputs.Visible = SettingsController:GetSetting("ShowInputs")
+	if self.Instance.Inputs.Visible then
+		self.Instance.Inputs.Steering.Left.Fill.Size = UDim2.fromScale(math.max(-self.Vehicle.Steering, 0), 1)
+		self.Instance.Inputs.Steering.Right.Fill.Size = UDim2.fromScale(math.max(self.Vehicle.Steering, 0), 1)
+
+		self.Instance.Inputs.Pedals.Throttle.Fill.Size = UDim2.fromScale(1, self.Vehicle.Throttle)
+		self.Instance.Inputs.Pedals.Brake.Fill.Size = UDim2.fromScale(1, self.Vehicle.Brake)
+		self.Instance.Inputs.Pedals.Clutch.Fill.Size = UDim2.fromScale(1, self.Vehicle.Clutch)
+	end
+end
+
 function VehicleInterface.Destroy(self: VehicleInterface)
-	if self._conn then self._conn:Disconnect() end
+	for _, v in self._cons do
+		v:Disconnect()
+	end
 	self.Speedometer:Destroy()
 	self.Instance:Destroy()
 	RunService:UnbindFromRenderStep("CursorUpdate")

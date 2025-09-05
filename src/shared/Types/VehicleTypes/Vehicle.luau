@@ -393,10 +393,11 @@ export type SpeedEffect = {
 	new: (self: SpeedEffect, vehicle: ClientVehicle, part: GuiObject) -> SpeedEffect,
 }
 
+type VISlider = Frame & { Fill: Frame }
 export type VehicleInterface = {
 	__index: VehicleInterface,
 	_cursorTransparency: number,
-	_conn: RBXScriptConnection?,
+	_cons: { RBXScriptConnection },
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & {
 		Cursor: Frame,
@@ -411,6 +412,10 @@ export type VehicleInterface = {
 				Brakes: Frame,
 				Driveshaft: CanvasGroup & { Front: Frame, Rear: Frame },
 			},
+		},
+		Inputs: Frame & {
+			Steering: Frame & { Left: VISlider, Right: VISlider },
+			Pedals: Frame & { Throttle: VISlider, Brake: VISlider, Clutch: VISlider },
 		},
 	},
 	Speedometer: VehicleSpeedometer,
