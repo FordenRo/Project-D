@@ -6,8 +6,8 @@ return function(self: VehicleTypes.ClientVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 	if self._ShiftUp and not self.Shifting then
 		if
-			(self.TransmissionMode == "Manual" and self.InputController.Clutch < 1)
-			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self.InputController.Throttle > 0))
+			(self.TransmissionMode == "Manual" and self.Clutch < 1)
+			or (self.TransmissionMode == "Manual" and self.Tune.ClutchRel and (self.Throttle > 0))
 			or self.Gear == #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0)
 			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
 		then
@@ -44,7 +44,7 @@ return function(self: VehicleTypes.ClientVehicle)
 	end
 	if self._ShiftDown and not self.Shifting then
 		if
-			(self.TransmissionMode == "Manual" and self.InputController.Clutch < 1)
+			(self.TransmissionMode == "Manual" and self.Clutch < 1)
 			or self.Gear == -1 - (ParkingGearEnabled and 1 or 0)
 			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
 		then

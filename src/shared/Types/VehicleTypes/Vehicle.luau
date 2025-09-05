@@ -152,6 +152,8 @@ export type Engine = {
 	_RevLimiting: boolean,
 	_GoalRPM: number,
 	_FuelSupply: number,
+	Throttle: number,
+	Clutch: number,
 	Vehicle: ClientVehicle,
 
 	new: (vehicle: ClientVehicle) -> Engine,
@@ -167,9 +169,6 @@ export type InputController = {
 	_RawBrake: number,
 	_RawClutch: number,
 	Vehicle: ClientVehicle,
-	Throttle: number,
-	Brake: number,
-	Clutch: number,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
 	Steering: number,

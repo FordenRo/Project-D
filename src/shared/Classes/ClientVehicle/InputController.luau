@@ -27,9 +27,6 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputControll
 	self._RawBrake = 0
 	self._RawClutch = 0
 
-	self.Throttle = 0
-	self.Brake = 0
-	self.Clutch = 0
 	self.Steering = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.MouseSteerOn = false
@@ -87,26 +84,49 @@ function Update(self: InputController, deltaTime: number)
 	Context.ShiftDown.Enabled = canShift
 	Context.ShiftUp.Enabled = canShift
 
-	SmoothInputs(self, deltaTime)
+	ApplyInputs(self, deltaTime)
 end
 
-function SmoothInputs(self: InputController, deltaTime: number)
-	if self.Throttle <= self._RawThrottle then
-		self.Throttle =
-			math.min(self._RawThrottle, self.Throttle + (1 / (self.Vehicle.Tune.ThrotAccel / 1000) * deltaTime))
+function ApplyInputs(self: InputController, deltaTime: number)
+	-- Update throttle
+	local throttle = (
+		self.Vehicle.Tune.AutoShiftVers == "Old"
+		and self.Vehicle.Gear == -1
+		and self.Vehicle.TransmissionMode == "Manual"
+	)
+			and self._RawBrake
+		or self._RawThrottle
+	if self.Vehicle.Throttle <= throttle then
+		self.Vehicle.Throttle =
+			math.min(throttle, self.Vehicle.Throttle + (1 / (self.Vehicle.Tune.ThrotAccel / 1000) * deltaTime))
 	else
-		self.Throttle =
-			math.max(self._RawThrottle, self.Throttle - (1 / (self.Vehicle.Tune.ThrotDecel / 1000) * deltaTime))
+		self.Vehicle.Throttle =
+			math.max(throttle, self.Vehicle.Throttle - (1 / (self.Vehicle.Tune.ThrotDecel / 1000) * deltaTime))
 	end
-	if self.Brake <= self._RawBrake then
-		self.Brake = math.min(self._RawBrake, self.Brake + (1 / (self.Vehicle.Tune.BrakeAccel / 1000) * deltaTime))
+
+	-- Update brake
+	local brake = (
+		self.Vehicle.Tune.AutoShiftVers == "Old"
+		and self.Vehicle.Gear == -1
+		and self.Vehicle.TransmissionMode == "Manual"
+	)
+			and self._RawThrottle
+		or self._RawBrake
+	if self.Vehicle.Brake <= brake then
+		self.Vehicle.Brake =
+			math.min(brake, self.Vehicle.Brake + (1 / (self.Vehicle.Tune.BrakeAccel / 1000) * deltaTime))
 	else
-		self.Brake = math.max(self._RawBrake, self.Brake - (1 / (self.Vehicle.Tune.BrakeDecel / 1000) * deltaTime))
+		self.Vehicle.Brake =
+			math.max(brake, self.Vehicle.Brake - (1 / (self.Vehicle.Tune.BrakeDecel / 1000) * deltaTime))
 	end
-	if self.Clutch <= self._RawClutch then
-		self.Clutch = math.min(self._RawClutch, self.Clutch + (1 / (self.Vehicle.Tune.ClutchAccel / 1000) * deltaTime))
+
+	-- Update clutch
+	if self.Vehicle.Clutch <= self._RawClutch then
+		self.Vehicle.Clutch =
+			math.min(self._RawClutch, self.Vehicle.Clutch + (1 / (self.Vehicle.Tune.ClutchAccel / 1000) * deltaTime))
 	else
-		self.Clutch = math.max(self._RawClutch, self.Clutch - (1 / (self.Vehicle.Tune.ClutchDecel / 1000) * deltaTime))
+		self.Vehicle.Clutch =
+			math.max(self._RawClutch, self.Vehicle.Clutch - (1 / (self.Vehicle.Tune.ClutchDecel / 1000) * deltaTime))
 	end
 end
 
