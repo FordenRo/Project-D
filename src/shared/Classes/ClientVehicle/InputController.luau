@@ -91,21 +91,22 @@ function Update(self: InputController, deltaTime: number)
 end
 
 function SmoothInputs(self: InputController, deltaTime: number)
-	deltaTime = (60 / (1 / deltaTime))
 	if self.Throttle <= self._RawThrottle then
-		self.Throttle = math.min(self._RawThrottle, self.Throttle + (self.Vehicle.Tune.ThrotAccel * deltaTime))
+		self.Throttle =
+			math.min(self._RawThrottle, self.Throttle + (1 / (self.Vehicle.Tune.ThrotAccel / 1000) * deltaTime))
 	else
-		self.Throttle = math.max(self._RawThrottle, self.Throttle - (self.Vehicle.Tune.ThrotDecel * deltaTime))
+		self.Throttle =
+			math.max(self._RawThrottle, self.Throttle - (1 / (self.Vehicle.Tune.ThrotDecel / 1000) * deltaTime))
 	end
 	if self.Brake <= self._RawBrake then
-		self.Brake = math.min(self._RawBrake, self.Brake + (self.Vehicle.Tune.BrakeAccel * deltaTime))
+		self.Brake = math.min(self._RawBrake, self.Brake + (1 / (self.Vehicle.Tune.BrakeAccel / 1000) * deltaTime))
 	else
-		self.Brake = math.max(self._RawBrake, self.Brake - (self.Vehicle.Tune.BrakeDecel * deltaTime))
+		self.Brake = math.max(self._RawBrake, self.Brake - (1 / (self.Vehicle.Tune.BrakeDecel / 1000) * deltaTime))
 	end
 	if self.Clutch <= self._RawClutch then
-		self.Clutch = math.min(self._RawClutch, self.Clutch + (self.Vehicle.Tune.ClutchAccel * deltaTime))
+		self.Clutch = math.min(self._RawClutch, self.Clutch + (1 / (self.Vehicle.Tune.ClutchAccel / 1000) * deltaTime))
 	else
-		self.Clutch = math.max(self._RawClutch, self.Clutch - (self.Vehicle.Tune.ClutchDecel * deltaTime))
+		self.Clutch = math.max(self._RawClutch, self.Clutch - (1 / (self.Vehicle.Tune.ClutchDecel / 1000) * deltaTime))
 	end
 end
 

@@ -133,17 +133,17 @@ export type Type = {
 	--- The minimum RPM required to start the car.
 	IgnitionMinRPM: number,
 
-	--- Throttle acceleration, applied per tick (recommended values between 0.1 to 0.3)
+	--- Time to press the throttle (ms)
 	ThrotAccel: number,
-	--- Throttle deceleration, applied per tick (recommended values between 0.05 to 0.1)
+	--- Time to release the throttle (ms)
 	ThrotDecel: number,
-	--- Brake acceleration, applied per tick
+	--- Time to press the brake (ms)
 	BrakeAccel: number,
-	--- Brake deceleration, applied per tick
+	--- Time to release the brake (ms)
 	BrakeDecel: number,
-	--- Clutch acceleration, applied per tick
+	--- Time to press the clutch (ms)
 	ClutchAccel: number,
-	--- Clutch deceleration, applied per tick
+	--- Time to release the clutch (ms)
 	ClutchDecel: number,
 
 	--- RPM kickback from redline
