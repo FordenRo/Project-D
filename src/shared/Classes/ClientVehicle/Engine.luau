@@ -62,7 +62,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		* (1 - self.Clutch)
 		* 1.356
 		* Units.Torque_nm
-	self.DriveshaftStress = math.abs(flywheelEnergy / 5000) ^ 1.2
+	self.DriveshaftStress = math.abs(flywheelEnergy / 3000) ^ 2
 
 	-- Determine RPM
 	local revMin = 0

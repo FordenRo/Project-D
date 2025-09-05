@@ -41,12 +41,12 @@ Tune.FanAirSpeed = 15
 Tune.CoolingFactor = 0.02
 Tune.EfficientCombustionRPM = 2000
 
-Tune.RPMDamage = 0.6
+Tune.RPMDamage = 0.3
 Tune.HotDamage = 2.6
-Tune.RedlineDamage = 0.06
-Tune.RedlineDamageCurve = 2.4
+Tune.RedlineDamage = 2.5
+Tune.RedlineDamageCurve = 2
 Tune.DriveshaftDamage = 0.01
-Tune.ClutchlessDamage = 0.1
+Tune.ClutchlessDamage = 0.12
 
 Tune.Electric = false
 
