@@ -135,19 +135,6 @@ export type Type = {
 	--- The minimum RPM required to start the car.
 	IgnitionMinRPM: number,
 
-	--- Time to press the throttle (ms)
-	ThrotAccel: number,
-	--- Time to release the throttle (ms)
-	ThrotDecel: number,
-	--- Time to press the brake (ms)
-	BrakeAccel: number,
-	--- Time to release the brake (ms)
-	BrakeDecel: number,
-	--- Time to press the clutch (ms)
-	ClutchAccel: number,
-	--- Time to release the clutch (ms)
-	ClutchDecel: number,
-
 	--- RPM kickback from redline
 	RevBounce: number,
 	--- Set to true to allow the RPM to go above redline

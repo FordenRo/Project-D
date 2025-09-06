@@ -97,11 +97,15 @@ function ApplyInputs(self: InputController, deltaTime: number)
 			and self._RawBrake
 		or self._RawThrottle
 	if self.Vehicle.Throttle <= throttle then
-		self.Vehicle.Throttle =
-			math.min(throttle, self.Vehicle.Throttle + (1 / (self.Vehicle.Tune.ThrotAccel / 1000) * deltaTime))
+		self.Vehicle.Throttle = math.min(
+			throttle,
+			self.Vehicle.Throttle + (1 / (SettingsController:GetSetting("ThrottlePressTime") / 1000) * deltaTime)
+		)
 	else
-		self.Vehicle.Throttle =
-			math.max(throttle, self.Vehicle.Throttle - (1 / (self.Vehicle.Tune.ThrotDecel / 1000) * deltaTime))
+		self.Vehicle.Throttle = math.max(
+			throttle,
+			self.Vehicle.Throttle - (1 / (SettingsController:GetSetting("ThrottleReleaseTime") / 1000) * deltaTime)
+		)
 	end
 
 	-- Update brake
@@ -113,20 +117,28 @@ function ApplyInputs(self: InputController, deltaTime: number)
 			and self._RawThrottle
 		or self._RawBrake
 	if self.Vehicle.Brake <= brake then
-		self.Vehicle.Brake =
-			math.min(brake, self.Vehicle.Brake + (1 / (self.Vehicle.Tune.BrakeAccel / 1000) * deltaTime))
+		self.Vehicle.Brake = math.min(
+			brake,
+			self.Vehicle.Brake + (1 / (SettingsController:GetSetting("ClutchPressTime") / 1000) * deltaTime)
+		)
 	else
-		self.Vehicle.Brake =
-			math.max(brake, self.Vehicle.Brake - (1 / (self.Vehicle.Tune.BrakeDecel / 1000) * deltaTime))
+		self.Vehicle.Brake = math.max(
+			brake,
+			self.Vehicle.Brake - (1 / (SettingsController:GetSetting("ClutchReleaseTime") / 1000) * deltaTime)
+		)
 	end
 
 	-- Update clutch
 	if self.Vehicle.Clutch <= self._RawClutch then
-		self.Vehicle.Clutch =
-			math.min(self._RawClutch, self.Vehicle.Clutch + (1 / (self.Vehicle.Tune.ClutchAccel / 1000) * deltaTime))
+		self.Vehicle.Clutch = math.min(
+			self._RawClutch,
+			self.Vehicle.Clutch + (1 / (SettingsController:GetSetting("ClutchPressTime") / 1000) * deltaTime)
+		)
 	else
-		self.Vehicle.Clutch =
-			math.max(self._RawClutch, self.Vehicle.Clutch - (1 / (self.Vehicle.Tune.ClutchDecel / 1000) * deltaTime))
+		self.Vehicle.Clutch = math.max(
+			self._RawClutch,
+			self.Vehicle.Clutch - (1 / (SettingsController:GetSetting("ClutchReleaseTime") / 1000) * deltaTime)
+		)
 	end
 end
 
