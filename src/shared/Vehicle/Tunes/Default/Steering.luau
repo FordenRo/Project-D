@@ -16,7 +16,6 @@ Tune.SteerDecay = 260
 Tune.SteerSpeedDecay = 300
 Tune.MinSteer = 40
 Tune.MinSteerSpeed = 50
-Tune.MSteerExp = 1
 
 Tune.CSEnabled = false
 Tune.CSAmt = 30

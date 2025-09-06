@@ -247,7 +247,7 @@ function UpdateMouseInput(self: InputController)
 		self._RawSteering = 0
 	else
 		self._RawSteering = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
-				^ self.Vehicle.Tune.MSteerExp
+				^ SettingsController:GetSetting("MSteerExp")
 			* (mST / math.abs(mST))
 	end
 end

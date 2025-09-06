@@ -45,8 +45,6 @@ export type Type = {
 	MinSteer: number,
 	--- Minimum steering speed at max decay (in percent)
 	MinSteerSpeed: number,
-	--- Mouse steering exponential degree
-	MSteerExp: number,
 
 	--- Enables countersteering
 	CSEnabled: boolean,
