@@ -40,7 +40,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
 		if not wheel.IsDriven then continue end
 
-		driveWheelSpeed += math.abs(wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X)
+		driveWheelSpeed += wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X * (wheel.IsRight and 1 or -1)
 		driveCount += 1
 	end
 	driveWheelSpeed /= driveCount
