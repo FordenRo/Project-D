@@ -65,6 +65,7 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 	self.Instance.Info.Title.Text = self.Properties.Title
 	self.Instance.Info.Description.Text = self.Properties.Description or ""
 	self.Instance.Info.Description.Visible = self.Properties.Description ~= nil
+	self.Instance.LayoutOrder = self.Properties.Index or 0
 
 	if self.Type == "Slider" then
 		InitSlider(self)
