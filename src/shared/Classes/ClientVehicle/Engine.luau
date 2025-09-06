@@ -173,7 +173,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Set RPM
 	local aRPM = math.max(
-		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Clutch) + self._GoalRPM * self.Clutch,
+		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Clutch ^ 0.5)
+			+ self._GoalRPM * self.Clutch ^ 0.5,
 		revMin
 	)
 	local clutchP = math.min(math.abs(aRPM - self.Vehicle.RPM) / (self.Vehicle.Tune.Flywheel * deltaTime), 0.9)
