@@ -73,6 +73,7 @@ end
 
 function Update(self: Speedometer)
 	SpeedUpdate(self)
+	GearUpdate(self)
 	TachUpdate(self)
 	ABSUpdate(self)
 	BoostUpdate(self)
@@ -80,7 +81,6 @@ function Update(self: Speedometer)
 end
 
 function SlowUpdate(self: Speedometer)
-	GearUpdate(self)
 	MileageUpdate(self)
 	FuelUpdate(self)
 	TempUpdate(self)
