@@ -35,8 +35,18 @@ end
 function Engine.Update(self: Engine, deltaTime: number)
 	deltaTime = math.max(60 / (1 / deltaTime), 1 / 1000)
 
+	local driveWheelSpeed = 0
+	local driveCount = 0
+	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
+		if not wheel.IsDriven then continue end
+
+		driveWheelSpeed += math.abs(wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X)
+		driveCount += 1
+	end
+	driveWheelSpeed /= driveCount
+
 	local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
-	local wheelRPM = self.Vehicle._DriveWheelSpeed
+	local wheelRPM = driveWheelSpeed
 		* self.Vehicle.CurrentRatio
 		* self.Vehicle.FinalDriveRatio
 		* math.sign(self.Vehicle.Gear)
@@ -45,7 +55,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	local CVTRatio
 	if self.Vehicle.Tune.ClutchType == "CVT" then
 		CVTRatio = math.clamp(
-			(self.Vehicle.Tune.CVTRPM * self.Throttle) / (self.Vehicle._DriveWheelSpeed * self.Vehicle.FinalDriveRatio),
+			(self.Vehicle.Tune.CVTRPM * self.Throttle) / (driveWheelSpeed * self.Vehicle.FinalDriveRatio),
 			self.Vehicle.Tune.CVTMinRatio,
 			self.Vehicle.Tune.CVTMaxRatio
 		)

@@ -8,6 +8,16 @@ function DamageEngine(self: VehicleTypes.ClientVehicle)
 end
 
 return function(self: VehicleTypes.ClientVehicle)
+	local maxSpin = 0
+	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
+		if not wheel.IsDriven then continue end
+
+		maxSpin = math.max(
+			math.abs(wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X),
+			maxSpin
+		)
+	end
+
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 	if self._ShiftUp and not self.Shifting then
 		if
@@ -30,7 +40,7 @@ return function(self: VehicleTypes.ClientVehicle)
 					until self.RPM
 							<= math.max(
 								math.min(
-									self._MaxSpin * self.Tune.Ratios[NextGear] * self.FinalDriveRatio,
+									maxSpin * self.Tune.Ratios[NextGear] * self.FinalDriveRatio,
 									self.Tune.Redline - self.Tune.RevBounce
 								),
 								self.Tune.IdleRPM
@@ -67,7 +77,7 @@ return function(self: VehicleTypes.ClientVehicle)
 					until self.RPM
 							>= math.max(
 								math.min(
-									self._MaxSpin * self.Tune.Ratios[PrevGear] * self.FinalDriveRatio,
+									maxSpin * self.Tune.Ratios[PrevGear] * self.FinalDriveRatio,
 									self.Tune.Redline - self.Tune.RevBounce
 								),
 								self.Tune.IdleRPM

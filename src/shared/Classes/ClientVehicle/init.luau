@@ -196,9 +196,7 @@ function InitializeVariables(self: ClientVehicle)
 	self._cons = {}
 	self._ShiftUp = false
 	self._ShiftDown = false
-	self._DriveWheelSpeed = 0
 	self._OldVelocity = Vector3.new()
-	self._MaxSpin = 0
 	self._DrivenChangedEvent = Instance.new("BindableEvent")
 	self.DrivenChanged = self._DrivenChangedEvent.Event
 	self.WeightPart = self.Instance.Body.WeightPart
@@ -215,26 +213,10 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.Initial
 -- end
 
 function UpdateWheels(self: ClientVehicle, deltaTime: number)
-	local count = #self.Wheels
-	local driveCount = 0
-
-	local data: VehicleTypes.ClientWheelSharedData = {
-		Rotation = 0,
-		MaxSpin = 0,
-		DriveWheelSpeed = 0,
-	}
 	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
-		wheel:Update(deltaTime, data)
-
-		if wheel.IsDriven then
-			driveCount += 1
-		end
+		wheel:Update(deltaTime)
 	end
-	self._DriveWheelSpeed = data.DriveWheelSpeed / driveCount
 
-	-- Wheel speeds
-	self._MaxSpin = data.MaxSpin
-	self.AverageRotSpeed = data.Rotation / count
 	self.TCSActive = false
 	self.ABSActive = false
 	self.ESCActive = false

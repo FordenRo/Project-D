@@ -36,11 +36,17 @@ end
 function Handlers.Transmission(self: SoundTypesHandler, sound: VehicleTypes.CachedSoundData)
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
+	local avgRotSpeed = 0
+	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
+		avgRotSpeed += math.abs(wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X)
+	end
+	avgRotSpeed /= #self.Vehicle.Wheels
+
 	sound.AudioPlayer.PlaybackSpeed = sound.VariablePlaybackSpeed
-		* (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))
+		* (avgRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))
 
 	sound.AudioPlayer.Volume = table.find(sound.Gears, self.Vehicle.Gear)
-			and (sound.ClutchVolume + ((sound.Volume + sound.VariableVolume * (self.Vehicle.AverageRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))) - sound.ClutchVolume) * (1 - self.Vehicle.Clutch) + sound.ThrottleVolume * self.Vehicle.Throttle)
+			and (sound.ClutchVolume + ((sound.Volume + sound.VariableVolume * (avgRotSpeed / (300 * (Units.Length_mm / 1000) * 3.6))) - sound.ClutchVolume) * (1 - self.Vehicle.Clutch) + sound.ThrottleVolume * self.Vehicle.Throttle)
 		or sound.OffVolume
 end
 

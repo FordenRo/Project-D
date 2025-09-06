@@ -64,7 +64,6 @@ function InitializeVariables(self: BaseVehicle)
 	-- Velocity
 	self.Velocity = Vector3.new()
 	self.AngularVelocity = Vector3.new()
-	self.AverageRotSpeed = 0
 	self.Acceleration = Vector3.new()
 	self.Mileage = 0
 	-- Misc

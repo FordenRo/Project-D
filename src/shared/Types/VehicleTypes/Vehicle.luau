@@ -65,7 +65,6 @@ export type BaseVehicle = {
 	-- Velocity
 	Velocity: Vector3,
 	AngularVelocity: Vector3,
-	AverageRotSpeed: number,
 	Acceleration: Vector3,
 	--- Mileage in meters
 	Mileage: number,
@@ -120,7 +119,6 @@ export type ClientVehicle = {
 	__index: ClientVehicle,
 	_cons: { RBXScriptConnection },
 	_task: thread,
-	_MaxSpin: number,
 	_DrivenChangedEvent: BindableEvent,
 	IsDriven: boolean,
 	MeshParts: { MeshPart },
@@ -140,7 +138,6 @@ export type ClientVehicle = {
 	-- Transmission
 	_ShiftUp: boolean,
 	_ShiftDown: boolean,
-	_DriveWheelSpeed: number,
 	-- Velocity
 	_OldVelocity: Vector3,
 
@@ -263,15 +260,8 @@ export type BaseWheel = {
 	new: (vehicle: BaseVehicle, instance: BasePart) -> BaseWheel,
 }
 
-export type ClientWheelSharedData = {
-	Rotation: number,
-	MaxSpin: number,
-	DriveWheelSpeed: number,
-}
-
 export type ClientWheel = {
 	__index: ClientWheel,
-	_WheelSpeeds: { number },
 	Vehicle: ClientVehicle,
 	Tire: ClientWheelTire,
 	BrakeDisk: ClientBrakeDisk,
@@ -279,7 +269,7 @@ export type ClientWheel = {
 	OppositeWheel: BasePart,
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
-	Update: (self: ClientWheel, deltaTime: number, data: ClientWheelSharedData) -> (),
+	Update: (self: ClientWheel, deltaTime: number) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 

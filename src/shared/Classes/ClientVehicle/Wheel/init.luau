@@ -21,7 +21,6 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 	) :: BasePart
 
 	self.CanSteer = 0
-	self._WheelSpeeds = {}
 
 	-- Check if can steer
 	if self.Instance:FindFirstChild("Arm") and (self.Instance.Arm :: any):FindFirstChild("Steer") then
@@ -35,34 +34,7 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 	return self
 end
 
-function ClientWheel.Update(self: ClientWheel, deltaTime: number, data: VehicleTypes.ClientWheelSharedData)
-	-- Wheel speeds
-	table.insert(
-		self._WheelSpeeds,
-		self.Instance.CFrame:VectorToObjectSpace(self.Instance.AssemblyAngularVelocity).X * (self.IsRight and 1 or -1)
-	)
-	if #self._WheelSpeeds > 8 then table.remove(self._WheelSpeeds, 1) end
-	local avg = 0
-	local avgCount = 0
-	for _, a in self._WheelSpeeds do
-		avg += a
-		avgCount += 1
-	end
-	avg = avg / avgCount
-	-- _WheelSpeeds[data.Name] = avg
-	if self.IsDriven then
-		if avg > data.MaxSpin then data.MaxSpin = avg end
-		data.DriveWheelSpeed += avg
-		data.MaxSpin = math.max(data.MaxSpin, avg)
-	end
-
-	-- Output wheel speeds
-	-- (Forden) Changed to avg
-	-- data.WheelSpeedValue.Value = avg -- I'm not using the avg variable here for future-proofing if we change the calculation later and stuff
-	data.Rotation += avg * (self.Instance.Size.Y / 2)
-
-	ApplySteering(self, deltaTime)
-end
+function ClientWheel.Update(self: ClientWheel, deltaTime: number) ApplySteering(self, deltaTime) end
 
 function ApplySteering(self: ClientWheel, deltaTime: number)
 	if self.CanSteer == 0 then return end

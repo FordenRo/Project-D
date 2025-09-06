@@ -13,7 +13,6 @@ export type SpeedEffect = Vehicle.SpeedEffect
 
 export type BaseWheel = Vehicle.BaseWheel
 export type ClientWheel = Vehicle.ClientWheel
-export type ClientWheelSharedData = Vehicle.ClientWheelSharedData
 export type ServerWheel = Vehicle.ServerWheel
 
 export type ClientWheelTire = Vehicle.ClientWheelTire
