@@ -18,7 +18,6 @@ export type Aerodynamics = {
 		FDownforce: VectorForce,
 		RDownforce: VectorForce,
 	},
-	_Sounds: { Wind: Sound, Body: Sound },
 	Vehicle: VehicleTypes.ClientVehicle,
 
 	new: (vehicle: VehicleTypes.ClientVehicle) -> Aerodynamics,
@@ -45,15 +44,6 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 end
 
 function Initialize(self: Aerodynamics)
-	-- Sounds
-	local windSound = ReplicatedStorage.Vehicle.Sounds.Wind:Clone()
-	windSound.Parent = self.Vehicle.WeightPart
-
-	local bodySound = ReplicatedStorage.Vehicle.Sounds.Body:Clone()
-	bodySound.Parent = self.Vehicle.WeightPart
-
-	self._Sounds = { Wind = windSound, Body = bodySound }
-
 	-- Attachments
 	local dragAttach = Instance.new("Attachment")
 	dragAttach.Parent = self.Vehicle.Instance.Body.Aerodynamics.Drag
@@ -154,15 +144,18 @@ function Update(self: Aerodynamics)
 	self._Forces.Drag.Force = combinedForce * 9.81 * Units.Force_N
 
 	-- Apply sounds
-	self._Sounds.Wind.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroWindVolume / 200 ^ 2
-	self._Sounds.Body.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroBodyVolume / 200 ^ 2
+	local wind = self.Vehicle.SoundController.Sounds.Wind.AudioPlayer :: AudioPlayer
+	local body = self.Vehicle.SoundController.Sounds.Body.AudioPlayer :: AudioPlayer
+	if not wind.IsPlaying or not body.IsPlaying then
+		wind:Play()
+		body:Play()
+	end
+	wind.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroWindVolume / 200 ^ 2
+	body.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroBodyVolume / 200 ^ 2
 end
 
 function Aerodynamics.Destroy(self: Aerodynamics)
 	task.cancel(self._task)
-	for _, v in self._Sounds do
-		v:Destroy()
-	end
 	for _, v in self._Forces do
 		v.Attachment0:Destroy()
 		v:Destroy()

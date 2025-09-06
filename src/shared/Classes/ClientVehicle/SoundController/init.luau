@@ -24,6 +24,9 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 		self.Emitters[v.Name] = v
 	end
 
+	self.Emitters.WeightPart = Instance.new("AudioEmitter")
+	self.Emitters.WeightPart.Parent = self.Vehicle.WeightPart
+
 	local folder = Instance.new("Folder")
 	folder.Name = "AudioPlayers"
 	folder.Parent = self.Vehicle.Instance
@@ -40,7 +43,7 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 
 		local wire = Instance.new("Wire")
 		wire.SourceInstance = audioPlayer
-		wire.TargetInstance = self.Emitters[soundData.Emitter]
+		wire.TargetInstance = self.Emitters[soundData.Emitter or "WeightPart"]
 		wire.Parent = audioPlayer
 
 		cachedSound.AudioPlayer = audioPlayer

@@ -62,6 +62,12 @@ Tune.Sounds = {
 		Emitter = "GearLever",
 		Volume = 0.7,
 	},
+	Wind = {
+		Asset = "rbxassetid://188608071",
+	},
+	Body = {
+		Asset = "rbxassetid://4471836491",
+	},
 }
 
 Tune.TireSounds = {
