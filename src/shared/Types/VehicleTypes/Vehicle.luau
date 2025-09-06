@@ -171,6 +171,7 @@ export type Engine = {
 	_GoalRPM: number,
 	_FuelSupply: number,
 	Throttle: number,
+	Brake: number,
 	Clutch: number,
 	Vehicle: ClientVehicle,
 
@@ -270,6 +271,7 @@ export type ClientWheel = {
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, deltaTime: number) -> (),
+	UpdateForces: (self: ClientWheel, torque: number, flywheelEnergy: number) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 
