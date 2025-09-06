@@ -41,7 +41,7 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 	return self
 end
 
-function ClientWheel.Update(self: ClientWheel, data: VehicleTypes.ClientWheelSharedData)
+function ClientWheel.Update(self: ClientWheel, deltaTime: number, data: VehicleTypes.ClientWheelSharedData)
 	-- Wheel speeds
 	table.insert(
 		self._WheelSpeeds,
@@ -80,6 +80,54 @@ function ClientWheel.Update(self: ClientWheel, data: VehicleTypes.ClientWheelSha
 	-- ESC
 	if self.Trackers.ESC then
 		data.ESCCount += 1
+	end
+
+	ApplySteering(self, deltaTime)
+end
+
+function ApplySteering(self: ClientWheel, deltaTime: number)
+	if self.CanSteer == 0 then return end
+
+	local angle = 0
+	local rsteerVariableAngle = 1
+	if typeof(self.Vehicle.Steering) ~= "number" then return end
+
+	if self.CanSteer == 2 then
+		if self.Instance.Name == "FL" then
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerInner or self.Vehicle.Tune.SteerOuter
+		elseif self.Instance.Name == "FR" then
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerOuter or self.Vehicle.Tune.SteerInner
+		elseif self.Instance.Name == "F" then
+			angle = self.Vehicle.Tune.SteerInner
+		elseif self.Instance.Name == "RL" then
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerInner or self.Vehicle.Tune.RSteerOuter
+		elseif self.Instance.Name == "RR" then
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerOuter or self.Vehicle.Tune.RSteerInner
+		elseif self.Instance.Name == "R" then
+			angle = self.Vehicle.Tune.RSteerInner
+		end
+		if not self.IsFront then
+			if self.Vehicle.Tune.FWSteer == "Static" then
+				rsteerVariableAngle =
+					-math.max(0, 1 - (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+			elseif self.Vehicle.Tune.FWSteer == "Speed" then
+				rsteerVariableAngle = math.min(1, (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+			elseif self.Vehicle.Tune.FWSteer == "Both" then
+				rsteerVariableAngle =
+					-math.max(-1, 1 - (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+			end
+		end
+	end
+
+	if self.Vehicle.Tune.PowerSteeringType == "New" then
+		self.Instance.Arm.SteerAttach0.Orientation =
+			Vector3.new(0, self.CanSteer == 1 and 0 or self.Vehicle.Steering * angle * rsteerVariableAngle, 0)
+	else
+		(self.Instance.Arm.Steer :: BodyGyro).CFrame = self.Instance.Base.CFrame
+			* (
+				self.CanSteer == 1 and CFrame.new(0, 0, 0)
+				or (CFrame.Angles(0, -math.rad(self.Vehicle.Steering * angle * rsteerVariableAngle), 0))
+			)
 	end
 end
 

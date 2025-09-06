@@ -17,7 +17,6 @@ local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local SoundController = require(script.SoundController)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local UpdateSteering = require(script.UpdateSteering)
 local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -215,7 +214,7 @@ function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.Initial
 -- 	self.SteerInner = math.min(self.SteerOuter - (self.SteerOuter * (1 - self.Tune.Ackerman)), self.SteerOuter * 1.2)
 -- end
 
-function UpdateWheels(self: ClientVehicle)
+function UpdateWheels(self: ClientVehicle, deltaTime: number)
 	local count = #self.Wheels
 	local driveCount = 0
 
@@ -231,7 +230,7 @@ function UpdateWheels(self: ClientVehicle)
 		DriveWheelSpeed = 0,
 	}
 	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
-		wheel:Update(data)
+		wheel:Update(deltaTime, data)
 
 		if wheel.IsDriven then
 			driveCount += 1
@@ -281,8 +280,7 @@ function Update(self: ClientVehicle, deltaTime: number)
 
 	if not self.IsDriven then return end
 
-	UpdateWheels(self)
-	UpdateSteering(self, deltaTime)
+	UpdateWheels(self, deltaTime)
 	UpdateTransmission(self)
 	self.Engine:Update(deltaTime)
 	UpdateMileage(self, deltaTime)

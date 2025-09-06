@@ -234,7 +234,8 @@ export type BaseWheel = {
 	Instance: BasePart & {
 		Base: BasePart,
 		Arm: BasePart & {
-			Steer: Instance,
+			Steer: BodyGyro | AlignOrientation,
+			SteerAttach0: Attachment,
 		},
 		Parts: Model & {
 			Tire: BasePart,
@@ -282,7 +283,7 @@ export type ClientWheel = {
 	Trackers: { ABS: number, TCS: number, ESC: number },
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
-	Update: (self: ClientWheel, data: ClientWheelSharedData) -> (),
+	Update: (self: ClientWheel, deltaTime: number, data: ClientWheelSharedData) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 
