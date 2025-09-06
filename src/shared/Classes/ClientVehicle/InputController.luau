@@ -119,12 +119,12 @@ function ApplyInputs(self: InputController, deltaTime: number)
 	if self.Vehicle.Brake <= brake then
 		self.Vehicle.Brake = math.min(
 			brake,
-			self.Vehicle.Brake + (1 / (SettingsController:GetSetting("ClutchPressTime") / 1000) * deltaTime)
+			self.Vehicle.Brake + (1 / (SettingsController:GetSetting("BrakePressTime") / 1000) * deltaTime)
 		)
 	else
 		self.Vehicle.Brake = math.max(
 			brake,
-			self.Vehicle.Brake - (1 / (SettingsController:GetSetting("ClutchReleaseTime") / 1000) * deltaTime)
+			self.Vehicle.Brake - (1 / (SettingsController:GetSetting("BrakeReleaseTime") / 1000) * deltaTime)
 		)
 	end
 
