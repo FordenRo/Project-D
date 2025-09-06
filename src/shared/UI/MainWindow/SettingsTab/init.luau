@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
+local SettingFolder = require(script.SettingFolder)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SplitPascalCase = require(ReplicatedStorage.Shared.Utils.SplitPascalCase)
 
@@ -13,6 +14,7 @@ export type SettingsTab = typeof(setmetatable(
 		_cons: { RBXScriptConnection },
 		Instance: ScrollingFrame & {
 			Setting: Frame,
+			SettingFolder: Frame,
 			ControlContext: Frame & {
 				Title: TextLabel,
 			},
@@ -28,10 +30,22 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	self._cons = {}
 
 	local settingInstance = self.Instance.Setting
+	local folderInstance = self.Instance.SettingFolder
 	for k, v in SettingsController:GetSettingInfos() do
 		local setting = Setting.new(settingInstance:Clone(), v)
 		table.insert(self._cons, setting.Changed:Connect(function(value) SettingsController:SetSetting(k, value) end))
-		setting.Instance.Parent = self.Instance:FindFirstChild(v.Category)
+
+		local category = assert(self.Instance:FindFirstChild(v.Category), `Setting category {v.Category} not found`)
+		if v.Folder then
+			local folder = category:FindFirstChild(v.Folder)
+			if not folder then
+				folder = SettingFolder.new(folderInstance:Clone(), v.Folder).Instance
+				folder.Parent = category
+			end
+			setting.Instance.Parent = folder.Content
+		else
+			setting.Instance.Parent = category
+		end
 	end
 
 	local contextInstance = self.Instance.ControlContext

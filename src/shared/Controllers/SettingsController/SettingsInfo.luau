@@ -6,6 +6,7 @@ export type SettingInfo = {
 	Title: string,
 	Description: string?,
 	Category: SettingCategory,
+	Folder: string?,
 	Type: SettingType,
 	Value: any,
 	Default: any,
@@ -45,7 +46,8 @@ local Info = {
 		Max = 0.9,
 	},
 	MSteerSensivity = {
-		Title = "Mouse Steering Sensivity",
+		Folder = "Mouse Steering Settings",
+		Title = "Sensivity",
 		Category = "Controls",
 		Description = "The speed of cursor in mouse steering mode",
 		Type = "Slider",
@@ -54,7 +56,8 @@ local Info = {
 		Max = 4,
 	},
 	MSteerDZone = {
-		Title = "Mouse Steering Deadzone",
+		Folder = "Mouse Steering Settings",
+		Title = "Steering Deadzone",
 		Category = "Controls",
 		Description = "Deadzone in mouse steering mode",
 		Type = "Slider",
@@ -62,7 +65,8 @@ local Info = {
 		Max = 0.9,
 	},
 	MSteerCursorY = {
-		Title = "Mouse Steering Cursor Y",
+		Folder = "Mouse Steering Settings",
+		Title = "Cursor Y",
 		Category = "Controls",
 		Description = "The Y of cursor in mouse steering mode",
 		Type = "Slider",
@@ -70,7 +74,8 @@ local Info = {
 		Max = 1,
 	},
 	MSteerWidth = {
-		Title = "Mouse Steering Width",
+		Folder = "Mouse Steering Settings",
+		Title = "Steering Width",
 		Category = "Controls",
 		Description = "Steering width in mouse steering mode",
 		Type = "Slider",
