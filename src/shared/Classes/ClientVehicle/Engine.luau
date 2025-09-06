@@ -55,7 +55,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	local CVTRatio
 	if self.Vehicle.Tune.ClutchType == "CVT" then
 		CVTRatio = math.clamp(
-			(self.Vehicle.Tune.CVTRPM * self.Throttle) / (driveWheelSpeed * self.Vehicle.FinalDriveRatio),
+			(self.Vehicle.Tune.CVTRPM * self.Throttle) / (math.abs(driveWheelSpeed) * self.Vehicle.FinalDriveRatio),
 			self.Vehicle.Tune.CVTMinRatio,
 			self.Vehicle.Tune.CVTMaxRatio
 		)
