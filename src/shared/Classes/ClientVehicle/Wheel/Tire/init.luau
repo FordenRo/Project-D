@@ -108,33 +108,33 @@ function Initialize(self: ClientTire)
 		Dirt = ColorSequence.new(Color3.fromRGB(255, 173, 102)),
 	}
 
-	self.Sounds = {}
-	self.Emitters = {}
-	self.Trails = {}
-	for k, v in MaterialGroups do
-		local sound = ReplicatedStorage.Vehicle.Sounds.Tires:FindFirstChild(k):Clone()
-		sound.Parent = self.SmokePart
-		self.Sounds[k] = sound
+	task.defer(function()
+		self.AudioPlayers = {}
+		self.Emitters = {}
+		self.Trails = {}
+		for k, v in MaterialGroups do
+			self.AudioPlayers[k] = self.Vehicle.SoundController.Sounds[`{self.Wheel.Instance.Name}Tire{k}`].AudioPlayer
 
-		local emitter = ReplicatedStorage.Vehicle.Effects.Tires:FindFirstChild(k):Clone()
-		emitter.Parent = self.SmokePart
-		self.Emitters[k] = emitter
+			local emitter = ReplicatedStorage.Vehicle.Effects.Tires:FindFirstChild(k):Clone()
+			emitter.Parent = self.SmokePart
+			self.Emitters[k] = emitter
 
-		self.Trails[k] = {}
-		for i = 1, self.Vehicle.Tune.TireMarkTransparencyLevels do
-			local trail = Instance.new("Trail")
-			trail.Transparency = NumberSequence.new(self.Vehicle.Tune.TireMarkTransparency)
-			trail.Texture = "rbxassetid://14987871952"
-			trail.TextureMode = Enum.TextureMode.Static
-			trail.Lifetime = 20
-			trail.Enabled = false
-			trail.Attachment0 = trailAttachment1
-			trail.Attachment1 = trailAttachment2
-			trail.Color = trailColors[k]
-			trail.Parent = self.SmokePart
-			self.Trails[k][i] = trail
+			self.Trails[k] = {}
+			for i = 1, self.Vehicle.Tune.TireMarkTransparencyLevels do
+				local trail = Instance.new("Trail")
+				trail.Transparency = NumberSequence.new(self.Vehicle.Tune.TireMarkTransparency)
+				trail.Texture = "rbxassetid://14987871952"
+				trail.TextureMode = Enum.TextureMode.Static
+				trail.Lifetime = 20
+				trail.Enabled = false
+				trail.Attachment0 = trailAttachment1
+				trail.Attachment1 = trailAttachment2
+				trail.Color = trailColors[k]
+				trail.Parent = self.SmokePart
+				self.Trails[k][i] = trail
+			end
 		end
-	end
+	end)
 end
 
 function Replicate(self: ClientTire, buf: buffer?)
@@ -146,12 +146,14 @@ function Replicate(self: ClientTire, buf: buffer?)
 			self[k] = v
 		end
 	else
-		if self.CurrentTrail then
-			for _, trail in self.CurrentTrail do
+		for _, v in self.Trails do
+			for _, trail in v do
 				trail.Enabled = false
 			end
 		end
-		if self.CurrentEmitter then self.CurrentEmitter.Enabled = false end
+		for _, v in self.Emitters do
+			v.Enabled = false
+		end
 	end
 end
 
@@ -324,12 +326,19 @@ function Update(self: ClientTire, deltaTime: number)
 
 	self._LastMaterial = self.Material
 
-	-- Set sounds and smoke
+	-- Disable sounds, smokes and trails
 	if materialChanged then
-		if self.CurrentSound then self.CurrentSound.Playing = false end
-		if self.CurrentEmitter then self.CurrentEmitter.Enabled = false end
-		self.CurrentSound = self.Sounds[self.Material]
-		self.CurrentEmitter = self.Emitters[self.Material]
+		for _, v in self.AudioPlayers do
+			v:Stop()
+		end
+		for _, v in self.Emitters do
+			v.Enabled = false
+		end
+		for _, v in self.Trails do
+			for _, trail in v do
+				trail.Enabled = false
+			end
+		end
 	end
 
 	-- Set Trails
@@ -340,33 +349,25 @@ function Update(self: ClientTire, deltaTime: number)
 			self.Trails[self.Material][i].Enabled = trailStress >= i
 		end
 	end
-	if materialChanged and self.CurrentTrail then
-		for _, trail in self.CurrentTrail do
-			trail.Enabled = false
-		end
-	end
-	self.CurrentTrail = self.Trails[self.Material]
 	self.TrailStress = trailStress
 
-	-- Run effects
-	if self.CurrentSound then
-		if not self.CurrentSound.Playing then
-			self.CurrentSound.TimePosition = math.random() * self.CurrentSound.TimeLength --avoid overlapping sounds
+	-- Play sound
+	local audioPlayer = self.AudioPlayers[self.Material]
+	if audioPlayer then
+		if not audioPlayer.IsPlaying then
+			audioPlayer.TimePosition = math.random() * audioPlayer.TimeLength -- Avoid overlapping sounds
+			audioPlayer:Play()
 		end
-		self.CurrentSound.Playing = true
-		self.CurrentSound.Volume = smokeStress ^ 3 * 1.4
-		self.CurrentSound.PlaybackSpeed = 1.6 - 0.5 * smokeStress
-		local tremolo = self.CurrentSound:FindFirstChildOfClass("TremoloSoundEffect") :: TremoloSoundEffect?
-		if tremolo then
-			tremolo.Depth = math.abs(
-				self.Wheel.Instance.AssemblyLinearVelocity:Dot(self.Wheel.Instance.CFrame.RightVector)
-			) / self.Wheel.Instance.AssemblyLinearVelocity.Magnitude
-		end
+		audioPlayer.Volume = smokeStress ^ 3 * 1.4
+		audioPlayer.PlaybackSpeed = 1.6 - 0.5 * smokeStress
 	end
-	if self.CurrentEmitter then
-		self.CurrentEmitter.Enabled = true
-		self.CurrentEmitter.Rate = smokeStress ^ 10 * 100
+
+	local emitter = self.Emitters[self.Material]
+	if emitter then
+		emitter.Enabled = true
+		emitter.Rate = smokeStress ^ 10 * 100
 	end
+
 	local compression = 1
 	if self.Collision then
 		compression = math.clamp((self.Wheel.Instance.Position - self.Collision.Position).Magnitude / 0.1, 0, 1)

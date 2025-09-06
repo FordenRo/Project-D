@@ -111,6 +111,7 @@ export type SoundController = {
 	__index: SoundController,
 	Vehicle: ClientVehicle,
 	Sounds: { [string]: SoundData.CachedSoundData },
+	Emitters: { [string]: AudioEmitter },
 
 	new: (vehicle: ClientVehicle) -> SoundController,
 }
@@ -311,10 +312,7 @@ export type ClientWheelTire = {
 		TrailAttachment2: Attachment,
 		AlignOrientation: AlignOrientation,
 	},
-	CurrentSound: Sound?,
-	CurrentEmitter: ParticleEmitter?,
-	CurrentTrail: { Trail }?,
-	Sounds: { [string]: Sound },
+	AudioPlayers: { [string]: AudioPlayer },
 	Emitters: { [string]: ParticleEmitter },
 	Trails: { [string]: { Trail } },
 	TrailStress: number,

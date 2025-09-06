@@ -64,4 +64,11 @@ Tune.Sounds = {
 	},
 }
 
+Tune.TireSounds = {
+	Road = "rbxassetid://2458731104",
+	Dirt = "rbxassetid://3127764011",
+	Sand = "rbxassetid://3127764011",
+	Snow = "rbxassetid://3127764011",
+}
+
 return Tune

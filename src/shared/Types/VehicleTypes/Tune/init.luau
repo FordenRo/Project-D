@@ -35,6 +35,8 @@ export type Tune =
 
 		--- Sound configurations
 		Sounds: { [string]: SoundData.SoundData },
+		--- Tire sound configurations
+		TireSounds: { [string]: SoundData.SoundData },
 	}
 	& Engine.Type
 	& Transmission.Type
