@@ -6,6 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local PlayerModule = require(Players.LocalPlayer.PlayerScripts.PlayerModule) :: any
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -26,8 +27,8 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputControll
 	self._RawThrottle = 0
 	self._RawBrake = 0
 	self._RawClutch = 0
+	self._RawSteering = 0
 
-	self.Steering = 0
 	self.MousePosition = Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.MouseSteerOn = false
 
@@ -140,6 +141,95 @@ function ApplyInputs(self: InputController, deltaTime: number)
 			self.Vehicle.Clutch - (1 / (SettingsController:GetSetting("ClutchReleaseTime") / 1000) * deltaTime)
 		)
 	end
+
+	ApplySteering(self, deltaTime)
+end
+
+function ApplySteering(self: InputController, deltaTime: number)
+	deltaTime = (60 / (1 / deltaTime))
+
+	local isController = UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
+		or (self.Vehicle.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
+
+	local steerSpeed
+	local returnSpeed
+	if isController then
+		steerSpeed = self.Vehicle.Tune.ContlrSteerSpeed > 0 and self.Vehicle.Tune.ContlrSteerSpeed
+			or self.Vehicle.Tune.SteerSpeed
+		returnSpeed = self.Vehicle.Tune.ContlrReturnSpeed > 0 and self.Vehicle.Tune.ContlrReturnSpeed
+			or self.Vehicle.Tune.ReturnSpeed
+	else
+		steerSpeed = self.Vehicle.Tune.SteerSpeed
+			* (
+				1
+				- math.min(
+					self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Vehicle.Tune.SteerSpeedDecay,
+					1 - (self.Vehicle.Tune.MinSteerSpeed / 100)
+				)
+			)
+		returnSpeed = self.Vehicle.Tune.ReturnSpeed
+			* (
+				1
+				- math.min(
+					self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Vehicle.Tune.SteerSpeedDecay,
+					1 - (self.Vehicle.Tune.MinSteerSpeed / 100)
+				)
+			)
+	end
+
+	--- Steer Decay Multiplier
+	local sDecay = (
+		1
+		- math.min(
+			self.Vehicle.Velocity.Magnitude
+				/ (Units.Velocity_mdivs / 3.6)
+				/ (self.Vehicle.Tune.SteerDecay / (Units.Velocity_mdivs / 3.6)),
+			1 - (self.Vehicle.Tune.MinSteer / 100)
+		)
+	)
+
+	-- Interpolate Steering
+	local CSAmt = 0
+	if
+		math.abs(self._RawSteering) < self.Vehicle.Tune.CSSteerThresh / 100
+		and self.Vehicle.CS
+		and self.Vehicle.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6 > self.Vehicle.Tune.CSSpeedThresh
+	then
+		CSAmt = (
+			self.Vehicle.Center:VectorToObjectSpace(self.Vehicle.Velocity):Dot(Vector3.new(1, 0, 0))
+			/ math.max(
+				self.Vehicle.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6,
+				self.Vehicle.Tune.CSSpeedThresh
+			)
+		) * (self.Vehicle.Tune.CSAmt / 100)
+	else
+		CSAmt = 0
+	end
+	self.Vehicle.CSActive = math.abs(CSAmt) > (self.Vehicle.Tune.CSAmt / 100) * 0.01
+
+	local SteerWithCounter = math.clamp(self._RawSteering * sDecay + CSAmt, -1, 1)
+	local SteerSmoothing = math.clamp(
+		math.abs(SteerWithCounter - self.Vehicle.Steering) ^ (1 / math.max(self.Vehicle.Tune.SteerSmoothing, 0.001)),
+		0,
+		1
+	)
+	if self.Vehicle.Steering < SteerWithCounter then
+		if self.Vehicle.Steering < 0 then
+			self.Vehicle.Steering =
+				math.min(SteerWithCounter, self.Vehicle.Steering + (returnSpeed * SteerSmoothing * deltaTime))
+		else
+			self.Vehicle.Steering =
+				math.min(SteerWithCounter, self.Vehicle.Steering + (steerSpeed * SteerSmoothing * deltaTime))
+		end
+	else
+		if self.Vehicle.Steering > 0 then
+			self.Vehicle.Steering =
+				math.max(SteerWithCounter, self.Vehicle.Steering - (returnSpeed * SteerSmoothing * deltaTime))
+		else
+			self.Vehicle.Steering =
+				math.max(SteerWithCounter, self.Vehicle.Steering - (steerSpeed * SteerSmoothing * deltaTime))
+		end
+	end
 end
 
 function UpdateMouseInput(self: InputController)
@@ -154,9 +244,9 @@ function UpdateMouseInput(self: InputController)
 	local mdZone = SettingsController:GetSetting("MSteerDZone") :: number
 	local mST = (self.MousePosition.X - 0.5) / (SettingsController:GetSetting("MSteerWidth") :: number) * 2
 	if math.abs(mST) <= mdZone then
-		self.Steering = 0
+		self._RawSteering = 0
 	else
-		self.Steering = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
+		self._RawSteering = (math.max(math.min((math.abs(mST) - mdZone), (1 - mdZone)), 0) / (1 - mdZone))
 				^ self.Vehicle.Tune.MSteerExp
 			* (mST / math.abs(mST))
 	end
@@ -168,14 +258,14 @@ function InitializeConnections(self: InputController)
 		Brake = function(value) self._RawBrake = value end,
 		MouseThrottle = function(value) self._RawThrottle = value end,
 		MouseBrake = function(value) self._RawBrake = value end,
-		TurnLeft = function(value) self.Steering = -value end,
-		TurnRight = function(value) self.Steering = value end,
+		TurnLeft = function(value) self._RawSteering = -value end,
+		TurnRight = function(value) self._RawSteering = value end,
 		ControllerSteering = function(value: Vector2)
 			local cDZone = math.min(0.99, SettingsController:GetSetting("ControllerDZone"))
 			if math.abs(value.X) > cDZone then
-				self.Steering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
+				self._RawSteering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
 			else
-				self.Steering = 0
+				self._RawSteering = 0
 			end
 		end,
 		Clutch = function(value) self._RawClutch = value end,
@@ -211,7 +301,7 @@ function InitializeConnections(self: InputController)
 		end,
 		ToggleMouseSteering = function()
 			self.MouseSteerOn = not self.MouseSteerOn
-			self.Steering = 0
+			self._RawSteering = 0
 		end,
 		ToggleFirstPersonView = function()
 			self.Vehicle.CameraController.FirstPerson = not self.Vehicle.CameraController.FirstPerson
@@ -262,7 +352,7 @@ function InputController.Destroy(self: InputController)
 
 	self._RawBrake = 0
 	self._RawThrottle = 0
-	self.Steering = 0
+	self._RawSteering = 0
 
 	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = true

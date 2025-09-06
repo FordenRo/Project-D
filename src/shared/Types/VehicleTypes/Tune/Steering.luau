@@ -86,8 +86,6 @@ export type Type = {
 
 	--- Speed at which 4WS fully activates (Speed), deactivates (Static), or transition begins (Both) (km/h)
 	RSteerSpeed: number,
-	--- Speed of gradient cutoff (in km/h)
-	RSteerDecay: number,
 
 	--- Rear Steering Damping
 	---

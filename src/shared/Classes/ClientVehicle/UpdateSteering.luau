@@ -1,94 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UserInputService = game:GetService("UserInputService")
 
-local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
-	deltaTime = (60 / (1 / deltaTime))
-	local controller = UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
-		or (self.Tune.MSteerUsesContlr and self.InputController.MouseSteerOn or false)
-	local SteerSpeed
-	local ReturnSpeed
-	if controller then
-		SteerSpeed = self.Tune.ContlrSteerSpeed > 0 and self.Tune.ContlrSteerSpeed or self.Tune.SteerSpeed
-		ReturnSpeed = self.Tune.ContlrReturnSpeed > 0 and self.Tune.ContlrReturnSpeed or self.Tune.ReturnSpeed
-	else
-		SteerSpeed = self.Tune.SteerSpeed
-			* (
-				1
-				- math.min(
-					self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
-					1 - (self.Tune.MinSteerSpeed / 100)
-				)
-			)
-		ReturnSpeed = self.Tune.ReturnSpeed
-			* (
-				1
-				- math.min(
-					self.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) / self.Tune.SteerSpeedDecay,
-					1 - (self.Tune.MinSteerSpeed / 100)
-				)
-			)
-	end
-
-	--Interpolate Steering
-	local CSAmt = 0
-	if
-		math.abs(self.InputController.Steering) < self.Tune.CSSteerThresh / 100
-		and self.CS
-		and self.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6 > self.Tune.CSSpeedThresh
-	then
-		CSAmt = (
-			self.Center:VectorToObjectSpace(self.Velocity):Dot(Vector3.new(1, 0, 0))
-			/ math.max(self.Velocity.Magnitude * (Units.Length_mm / 1000) * 3.6, self.Tune.CSSpeedThresh)
-		) * (self.Tune.CSAmt / 100)
-	else
-		CSAmt = 0
-	end
-	if math.abs(CSAmt) > (self.Tune.CSAmt / 100) * 0.01 then
-		self.CSActive = true
-	else
-		self.CSActive = false
-	end
-	local SteerWithCounter = math.clamp(self.InputController.Steering + CSAmt, -1, 1)
-	local SteerSmoothing =
-		math.clamp(math.abs(SteerWithCounter - self.Steering) ^ (1 / math.max(self.Tune.SteerSmoothing, 0.001)), 0, 1)
-	if self.Steering < SteerWithCounter then
-		if self.Steering < 0 then
-			self.Steering = math.min(SteerWithCounter, self.Steering + (ReturnSpeed * SteerSmoothing * deltaTime))
-		else
-			self.Steering = math.min(SteerWithCounter, self.Steering + (SteerSpeed * SteerSmoothing * deltaTime))
-		end
-	else
-		if self.Steering > 0 then
-			self.Steering = math.max(SteerWithCounter, self.Steering - (ReturnSpeed * SteerSmoothing * deltaTime))
-		else
-			self.Steering = math.max(SteerWithCounter, self.Steering - (SteerSpeed * SteerSmoothing * deltaTime))
-		end
-	end
-
-	--Steer Decay Multiplier
-	local sDecay = (
-		1
-		- math.min(
-			self.Velocity.Magnitude
-				/ (Units.Velocity_mdivs / 3.6)
-				/ (self.Tune.SteerDecay / (Units.Velocity_mdivs / 3.6)),
-			1 - (self.Tune.MinSteer / 100)
-		)
-	)
-	local rsDecay = (
-		1
-		- math.min(
-			self.Velocity.Magnitude
-				/ (Units.Velocity_mdivs / 3.6)
-				/ (self.Tune.RSteerDecay / (Units.Velocity_mdivs / 3.6)),
-			1 - (self.Tune.MinSteer / 100)
-		)
-	)
-
-	--Apply Steering
+	-- Apply Steering
 	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		if wheel.CanSteer == 0 then continue end
 
@@ -96,18 +11,17 @@ return function(self: VehicleTypes.ClientVehicle, deltaTime: number)
 		local rsteerVariableAngle = 1
 		if wheel.CanSteer == 2 then
 			if wheel.Instance.Name == "FL" then
-				-- self.SteerInner and self.SteerOuter
-				angle = (self.Steering < 0 and self.Tune.SteerInner or self.Tune.SteerOuter) * sDecay
+				angle = self.Steering < 0 and self.Tune.SteerInner or self.Tune.SteerOuter
 			elseif wheel.Instance.Name == "FR" then
-				angle = (self.Steering < 0 and self.Tune.SteerOuter or self.Tune.SteerInner) * sDecay
+				angle = self.Steering < 0 and self.Tune.SteerOuter or self.Tune.SteerInner
 			elseif wheel.Instance.Name == "F" then
-				angle = self.Tune.SteerInner * sDecay
+				angle = self.Tune.SteerInner
 			elseif wheel.Instance.Name == "RL" then
-				angle = (self.Steering < 0 and self.Tune.RSteerInner or self.Tune.RSteerOuter) * rsDecay
+				angle = self.Steering < 0 and self.Tune.RSteerInner or self.Tune.RSteerOuter
 			elseif wheel.Instance.Name == "RR" then
-				angle = (self.Steering < 0 and self.Tune.RSteerOuter or self.Tune.RSteerInner) * rsDecay
+				angle = self.Steering < 0 and self.Tune.RSteerOuter or self.Tune.RSteerInner
 			elseif wheel.Instance.Name == "R" then
-				angle = self.Tune.RSteerInner * rsDecay
+				angle = self.Tune.RSteerInner
 			end
 			if not wheel.IsFront then
 				if self.Tune.FWSteer == "Static" then

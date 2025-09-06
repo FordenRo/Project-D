@@ -189,10 +189,10 @@ export type InputController = {
 	_RawThrottle: number,
 	_RawBrake: number,
 	_RawClutch: number,
+	_RawSteering: number,
 	Vehicle: ClientVehicle,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
-	Steering: number,
 
 	new: (vehicle: ClientVehicle) -> InputController,
 	Destroy: (self: InputController) -> (),

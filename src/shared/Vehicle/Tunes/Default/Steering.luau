@@ -31,10 +31,7 @@ Tune.SteerP = 30000
 Tune.SteerMaxTorque = 20000
 
 Tune.FWSteer = "None"
-
 Tune.RSteerSpeed = 60
-Tune.RSteerDecay = 330
-
 Tune.RSteerD = 1000
 Tune.RSteerP = 50000
 Tune.RSteerMaxTorque = 20000
