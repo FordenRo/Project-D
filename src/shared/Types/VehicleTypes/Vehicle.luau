@@ -264,9 +264,6 @@ export type BaseWheel = {
 }
 
 export type ClientWheelSharedData = {
-	TCSCount: number,
-	ABSCount: number,
-	ESCCount: number,
 	Rotation: number,
 	MaxSpin: number,
 	DriveWheelSpeed: number,
@@ -280,7 +277,6 @@ export type ClientWheel = {
 	BrakeDisk: ClientBrakeDisk,
 	CanSteer: number,
 	OppositeWheel: BasePart,
-	Trackers: { ABS: number, TCS: number, ESC: number },
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, deltaTime: number, data: ClientWheelSharedData) -> (),

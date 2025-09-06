@@ -479,7 +479,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 			end
 		end
 		self.Vehicle.ESCActive = torqueESC ~= 0 or self.Vehicle.ESCActive
-		wheel.Trackers.ESC = torqueESC
 
 		-- Apply ABS
 		local torqueABS = 1
@@ -501,7 +500,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 				)
 		end
 		self.Vehicle.ABSActive = torqueABS < 1 or self.Vehicle.ABSActive
-		wheel.Trackers.ABS = 1 - torqueABS
 
 		local PBrake = 0
 		if self.Vehicle.PBrake == true or self.Vehicle.Gear == -2 then
@@ -646,7 +644,6 @@ function Engine.Update(self: Engine, deltaTime: number)
 					)
 			end
 			self.Vehicle.TCSActive = torqueTCS < 1 or self.Vehicle.TCSActive
-			wheel.Trackers.TCS = 1 - torqueTCS
 
 			-- Update Forces
 			local outWheelTorque = (wheelTorque * 1.356 * Units.Torque_nm * throttle * torqueTCS * clutch)

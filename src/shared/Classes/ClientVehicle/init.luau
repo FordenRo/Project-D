@@ -219,12 +219,6 @@ function UpdateWheels(self: ClientVehicle, deltaTime: number)
 	local driveCount = 0
 
 	local data: VehicleTypes.ClientWheelSharedData = {
-		TCSAmt = 0,
-		ABSAmt = 0,
-		ESCAmt = 0,
-		TCSCount = 0,
-		ABSCount = 0,
-		ESCCount = 0,
 		Rotation = 0,
 		MaxSpin = 0,
 		DriveWheelSpeed = 0,

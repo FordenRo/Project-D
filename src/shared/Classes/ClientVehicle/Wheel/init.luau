@@ -13,12 +13,6 @@ type ClientWheel = VehicleTypes.ClientWheel
 function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart): ClientWheel
 	local self: ClientWheel = setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
-	self.Trackers = {
-		ABS = 0,
-		TCS = 0,
-		ESC = 0,
-	}
-
 	self.OppositeWheel = (
 		(self.Instance.Name == "FL" and self.Vehicle.Instance.Wheels:FindFirstChild("FR"))
 		or (self.Instance.Name == "FR" and self.Vehicle.Instance.Wheels:FindFirstChild("FL"))
@@ -66,21 +60,6 @@ function ClientWheel.Update(self: ClientWheel, deltaTime: number, data: VehicleT
 	-- (Forden) Changed to avg
 	-- data.WheelSpeedValue.Value = avg -- I'm not using the avg variable here for future-proofing if we change the calculation later and stuff
 	data.Rotation += avg * (self.Instance.Size.Y / 2)
-
-	-- TCS
-	if self.Trackers.TCS then
-		data.TCSCount += 1
-	end
-
-	-- ABS
-	if self.Trackers.ABS then
-		data.ABSCount += 1
-	end
-
-	-- ESC
-	if self.Trackers.ESC then
-		data.ESCCount += 1
-	end
 
 	ApplySteering(self, deltaTime)
 end
