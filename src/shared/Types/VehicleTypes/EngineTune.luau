@@ -1,6 +1,11 @@
-type Drivetrain = "FWD" | "RWD" | "AWD"
-
-export type Type = {
+--- Naturally Aspirated Engine
+---
+--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
+export type Engine = {
+	--- The name of the engine
+	Title: string,
+	--- The description of the engine
+	Description: string,
 	--- Naturally Aspirated Engine
 	---
 	--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
@@ -35,14 +40,6 @@ export type Type = {
 	VVLCurve: number,
 	--- The horsepower limit of the engine (set to 0 to turn off).
 	HPLimit: number,
-
-	--- Fuel capacity in liters
-	FuelCapacity: number,
-	--- Fuel density in kg/l (0.71 for petrol 0.83 for diesel)
-	FuelDensity: number,
-	--- Brake Specific Fuel Consumption in g/kW*h
-	BSFC: number,
-
 	--- The temperature at which the engine operating normally
 	OperatingEngineTemp: number,
 	--- The temperature at which the engine will explode
@@ -55,13 +52,6 @@ export type Type = {
 	RedlineHeatRejection: number,
 	--- Heat gain multiplier at idle (excluding rpm effect). Think of this as "inefficiency" of cumbustion
 	IdleHeatRejection: number,
-	--- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
-	FanAirSpeed: number,
-	--- Think of this as a size of radiator + efficiency variable
-	CoolingFactor: number,
-	--- RPM at which the engine is most efficient
-	EfficientCombustionRPM: number,
-
 	--- Max damage on redline per hour
 	RPMDamage: number,
 	--- Damage at `EngineBurnTemp` per hour
@@ -70,26 +60,12 @@ export type Type = {
 	RedlineDamage: number,
 	--- The shape of the redline damage curve
 	RedlineDamageCurve: number,
-	--- Damage at high driveshaft stress per second
-	DriveshaftDamage: number,
-	--- Damage at redline when shifting without clutch
-	ClutchlessDamage: number,
-
-	--- Electric Engine
-	---
-	--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
-	Electric: boolean,
-	--- The amount of electric torque in lb-ft.
-	E_Torque: number,
-	--- When the torque begins decaying.
-	E_TransitionRPM: number,
-	--- The maximum RPM of the electric motor.
-	E_Redline: number,
-	--- How much torque is made at the maximum RPM.
-	E_RedlineTorque: number,
-	--- The shape of the curve between TransitionRPM and the redline.
-	E_Curve: number,
-
+	--- Air speed (M/s) from the fan at redline (assumes mechanical linkage to fan from engine)
+	FanAirSpeed: number,
+	--- Think of this as a size of radiator + efficiency variable
+	CoolingFactor: number,
+	--- RPM at which the engine is most efficient
+	EfficientCombustionRPM: number,
 	--- Number of turbochargers in the engine, set to 0 for no turbochargers
 	Turbochargers: number,
 	--- The maximum amount of boost of one turbocharger in PSI.
@@ -108,7 +84,6 @@ export type Type = {
 	T_SpoolIncrease: number,
 	--- Throttle response of the turbo. (Higher = more responsive, ranges from 0 to 1)
 	T_SpoolDecrease: number,
-
 	--- Number of superchargers in the engine, Set to 0 for no superchargers
 	Superchargers: number,
 	--- The maximum amount of boost of one supercharger in PSI.
@@ -127,14 +102,12 @@ export type Type = {
 	S_Efficiency: number,
 	--- Throttle response of the supercharger. (Higher = more responsive, ranges from 0 to 1)
 	S_Response: number,
-
 	--- This is how high the engine revs for the ignition.
 	IgnitionRPM: number,
 	--- The acceleration of the RPM while starting the car.
 	IgnitionAccel: number,
 	--- The minimum RPM required to start the car.
 	IgnitionMinRPM: number,
-
 	--- RPM kickback from redline
 	RevBounce: number,
 	--- Set to true to allow the RPM to go above redline
@@ -159,60 +132,20 @@ export type Type = {
 	RemoveCreep: boolean,
 	--- Torque compensation multiplier for inclines (applies gradient from 0-90 degrees)
 	InclineComp: number,
-
-	--- Drivetrain configuration
-	Config: Drivetrain,
-	--- AWD ONLY, "-1" has a 100% front bias, "0" has a 50:50 bias, and "1" has a 100% rear bias. Can be any number between that range.
-	TorqueVector: number,
-
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values yield more wheel lock-up under throttle, more stability
-
-		Front wheels, only if driven
-	]]
-	FDiffPower: number,
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values yield more wheel lock-up when off throttle, more stability
-
-		Front wheels, only if driven
-	]]
-	FDiffCoast: number,
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values will make the wheels generally lock up faster in any environment
-
-		Front wheels, only if driven
-	]]
-	FDiffPreload: number,
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values yield more wheel lock-up under throttle, more stability
-
-		Rear wheels, only if driven
-	]]
-	RDiffPower: number,
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values yield more wheel lock-up when off throttle, more stability
-
-		Rear wheels, only if driven
-	]]
-	RDiffCoast: number,
-	--[[
-		Option for a limited slip differential in percent (LuaInt)
-
-		Higher values will make the wheels generally lock up faster in any environment
-
-		Rear wheels, only if driven
-	]]
-	RDiffPreload: number,
+	--- Electric Engine
+	---
+	--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
+	Electric: boolean,
+	--- The amount of electric torque in lb-ft.
+	E_Torque: number,
+	--- When the torque begins decaying.
+	E_TransitionRPM: number,
+	--- The maximum RPM of the electric motor.
+	E_Redline: number,
+	--- How much torque is made at the maximum RPM.
+	E_RedlineTorque: number,
+	--- The shape of the curve between TransitionRPM and the redline.
+	E_Curve: number,
 }
 
 return {}

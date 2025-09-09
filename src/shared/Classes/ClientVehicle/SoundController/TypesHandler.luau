@@ -25,10 +25,10 @@ function Handlers.Engine(self: SoundTypesHandler, sound: VehicleTypes.CachedSoun
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
 	sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed
-		+ (sound.RedlinePlaybackSpeed - sound.PlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)
+		+ (sound.RedlinePlaybackSpeed - sound.PlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline)
 
 	sound.AudioPlayer.Volume = (self.Vehicle.IsOn and 1 or 0)
-		* (sound.Volume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Tune.Redline)))
+		* (sound.Volume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline)))
 		* math.clamp(1 / sound.TransitionStart * (self.Vehicle.RPM - sound.RangeStart), 0, 1)
 		* math.clamp(-1 / sound.TransitionEnd * (self.Vehicle.RPM - sound.RangeEnd), 0, 1)
 end
@@ -89,7 +89,8 @@ function Handlers.Ignition(self: SoundTypesHandler, sound: VehicleTypes.CachedSo
 		end
 		sound.Played = true
 		sound.AudioPlayer.PlaybackSpeed = sound.PlaybackSpeed
-			+ (sound.MaxPlaybackSpeed - sound.PlaybackSpeed) * (self.Vehicle.RPM / self.Vehicle.Tune.IgnitionRPM)
+			+ (sound.MaxPlaybackSpeed - sound.PlaybackSpeed)
+				* (self.Vehicle.RPM / self.Vehicle.Engine.Tune.IgnitionRPM)
 	else
 		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
 		sound.Played = false
@@ -109,7 +110,7 @@ function Handlers.Fan(self: SoundTypesHandler, sound: VehicleTypes.CachedSoundDa
 	if self.Vehicle.FanSpeed > 0 then
 		if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
-		sound.AudioPlayer.Volume = self.Vehicle.RPM / self.Vehicle.Tune.Redline ^ 0.5 * sound.Volume
+		sound.AudioPlayer.Volume = self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline ^ 0.5 * sound.Volume
 		sound.AudioPlayer.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed / 10 * sound.PlaybackSpeed
 	else
 		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end

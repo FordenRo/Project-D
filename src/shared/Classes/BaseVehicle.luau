@@ -101,11 +101,12 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 		self[k] = v
 	end
 
+	local engineTune = require(ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(self.Tune.Engine))
 	local x = self.RPM / 1000
 	self.Engine.Boost = self.Engine.BoostTurbo + self.Engine.BoostSuper
 
-	self.Engine.TqTurbo = self.Engine.BoostTurbo * self.Tune.T_Efficiency
-	self.Engine.TqSuper = self.Engine.BoostSuper * self.Tune.S_Efficiency
+	self.Engine.TqTurbo = self.Engine.BoostTurbo * engineTune.T_Efficiency
+	self.Engine.TqSuper = self.Engine.BoostSuper * engineTune.S_Efficiency
 	self.Engine.TqBoosted = self.Engine.TqTurbo + self.Engine.TqSuper
 	self.Engine.Torque = self.Engine.TqNatural + self.Engine.TqElectric + self.Engine.TqBoosted
 

@@ -1,4 +1,5 @@
 local Controls = require(script.Parent.Controls)
+local EngineTune = require(script.Parent.EngineTune)
 local SoundData = require(script.Parent.SoundData)
 local Tune = require(script.Parent.Tune)
 
@@ -174,6 +175,7 @@ export type Engine = {
 	Throttle: number,
 	Brake: number,
 	Clutch: number,
+	Tune: EngineTune.Engine,
 	Vehicle: ClientVehicle,
 
 	new: (vehicle: ClientVehicle) -> Engine,

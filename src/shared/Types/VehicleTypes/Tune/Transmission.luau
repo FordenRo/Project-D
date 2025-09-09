@@ -65,6 +65,11 @@ export type Type = {
 	--- Will also limit RPMs while the clutch is pressed down
 	LimitClutch: boolean,
 
+	--- Damage at high driveshaft stress per second
+	DriveshaftDamage: number,
+	--- Damage at redline when shifting without clutch
+	ClutchlessDamage: number,
+
 	--- `Speed` - Shifts based on wheel speed
 	---
 	--- `RPM` - Shifts based on RPM

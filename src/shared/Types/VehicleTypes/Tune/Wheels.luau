@@ -36,6 +36,58 @@ export type Type = {
 	EBrakeForce: number,
 	--- Set to false if you don't want the car to apply the parking brake when exiting
 	ExitBrake: boolean,
+
+	--- AWD ONLY, "-1" has a 100% front bias, "0" has a 50:50 bias, and "1" has a 100% rear bias. Can be any number between that range.
+	TorqueVector: number,
+
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values yield more wheel lock-up under throttle, more stability
+
+		Front wheels, only if driven
+	]]
+	FDiffPower: number,
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values yield more wheel lock-up when off throttle, more stability
+
+		Front wheels, only if driven
+	]]
+	FDiffCoast: number,
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values will make the wheels generally lock up faster in any environment
+
+		Front wheels, only if driven
+	]]
+	FDiffPreload: number,
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values yield more wheel lock-up under throttle, more stability
+
+		Rear wheels, only if driven
+	]]
+	RDiffPower: number,
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values yield more wheel lock-up when off throttle, more stability
+
+		Rear wheels, only if driven
+	]]
+	RDiffCoast: number,
+	--[[
+		Option for a limited slip differential in percent (LuaInt)
+
+		Higher values will make the wheels generally lock up faster in any environment
+
+		Rear wheels, only if driven
+	]]
+	RDiffPreload: number,
 }
 
 return {}

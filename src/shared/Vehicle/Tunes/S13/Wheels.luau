@@ -25,4 +25,13 @@ Tune.PBrakeBias = 0
 Tune.EBrakeForce = 500
 Tune.ExitBrake = false
 
+Tune.TorqueVector = 0.2
+
+Tune.FDiffPower = 20
+Tune.FDiffCoast = 60
+Tune.FDiffPreload = 40
+Tune.RDiffPower = 20
+Tune.RDiffCoast = 60
+Tune.RDiffPreload = 40
+
 return Tune

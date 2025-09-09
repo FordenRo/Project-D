@@ -22,6 +22,9 @@ Tune.AutoShiftType = "DCT"
 Tune.AutoUpThresh = -200
 Tune.AutoDownThresh = 1400
 
+Tune.DriveshaftDamage = 0.01
+Tune.ClutchlessDamage = 0.12
+
 Tune.ShiftThrot = 100
 
 Tune.ShiftUpTime = 0.2

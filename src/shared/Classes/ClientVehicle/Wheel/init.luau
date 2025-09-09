@@ -91,7 +91,7 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 	local clutch = 1 - self.Vehicle.Engine.Clutch
 	local wheelTorque = torque
 
-	local spLimit = self.Vehicle.Tune.Redline / (self.Vehicle.FinalDriveRatio * self.Vehicle.CurrentRatio)
+	local spLimit = self.Vehicle.Engine.Tune.Redline / (self.Vehicle.FinalDriveRatio * self.Vehicle.CurrentRatio)
 	if self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio == 0 then spLimit = 0 end -- Prevents [nan] from dividing by 0
 
 	-- Apply ESC
@@ -265,7 +265,7 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 
 		-- Apply TCS
 		local torqueTCS = 1
-		if self.Vehicle.TCS and throttle > self.Vehicle.Tune.IdleThrottle / 100 then
+		if self.Vehicle.TCS and throttle > self.Vehicle.Engine.Tune.IdleThrottle / 100 then
 			torqueTCS = 1
 				- (
 					math.min(
@@ -302,7 +302,7 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 		self.Instance.AV.AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
 
 		local brakeTorque = self.Vehicle.Tune.EBrakeForce
-				* math.min(self.Vehicle.RPM / self.Vehicle.Tune.Redline, 0.5)
+				* math.min(self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline, 0.5)
 				* (1 - throttle)
 				* clutch
 			- math.min(flywheelEnergy, 0) / drWCount

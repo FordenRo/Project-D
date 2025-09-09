@@ -30,7 +30,7 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 		},
 	}
 
-	if self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers == 0 then
+	if self.Vehicle.Engine.Tune.Superchargers + self.Vehicle.Engine.Tune.Turbochargers == 0 then
 		self.Instance.Boost.Visible = false
 		self.Instance.BoostBG.Visible = false
 		self.Instance.Labels.Boost.Visible = false
@@ -49,7 +49,7 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 						and self.Vehicle.Tune.SpeedLimit / ((Units.Length_mm / 1000) * 3.6)
 					or wDia
 						* math.pi
-						* self.Vehicle.Tune.Redline
+						* self.Vehicle.Engine.Tune.Redline
 						/ 60
 						/ (self.Vehicle.Tune.ClutchType == "CVT" and self.Vehicle.Tune.CVTMinRatio or self.Vehicle.Tune.Ratios[#self.Vehicle.Tune.Ratios])
 						/ self.Vehicle.Tune.FinalDrive
@@ -121,14 +121,14 @@ function SpeedUpdate(self: Speedometer)
 end
 
 function TachInit(self: Speedometer)
-	local max = math.ceil(self.Vehicle.Tune.Redline / 1000)
+	local max = math.ceil(self.Vehicle.Engine.Tune.Redline / 1000)
 	for i = 0, max do
 		local bin = self.Instance.Tach.Bin:Clone()
 		bin.Visible = true
 		bin.Rotation = i / max * 225 - 135
 		bin.Num.Text = tostring(i)
 		bin.Num.Rotation = -bin.Rotation
-		if i * 1000 > self.Vehicle.Tune.ShiftRPM then bin.Num.TextColor3 = Color3.new(1, 0.2, 0.2) end
+		if i * 1000 > self.Vehicle.Engine.Tune.ShiftRPM then bin.Num.TextColor3 = Color3.new(1, 0.2, 0.2) end
 		bin.Parent = self.Instance.Tach
 	end
 end
@@ -140,17 +140,16 @@ function TachUpdate(self: Speedometer)
 		end
 	end
 
-	local max = math.ceil(self.Vehicle.Tune.Redline / 1000) * 1000
+	local max = math.ceil(self.Vehicle.Engine.Tune.Redline / 1000) * 1000
 	local rot = self.Vehicle.RPM / max * 225
 	self.Instance.Tach.Left.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 180)
 	self.Instance.Tach.Right.CanvasGroup.FG.Rotation = math.clamp(rot - 180, 0, 45)
-	if self.Vehicle.RPM / self.Vehicle.Tune.ShiftRPM > 0.8 then
+	if self.Vehicle.RPM / self.Vehicle.Engine.Tune.ShiftRPM > 0.8 then
 		setColor(
-			Color3.new(1, 1, 1)
-				:Lerp(
-					Color3.new(1, 0, 0),
-					math.clamp((self.Vehicle.RPM / self.Vehicle.Tune.ShiftRPM - 0.8) / 0.2, 0, 1)
-				)
+			Color3.new(1, 1, 1):Lerp(
+				Color3.new(1, 0, 0),
+				math.clamp((self.Vehicle.RPM / self.Vehicle.Engine.Tune.ShiftRPM - 0.8) / 0.2, 0, 1)
+			)
 		)
 	else
 		setColor(Color3.new(1, 1, 1))
@@ -164,9 +163,9 @@ function MileageUpdate(self: Speedometer)
 end
 
 function BoostUpdate(self: Speedometer)
-	if not (self.Vehicle.Tune.Superchargers + self.Vehicle.Tune.Turbochargers) then return end
+	if not (self.Vehicle.Engine.Tune.Superchargers + self.Vehicle.Engine.Tune.Turbochargers) then return end
 
-	local max = self.Vehicle.Tune.S_Boost + self.Vehicle.Tune.T_Boost
+	local max = self.Vehicle.Engine.Tune.S_Boost + self.Vehicle.Engine.Tune.T_Boost
 	local rot = self.Vehicle.Engine.Boost / max * 45
 	self.Instance.Boost.Rotation = math.clamp(180 - rot / 2, 180 - 45 / 2, 180 + 45 / 2)
 	self.Instance.Boost.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 45)
@@ -199,14 +198,18 @@ function TempUpdate(self: Speedometer)
 		self.Instance.TempIcon.Icon.ImageColor3 = color
 	end
 
-	local rot = (self.Vehicle.Engine.Temperature - 60) / (self.Vehicle.Tune.EngineBurnTemp - 65) * 60
+	local rot = (self.Vehicle.Engine.Temperature - 60) / (self.Vehicle.Engine.Tune.EngineBurnTemp - 65) * 60
 	self.Instance.Temp.CanvasGroup.FG.Rotation = 180 - math.clamp(rot, 0, 60)
 
-	if self.Vehicle.Engine.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5) < 0.3 then
+	if self.Vehicle.Engine.Temperature / (self.Vehicle.Engine.Tune.EngineBurnTemp - 5) < 0.3 then
 		setColor(
 			Color3.new(1, 1, 1):Lerp(
 				Color3.new(1, 0, 0),
-				math.clamp(1 - (self.Vehicle.Engine.Temperature / (self.Vehicle.Tune.EngineBurnTemp - 5)) / 0.3, 0, 1)
+				math.clamp(
+					1 - (self.Vehicle.Engine.Temperature / (self.Vehicle.Engine.Tune.EngineBurnTemp - 5)) / 0.3,
+					0,
+					1
+				)
 			)
 		)
 	else

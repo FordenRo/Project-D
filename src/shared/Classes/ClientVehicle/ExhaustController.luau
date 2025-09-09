@@ -77,8 +77,8 @@ function Update(self: ExhaustController)
 	self.Emitter.Enabled = canUpdate
 	if not canUpdate then return end
 
-	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM), 0.2, 0.8)
-	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM) ^ 1.5
+	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM), 0.2, 0.8)
+	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 1.5
 
 	local t = math.sin(tick() * 30)
 	local offset = Vector3.new(
@@ -90,19 +90,19 @@ function Update(self: ExhaustController)
 	self.Motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
-	rpmDelta = MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Tune.ShiftRPM) ^ 0.5
+	rpmDelta = MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 0.5
 	local speed = rpmDelta * 7
 	local rate = rpmDelta * 30
 
 	self.Emitter.Rate = rate
 	self.Emitter.Speed = NumberRange.new(speed / 1.2, speed * 1.2)
 
-	if self.Vehicle.RPM > self.Vehicle.Tune.Redline then
+	if self.Vehicle.RPM > self.Vehicle.Engine.Tune.Redline then
 		self.Emitter.Rate *= 2
 		self.Emitter.Transparency = self._startEmitter.Transparency
 		self.Emitter.Color = ColorSequence.new(Color3.new())
 
-		local damage = math.clamp((self.Vehicle.RPM - self.Vehicle.Tune.Redline) / 1000, 0, 1)
+		local damage = math.clamp((self.Vehicle.RPM - self.Vehicle.Engine.Tune.Redline) / 1000, 0, 1)
 		local keypoints = {}
 		for k, v in self._startEmitter.Size.Keypoints do
 			table.insert(keypoints, NumberSequenceKeypoint.new(v.Time, v.Value * (1 + damage), v.Envelope))

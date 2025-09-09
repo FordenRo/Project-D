@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 function DamageEngine(self: VehicleTypes.ClientVehicle)
-	local factor = (self.RPM / self.Tune.Redline) ^ 1.5 * (1 - self.Clutch)
+	local factor = (self.RPM / self.Engine.Tune.Redline) ^ 1.5 * (1 - self.Clutch)
 	self.Engine.Health = math.max(self.Engine.Health - factor * self.Tune.ClutchlessDamage, 0)
 end
 
@@ -41,9 +41,9 @@ return function(self: VehicleTypes.ClientVehicle)
 							<= math.max(
 								math.min(
 									maxSpin * self.Tune.Ratios[NextGear] * self.FinalDriveRatio,
-									self.Tune.Redline - self.Tune.RevBounce
+									self.Engine.Tune.Redline - self.Engine.Tune.RevBounce
 								),
-								self.Tune.IdleRPM
+								self.Engine.Tune.IdleRPM
 							)
 						or not self.IsOn
 						or self._ShiftDown
@@ -78,9 +78,9 @@ return function(self: VehicleTypes.ClientVehicle)
 							>= math.max(
 								math.min(
 									maxSpin * self.Tune.Ratios[PrevGear] * self.FinalDriveRatio,
-									self.Tune.Redline - self.Tune.RevBounce
+									self.Engine.Tune.Redline - self.Engine.Tune.RevBounce
 								),
-								self.Tune.IdleRPM
+								self.Engine.Tune.IdleRPM
 							)
 						or not self.IsOn
 						or self._ShiftUp
