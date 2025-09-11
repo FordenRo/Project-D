@@ -34,8 +34,8 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self._cons = {}
 	self.Instance.Debug.Visible = RunService:IsStudio()
 	if self.Instance.Debug.Visible then
-		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Config ~= "RWD"
-		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Config ~= "FWD"
+		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Drivetrain ~= "RWD"
+		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Drivetrain ~= "FWD"
 
 		table.insert(self._cons, RunService.Heartbeat:Connect(function() UpdateDebug(self) end))
 	end

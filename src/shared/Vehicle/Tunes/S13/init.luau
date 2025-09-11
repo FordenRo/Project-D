@@ -7,7 +7,7 @@ local Tune = Default :: VehicleTypes.Tune
 
 Tune.Title = "Missat Zilfia S13"
 Tune.Engine = "4A-GEU"
-Tune.Config = "RWD"
+Tune.Drivetrain = "RWD"
 
 Tune.FuelCapacity = 50
 Tune.FuelDensity = 0.71

@@ -258,8 +258,8 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 
 		-- Apply torque split
 		-- This takes the total amount of torque alotted to the front or rear wheels, then divides it by how many wheels there are
-		local bias = (self.Vehicle.Tune.Config == "AWD" and (self.Vehicle.Tune.TorqueVector + 1) / 2)
-			or (self.Vehicle.Tune.Config == "FWD" and 0)
+		local bias = (self.Vehicle.Tune.Drivetrain == "AWD" and (self.Vehicle.Tune.TorqueVector + 1) / 2)
+			or (self.Vehicle.Tune.Drivetrain == "FWD" and 0)
 			or 1
 		wheelTorque = self.IsFront and (wheelTorque * (1 - bias)) / fWCount or (wheelTorque * bias) / rWCount
 
