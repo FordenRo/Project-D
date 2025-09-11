@@ -5,7 +5,7 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Tune = Default :: VehicleTypes.Tune
 
-Tune.Title = "Missat Zilfia S13"
+Tune.Title = "Zoyota Sprint AE-86 Trueno"
 Tune.Engine = "4A-GEU"
 Tune.Drivetrain = "RWD"
 
@@ -13,9 +13,9 @@ Tune.FuelCapacity = 50
 Tune.FuelDensity = 0.71
 Tune.BSFC = 250
 
-Tune.Weight = 1130
+Tune.Weight = 940
 Tune.WeightPartSize = Vector3.new(1690, 1065, 4470)
-Tune.WeightDist = 50
+Tune.WeightDist = 53
 
 for _, module in script:GetChildren() do
 	if not module:IsA("ModuleScript") then continue end
