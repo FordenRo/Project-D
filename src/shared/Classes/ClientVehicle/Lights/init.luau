@@ -25,6 +25,7 @@ local ClientLights = {}
 ClientLights.__index = ClientLights
 
 type ClientLights = VehicleTypes.ClientLights
+type Side = "Right" | "Left" | "Both"
 
 function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 	local self: ClientLights = setmetatable({}, ClientLights) :: any
@@ -39,18 +40,16 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 	self._typesBrightness = {}
 	self.Headlights = {} :: any
 
-	for _, lightType in LIGHT_TYPES do
-		local model = self.Vehicle.Instance.Body.Lights:FindFirstChild(lightType)
-		if not model then continue end
+	for _, lightPart in self.Vehicle.Instance:GetDescendants() do
+		if not lightPart:HasTag("Headlight") then continue end
 
-		self.Headlights[lightType] = {}
-		for k, lightPart in model:GetChildren() :: { BasePart } do
-			if not lightPart:FindFirstChildWhichIsA("Light", true) and not lightPart:GetAttribute("Color") then
-				continue
-			end
-
-			table.insert(self.Headlights[lightType], Headlight.new(lightPart))
+		local typeHeadlights = self.Headlights[lightPart:GetAttribute("Type")]
+		if not typeHeadlights then
+			typeHeadlights = {}
+			self.Headlights[lightPart:GetAttribute("Type")] = typeHeadlights
 		end
+
+		table.insert(typeHeadlights, Headlight.new(lightPart))
 	end
 
 	self._cons = {
@@ -84,7 +83,7 @@ function ClientLights.ToggleTurnState(self: ClientLights, turnState: "Left" | "R
 	self.TurnState = self.TurnState ~= turnState and turnState or "Off"
 end
 
-function setTypeBrightness(self: ClientLights, type: string, brightness: boolean | number)
+function setTypeBrightness(self: ClientLights, type: string, brightness: boolean | number, side: Side?)
 	if brightness == true then
 		brightness = 1
 	elseif brightness == false then
@@ -95,6 +94,9 @@ function setTypeBrightness(self: ClientLights, type: string, brightness: boolean
 	self._typesBrightness[type] = brightness :: number
 
 	for k, v in self.Headlights[type] do
+		local sideAttr = v.Instance:GetAttribute("Side")
+		if side and side ~= "Both" and sideAttr ~= side then continue end
+
 		v:SetBrightness(brightness)
 	end
 end
@@ -120,13 +122,15 @@ function Update(self: ClientLights)
 	setTypeBrightness(self, "Front", LIGHT_POWER[self.State])
 	setTypeBrightness(
 		self,
-		"TurnLeft",
-		(self.TurnState == "Left" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0
+		"TurnSignal",
+		(self.TurnState == "Left" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0,
+		"Left"
 	)
 	setTypeBrightness(
 		self,
-		"TurnRight",
-		(self.TurnState == "Right" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0
+		"TurnSignal",
+		(self.TurnState == "Right" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0,
+		"Right"
 	)
 end
 
