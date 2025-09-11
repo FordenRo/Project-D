@@ -13,10 +13,10 @@ Tune.TireSmokePollingRate = 1 / 8
 Tune.TireMarkTransparencyLevels = 5
 Tune.TireMarkTransparency = 0.9
 
-Tune.TireFMaxFriction = 1.7
-Tune.TireRMaxFriction = 1.7
+Tune.TireFMaxFriction = 1.9
+Tune.TireRMaxFriction = 1.9
 
-Tune.TireDamage = 0.004
+Tune.TireDamage = 0.002
 Tune.TireWearLoss = 0.5
 Tune.TireDirtLoss = 0.1
 Tune.TireSpeedStress = 0.03

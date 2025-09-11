@@ -6,14 +6,14 @@ local Tune = {} :: VehicleTypes.Tune
 
 Tune.SteeringType = "Manual"
 
-Tune.SteerSpeed = 0.03
-Tune.ReturnSpeed = 0.04
-Tune.ContlrSteerSpeed = 0.2
-Tune.ContlrReturnSpeed = 0.2
+Tune.SteerSpeed = 0.04
+Tune.ReturnSpeed = 0.05
+Tune.ContlrSteerSpeed = 0.08
+Tune.ContlrReturnSpeed = 0.08
 Tune.MSteerUsesContlr = true
 
-Tune.SteerDecay = 260
-Tune.SteerSpeedDecay = 300
+Tune.SteerDecay = 220
+Tune.SteerSpeedDecay = 240
 Tune.MinSteer = 40
 Tune.MinSteerSpeed = 50
 
@@ -22,7 +22,7 @@ Tune.CSAmt = 30
 Tune.CSSteerThresh = 10
 Tune.CSSpeedThresh = 10
 
-Tune.SteerSmoothing = 1
+Tune.SteerSmoothing = 2
 Tune.PowerSteeringType = "Old"
 
 Tune.SteerD = 600
