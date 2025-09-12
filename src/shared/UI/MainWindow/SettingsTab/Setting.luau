@@ -185,7 +185,7 @@ function InitBinding(self: Setting)
 
 			updateBinding(input.KeyCode, true)
 		end)
-		self._trove:Connect(binding.Revert.Activated, function() updateBinding(self.Properties.Default[v]) end)
+		self._trove:Connect(binding.Revert.Activated, function() updateBinding(self.Properties.Default[v], true) end)
 
 		updateBinding(self.Value[v])
 		binding.Visible = true
