@@ -91,6 +91,7 @@ function setTypeBrightness(self: ClientLights, type: string, brightness: boolean
 		brightness = 0
 	end
 
+	if not self.Headlights[type] then return end
 	if self._typesBrightness[type] == brightness then return end
 	self._typesBrightness[type] = brightness :: number
 
