@@ -151,8 +151,15 @@ function InitializeSteeringWheel(self: BodyController)
 	local rightShoulderAttachment =
 		player.Character:FindFirstChild("RightUpperArm"):FindFirstChild("RightShoulderAttachment") :: Attachment
 
+	local startLeftShoulderCFrame = leftShoulderAttachment.CFrame
+	local startRightShoulderCFrame = rightShoulderAttachment.CFrame
 	leftShoulderAttachment.CFrame *= CFrame.new(0, 0.2, 0)
 	rightShoulderAttachment.CFrame *= CFrame.new(0, 0.2, 0)
+
+	self._trove:Add(function()
+		leftShoulderAttachment.CFrame = startLeftShoulderCFrame
+		rightShoulderAttachment.CFrame = startRightShoulderCFrame
+	end)
 
 	rightIK.SmoothTime = 0
 	leftIK.SmoothTime = 0
@@ -224,8 +231,16 @@ function InitializePedals(self: BodyController)
 	local rightHipAttachment =
 		player.Character:FindFirstChild("RightUpperLeg"):FindFirstChild("RightHipRigAttachment") :: Attachment
 
+	local startLeftHipCFrame = leftHipAttachment.CFrame
+	local startRightHipCFrame = rightHipAttachment.CFrame
+
 	leftHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
 	rightHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
+
+	self._trove:Add(function()
+		leftHipAttachment.CFrame = startLeftHipCFrame
+		rightHipAttachment.CFrame = startRightHipCFrame
+	end)
 
 	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		throttleIK.Weight = 0.05 + self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
