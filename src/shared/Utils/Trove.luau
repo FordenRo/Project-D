@@ -153,9 +153,6 @@ export type Trove = {
 		instance dictates when the trove is cleaned up, rather than
 		the trove dictating the cleanup of the instance.
 
-		Will throw an error if `instance` is not a descendant
-		of the game hierarchy.
-
 		```lua
 		trove:AttachToInstance(somePart)
 		trove:Add(function()
@@ -373,11 +370,7 @@ function Trove._cleanupObject(self: TroveImpl, object: any, cleanupMethod: strin
 end
 
 function Trove.AttachToInstance(self: TroveImpl, instance: Instance)
-	if self._cleaning then
-		error("cannot call trove:AttachToInstance() while cleaning", 2)
-	elseif not instance:IsDescendantOf(game) then
-		error("instance is not a descendant of the game hierarchy", 2)
-	end
+	if self._cleaning then error("cannot call trove:AttachToInstance() while cleaning", 2) end
 
 	return self:Connect(instance.Destroying, function() self:Destroy() end)
 end
