@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -49,9 +50,11 @@ function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraContro
 	self.CameraCFrame = CFrame.new()
 	Camera.CameraType = Enum.CameraType.Scriptable
 
+	self._trove = Trove.new()
+
 	InitializeNeck(self)
 
-	RunService:BindToRenderStep(
+	self._trove:BindToRenderStep(
 		"CameraUpdate",
 		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) Update(self, deltaTime) end
@@ -70,6 +73,13 @@ function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraContro
 		false,
 		Enum.UserInputType.MouseMovement
 	)
+
+	self._trove:Add(function()
+		ContextActionService:UnbindAction("CameraZoom")
+		ContextActionService:UnbindAction("CameraRotation")
+
+		Camera.CameraType = Enum.CameraType.Custom
+	end)
 
 	return self
 end
@@ -99,8 +109,6 @@ function UpdateRotation(self: CameraController, input: InputObject)
 end
 
 function Update(self: CameraController, deltaTime: number)
-	if not player.Character then return end
-
 	if self._CharacterVisible == self.FirstPerson then
 		self._CharacterVisible = not self.FirstPerson
 		for _, v in player.Character:GetDescendants() do
@@ -124,7 +132,7 @@ function InitializeNeck(self: CameraController)
 	local neckDirection = Vector3.zero
 
 	-- Run task
-	task.defer(function()
+	self._trove:Add(task.defer(function()
 		while true do
 			local deltaTime = RunService.PreSimulation:Wait()
 
@@ -151,7 +159,7 @@ function InitializeNeck(self: CameraController)
 					* CFrame.fromOrientation(neckRotation.X, -neckRotation.Y, neckRotation.Z)
 			).Rotation
 		end
-	end)
+	end))
 end
 
 function UpdateFirstPerson(self: CameraController, deltaTime: number)
@@ -240,12 +248,6 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
 end
 
-function CameraController.Destroy(self: CameraController)
-	RunService:UnbindFromRenderStep("CameraUpdate")
-	ContextActionService:UnbindAction("CameraZoom")
-	ContextActionService:UnbindAction("CameraRotation")
-
-	Camera.CameraType = Enum.CameraType.Custom
-end
+function CameraController.Destroy(self: CameraController) self._trove:Destroy() end
 
 return CameraController

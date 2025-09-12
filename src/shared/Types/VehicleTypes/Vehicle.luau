@@ -150,6 +150,8 @@ export type ClientVehicle = {
 } & BaseVehicle
 
 export type CameraController = {
+	__index: CameraController,
+	_trove: Trove.Trove,
 	_LastCameraRotation: number,
 	_CharacterVisible: boolean,
 	Vehicle: ClientVehicle,
