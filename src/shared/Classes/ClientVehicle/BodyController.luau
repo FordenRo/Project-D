@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -13,6 +14,7 @@ BodyController.__index = BodyController
 export type BodyController = typeof(setmetatable(
 	{} :: {
 		_RightHanded: boolean,
+		_trove: Trove.Trove,
 		Vehicle: VehicleTypes.ClientVehicle,
 		IKControls: { [string]: IKControl },
 		Attachments: { [string]: Attachment },
@@ -27,6 +29,8 @@ function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
 	self.IKControls = {}
 	self.Attachments = {}
 
+	self._trove = Trove.new()
+
 	InitializeIKControls(self)
 	InitializeGearLever(self)
 	InitializeTorso(self)
@@ -35,7 +39,7 @@ function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
 	InitializePedals(self)
 	InitializeIgnition(self)
 
-	self.Vehicle.Instance.Destroying:Once(function() self:Destroy() end)
+	self.Vehicle.DrivenChanged:Once(function() self._trove:Destroy() end)
 
 	return self
 end
@@ -53,6 +57,7 @@ function InitializeIKControls(self: BodyController)
 		IKControl.Weight = 0
 		IKControl.Target = target
 		IKControl.Parent = player.Character
+		self._trove:Add(IKControl)
 
 		self.IKControls[name] = IKControl
 		self.Attachments[name] = target
@@ -129,7 +134,7 @@ function InitializeTorso(self: BodyController)
 
 	local startCFrame = attachment.CFrame
 	local offset = Vector3.zero
-	RunService.Heartbeat:Connect(function(deltaTime: number)
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local force = self.Vehicle.Acceleration.Magnitude
 		if force > 0 then offset = offset:Lerp(force * self.Vehicle.Acceleration.Unit, deltaTime * 2) end
 		attachment.CFrame = startCFrame + attachment.WorldCFrame:VectorToObjectSpace(-offset) * 0.01
@@ -163,7 +168,7 @@ function InitializeHandbrake(self: BodyController)
 
 	local lastPBrake = false
 	local curTask
-	RunService.Heartbeat:Connect(function(deltaTime: number)
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		if self.Vehicle.PBrake == lastPBrake then return end
 
 		lastPBrake = self.Vehicle.PBrake
@@ -181,7 +186,7 @@ function InitializeGearLever(self: BodyController)
 
 	local lastGear = 0
 	local curTask
-	RunService.Heartbeat:Connect(function(deltaTime: number)
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local oneHanded = SettingsController:GetSetting("OneHandedSteering")
 		if oneHanded then IKControl.Weight = (not self.Vehicle.PBrake or curTask) and 1 or 0 end
 		if self.Vehicle.Gear == lastGear then return end
@@ -222,7 +227,7 @@ function InitializePedals(self: BodyController)
 	leftHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
 	rightHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
 
-	RunService.Heartbeat:Connect(function(deltaTime: number)
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		throttleIK.Weight = 0.05 + self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
 		brakeIK.Weight = 0.05 + self.Vehicle.Brake * (1 - self.Vehicle.Throttle * 0.5)
 		clutchIK.Weight = 0.05 + self.Vehicle.Clutch
@@ -232,9 +237,10 @@ end
 function InitializeIgnition(self: BodyController)
 	local IKControl = self.IKControls.Ignition
 
-	RunService.Heartbeat:Connect(function(deltaTime: number) IKControl.Weight = self.Vehicle.Starting and 1 or 0 end)
+	self._trove:Connect(
+		RunService.Heartbeat,
+		function(deltaTime: number) IKControl.Weight = self.Vehicle.Starting and 1 or 0 end
+	)
 end
-
-function BodyController.Destroy(self: BodyController) end
 
 return BodyController

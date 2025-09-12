@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerLights = {}
@@ -11,7 +12,6 @@ ServerLights.__index = ServerLights
 export type ServerLights = typeof(setmetatable(
 	{} :: {
 		_RE: RemoteEvent,
-		_conn: RBXScriptConnection,
 		Vehicle: VehicleTypes.ServerVehicle,
 		State: string,
 		TurnState: string,
@@ -30,7 +30,9 @@ function ServerLights.new(vehicle: VehicleTypes.ServerVehicle): ServerLights
 	self._RE.Name = "_LightsRE"
 	self._RE.Parent = self.Vehicle.Instance
 
-	self._conn = self._RE.OnServerEvent:Connect(function(...) Replicate(self, ...) end)
+	local trove = Trove.new()
+	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self
 end
@@ -46,7 +48,5 @@ function Replicate(self: ServerLights, sender: Player, buf: buffer)
 		self._RE:FireClient(player, buf)
 	end
 end
-
-function ServerLights.Destroy(self: ServerLights) self._conn:Disconnect() end
 
 return ServerLights

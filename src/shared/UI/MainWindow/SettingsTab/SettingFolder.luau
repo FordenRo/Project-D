@@ -1,4 +1,8 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local TweenService = game:GetService("TweenService")
+
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local SettingFolder = {}
 SettingFolder.__index = SettingFolder
 
@@ -29,47 +33,34 @@ function SettingFolder.new(instance: Frame, name: string): SettingFolder
 	self.Instance.Button.Info.Title.Text = name
 	self.Instance.Visible = true
 
-	do -- Initialize connections
-		local cons = {}
+	local trove = Trove.new()
+	trove:AttachToInstance(instance)
 
-		-- On mouse enter
-		table.insert(
-			cons,
-			self.Instance.Button.MouseEnter:Connect(
-				function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0 or 0.5 end
-			)
-		)
-		-- On mouse leave
-		table.insert(
-			cons,
-			self.Instance.Button.MouseLeave:Connect(
-				function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0.5 or 1 end
-			)
-		)
-		-- On press
-		table.insert(
-			cons,
-			self.Instance.Button.Activated:Connect(function()
-				self.Expanded = not self.Expanded
-				self.Instance.Button.BackgroundTransparency = 0
-				self.Instance.BackgroundTransparency = self.Expanded and 0.5 or 1
-				self.Instance.Content.Visible = self.Expanded
+	-- On mouse enter
+	trove:Connect(
+		self.Instance.Button.MouseEnter,
+		function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0 or 0.5 end
+	)
 
-				TweenService:Create(
-					self.Instance.Button.Expand.Image,
-					TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-					{ Rotation = self.Expanded and 180 or 0 }
-				):Play()
-			end)
-		)
+	-- On mouse leave
+	trove:Connect(
+		self.Instance.Button.MouseLeave,
+		function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0.5 or 1 end
+	)
 
-		-- On destroying
-		self.Instance.Destroying:Once(function()
-			for _, v in cons do
-				v:Disconnect()
-			end
-		end)
-	end
+	-- On press
+	trove:Connect(self.Instance.Button.Activated, function()
+		self.Expanded = not self.Expanded
+		self.Instance.Button.BackgroundTransparency = 0
+		self.Instance.BackgroundTransparency = self.Expanded and 0.5 or 1
+		self.Instance.Content.Visible = self.Expanded
+
+		TweenService:Create(
+			self.Instance.Button.Expand.Image,
+			TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Rotation = self.Expanded and 180 or 0 }
+		):Play()
+	end)
 
 	return self
 end

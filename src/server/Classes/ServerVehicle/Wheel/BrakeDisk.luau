@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerBrakeDisk = {}
@@ -18,7 +19,9 @@ function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart
 	self._RE.Name = "_DiskRE"
 	self._RE.Parent = instance
 
-	self._conn = self._RE.OnServerEvent:Connect(function(...) Replicate(self, ...) end)
+	local trove = Trove.new()
+	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -34,7 +37,5 @@ function Replicate(self: ServerBrakeDisk, sender: Player, buf: buffer)
 		self._RE:FireClient(player, buf)
 	end
 end
-
-function ServerBrakeDisk.Destroy(self: ServerBrakeDisk) self._conn:Disconnect() end
 
 return ServerBrakeDisk

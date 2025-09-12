@@ -4,6 +4,7 @@ local UserInputService = game:GetService("UserInputService")
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local SettingsInfo = require(ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local Setting = {}
 Setting.__index = Setting
@@ -14,8 +15,8 @@ type BindingButton = TextButton & {
 
 export type Setting = typeof(setmetatable(
 	{} :: {
+		_trove: Trove.Trove,
 		_changedEvent: BindableEvent,
-		_cons: { RBXScriptConnection },
 		Instance: Frame & {
 			Info: Frame & {
 				Title: TextLabel,
@@ -57,9 +58,10 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 	self.Type = properties.Type
 	self.Properties = properties
 	self.Value = self.Properties.Value
-	self._cons = {}
 
-	self._changedEvent = Instance.new("BindableEvent")
+	self._trove = Trove.new()
+
+	self._changedEvent = self._trove:Construct(Instance, "BindableEvent") :: BindableEvent
 	self.Changed = self._changedEvent.Event
 
 	self.Instance.Info.Title.Text = self.Properties.Title
@@ -75,19 +77,11 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 		InitCheckbox(self)
 	end
 
-	table.insert(
-		self._cons,
-		self.Instance.MouseEnter:Connect(function() self.Instance.BackgroundTransparency = 0.5 end)
-	)
-	table.insert(self._cons, self.Instance.MouseLeave:Connect(function() self.Instance.BackgroundTransparency = 1 end))
+	self._trove:Connect(self.Instance.MouseEnter, function() self.Instance.BackgroundTransparency = 0.5 end)
+	self._trove:Connect(self.Instance.MouseLeave, function() self.Instance.BackgroundTransparency = 1 end)
+	self._trove:AttachToInstance(self.Instance)
 
 	self.Instance.Visible = true
-
-	self.Instance.Destroying:Once(function()
-		for _, v in self._cons do
-			v:Disconnect()
-		end
-	end)
 
 	return self
 end
@@ -111,43 +105,29 @@ function InitSlider(self: Setting)
 	end
 
 	local start = MapToRange(self.Value, min, max)
-	table.insert(
-		self._cons,
-		slider.Handle.Dragger.DragStart:Connect(function() start = MapToRange(self.Value, min, max) end)
+	self._trove:Connect(slider.Handle.Dragger.DragStart, function() start = MapToRange(self.Value, min, max) end)
+	self._trove:Connect(
+		slider.Handle.Dragger.DragContinue,
+		function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale)) end
 	)
-	table.insert(
-		self._cons,
-		slider.Handle.Dragger.DragContinue:Connect(
-			function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale)) end
-		)
+	self._trove:Connect(
+		slider.Handle.Dragger.DragEnd,
+		function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale), true, true) end
 	)
-	table.insert(
-		self._cons,
-		slider.Handle.Dragger.DragEnd:Connect(
-			function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale), true, true) end
-		)
-	)
-
-	table.insert(
-		self._cons,
-		valueFrame.Input.FocusLost:Connect(function(enterPressed: boolean)
-			if enterPressed then
-				local inp = string.gsub(valueFrame.Input.Text, ",", ".")
-				local value = tonumber(inp)
-				if not value then
-					valueFrame.Input.Text = self.Value
-					return
-				end
-				updateValue(value, true, true)
-			else
+	self._trove:Connect(valueFrame.Input.FocusLost, function(enterPressed: boolean)
+		if enterPressed then
+			local inp = string.gsub(valueFrame.Input.Text, ",", ".")
+			local value = tonumber(inp)
+			if not value then
 				valueFrame.Input.Text = self.Value
+				return
 			end
-		end)
-	)
-	table.insert(
-		self._cons,
-		valueFrame.Revert.Activated:Connect(function() updateValue(self.Properties.Default, true, true) end)
-	)
+			updateValue(value, true, true)
+		else
+			valueFrame.Input.Text = self.Value
+		end
+	end)
+	self._trove:Connect(valueFrame.Revert.Activated, function() updateValue(self.Properties.Default, true, true) end)
 
 	updateValue(self.Value, true)
 	self.Instance.Slider.Visible = true
@@ -155,6 +135,7 @@ end
 
 function InitBinding(self: Setting)
 	assert(self.Properties.ActionTypes, "Type check")
+
 	for _, v in self.Instance.Binding:GetChildren() do
 		if not v:IsA("TextButton") or table.find(self.Properties.ActionTypes, v.Name) then continue end
 
@@ -162,6 +143,7 @@ function InitBinding(self: Setting)
 		v.BackgroundTransparency = 1
 		v.Text = ""
 	end
+
 	for _, v in self.Properties.ActionTypes do
 		local binding = self.Instance.Binding:FindFirstChild(v) :: BindingButton
 		local function updateBinding(value: Enum.KeyCode, fireEvent: boolean?)
@@ -177,40 +159,34 @@ function InitBinding(self: Setting)
 			if fireEvent then self._changedEvent:Fire(v, self.Value[v]) end
 		end
 
-		table.insert(
-			self._cons,
-			binding.Activated:Connect(function()
-				local t = 5
-				local thread = task.spawn(function()
-					while true do
-						binding.Text = string.sub(".....", 1, t)
-						task.wait(1 / 5)
-						t = t < 5 and t + 1 or 1
-					end
-				end)
-				binding.Interactable = false
-
-				local input = UserInputService.InputBegan:Wait()
-				task.cancel(thread)
-				binding.Interactable = true
-
-				if not input.KeyCode then
-					updateBinding(self.Value[v])
-					return
+		self._trove:Connect(binding.Activated, function()
+			local t = 5
+			local thread = task.spawn(function()
+				while true do
+					binding.Text = string.sub(".....", 1, t)
+					task.wait(1 / 5)
+					t = t < 5 and t + 1 or 1
 				end
-
-				if input.KeyCode == Enum.KeyCode.Escape then
-					updateBinding(Enum.KeyCode.Unknown, true)
-					return
-				end
-
-				updateBinding(input.KeyCode, true)
 			end)
-		)
-		table.insert(
-			self._cons,
-			binding.Revert.Activated:Connect(function() updateBinding(self.Properties.Default[v]) end)
-		)
+			binding.Interactable = false
+
+			local input = UserInputService.InputBegan:Wait()
+			task.cancel(thread)
+			binding.Interactable = true
+
+			if not input.KeyCode then
+				updateBinding(self.Value[v])
+				return
+			end
+
+			if input.KeyCode == Enum.KeyCode.Escape then
+				updateBinding(Enum.KeyCode.Unknown, true)
+				return
+			end
+
+			updateBinding(input.KeyCode, true)
+		end)
+		self._trove:Connect(binding.Revert.Activated, function() updateBinding(self.Properties.Default[v]) end)
 
 		updateBinding(self.Value[v])
 		binding.Visible = true
@@ -227,10 +203,7 @@ function InitCheckbox(self: Setting)
 		self._changedEvent:Fire(self.Value)
 	end
 
-	table.insert(
-		self._cons,
-		self.Instance.Checkbox.Button.Activated:Connect(function() updateCheckbox(not self.Value) end)
-	)
+	self._trove:Connect(self.Instance.Checkbox.Button.Activated, function() updateCheckbox(not self.Value) end)
 
 	updateCheckbox(self.Value)
 	self.Instance.Checkbox.Visible = true

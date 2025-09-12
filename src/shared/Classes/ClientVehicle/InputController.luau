@@ -6,6 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local PlayerModule = require(Players.LocalPlayer.PlayerScripts.PlayerModule) :: any
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -23,7 +24,6 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputControll
 
 	self.Vehicle = vehicle
 
-	self._cons = {}
 	self._RawThrottle = 0
 	self._RawBrake = 0
 	self._RawClutch = 0
@@ -39,14 +39,27 @@ function InputController.new(vehicle: VehicleTypes.ClientVehicle): InputControll
 
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
+	self._trove = Trove.new()
+	self._trove:AttachToInstance(self.Vehicle.Instance)
+
 	InitializeConnections(self)
 
-	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime: number) Update(self, deltaTime) end))
-	RunService:BindToRenderStep(
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
+	self._trove:BindToRenderStep(
 		"MouseSteerUpdate",
 		Enum.RenderPriority.Camera.Value - 2,
 		function() UpdateMouseInput(self) end
 	)
+	self._trove:Add(function()
+		Context.Enabled = false
+
+		self._RawBrake = 0
+		self._RawThrottle = 0
+		self._RawSteering = 0
+
+		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+		PlayerModule:GetControls():GetActiveController().jumpEnabled = true
+	end)
 
 	return self
 end
@@ -334,28 +347,15 @@ function InitializeConnections(self: InputController)
 
 	for k, v in onChangeActions do
 		local action = Context[k] :: InputAction
-		table.insert(self._cons, action.StateChanged:Connect(v))
+		self._trove:Connect(action.StateChanged, v)
 	end
 
 	for k, v in onPressActions do
 		local action = Context[k] :: InputAction
-		table.insert(self._cons, action.Pressed:Connect(v))
+		self._trove:Connect(action.Pressed, v)
 	end
 end
 
-function InputController.Destroy(self: InputController)
-	Context.Enabled = false
-
-	for _, v in self._cons do
-		v:Disconnect()
-	end
-
-	self._RawBrake = 0
-	self._RawThrottle = 0
-	self._RawSteering = 0
-
-	UserInputService.MouseBehavior = Enum.MouseBehavior.Default
-	PlayerModule:GetControls():GetActiveController().jumpEnabled = true
-end
+function InputController.Destroy(self: InputController) self._trove:Destroy() end
 
 return InputController

@@ -1,3 +1,7 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
+
 export type InterfaceController = {
 	__index: InterfaceController,
 	Interface: Interface,
@@ -12,7 +16,7 @@ export type InterfaceController = {
 
 export type Interface = {
 	__index: Interface,
-	_cons: { RBXScriptConnection },
+	_trove: Trove.Trove,
 	InterfaceController: InterfaceController,
 	Instance: ScreenGui & {
 		Buttons: Frame,
@@ -30,9 +34,9 @@ type TabModule = any & { new: (instance: ScrollingFrame) -> TabModule, Destroy: 
 
 export type MainWindow = {
 	__index: MainWindow,
+	_trove: Trove.Trove,
 	_TabPositions: { [ScrollingFrame]: number },
 	_TabModules: { [string]: TabModule },
-	_cons: { RBXScriptConnection },
 	CurrentTab: string?,
 	Visible: boolean,
 	Instance: ScreenGui & {

@@ -14,8 +14,8 @@ function BaseWheel.new(vehicle: VehicleTypes.BaseVehicle, instance: BasePart): B
 	self.Vehicle = vehicle
 	self.IsFront = string.find(self.Instance.Name, "F") ~= nil
 	self.IsRight = string.find(self.Instance.Name, "L") == nil
-	self.IsDriven = ((self.Vehicle.Tune.Config == "FWD" or self.Vehicle.Tune.Config == "AWD") and self.IsFront)
-		or ((self.Vehicle.Tune.Config == "RWD" or self.Vehicle.Tune.Config == "AWD") and not self.IsFront)
+	self.IsDriven = ((self.Vehicle.Tune.Drivetrain == "FWD" or self.Vehicle.Tune.Drivetrain == "AWD") and self.IsFront)
+		or ((self.Vehicle.Tune.Drivetrain == "RWD" or self.Vehicle.Tune.Drivetrain == "AWD") and not self.IsFront)
 
 	return self
 end

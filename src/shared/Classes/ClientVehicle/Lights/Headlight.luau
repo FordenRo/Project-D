@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Headlight = {}
@@ -25,11 +26,13 @@ function Headlight.new(instance: BasePart): Headlight
 		self.Light.Enabled = true
 	end
 
-	self._task = task.spawn(function()
+	local trove = Trove.new()
+	trove:Add(task.defer(function()
 		while true do
 			Update(self, task.wait(1 / 30))
 		end
-	end)
+	end))
+	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -47,7 +50,5 @@ function Update(self: Headlight, deltaTime: number)
 end
 
 function Headlight.SetBrightness(self: Headlight, brightness: number) self.Brightness = brightness end
-
-function Headlight.Destroy(self: Headlight) self._conn:Disconnect() end
 
 return Headlight

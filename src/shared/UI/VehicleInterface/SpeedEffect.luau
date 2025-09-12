@@ -1,15 +1,32 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local SpeedEffect = {}
 SpeedEffect.__index = SpeedEffect
 
-type EffectFrame = VehicleTypes.EffectFrame
-type SpeedEffect = VehicleTypes.SpeedEffect
+export type EffectFrame = {
+	Instance: Frame,
+	Rotation: number,
+	Force: number,
+	Position: number,
+
+	Move: (self: EffectFrame, delta: number) -> (),
+}
+
+export type SpeedEffect = {
+	__index: SpeedEffect,
+	_trove: Trove.Trove,
+	_LastSpawn: number,
+	Vehicle: VehicleTypes.ClientVehicle,
+	Parent: GuiObject,
+	Effects: { EffectFrame },
+
+	new: (self: SpeedEffect, vehicle: VehicleTypes.ClientVehicle, parent: GuiObject) -> SpeedEffect,
+}
 
 function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 	local self: SpeedEffect = setmetatable({}, SpeedEffect) :: any
@@ -19,11 +36,13 @@ function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 	self.Effects = {}
 	self._LastSpawn = 0
 
-	RunService:BindToRenderStep(
+	self._trove = Trove.new()
+	self._trove:BindToRenderStep(
 		"SpeedEffect",
 		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) Update(self, deltaTime) end
 	)
+	self._trove:AttachToInstance(parent)
 
 	return self
 end
@@ -72,6 +91,7 @@ function Update(self: SpeedEffect, deltaTime: number)
 			local effect = createEffect(math.random() * 360, force)
 			effect:Move(math.min(force, 0.5))
 			effect.Instance.Parent = self.Parent
+			self._trove:Add(effect)
 
 			self._LastSpawn = tick()
 			table.insert(self.Effects, effect)
@@ -82,7 +102,7 @@ function Update(self: SpeedEffect, deltaTime: number)
 		local position = effect.Position - effect.Force * deltaTime * 6
 		effect:Move(position)
 
-		if position < 0 then effect:Destroy() end
+		if position < 0 then self._trove:Remove(effect) end
 	end
 end
 

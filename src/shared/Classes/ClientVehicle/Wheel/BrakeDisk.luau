@@ -5,6 +5,7 @@ local BrakeDiskPacket = require(ReplicatedStorage.Shared.Packets.BrakeDiskPacket
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ClientBrakeDisk = {}
@@ -37,11 +38,10 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 
 	self._RE = instance:WaitForChild("_DiskRE") :: UnreliableRemoteEvent
 
-	self._cons = {
-		RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end),
-		self._RE.OnClientEvent:Connect(function(buf) Replicate(self, buf) end),
-	}
-	self._task = task.spawn(function()
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
+	trove:Connect(self._RE.OnClientEvent, function(buf) Replicate(self, buf) end)
+	trove:Add(task.spawn(function()
 		while true do
 			task.wait(1 / 20)
 			if not self.Vehicle.IsDriven then continue end
@@ -54,7 +54,8 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 			}
 			self._RE:FireServer(Serialization.Serialize(BrakeDiskPacket, data))
 		end
-	end)
+	end))
+	trove:AttachToInstance(self.Instance)
 
 	return self
 end
@@ -100,13 +101,6 @@ function Replicate(self: ClientBrakeDisk, buf: buffer?)
 	self.Sound.Volume = self.Volume
 	self.Sound.Playing = true
 	updateColor(self)
-end
-
-function ClientBrakeDisk.Destroy(self: ClientBrakeDisk)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
-	task.cancel(self._task)
 end
 
 return ClientBrakeDisk

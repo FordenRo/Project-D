@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local SoundTypesHandler = require(script.TypesHandler)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local SoundController = {}
@@ -83,8 +84,9 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 		end
 	end
 
-	local conn = RunService.Heartbeat:Connect(function() handler:HandleSounds(self.Sounds) end)
-	self.Vehicle.Instance.Destroying:Once(function() conn:Disconnect() end)
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function() handler:HandleSounds(self.Sounds) end)
+	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self
 end

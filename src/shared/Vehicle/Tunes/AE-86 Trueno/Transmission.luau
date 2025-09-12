@@ -30,15 +30,15 @@ Tune.ShiftThrot = 100
 Tune.ShiftUpTime = 0.2
 Tune.ShiftDnTime = 0.1
 
-Tune.FinalDrive = 4.38
+Tune.FinalDrive = 4.3
 Tune.Ratios = {
-	3.2,
+	3.8,
 	0,
-	3.6,
-	2,
-	1.3,
+	3.58,
+	2.02,
+	1.38,
 	1,
-	0.82,
+	0.86,
 }
 
 return Tune

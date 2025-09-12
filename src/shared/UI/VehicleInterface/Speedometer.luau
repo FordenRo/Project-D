@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -60,13 +61,15 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 
 	TachInit(self)
 
-	self._conn = RunService.Heartbeat:Connect(function() Update(self) end)
-	self._task = task.spawn(function()
+	self._trove = Trove.new()
+	self._trove:Connect(RunService.Heartbeat, function() Update(self) end)
+	self._trove:Add(task.defer(function()
 		while true do
 			task.wait(1 / 10)
 			SlowUpdate(self)
 		end
-	end)
+	end))
+	self._trove:AttachToInstance(instance)
 
 	return self
 end
@@ -291,12 +294,6 @@ function TSCUpdate(self: Speedometer)
 			self.Instance.TCS.ImageTransparency = 0.8
 		end
 	end
-end
-
-function Speedometer.Destroy(self: Speedometer)
-	self.Instance:Destroy()
-	self._conn:Disconnect()
-	task.cancel(self._task)
 end
 
 return Speedometer

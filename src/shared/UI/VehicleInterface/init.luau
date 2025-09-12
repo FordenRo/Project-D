@@ -7,6 +7,7 @@ local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local UI = ReplicatedStorage.UI.VehicleInterface
@@ -26,22 +27,25 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	self.Instance.Parent = player.PlayerGui
 
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
-	self.SpeedEffect = SpeedEffect.new(vehicle, self.Instance)
+	SpeedEffect.new(vehicle, self.Instance)
 
 	self.CursorInstance = self.Instance.Cursor
 	self._cursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
-	self._cons = {}
+	local trove = Trove.new()
+
 	self.Instance.Debug.Visible = RunService:IsStudio()
 	if self.Instance.Debug.Visible then
-		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Config ~= "RWD"
-		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Config ~= "FWD"
+		self.Instance.Debug.Car.Driveshaft.Front.Visible = self.Vehicle.Tune.Drivetrain ~= "RWD"
+		self.Instance.Debug.Car.Driveshaft.Rear.Visible = self.Vehicle.Tune.Drivetrain ~= "FWD"
 
-		table.insert(self._cons, RunService.Heartbeat:Connect(function() UpdateDebug(self) end))
+		trove:Connect(RunService.Heartbeat, function() UpdateDebug(self) end)
 	end
 
-	table.insert(self._cons, RunService.Heartbeat:Connect(function() UpdateInputs(self) end))
-	RunService:BindToRenderStep("CursorUpdate", Enum.RenderPriority.Camera.Value - 1, function() UpdateCursor(self) end)
+	trove:Connect(RunService.Heartbeat, function() UpdateInputs(self) end)
+	trove:BindToRenderStep("CursorUpdate", Enum.RenderPriority.Camera.Value - 1, function() UpdateCursor(self) end)
+	trove:Add(function() UserInputService.MouseIconEnabled = true end)
+	trove:AttachToInstance(self.Instance)
 
 	return self
 end
@@ -87,14 +91,6 @@ function UpdateInputs(self: VehicleInterface)
 	end
 end
 
-function VehicleInterface.Destroy(self: VehicleInterface)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
-	self.Speedometer:Destroy()
-	self.Instance:Destroy()
-	RunService:UnbindFromRenderStep("CursorUpdate")
-	UserInputService.MouseIconEnabled = true
-end
+function VehicleInterface.Destroy(self: VehicleInterface) self.Instance:Destroy() end
 
 return VehicleInterface

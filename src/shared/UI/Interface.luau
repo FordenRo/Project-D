@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
 local ScreenGui = ReplicatedStorage.UI.Interface
@@ -22,7 +23,8 @@ function Interface.new(interfaceController: UITypes.InterfaceController)
 	self.Instance = ScreenGui:Clone()
 	self.Instance.Parent = player.PlayerGui
 
-	self._cons = {}
+	self._trove = Trove.new()
+	self._trove:AttachToInstance(self.Instance)
 
 	Initialize(self)
 
@@ -36,7 +38,7 @@ end
 
 function InitializeFPSLabel(self: Interface)
 	local fps = 0
-	RunService.Heartbeat:Connect(function(deltaTime: number)
+	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local fpsEnabled = SettingsController:GetSetting("ShowFPS")
 		self.Instance.FPS.Visible = fpsEnabled
 		if fpsEnabled then
@@ -56,7 +58,7 @@ function InitializeButtons(self: Interface)
 
 	for k, v in callbacks do
 		local button = self.Instance.Buttons:FindFirstChild(k, true) :: TextButton
-		table.insert(self._cons, button.Activated:Connect(v))
+		self._trove:Connect(button.Activated, v)
 	end
 end
 
@@ -64,11 +66,6 @@ function Interface.Show(self: Interface) self.Instance.Enabled = true end
 
 function Interface.Hide(self: Interface) self.Instance.Enabled = false end
 
-function Interface.Destroy(self: Interface)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
-	self.Instance:Destroy()
-end
+function Interface.Destroy(self: Interface) self.Instance:Destroy() end
 
 return Interface

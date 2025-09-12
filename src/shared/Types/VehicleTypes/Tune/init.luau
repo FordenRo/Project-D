@@ -16,7 +16,7 @@ export type Tune = {
 	--- Name of the engine
 	Engine: string,
 	--- Drivetrain configuration
-	Config: Drivetrain,
+	Drivetrain: Drivetrain,
 
 	--- Fuel capacity in liters
 	FuelCapacity: number,
