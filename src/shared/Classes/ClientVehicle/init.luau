@@ -15,6 +15,7 @@ local InputController = require(script.InputController)
 local InteriorController = require(script.InteriorController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundController = require(script.SoundController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -39,6 +40,11 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.Meshes = {}
 	self.Textures = {}
 
+	local trove = Trove.new()
+	trove:AttachToInstance(instance)
+
+	self.DrivenChanged = trove:Construct(Signal)
+
 	InitializeVariables(self)
 	InitializeSeats(self)
 	InitializeBody(self)
@@ -51,7 +57,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	InteriorController.new(self)
 	self.Lights = Lights.new(self)
 
-	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
 	trove:Connect(self._Remote.OnClientEvent, function(buf) Replicate(self, buf) end)
 	trove:Add(task.spawn(function()
@@ -69,7 +74,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 			end
 		end
 	end)
-	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -86,7 +90,7 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = true
-	self._DrivenChangedEvent:Fire(true)
+	self.DrivenChanged:Fire(true)
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
@@ -108,7 +112,7 @@ function Leaved(self: ClientVehicle, leavedPlayer: Player, seat: VehicleSeat | S
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = false
-	self._DrivenChangedEvent:Fire(false)
+	self.DrivenChanged:Fire(false)
 
 	self.InputController:Destroy()
 	self.CameraController:Destroy()
@@ -209,8 +213,6 @@ function InitializeVariables(self: ClientVehicle)
 	self._ShiftUp = false
 	self._ShiftDown = false
 	self._OldVelocity = Vector3.new()
-	self._DrivenChangedEvent = Instance.new("BindableEvent")
-	self.DrivenChanged = self._DrivenChangedEvent.Event
 	self.WeightPart = self.Instance.Body.WeightPart
 end
 

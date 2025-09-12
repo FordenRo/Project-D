@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Controls = require(script.Parent.Controls)
 local EngineTune = require(script.Parent.EngineTune)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.Parent.SoundData)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Tune = require(script.Parent.Tune)
@@ -122,13 +123,12 @@ export type SoundController = {
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
-	_DrivenChangedEvent: BindableEvent,
 	IsDriven: boolean,
 	MeshParts: { MeshPart },
 	Meshes: { [MeshPart]: EditableMesh },
 	Textures: { [MeshPart]: EditableImage },
 	Lights: ClientLights,
-	DrivenChanged: RBXScriptSignal<boolean>,
+	DrivenChanged: Signal.Signal<boolean>,
 	InputController: InputController,
 	SoundController: SoundController,
 	DeformationController: DeformationController,

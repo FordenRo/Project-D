@@ -4,6 +4,7 @@ local UserInputService = game:GetService("UserInputService")
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
 local SettingsInfo = require(ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local Setting = {}
@@ -16,7 +17,6 @@ type BindingButton = TextButton & {
 export type Setting = typeof(setmetatable(
 	{} :: {
 		_trove: Trove.Trove,
-		_changedEvent: BindableEvent,
 		Instance: Frame & {
 			Info: Frame & {
 				Title: TextLabel,
@@ -45,7 +45,7 @@ export type Setting = typeof(setmetatable(
 		},
 		Type: SettingsInfo.SettingType,
 		Properties: SettingsInfo.SettingInfo,
-		Changed: RBXScriptSignal,
+		Changed: Signal.Signal<...any>,
 		Value: any,
 	},
 	Setting
@@ -61,8 +61,7 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 
 	self._trove = Trove.new()
 
-	self._changedEvent = self._trove:Construct(Instance, "BindableEvent") :: BindableEvent
-	self.Changed = self._changedEvent.Event
+	self.Changed = self.trove:Construct(Signal)
 
 	self.Instance.Info.Title.Text = self.Properties.Title
 	self.Instance.Info.Description.Text = self.Properties.Description or ""
@@ -101,7 +100,7 @@ function InitSlider(self: Setting)
 		valueFrame.Input.Text = string.format(`%.{l}f`, self.Value :: number)
 		valueFrame.Revert.Visible = math.abs(self.Properties.Default - self.Value) > step / 2
 		if updateHandle then slider.Handle.Position = UDim2.fromScale(normalizedValue, 0.5) end
-		if fireEvent then self._changedEvent:Fire(self.Value) end
+		if fireEvent then self.Changed:Fire(self.Value) end
 	end
 
 	local start = MapToRange(self.Value, min, max)
@@ -156,7 +155,7 @@ function InitBinding(self: Setting)
 						:gsub("DPad", "D")
 				or "-"
 			binding.Revert.Visible = self.Value[v] ~= self.Properties.Default[v]
-			if fireEvent then self._changedEvent:Fire(v, self.Value[v]) end
+			if fireEvent then self.Changed:Fire(v, self.Value[v]) end
 		end
 
 		self._trove:Connect(binding.Activated, function()
@@ -200,7 +199,7 @@ function InitCheckbox(self: Setting)
 		self.Value = value
 		self.Instance.Checkbox.Button.Box.Enabled.Visible = self.Value
 		self.Instance.Checkbox.Button.Text = self.Value and "Enabled" or "Disabled"
-		self._changedEvent:Fire(self.Value)
+		self.Changed:Fire(self.Value)
 	end
 
 	self._trove:Connect(self.Instance.Checkbox.Button.Activated, function() updateCheckbox(not self.Value) end)
