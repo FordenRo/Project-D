@@ -61,7 +61,7 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 
 	self._trove = Trove.new()
 
-	self.Changed = self.trove:Construct(Signal)
+	self.Changed = self._trove:Construct(Signal)
 
 	self.Instance.Info.Title.Text = self.Properties.Title
 	self.Instance.Info.Description.Text = self.Properties.Description or ""
