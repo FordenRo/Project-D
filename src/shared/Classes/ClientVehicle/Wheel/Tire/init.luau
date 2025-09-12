@@ -6,6 +6,7 @@ local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
 local MaterialGroups = require(script.MaterialGroups)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local TirePacket = require(ReplicatedStorage.Shared.Packets.TirePacket)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -26,17 +27,17 @@ function ClientTire.new(wheel: VehicleTypes.ClientWheel, instance: BasePart): Cl
 
 	self._RE = self.Instance:WaitForChild("_RE") :: UnreliableRemoteEvent
 
-	self._task = task.spawn(function()
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end)
+	trove:Connect(self._RE.OnClientEvent, function(buf) Replicate(self, buf) end)
+	trove:Add(task.spawn(function()
 		while true do
 			local deltaTime = task.wait(1 / 30)
 			Update(self, deltaTime)
 			if self.Vehicle.IsDriven then Replicate(self) end
 		end
-	end)
-	self._cons = {
-		RunService.Heartbeat:Connect(function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end),
-		self._RE.OnClientEvent:Connect(function(buf) Replicate(self, buf) end),
-	}
+	end))
+	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -401,13 +402,6 @@ function Update(self: ClientTire, deltaTime: number)
 	for _, v in self.WheelDirtInstances do
 		v.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
 	end
-end
-
-function ClientTire.Destroy(self: ClientTire)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
-	task.cancel(self._task)
 end
 
 return ClientTire

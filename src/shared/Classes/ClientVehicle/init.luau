@@ -16,6 +16,7 @@ local InteriorController = require(script.InteriorController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local SoundController = require(script.SoundController)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
@@ -50,13 +51,25 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	InteriorController.new(self)
 	self.Lights = Lights.new(self)
 
-	table.insert(self._cons, RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end))
-	table.insert(self._cons, self._Remote.OnClientEvent:Connect(function(buf) Replicate(self, buf) end))
-	self._task = task.spawn(function()
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
+	trove:Connect(self._Remote.OnClientEvent, function(buf) Replicate(self, buf) end)
+	trove:Add(task.spawn(function()
 		while task.wait(1 / 30) do
 			Replicate(self)
 		end
+	end))
+	trove:Add(function()
+		--Remove Flip Force
+		if self.Instance.DriveSeat:FindFirstChild("Flip") then
+			if VehicleConstants.FlipType == "New" then
+				self.Instance.DriveSeat.Flip.Enabled = false
+			else
+				self.Instance.DriveSeat.Flip.MaxTorque = 0
+			end
+		end
 	end)
+	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -193,7 +206,6 @@ function InitializeVariables(self: ClientVehicle)
 		Front = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * self.Tune.PBrakeBias,
 		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
 	}
-	self._cons = {}
 	self._ShiftUp = false
 	self._ShiftDown = false
 	self._OldVelocity = Vector3.new()
@@ -260,31 +272,6 @@ function Update(self: ClientVehicle, deltaTime: number)
 	UpdateTransmission(self)
 	self.Engine:Update(deltaTime)
 	UpdateMileage(self, deltaTime)
-end
-
-function ClientVehicle.Destroy(self: ClientVehicle)
-	--Remove Flip Force
-	if self.Instance.DriveSeat:FindFirstChild("Flip") then
-		if VehicleConstants.FlipType == "New" then
-			self.Instance.DriveSeat.Flip.Enabled = false
-		else
-			self.Instance.DriveSeat.Flip.MaxTorque = 0
-		end
-	end
-
-	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
-		wheel:Destroy()
-	end
-
-	self.Engine:Destroy()
-	self.InputController:Destroy()
-	self.Interface:Destroy()
-	self.Lights:Destroy()
-
-	for _, conn in self._cons do
-		conn:Disconnect()
-	end
-	task.cancel(self._task)
 end
 
 return ClientVehicle

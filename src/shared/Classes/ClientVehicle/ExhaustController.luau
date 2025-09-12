@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 
 local MakeMotor = require(ReplicatedStorage.Shared.Utils.MakeMotor)
 local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -64,8 +65,9 @@ function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustCont
 
 	self.Motor = MakeMotor(self.Vehicle.Instance.DriveSeat, self.Instance)
 
-	local con = RunService.Heartbeat:Connect(function() Update(self) end)
-	self.Vehicle.Instance.Destroying:Once(function() con:Disconnect() end)
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function() Update(self) end)
+	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self
 end

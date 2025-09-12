@@ -3,46 +3,46 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local InteriorController = {}
 InteriorController.__index = InteriorController
 
-export type InteriorController = {
-	__index: InteriorController,
-	_cons: { RBXScriptConnection },
-	Vehicle: VehicleTypes.ClientVehicle,
-	Instance: Model & {
-		Pedals: (Model & {
-			Throttle: BasePart,
-			Brake: BasePart,
-			Clutch: BasePart,
-		})?,
-		Handbrake: BasePart?,
-		SteeringWheel: BasePart?,
+export type InteriorController = typeof(setmetatable(
+	{} :: {
+		_trove: Trove.Trove,
+		Vehicle: VehicleTypes.ClientVehicle,
+		Instance: Model & {
+			Pedals: (Model & {
+				Throttle: BasePart,
+				Brake: BasePart,
+				Clutch: BasePart,
+			})?,
+			Handbrake: BasePart?,
+			SteeringWheel: BasePart?,
+		},
 	},
-
-	new: (vehicle: VehicleTypes.ClientVehicle) -> InteriorController,
-	Destroy: (self: InteriorController) -> (),
-}
+	InteriorController
+))
 
 function InteriorController.new(vehicle: VehicleTypes.ClientVehicle): InteriorController
 	local self: InteriorController = setmetatable({}, InteriorController) :: any
 
 	self.Vehicle = vehicle
 	self.Instance = self.Vehicle.Instance.Body:FindFirstChild("Interior") :: any
-	self._cons = {}
 	if not self.Instance then
 		warn(`Interior not found in {self.Vehicle.Instance.Name}`)
 		return self
 	end
 
+	self._trove = Trove.new()
+	self._trove:AttachToInstance(self.Instance)
+
 	InitializeSteeringWheel(self)
 	InitializePedals(self)
 	InitializeHandbrake(self)
 	InitializeGearLever(self)
-
-	self.Vehicle.Instance.Destroying:Once(function() self:Destroy() end)
 
 	return self
 end
@@ -54,11 +54,9 @@ function InitializeSteeringWheel(self: InteriorController)
 	local motor = steeringWheel:FindFirstChildOfClass("Motor6D")
 	if not motor then return end
 
-	table.insert(
-		self._cons,
-		RunService.Heartbeat:Connect(
-			function() motor.CurrentAngle = -self.Vehicle.Steering * self.Vehicle.Tune.LockToLock * math.pi end
-		)
+	self._trove:Connect(
+		RunService.Heartbeat,
+		function() motor.CurrentAngle = -self.Vehicle.Steering * self.Vehicle.Tune.LockToLock * math.pi end
 	)
 end
 
@@ -70,13 +68,11 @@ function InitializeHandbrake(self: InteriorController)
 	if not motor then return end
 
 	local maxAngle = math.rad(handbrake:GetAttribute("MaxAngle"))
-	table.insert(
-		self._cons,
-		RunService.Heartbeat:Connect(
-			function(deltaTime)
-				motor.CurrentAngle = Lerp(motor.CurrentAngle, self.Vehicle.PBrake and maxAngle or 0, deltaTime * 10)
-			end
-		)
+	self._trove:Connect(
+		RunService.Heartbeat,
+		function(deltaTime: number)
+			motor.CurrentAngle = Lerp(motor.CurrentAngle, self.Vehicle.PBrake and maxAngle or 0, deltaTime * 10)
+		end
 	)
 end
 
@@ -93,14 +89,11 @@ function InitializePedals(self: InteriorController)
 		motors[pedal.Name] = pedal:FindFirstChildOfClass("Motor6D")
 	end
 
-	table.insert(
-		self._cons,
-		RunService.Heartbeat:Connect(function()
-			motors.Throttle.CurrentAngle = self.Vehicle.Throttle * angles.Throttle
-			motors.Brake.CurrentAngle = self.Vehicle.Brake * angles.Brake
-			motors.Clutch.CurrentAngle = self.Vehicle.Clutch * angles.Clutch
-		end)
-	)
+	self._trove:Connect(RunService.Heartbeat, function()
+		motors.Throttle.CurrentAngle = self.Vehicle.Throttle * angles.Throttle
+		motors.Brake.CurrentAngle = self.Vehicle.Brake * angles.Brake
+		motors.Clutch.CurrentAngle = self.Vehicle.Clutch * angles.Clutch
+	end)
 end
 
 function InitializeGearLever(self: InteriorController)
@@ -146,26 +139,17 @@ function InitializeGearLever(self: InteriorController)
 
 	local shifting = false
 	local lastGear = 0
-	table.insert(
-		self._cons,
-		RunService.Heartbeat:Connect(function(deltaTime)
-			if shifting then return end
+	self._trove:Connect(RunService.Heartbeat, function()
+		if shifting then return end
 
-			local gear = self.Vehicle.Gear ~= -1 and self.Vehicle.Gear or (#self.Vehicle.Tune.Ratios - 1)
-			if lastGear ~= gear then
-				shifting = true
-				changeGear(gear, lastGear)
-				lastGear = gear
-				shifting = false
-			end
-		end)
-	)
-end
-
-function InteriorController.Destroy(self: InteriorController)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
+		local gear = self.Vehicle.Gear ~= -1 and self.Vehicle.Gear or (#self.Vehicle.Tune.Ratios - 1)
+		if lastGear ~= gear then
+			shifting = true
+			changeGear(gear, lastGear)
+			lastGear = gear
+			shifting = false
+		end
+	end)
 end
 
 return InteriorController

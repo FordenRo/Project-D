@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local BrakeDisk = require(script.BrakeDisk)
 local Tire = require(script.Tire)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -32,6 +33,28 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
 	self.BrakeDisk = BrakeDisk.new(self, self.Instance.Parts.BrakeDisk)
+
+	local trove = Trove.new()
+	trove:Add(function()
+		if self.Instance.AV then
+			self.Instance.AV.MotorMaxTorque = 0
+			self.Instance.AV.AngularVelocity = 0
+		end
+		if self.Instance.BV then
+			local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
+			if ParkingGearEnabled then
+				self.Vehicle.Gear = -2
+			else
+				self.Vehicle.PBrake = true
+			end
+			if self.IsFront then
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Front or 0
+			else
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
+			end
+		end
+	end)
+	trove:AttachToInstance(instance)
 
 	return self
 end
@@ -323,29 +346,6 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 				+ (self.Vehicle.PBrakeForce.Rear * PBrake)
 		end
 	end
-end
-
-function ClientWheel.Destroy(self: ClientWheel)
-	if self.Instance.AV then
-		self.Instance.AV.MotorMaxTorque = 0
-		self.Instance.AV.AngularVelocity = 0
-	end
-	if self.Instance.BV then
-		local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
-		if ParkingGearEnabled then
-			self.Vehicle.Gear = -2
-		else
-			self.Vehicle.PBrake = true
-		end
-		if self.IsFront then
-			self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Front or 0
-		else
-			self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
-		end
-	end
-
-	self.Tire:Destroy()
-	self.BrakeDisk:Destroy()
 end
 
 return ClientWheel

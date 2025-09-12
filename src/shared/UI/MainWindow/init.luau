@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
 local player = Players.LocalPlayer
@@ -40,7 +41,8 @@ function MainWindow.new(): MainWindow
 	end
 
 	self._TabModules = {}
-	self._cons = {}
+	self._trove = Trove.new()
+	self._trove:AttachToInstance(self.Instance)
 	self.CurrentTab = nil
 	self.Visible = false
 
@@ -53,16 +55,13 @@ function Initialize(self: MainWindow)
 	for _, button in self.Instance.Window.TabBar.Container:GetChildren() do
 		if not button:IsA("TextButton") then continue end
 
-		table.insert(
-			self._cons,
-			button.Activated:Connect(function()
-				local tab = string.gsub(button.Name, "Tab", "")
-				self:SetTab(tab)
-			end)
-		)
+		self._trove:Connect(button.Activated, function()
+			local tab = string.gsub(button.Name, "Tab", "")
+			self:SetTab(tab)
+		end)
 	end
 
-	table.insert(self._cons, self.Instance.Background.Activated:Connect(function() self:Hide() end))
+	self._trove:Connect(self.Instance.Background.Activated, function() self:Hide() end)
 end
 
 function MainWindow.Show(self: MainWindow, tab: string?)
@@ -144,14 +143,6 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	end
 end
 
-function MainWindow.Destroy(self: MainWindow)
-	for _, con in self._cons do
-		con:Disconnect()
-	end
-	for _, tabModule in self._TabModules do
-		tabModule:Destroy()
-	end
-	self.Instance:Destroy()
-end
+function MainWindow.Destroy(self: MainWindow) self.Instance:Destroy() end
 
 return MainWindow

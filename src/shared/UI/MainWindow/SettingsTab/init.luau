@@ -5,13 +5,13 @@ local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SplitPascalCase = require(ReplicatedStorage.Shared.Utils.SplitPascalCase)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local SettingsTab = {}
 SettingsTab.__index = SettingsTab
 
 export type SettingsTab = typeof(setmetatable(
 	{} :: {
-		_cons: { RBXScriptConnection },
 		Instance: ScrollingFrame & {
 			Setting: Frame,
 			SettingFolder: Frame,
@@ -27,13 +27,15 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
 
 	self.Instance = instance :: any
-	self._cons = {}
+
+	local trove = Trove.new()
+	trove:AttachToInstance(instance)
 
 	local settingInstance = self.Instance.Setting
 	local folderInstance = self.Instance.SettingFolder
 	for k, v in SettingsController:GetSettingInfos() do
 		local setting = Setting.new(settingInstance:Clone(), v)
-		table.insert(self._cons, setting.Changed:Connect(function(value) SettingsController:SetSetting(k, value) end))
+		trove:Connect(setting.Changed, function(value) SettingsController:SetSetting(k, value) end)
 
 		local category = assert(self.Instance:FindFirstChild(v.Category), `Setting category {v.Category} not found`)
 		if v.Folder then
@@ -83,13 +85,10 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 			local actionOrder = table.find(actionsOrder, inputAction.Name)
 			setting.Instance.LayoutOrder = actionOrder
 
-			table.insert(
-				self._cons,
-				setting.Changed:Connect(function(actionType: string, keyCode: Enum.KeyCode)
-					local binding = inputAction:FindFirstChild(actionType) :: InputBinding
-					binding.KeyCode = keyCode
-				end)
-			)
+			trove:Connect(setting.Changed, function(actionType: string, keyCode: Enum.KeyCode)
+				local binding = inputAction:FindFirstChild(actionType) :: InputBinding
+				binding.KeyCode = keyCode
+			end)
 			setting.Instance.Parent = context
 		end
 
@@ -104,12 +103,6 @@ function getOrder(context: string)
 		if v.Context == context then return k, v.Actions end
 	end
 	return 0
-end
-
-function SettingsTab.Destroy(self: SettingsTab)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
 end
 
 return SettingsTab

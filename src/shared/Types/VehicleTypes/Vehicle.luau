@@ -1,6 +1,9 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local Controls = require(script.Parent.Controls)
 local EngineTune = require(script.Parent.EngineTune)
 local SoundData = require(script.Parent.SoundData)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
@@ -119,8 +122,6 @@ export type SoundController = {
 
 export type ClientVehicle = {
 	__index: ClientVehicle,
-	_cons: { RBXScriptConnection },
-	_task: thread,
 	_DrivenChangedEvent: BindableEvent,
 	IsDriven: boolean,
 	MeshParts: { MeshPart },
@@ -146,7 +147,6 @@ export type ClientVehicle = {
 	new: (instance: Instance) -> ClientVehicle,
 	InitializeWheels: (self: ClientVehicle) -> (),
 	Leave: (self: ClientVehicle) -> (),
-	Destroy: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type CameraController = {
@@ -186,7 +186,7 @@ export type Engine = {
 
 export type InputController = {
 	__index: InputController,
-	_cons: { RBXScriptConnection },
+	_trove: Trove.Trove,
 	_RawThrottle: number,
 	_RawBrake: number,
 	_RawClutch: number,
@@ -290,8 +290,6 @@ export type ServerWheel = {
 export type ClientWheelTire = {
 	__index: ClientWheelTire,
 	_RE: UnreliableRemoteEvent,
-	_task: thread,
-	_cons: { RBXScriptConnection },
 	_LastMaterial: string,
 	Instance: BasePart,
 	WearInstance: BasePart,
@@ -320,7 +318,6 @@ export type ClientWheelTire = {
 	TrailStress: number,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientWheelTire,
-	Destroy: (self: ClientWheelTire) -> (),
 }
 
 export type ServerWheelTire = {
@@ -335,8 +332,6 @@ export type ServerWheelTire = {
 
 export type ClientBrakeDisk = {
 	__index: ClientBrakeDisk,
-	_cons: { RBXScriptConnection },
-	_task: thread,
 	_startColor: Color3,
 	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
@@ -349,24 +344,20 @@ export type ClientBrakeDisk = {
 	Volume: number,
 
 	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
-	Destroy: (self: ClientBrakeDisk) -> (),
 }
 
 export type ServerBrakeDisk = {
 	__index: ServerBrakeDisk,
-	_conn: RBXScriptConnection,
 	_RE: UnreliableRemoteEvent,
 	Wheel: ServerWheel,
 	Instance: BasePart,
 
 	new: (wheel: ServerWheel, instance: BasePart) -> ServerBrakeDisk,
-	Destroy: (self: ServerBrakeDisk) -> (),
 }
 
 export type VehicleSpeedometer = {
 	__index: VehicleSpeedometer,
-	_conn: RBXScriptConnection,
-	_task: thread,
+	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
 	Instance: Frame & any,
 	CurrentUnit: number,
@@ -380,34 +371,12 @@ export type VehicleSpeedometer = {
 	},
 
 	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
-	Destroy: (self: VehicleSpeedometer) -> (),
-}
-
-export type EffectFrame = {
-	Instance: Frame,
-	Rotation: number,
-	Force: number,
-	Position: number,
-
-	Move: (self: EffectFrame, delta: number) -> (),
-	Destroy: (self: EffectFrame) -> (),
-}
-
-export type SpeedEffect = {
-	__index: SpeedEffect,
-	_LastSpawn: number,
-	Vehicle: ClientVehicle,
-	Parent: GuiObject,
-	Effects: { EffectFrame },
-
-	new: (self: SpeedEffect, vehicle: ClientVehicle, part: GuiObject) -> SpeedEffect,
 }
 
 type VISlider = Frame & { Fill: Frame }
 export type VehicleInterface = {
 	__index: VehicleInterface,
 	_cursorTransparency: number,
-	_cons: { RBXScriptConnection },
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & {
 		Cursor: Frame,
@@ -429,7 +398,6 @@ export type VehicleInterface = {
 		},
 	},
 	Speedometer: VehicleSpeedometer,
-	SpeedEffect: SpeedEffect,
 	CursorInstance: Frame,
 
 	new: (vehicle: ClientVehicle) -> VehicleInterface,
@@ -438,7 +406,6 @@ export type VehicleInterface = {
 
 export type Headlight = {
 	__index: Headlight,
-	_conn: RBXScriptConnection,
 	_task: thread,
 	_lightBrightness: number,
 	_currentBrightness: number,
@@ -456,7 +423,6 @@ export type Headlight = {
 
 export type ClientLights = {
 	__index: ClientLights,
-	_cons: { RBXScriptConnection },
 	_RE: RemoteEvent,
 	_typesBrightness: { [string]: number },
 	_lastToggleTime: number,
@@ -468,7 +434,6 @@ export type ClientLights = {
 	new: (vehicle: ClientVehicle) -> ClientLights,
 	ToggleLights: (self: ClientLights) -> (),
 	ToggleTurnState: (self: ClientLights, state: "Left" | "Right" | "Both") -> (),
-	Destroy: (self: ClientLights) -> (),
 }
 
 return {}

@@ -8,8 +8,6 @@ local VehicleConstants = require(script.VehicleConstantsType)
 export type VehicleControls = Controls.VehicleControls
 export type VehicleInterface = Vehicle.VehicleInterface
 export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
-export type EffectFrame = Vehicle.EffectFrame
-export type SpeedEffect = Vehicle.SpeedEffect
 
 export type BaseWheel = Vehicle.BaseWheel
 export type ClientWheel = Vehicle.ClientWheel

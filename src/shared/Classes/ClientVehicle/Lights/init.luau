@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local Headlight = require(script.Headlight)
 local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local LIGHT_POWER = {
@@ -53,16 +54,16 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 		end
 	end
 
-	self._cons = {
-		self._RE.OnClientEvent:Connect(function(buf: buffer)
-			if self.Vehicle.IsDriven then return end
+	local trove = Trove.new()
+	trove:Connect(RunService.Heartbeat, function() Update(self) end)
+	trove:Connect(self._RE.OnClientEvent, function(buf: buffer)
+		if self.Vehicle.IsDriven then return end
 
-			local data = Serialization.Deserialize(LightPacket, buf)
-			self.State = data.State
-			self.TurnState = data.TurnState
-		end),
-		RunService.Heartbeat:Connect(function() Update(self) end),
-	}
+		local data = Serialization.Deserialize(LightPacket, buf)
+		self.State = data.State
+		self.TurnState = data.TurnState
+	end)
+	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self
 end
@@ -128,12 +129,6 @@ function Update(self: ClientLights)
 		"TurnRight",
 		(self.TurnState == "Right" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0
 	)
-end
-
-function ClientLights.Destroy(self: ClientLights)
-	for _, v in self._cons do
-		v:Disconnect()
-	end
 end
 
 return ClientLights

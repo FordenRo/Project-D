@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -25,7 +26,9 @@ function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): Se
 
 	Initialize(self)
 
-	self._RE.OnServerEvent:Connect(function(...) Replicate(self, ...) end)
+	local trove = Trove.new()
+	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:AttachToInstance(instance)
 
 	return self
 end

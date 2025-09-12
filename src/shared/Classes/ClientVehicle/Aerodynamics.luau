@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -12,7 +13,6 @@ Aerodynamics.__index = Aerodynamics
 export type Aerodynamics = {
 	__index: Aerodynamics,
 	_DragFactor: number,
-	_task: thread,
 	_Forces: {
 		Drag: VectorForce,
 		FDownforce: VectorForce,
@@ -21,7 +21,6 @@ export type Aerodynamics = {
 	Vehicle: VehicleTypes.ClientVehicle,
 
 	new: (vehicle: VehicleTypes.ClientVehicle) -> Aerodynamics,
-	Destroy: (self: Aerodynamics) -> (),
 }
 
 function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
@@ -31,14 +30,20 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 
 	Initialize(self)
 
-	self.Vehicle.DrivenChanged:Once(function() self:Destroy() end)
-
-	self._task = task.spawn(function()
+	local trove = Trove.new()
+	trove:Add(task.spawn(function()
 		while true do
 			task.wait(1 / 30)
 			Update(self)
 		end
+	end))
+	trove:Add(function()
+		for _, v in self._Forces do
+			v.Attachment0:Destroy()
+			v:Destroy()
+		end
 	end)
+	self.Vehicle.DrivenChanged:Once(function() trove:Destroy() end)
 
 	return self
 end
@@ -152,14 +157,6 @@ function Update(self: Aerodynamics)
 	end
 	wind.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroWindVolume / 200 ^ 2
 	body.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroBodyVolume / 200 ^ 2
-end
-
-function Aerodynamics.Destroy(self: Aerodynamics)
-	task.cancel(self._task)
-	for _, v in self._Forces do
-		v.Attachment0:Destroy()
-		v:Destroy()
-	end
 end
 
 return Aerodynamics
