@@ -6,6 +6,7 @@ local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.Engin
 local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
 local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -21,11 +22,14 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 
 	Initialize(self)
 
+	local trove = Trove.new()
+	trove:AttachToInstance(instance)
+
 	self.Engine = table.clone(EngineTable)
 	Lights.new(self)
 	InteriorHandler.new(self)
 
-	self._Remote.OnServerEvent:Connect(function(sender: Player, buf: buffer)
+	trove:Connect(self._Remote.OnServerEvent, function(sender: Player, buf: buffer)
 		self:_Replicate(buf)
 
 		for _, player in Players:GetPlayers() do
@@ -331,6 +335,8 @@ function InitializeSeats(self: ServerVehicle)
 		end)
 	end
 end
+
+function ServerVehicle.Destroy(self: ServerVehicle) self.Instance:Destroy() end
 
 -- TODO: Driver mental breakdown bruh
 
