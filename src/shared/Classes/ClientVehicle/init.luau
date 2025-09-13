@@ -84,6 +84,7 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 	else
 		self.Passengers[seat] = seatedPlayer
 	end
+	BodyController.new(self, seatedPlayer, seat)
 
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
@@ -95,7 +96,6 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
 	self.DeformationController = DeformationController.new(self)
-	BodyController.new(self)
 	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end

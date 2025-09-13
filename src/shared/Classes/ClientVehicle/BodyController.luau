@@ -1,12 +1,9 @@
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-
-local player = Players.LocalPlayer
 
 local BodyController = {}
 BodyController.__index = BodyController
@@ -15,6 +12,7 @@ export type BodyController = typeof(setmetatable(
 	{} :: {
 		_RightHanded: boolean,
 		_trove: Trove.Trove,
+		Player: Player,
 		Vehicle: VehicleTypes.ClientVehicle,
 		IKControls: { [string]: IKControl },
 		Attachments: { [string]: Attachment },
@@ -22,41 +20,45 @@ export type BodyController = typeof(setmetatable(
 	BodyController
 ))
 
-function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
+function BodyController.new(
+	vehicle: VehicleTypes.ClientVehicle,
+	player: Player,
+	seat: VehicleSeat | Seat
+): BodyController
 	local self: BodyController = setmetatable({}, BodyController) :: any
 
 	self.Vehicle = vehicle
+	self.Player = player
 	self.IKControls = {}
 	self.Attachments = {}
 
 	self._trove = Trove.new()
+	seat:GetPropertyChangedSignal("Occupant"):Once(function() self._trove:Destroy() end)
 
 	InitializeIKControls(self)
-	InitializeGearLever(self)
 	InitializeTorso(self)
+	InitializeGearLever(self)
 	InitializeSteeringWheel(self)
 	InitializeHandbrake(self)
 	InitializePedals(self)
 	InitializeIgnition(self)
-
-	self.Vehicle.DrivenChanged:Once(function() self._trove:Destroy() end)
 
 	return self
 end
 
 function InitializeIKControls(self: BodyController)
 	local function make(name: string, chainRoot: string, endEffector: string, target: Attachment, priority: number?)
-		if not target then return end
+		if not target or not self.Player or not self.Player.Character then return end
 
 		local IKControl = Instance.new("IKControl")
 		IKControl.Name = name .. "IK"
-		IKControl.ChainRoot = player.Character:FindFirstChild(chainRoot)
-		IKControl.EndEffector = player.Character:FindFirstChild(endEffector)
+		IKControl.ChainRoot = self.Player.Character:FindFirstChild(chainRoot)
+		IKControl.EndEffector = self.Player.Character:FindFirstChild(endEffector)
 		IKControl.Type = Enum.IKControlType.Position
 		IKControl.Priority = priority or 1
 		IKControl.Weight = 0
 		IKControl.Target = target
-		IKControl.Parent = player.Character
+		IKControl.Parent = self.Player.Character
 		self._trove:Add(IKControl)
 
 		self.IKControls[name] = IKControl
@@ -77,6 +79,9 @@ function InitializeIKControls(self: BodyController)
 
 	local vehicle = self.Vehicle.Instance
 	make("Torso", "LowerTorso", "UpperTorso", vehicle.DriveSeat:FindFirstChild("HeadAttachment"))
+
+	if self.Vehicle.Driver ~= self.Player then return end
+
 	make(
 		"RightHandWheel",
 		"RightUpperArm",
@@ -142,14 +147,18 @@ function InitializeTorso(self: BodyController)
 end
 
 function InitializeSteeringWheel(self: BodyController)
+	if not self.Player or not self.Player.Character then return end
+
 	local rightIK = self.IKControls.RightHandWheel
 	local leftIK = self.IKControls.LeftHandWheel
 	if not rightIK or not leftIK then return end
 
-	local leftShoulderAttachment =
-		player.Character:FindFirstChild("LeftUpperArm"):FindFirstChild("LeftShoulderAttachment") :: Attachment
-	local rightShoulderAttachment =
-		player.Character:FindFirstChild("RightUpperArm"):FindFirstChild("RightShoulderAttachment") :: Attachment
+	local leftShoulderAttachment = (self.Player.Character:FindFirstChild("LeftUpperArm") :: BasePart):FindFirstChild(
+		"LeftShoulderAttachment"
+	) :: Attachment
+	local rightShoulderAttachment = (self.Player.Character:FindFirstChild("RightUpperArm") :: BasePart):FindFirstChild(
+		"RightShoulderAttachment"
+	) :: Attachment
 
 	local startLeftShoulderCFrame = leftShoulderAttachment.CFrame
 	local startRightShoulderCFrame = rightShoulderAttachment.CFrame
@@ -217,6 +226,8 @@ function InitializeGearLever(self: BodyController)
 end
 
 function InitializePedals(self: BodyController)
+	if not self.Player or not self.Player.Character then return end
+
 	local throttleIK = self.IKControls.Throttle
 	local brakeIK = self.IKControls.Brake
 	local clutchIK = self.IKControls.Clutch
@@ -226,10 +237,12 @@ function InitializePedals(self: BodyController)
 	brakeIK.SmoothTime = 0
 	clutchIK.SmoothTime = 0
 
-	local leftHipAttachment =
-		player.Character:FindFirstChild("LeftUpperLeg"):FindFirstChild("LeftHipRigAttachment") :: Attachment
-	local rightHipAttachment =
-		player.Character:FindFirstChild("RightUpperLeg"):FindFirstChild("RightHipRigAttachment") :: Attachment
+	local leftHipAttachment = (self.Player.Character:FindFirstChild("LeftUpperLeg") :: BasePart):FindFirstChild(
+		"LeftHipRigAttachment"
+	) :: Attachment
+	local rightHipAttachment = (self.Player.Character:FindFirstChild("RightUpperLeg") :: BasePart):FindFirstChild(
+		"RightHipRigAttachment"
+	) :: Attachment
 
 	local startLeftHipCFrame = leftHipAttachment.CFrame
 	local startRightHipCFrame = rightHipAttachment.CFrame
