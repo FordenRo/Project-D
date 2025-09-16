@@ -1,4 +1,5 @@
-return function(part0: BasePart, part1: BasePart)
+--!strict
+return function(part0: BasePart, part1: BasePart): Motor6D
 	local motor = Instance.new("Motor6D")
 	motor.Part0 = part0
 	motor.Part1 = part1

@@ -1,3 +1,4 @@
+--!strict
 --!native
 local AssetService = game:GetService("AssetService")
 
