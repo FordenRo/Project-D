@@ -441,8 +441,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 	outTorque = outTorque * math.max(1, (1 + iComp))
 
 	-- Update Wheels
-	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
-		wheel:UpdateForces(outTorque, flywheelEnergy)
+	for _, wheel in self.Vehicle.Wheels do
+		(wheel :: VehicleTypes.ClientWheel):UpdateForces(outTorque, flywheelEnergy)
 	end
 
 	deltaTime /= 60
