@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -37,6 +38,7 @@ function BodyController.new(
 
 	InitializeIKControls(self)
 	InitializeTorso(self)
+	InitializeNeck(self)
 	InitializeGearLever(self)
 	InitializeSteeringWheel(self)
 	InitializeHandbrake(self)
@@ -77,11 +79,9 @@ function InitializeIKControls(self: BodyController)
 		make(name, side .. chainRoot, side .. endEffector, target, priority)
 	end
 
-	local vehicle = self.Vehicle.Instance
-	make("Torso", "LowerTorso", "UpperTorso", vehicle.DriveSeat:FindFirstChild("HeadAttachment"))
-
 	if self.Vehicle.Driver ~= self.Player then return end
 
+	local vehicle = self.Vehicle.Instance
 	make(
 		"RightHandWheel",
 		"RightUpperArm",
@@ -130,19 +130,82 @@ function InitializeIKControls(self: BodyController)
 end
 
 function InitializeTorso(self: BodyController)
-	local IKControl = self.IKControls.Torso
-	if not IKControl then return end
+	if not self.Player or not self.Player.Character then return end
 
-	local attachment = self.Attachments.Torso
-	IKControl.Weight = 1
-	IKControl.SmoothTime = 0
+	local humanoid = self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
+	local rootPart = humanoid.RootPart
 
-	local startCFrame = attachment.CFrame
-	local offset = Vector3.zero
-	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
-		local force = self.Vehicle.Acceleration.Magnitude
-		if force > 0 then offset = offset:Lerp(force * self.Vehicle.Acceleration.Unit, deltaTime * 2) end
-		attachment.CFrame = startCFrame + attachment.WorldCFrame:VectorToObjectSpace(-offset) * 0.01
+	local upperTorso = self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
+	local waist = upperTorso:FindFirstChild("Waist") :: AnimationConstraint
+
+	local rotationOffset = Vector3.new(math.rad(15), 0, 0)
+	local rotation = rotationOffset
+	local acceleration = Vector3.zero
+	local angularVelocity = Vector3.zero
+
+	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
+		acceleration =
+			Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		angularVelocity =
+			Lerp(angularVelocity, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity), deltaTime * 20)
+
+		-- Apply acceleration
+		rotation -= Vector3.new(acceleration.Z + acceleration.Y, 0, acceleration.X) * 0.025 * deltaTime
+		-- Apply angular velocity
+		rotation -= angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
+
+		rotation = rotation:Lerp(rotationOffset, deltaTime * 5)
+		waist.Transform = CFrame.fromOrientation(
+			math.clamp(rotation.X, -math.pi / 4, math.pi / 4),
+			math.clamp(rotation.Y, -math.pi / 4, math.pi / 4),
+			math.clamp(-rotation.Z, -math.pi / 4, math.pi / 4)
+		)
+	end)
+end
+
+function InitializeNeck(self: BodyController)
+	if not self.Player or not self.Player.Character then return end
+
+	local humanoid = self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
+	local rootPart = humanoid.RootPart
+
+	local upperTorso = self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
+	local head = self.Player.Character:FindFirstChild("Head") :: BasePart
+	local neck = head:FindFirstChild("Neck") :: AnimationConstraint
+
+	local rotationOffset = Vector3.new(-math.rad(10), 0, 0)
+	local rotation = Vector3.zero
+	local acceleration = Vector3.zero
+	local angularVelocity = Vector3.zero
+
+	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
+		acceleration =
+			Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		angularVelocity =
+			Lerp(angularVelocity, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity), deltaTime * 20)
+
+		-- Calculate look direction
+		local direction = self.Vehicle.WeightPart.CFrame.LookVector
+		if self.Vehicle.Velocity.Magnitude > 0 then
+			direction = direction:Lerp(
+				self.Vehicle.Velocity.Unit,
+				math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
+					* self.Vehicle.WeightPart.CFrame.LookVector:Dot(self.Vehicle.Velocity.Unit)
+					* 0.2
+			)
+		end
+
+		-- Apply acceleration
+		rotation -= Vector3.new(acceleration.Z + acceleration.Y, 0, acceleration.X / 2) * 0.015 * deltaTime
+		-- Apply angular velocity
+		rotation -= angularVelocity * Vector3.new(1, 0, 1) * 2 * deltaTime
+
+		local steeringRotation = Vector3.yAxis * self.Vehicle.Steering * math.rad(30)
+		rotation = rotation:Lerp(rotationOffset + steeringRotation, deltaTime * 7)
+		neck.Transform = upperTorso.CFrame:ToObjectSpace(
+			CFrame.lookAlong(Vector3.zero, direction, self.Vehicle.WeightPart.CFrame.UpVector)
+				* CFrame.fromOrientation(rotation.X, -rotation.Y, rotation.Z)
+		).Rotation
 	end)
 end
 

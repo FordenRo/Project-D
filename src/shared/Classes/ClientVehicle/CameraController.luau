@@ -52,8 +52,6 @@ function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraContro
 
 	self._trove = Trove.new()
 
-	InitializeNeck(self)
-
 	self._trove:BindToRenderStep(
 		"CameraUpdate",
 		Enum.RenderPriority.Camera.Value - 1,
@@ -125,48 +123,8 @@ function Update(self: CameraController, deltaTime: number)
 	end
 end
 
-function InitializeNeck(self: CameraController)
-	local neck = player.Character:FindFirstChild("Head"):FindFirstChild("Neck") :: AnimationConstraint
-	local upperTorso = player.Character:FindFirstChild("UpperTorso") :: BasePart
-	local neckRotation = Vector3.zero
-	local neckDirection = Vector3.zero
-
-	-- Run task
-	self._trove:Add(task.defer(function()
-		while true do
-			local deltaTime = RunService.PreSimulation:Wait()
-
-			local direction = self.Vehicle.WeightPart.CFrame.LookVector
-			if self.Vehicle.Velocity.Magnitude > 0 then
-				direction = direction:Lerp(
-					self.Vehicle.Velocity.Unit,
-					math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
-						* self.Vehicle.WeightPart.CFrame.LookVector:Dot(self.Vehicle.Velocity.Unit)
-						* 0.2
-				)
-			end
-
-			local rotationOffset = Vector3.new(-math.rad(10), 0, 0)
-			local steeringRotation = Vector3.yAxis * self.Vehicle.Steering * math.rad(30)
-			local angularVelocityRotation =
-				Vector3.new(self.Vehicle.AngularVelocity.X * 0.2, 0, self.Vehicle.AngularVelocity.Z * 0.4)
-
-			-- Update neck
-			neckRotation = neckRotation:Lerp(steeringRotation + angularVelocityRotation + rotationOffset, deltaTime * 3)
-			neckDirection = neckDirection:Lerp(direction, deltaTime * 3)
-			neck.Transform = upperTorso.CFrame:ToObjectSpace(
-				CFrame.lookAlong(Vector3.zero, neckDirection, self.Vehicle.WeightPart.CFrame.UpVector)
-					* CFrame.fromOrientation(neckRotation.X, -neckRotation.Y, neckRotation.Z)
-			).Rotation
-		end
-	end))
-end
-
 function UpdateFirstPerson(self: CameraController, deltaTime: number)
 	local head = player.Character:FindFirstChild("Head") :: BasePart
-
-	local bumping = Vector3.yAxis * self.Vehicle.Acceleration.Y * 0.02
-	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 4)
 
 	-- Update camera
 	Camera.FieldOfView = FOV * 1.2 + self.Vehicle.Velocity.Magnitude / 100
