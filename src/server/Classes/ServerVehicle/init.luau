@@ -69,6 +69,7 @@ function MakeGravity(self: ServerVehicle)
 		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH") or Instance.new("Attachment")
 		attachment.Name = "#GRAVCOMP_ATTACH"
 		attachment.Parent = v
+
 		local force = v:FindFirstChild("#GRAVCOMP") or Instance.new("VectorForce")
 		force.Name = "#GRAVCOMP"
 		force.RelativeTo = Enum.ActuatorRelativeTo.World
@@ -335,9 +336,5 @@ function InitializeSeats(self: ServerVehicle)
 		end)
 	end
 end
-
-function ServerVehicle.Destroy(self: ServerVehicle) self.Instance:Destroy() end
-
--- TODO: Driver mental breakdown bruh
 
 return ServerVehicle

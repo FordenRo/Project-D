@@ -76,19 +76,24 @@ function PlayerStatsHandler.GetPlayerCash(self: PlayerStatsHandler, player: Play
 	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):GetAsync(player.UserId) or 5000000
 end
 
-function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player & any, cash: number)
+function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player, cash: number)
 	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):SetAsync(player.UserId, cash)
-	player.leaderstats.Cash.Value = AbbreviateNumber(cash)
+
+	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
+	leaderstats.Cash.Value = AbbreviateNumber(cash)
 end
 
 function PlayerStatsHandler.GetPlayerLaps(self: PlayerStatsHandler, player: Player)
 	return DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`):GetAsync(player.UserId) or 0
 end
 
-function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Player & any)
+function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Player)
 	local laps = DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
 		:IncrementAsync(player.UserId)
-	player.leaderstats.Laps.Value = AbbreviateNumber(laps)
+
+	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
+	leaderstats.Laps.Value = AbbreviateNumber(laps)
+
 	return laps
 end
 

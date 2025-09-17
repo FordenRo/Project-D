@@ -2,6 +2,8 @@
 
 local RunService = game:GetService("RunService")
 
+local Signal = require(script.Parent.Signal)
+
 export type Trove = {
 	--[[
 		Creates and adds another trove to itself. This is just shorthand
@@ -63,7 +65,11 @@ export type Trove = {
 		end)
 		```
 	]]
-	Connect: (self: Trove, signal: SignalLike | RBXScriptSignal, fn: (...any) -> ...any) -> ConnectionLike,
+	Connect: <T...>(
+		self: Trove,
+		signal: Signal.Signal<T...> | RBXScriptSignal<T...>,
+		fn: (T...) -> ()
+	) -> ConnectionLike,
 	--[[
 		Calls `RunService:BindToRenderStep` and registers a function in the
 		trove that will call `RunService:UnbindFromRenderStep` on cleanup.
@@ -186,7 +192,6 @@ export type Trackable =
 	Instance
 	| RBXScriptConnection
 	| ConnectionLike
-	| PromiseLike
 	| thread
 	| ((...any) -> ...any)
 	| Destroyable
@@ -202,12 +207,6 @@ type ConnectionLike = {
 type SignalLike = {
 	Connect: (self: SignalLike, callback: (...any) -> ...any) -> ConnectionLike,
 	Once: (self: SignalLike, callback: (...any) -> ...any) -> ConnectionLike,
-}
-
-type PromiseLike = {
-	getStatus: (self: PromiseLike) -> string,
-	finally: (self: PromiseLike, callback: (...any) -> ...any) -> PromiseLike,
-	cancel: (self: PromiseLike) -> (),
 }
 
 type Constructable<T, A...> = { new: (A...) -> T } | (A...) -> T
