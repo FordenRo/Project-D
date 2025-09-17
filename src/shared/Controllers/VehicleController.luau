@@ -24,28 +24,17 @@ function VehicleController.new(): VehicleController
 
 	self.DrivenVehicle = nil
 
-	do -- Initialize existing vehicles
-		local taskCount = 0
-		for _, vehicle in CollectionService:GetTagged("Vehicle") do
-			if not vehicle:IsDescendantOf(game.Workspace) then continue end
-
-			task.spawn(function()
-				registerVehicle(self, ClientVehicle.new(vehicle))
-				taskCount -= 1
-			end)
-			taskCount += 1
-		end
-
-		repeat
-			task.wait()
-		until taskCount == 0
-	end
-
 	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle)
 		if not vehicle:IsDescendantOf(game.Workspace) then return end
 
 		registerVehicle(self, ClientVehicle.new(vehicle))
 	end)
+
+	for _, vehicle in CollectionService:GetTagged("Vehicle") do
+		if not vehicle:IsDescendantOf(game.Workspace) then continue end
+
+		registerVehicle(self, ClientVehicle.new(vehicle))
+	end
 
 	return self
 end
