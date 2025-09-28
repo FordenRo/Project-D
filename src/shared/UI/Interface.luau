@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
@@ -42,7 +42,7 @@ function InitializeFPSLabel(self: Interface)
 		local fpsEnabled = SettingsController:GetSetting("ShowFPS")
 		self.Instance.FPS.Visible = fpsEnabled
 		if fpsEnabled then
-			fps = Lerp(fps, 1 / deltaTime, deltaTime * 3)
+			fps = MathUtil.Lerp(fps, 1 / deltaTime, deltaTime * 3)
 			self.Instance.FPS.Text = `FPS: {math.round(fps)}`
 		end
 	end)

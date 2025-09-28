@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -85,8 +84,8 @@ end
 
 function Update(self: SpeedEffect, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 60 then
-		local force = math.clamp(MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200), 0, 1)
-		local debounce = Lerp(1 / 3, 1 / 200, force ^ 0.8)
+		local force = math.clamp(MathUtil.MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200), 0, 1)
+		local debounce = MathUtil.Lerp(1 / 3, 1 / 200, force ^ 0.8)
 		if tick() - self._LastSpawn > debounce then
 			local effect = createEffect(math.random() * 360, force)
 			effect:Move(math.min(force, 0.5))

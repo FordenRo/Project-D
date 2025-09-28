@@ -1,7 +1,7 @@
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 
 local DAY_TEMPERATURE = 34
 local NIGHT_TEMPERATURE = 16
@@ -32,8 +32,8 @@ function DatetimeHandler.new(): DatetimeHandler
 			end
 
 			local t = (1 - math.abs(Lighting.ClockTime - 12) / 12) ^ 2
-			Lighting.Brightness = Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
-			game.Workspace:SetAttribute("GlobalTemperature", Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t))
+			Lighting.Brightness = MathUtil.Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
+			game.Workspace:SetAttribute("GlobalTemperature", MathUtil.Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t))
 		end
 	end)
 

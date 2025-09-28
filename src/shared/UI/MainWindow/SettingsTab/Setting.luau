@@ -1,8 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsInfo = require(ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -94,8 +93,8 @@ function InitSlider(self: Setting)
 
 	local function updateValue(value: number, updateHandle: boolean?, fireEvent: boolean?)
 		self.Value = math.clamp(step * math.round(value / step), min, max)
-		local normalizedValue = MapToRange(self.Value, min, max)
-		slider.Fill.Size = UDim2.fromScale(updateHandle and normalizedValue or MapToRange(value, min, max), 1)
+		local normalizedValue = MathUtil.MapToRange(self.Value, min, max)
+		slider.Fill.Size = UDim2.fromScale(updateHandle and normalizedValue or MathUtil.MapToRange(value, min, max), 1)
 		local l = step >= 1 and 0 or step >= 0.1 and 1 or 2
 		valueFrame.Input.Text = string.format(`%.{l}f`, self.Value :: number)
 		valueFrame.Revert.Visible = math.abs(self.Properties.Default - self.Value) > step / 2
@@ -103,15 +102,18 @@ function InitSlider(self: Setting)
 		if fireEvent then self.Changed:Fire(self.Value) end
 	end
 
-	local start = MapToRange(self.Value, min, max)
-	self._trove:Connect(slider.Handle.Dragger.DragStart, function() start = MapToRange(self.Value, min, max) end)
+	local start = MathUtil.MapToRange(self.Value, min, max)
+	self._trove:Connect(
+		slider.Handle.Dragger.DragStart,
+		function() start = MathUtil.MapToRange(self.Value, min, max) end
+	)
 	self._trove:Connect(
 		slider.Handle.Dragger.DragContinue,
-		function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale)) end
+		function() updateValue(MathUtil.Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale)) end
 	)
 	self._trove:Connect(
 		slider.Handle.Dragger.DragEnd,
-		function() updateValue(Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale), true, true) end
+		function() updateValue(MathUtil.Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale), true, true) end
 	)
 	self._trove:Connect(valueFrame.Input.FocusLost, function(enterPressed: boolean)
 		if enterPressed then

@@ -2,8 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local BrakeDisk = require(script.BrakeDisk)
-local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
-local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local Tire = require(script.Tire)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -121,7 +120,7 @@ function Initialize(self: ServerWheel)
 	axlep.Name = "AxleP"
 	axlep.CFrame = self.Instance.CFrame
 	axlep.Parent = self.Instance
-	MakeWeld(axlep, axle)
+	MakeUtil.Weld(axlep, axle)
 
 	--Create Suspension
 	if self.Vehicle.Tune.SuspensionEnabled == true then
@@ -130,15 +129,15 @@ function Initialize(self: ServerWheel)
 			for _, a in SuspensionGeometry:GetDescendants() do
 				if a.Name == "Weld" then
 					if a:IsA("BasePart") then
-						MakeWeld(a, self.Vehicle.Instance.DriveSeat)
+						MakeUtil.Weld(a, self.Vehicle.Instance.DriveSeat)
 					elseif a:IsA("Model") then
-						ModelWeld(a, self.Vehicle.Instance.DriveSeat)
+						MakeUtil.ModelWeld(a, self.Vehicle.Instance.DriveSeat)
 					end
 				end
 			end
-			MakeWeld(SuspensionGeometry.Hub, base)
+			MakeUtil.Weld(SuspensionGeometry.Hub, base)
 			if SuspensionGeometry:FindFirstChild("SpringTop") then
-				MakeWeld(SuspensionGeometry.SpringTop, self.Vehicle.Instance.DriveSeat)
+				MakeUtil.Weld(SuspensionGeometry.SpringTop, self.Vehicle.Instance.DriveSeat)
 			end
 
 			local susparts = SuspensionGeometry:GetDescendants()
@@ -301,11 +300,11 @@ function Initialize(self: ServerWheel)
 				sp.MinLength = self.Vehicle.Tune.RSusLength - self.Vehicle.Tune.RCompressLim
 			end
 
-			MakeWeld(self.Vehicle.Instance.DriveSeat, sa)
-			MakeWeld(sb, base)
+			MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, sa)
+			MakeUtil.Weld(sb, base)
 		end
 	else
-		MakeWeld(self.Vehicle.Instance.DriveSeat, base)
+		MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, base)
 	end
 
 	--Lock Rear Steering Axle
@@ -316,20 +315,20 @@ function Initialize(self: ServerWheel)
 			or self.Vehicle.Tune.FWSteer == "Both"
 		) == false
 	then
-		if not self.IsFront then MakeWeld(base, axle) end
+		if not self.IsFront then MakeUtil.Weld(base, axle) end
 	end
 
-	MakeWeld(arm, axle)
+	MakeUtil.Weld(arm, axle)
 
 	--Weld Miscelaneous Parts
 	if self.Instance:FindFirstChild("SuspensionFixed") ~= nil then
-		ModelWeld(self.Instance.SuspensionFixed, self.Vehicle.Instance.DriveSeat)
+		MakeUtil.ModelWeld(self.Instance.SuspensionFixed, self.Vehicle.Instance.DriveSeat)
 	end
-	if self.Instance:FindFirstChild("WheelFixed") ~= nil then ModelWeld(self.Instance.WheelFixed, axle) end
-	if self.Instance:FindFirstChild("Fixed") ~= nil then ModelWeld(self.Instance.Fixed, arm) end
+	if self.Instance:FindFirstChild("WheelFixed") ~= nil then MakeUtil.ModelWeld(self.Instance.WheelFixed, axle) end
+	if self.Instance:FindFirstChild("Fixed") ~= nil then MakeUtil.ModelWeld(self.Instance.Fixed, arm) end
 
 	--Weld Wheel Parts
-	if self.Instance:FindFirstChild("Parts") ~= nil then ModelWeld(self.Instance.Parts, self.Instance) end
+	if self.Instance:FindFirstChild("Parts") ~= nil then MakeUtil.ModelWeld(self.Instance.Parts, self.Instance) end
 
 	--Add Steering Gyro
 	if self.Instance:FindFirstChild("Steer") then (self.Instance:FindFirstChild("Steer") :: Instance):Destroy() end

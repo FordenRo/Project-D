@@ -1,9 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
-local MakeWeld = require(ReplicatedStorage.Shared.Utils.MakeWeld)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local MaterialGroups = require(script.MaterialGroups)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local TirePacket = require(ReplicatedStorage.Shared.Packets.TirePacket)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -66,7 +66,7 @@ function Initialize(self: ClientTire)
 	self.WearInstance.Material = Enum.Material.Rock
 	self.WearInstance.Size *= 1.006
 	self.WearInstance.Parent = self.Instance
-	MakeWeld(self.WearInstance, self.Instance)
+	MakeUtil.Weld(self.WearInstance, self.Instance)
 
 	self.DirtInstance = self.Instance:Clone()
 	self.DirtInstance:ClearAllChildren()
@@ -75,7 +75,7 @@ function Initialize(self: ClientTire)
 	self.DirtInstance.Size *= 1.003
 	self.DirtInstance.Material = Enum.Material.Rock
 	self.DirtInstance.Parent = self.Instance
-	MakeWeld(self.DirtInstance, self.Instance)
+	MakeUtil.Weld(self.DirtInstance, self.Instance)
 
 	self.WheelDirtInstances = {}
 	for k, v in self.Wheel.Instance.Parts:GetChildren() do
@@ -88,7 +88,7 @@ function Initialize(self: ClientTire)
 		instance.Material = Enum.Material.Rock
 		instance.Size *= 1.003
 		instance.Parent = v
-		MakeWeld(instance, v)
+		MakeUtil.Weld(instance, v)
 		table.insert(self.WheelDirtInstances, instance)
 	end
 
@@ -237,10 +237,10 @@ function Update(self: ClientTire, deltaTime: number)
 
 		-- Update dirt
 		if self.Material ~= "Road" and self.Material ~= "" then
-			self.Dirt = Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
+			self.Dirt = MathUtil.Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
 			self.Vehicle.Dirt = math.clamp(math.min(rotSpeed * 0.0002 * deltaTime, 1), 0, 1)
 		else
-			self.Dirt = Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
+			self.Dirt = MathUtil.Lerp(self.Dirt, 0, rotSpeed * 0.0001 * deltaTime)
 		end
 
 		-- Apply friction

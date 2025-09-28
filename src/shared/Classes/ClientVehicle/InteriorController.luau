@@ -2,7 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -71,7 +71,8 @@ function InitializeHandbrake(self: InteriorController)
 	self._trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
-			motor.CurrentAngle = Lerp(motor.CurrentAngle, self.Vehicle.PBrake and maxAngle or 0, deltaTime * 10)
+			motor.CurrentAngle =
+				MathUtil.Lerp(motor.CurrentAngle, self.Vehicle.PBrake and maxAngle or 0, deltaTime * 10)
 		end
 	)
 end

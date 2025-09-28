@@ -3,8 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local EngineTable = require(script.Parent.EngineTable)
 local EngineTune = require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -110,7 +109,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 			or self.Vehicle.Tune.NeutralLimit and self.Vehicle.Tune.LimitClutch
 		)
 	then
-		goalMax = Lerp(self.Tune.Redline, self.Vehicle.Tune.NeutralRevRPM, self.Vehicle.Clutch)
+		goalMax = MathUtil.Lerp(self.Tune.Redline, self.Vehicle.Tune.NeutralRevRPM, self.Vehicle.Clutch)
 	end
 
 	-- Rev limiter/speed limiter
@@ -457,7 +456,7 @@ function UpdateHealth(self: Engine, deltaTime: number)
 	local damage = self.Tune.RPMDamage * (self.Vehicle.RPM / self.Tune.Redline) ^ 2 / 3600
 	damage += (math.max(self.Vehicle.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
 	damage += self.Tune.HotDamage * math.clamp(
-		MapToRange(self.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
+		MathUtil.MapToRange(self.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
 		0,
 		1
 	) ^ 1.5 / 3600
@@ -474,7 +473,7 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 	if not self.Vehicle.Tune.Engine or self.Health == 0 then return end
 
 	local kW = self.Horsepower / 1.35962
-	local heat = kW * Lerp(1, 2, self.Vehicle.RPM / self.Tune.Redline) / 120
+	local heat = kW * MathUtil.Lerp(1, 2, self.Vehicle.RPM / self.Tune.Redline) / 120
 	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
 	local cooling = tDelta * 0.015
 	cooling += (self.Vehicle.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8

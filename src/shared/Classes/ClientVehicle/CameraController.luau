@@ -3,7 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -131,7 +131,7 @@ function UpdateFirstPerson(self: CameraController, deltaTime: number)
 		head.Position + Vector3.new(0, 0.2, 0) - self.Vehicle.WeightPart.CFrame.LookVector * 0.4 + self.Bumping,
 		head.CFrame.LookVector,
 		head.CFrame.UpVector
-	) * CFrame.fromOrientation(self.Angles.X, self.Angles.Y, self.Angles.Z)
+	)
 end
 
 function UpdateThirdPerson(self: CameraController, deltaTime: number)
@@ -194,7 +194,7 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 		* self.Vehicle.WeightPart.CFrame.RightVector
 		* distance
 		* 0.5
-		* math.clamp(MapToRange(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1), 0, 1)
+		* math.clamp(MathUtil.MapToRange(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1), 0, 1)
 
 	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
 

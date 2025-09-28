@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local SpeedEffect = require(script.SpeedEffect)
 local Speedometer = require(script.Speedometer)
@@ -70,7 +70,7 @@ function UpdateDebug(self: VehicleInterface)
 
 		local brakeFill = car.Brakes:FindFirstChild(wheel.Instance.Name).Fill :: Frame
 		brakeFill.BackgroundColor3 =
-			Color3.fromHSV(0, math.clamp(MapToRange(wheel.BrakeDisk.Temperature, 80, 200), 0, 1), 1)
+			Color3.fromHSV(0, math.clamp(MathUtil.MapToRange(wheel.BrakeDisk.Temperature, 80, 200), 0, 1), 1)
 	end
 	car.Driveshaft.GroupColor3 = Color3.fromHSV(0, math.clamp(self.Vehicle.Engine.DriveshaftStress, 0, 1), 1)
 

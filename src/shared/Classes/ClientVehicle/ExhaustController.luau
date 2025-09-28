@@ -2,8 +2,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local MakeMotor = require(ReplicatedStorage.Shared.Utils.MakeMotor)
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -63,7 +63,7 @@ function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustCont
 		v:Destroy()
 	end
 
-	self.Motor = MakeMotor(self.Vehicle.Instance.DriveSeat, self.Instance)
+	self.Motor = MakeUtil.Motor(self.Vehicle.Instance.DriveSeat, self.Instance)
 
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
@@ -79,8 +79,12 @@ function Update(self: ExhaustController)
 	self.Emitter.Enabled = canUpdate
 	if not canUpdate then return end
 
-	local rpmDelta = math.clamp(MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM), 0.2, 0.8)
-	rpmDelta -= (1 - self.Vehicle.Throttle) * MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 1.5
+	local rpmDelta = math.clamp(MathUtil.MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM), 0.2, 0.8)
+	rpmDelta -= (1 - self.Vehicle.Throttle) * MathUtil.MapToRange(
+		self.Vehicle.RPM,
+		0,
+		self.Vehicle.Engine.Tune.ShiftRPM
+	) ^ 1.5
 
 	local t = math.sin(tick() * 30)
 	local offset = Vector3.new(
@@ -92,7 +96,7 @@ function Update(self: ExhaustController)
 	self.Motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
-	rpmDelta = MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 0.5
+	rpmDelta = MathUtil.MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 0.5
 	local speed = rpmDelta * 7
 	local rate = rpmDelta * 30
 

@@ -6,7 +6,7 @@ local TweenService = game:GetService("TweenService")
 
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
-local ImageUtils = require(ReplicatedStorage.Shared.Utils.ImageUtils)
+local ImageUtil = require(ReplicatedStorage.Shared.Utils.ImageUtil)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -23,8 +23,8 @@ do
 	local initialImage = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 	for i = 2, 10 do
 		task.spawn(function()
-			local image = ImageUtils.CopyImage(initialImage)
-			ImageUtils.SetImageAlpha(image, i / 10)
+			local image = ImageUtil.CopyImage(initialImage)
+			ImageUtil.SetImageAlpha(image, i / 10)
 			compiledScratchTextures[i] = image
 			taskCount -= 1
 		end)
@@ -193,7 +193,7 @@ function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): Deforma
 
 			task.spawn(function()
 				local image = AssetService:CreateEditableImageAsync(dirtTextureId)
-				ImageUtils.SetImageAlpha(image, 0.05)
+				ImageUtil.SetImageAlpha(image, 0.05)
 				compiledDirtTextures[texture] = image
 				taskCount -= 1
 			end)
@@ -234,7 +234,7 @@ function DeformationController.BlowEngine(self: DeformationController)
 
 			task.spawn(function()
 				local blowTexture = AssetService:CreateEditableImageAsync(Content.fromUri(blowTextureId))
-				ImageUtils.SetImageAlpha(blowTexture, 0.3)
+				ImageUtil.SetImageAlpha(blowTexture, 0.3)
 				texture:DrawImage(Vector2.zero, blowTexture, Enum.ImageCombineType.AlphaBlend)
 				blowTexture:Destroy()
 			end)

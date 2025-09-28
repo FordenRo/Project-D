@@ -1,3 +1,5 @@
+local StringUtil = {}
+
 local abbreviations = {
 	K = 3,
 	M = 6,
@@ -7,7 +9,7 @@ local abbreviations = {
 
 table.sort(abbreviations, function(a, b) return a > b end)
 
-return function(number: number): string
+function StringUtil.AbbreviateNumber(number: number): string
 	for k, v in abbreviations do
 		local num = number / (10 ^ v)
 		if num >= 100 then return string.format("%d %s", math.floor(num), k) end
@@ -16,3 +18,7 @@ return function(number: number): string
 	end
 	return tostring(math.floor(number))
 end
+
+function StringUtil.SplitPascalCase(s: string): string return string.gsub(s, "([A-Za-z])([A-Z][a-z])", "%1 %2") end
+
+return StringUtil

@@ -1,6 +1,6 @@
-local FlagsUtils = {}
+local FlagsUtil = {}
 
-function FlagsUtils.BoolsToFlags(...: boolean): number
+function FlagsUtil.BoolsToFlags(...: boolean): number
 	local flags = 0
 	for k, v in table.pack(...) do
 		if typeof(k) ~= "number" or not v then continue end
@@ -10,7 +10,7 @@ function FlagsUtils.BoolsToFlags(...: boolean): number
 	return flags
 end
 
-function FlagsUtils.FlagsToBools(flags: number, size: number?): ...boolean
+function FlagsUtil.FlagsToBools(flags: number, size: number?): ...boolean
 	size = size or 8
 	assert(size, "")
 
@@ -21,4 +21,4 @@ function FlagsUtils.FlagsToBools(flags: number, size: number?): ...boolean
 	return array
 end
 
-return FlagsUtils
+return FlagsUtil

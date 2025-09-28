@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local PlayerModule = require(Players.LocalPlayer.PlayerScripts.PlayerModule) :: any
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -276,7 +276,7 @@ function InitializeConnections(self: InputController)
 		ControllerSteering = function(value: Vector2)
 			local cDZone = math.min(0.99, SettingsController:GetSetting("ControllerDZone"))
 			if math.abs(value.X) > cDZone then
-				self._RawSteering = MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
+				self._RawSteering = MathUtil.MapToRange(math.abs(value.X), cDZone, 1) * math.sign(value.X)
 			else
 				self._RawSteering = 0
 			end

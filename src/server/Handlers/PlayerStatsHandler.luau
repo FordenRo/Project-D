@@ -2,7 +2,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local AbbreviateNumber = require(ReplicatedStorage.Shared.Utils.AbbreviateNumber)
+local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 
 local PlayerStatsHandler = {}
 PlayerStatsHandler.__index = PlayerStatsHandler
@@ -49,8 +49,8 @@ function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 	cash.Value = "-"
 	cash.Parent = leaderstats
 
-	cash.Value = AbbreviateNumber(self:GetPlayerCash(player))
-	laps.Value = AbbreviateNumber(self:GetPlayerLaps(player))
+	cash.Value = StringUtil.AbbreviateNumber(self:GetPlayerCash(player))
+	laps.Value = StringUtil.AbbreviateNumber(self:GetPlayerLaps(player))
 
 	task.defer(function()
 		while player.Parent do
@@ -80,7 +80,7 @@ function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Play
 	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):SetAsync(player.UserId, cash)
 
 	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
-	leaderstats.Cash.Value = AbbreviateNumber(cash)
+	leaderstats.Cash.Value = StringUtil.AbbreviateNumber(cash)
 end
 
 function PlayerStatsHandler.GetPlayerLaps(self: PlayerStatsHandler, player: Player)
@@ -92,7 +92,7 @@ function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Playe
 		:IncrementAsync(player.UserId)
 
 	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
-	leaderstats.Laps.Value = AbbreviateNumber(laps)
+	leaderstats.Laps.Value = StringUtil.AbbreviateNumber(laps)
 
 	return laps
 end

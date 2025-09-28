@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local MakeMotor = require(ReplicatedStorage.Shared.Utils.MakeMotor)
-local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local InteriorHandler = {}
@@ -23,32 +22,32 @@ function InteriorHandler.new(vehicle: VehicleTypes.ServerVehicle): InteriorHandl
 
 	local steeringWheel = misc:FindFirstChild("SteeringWheel")
 	if steeringWheel then
-		MakeMotor(steeringWheel, self.Vehicle.Instance.DriveSeat)
+		MakeUtil.Motor(steeringWheel, self.Vehicle.Instance.DriveSeat)
 		local parts = steeringWheel:FindFirstChild("Parts")
-		if parts then ModelWeld(parts, steeringWheel) end
+		if parts then MakeUtil.ModelWeld(parts, steeringWheel) end
 	end
 
 	local handbrake = misc:FindFirstChild("Handbrake")
 	if handbrake then
-		MakeMotor(handbrake, self.Vehicle.Instance.DriveSeat)
+		MakeUtil.Motor(handbrake, self.Vehicle.Instance.DriveSeat)
 		local parts = handbrake:FindFirstChild("Parts")
-		if parts then ModelWeld(parts, handbrake) end
+		if parts then MakeUtil.ModelWeld(parts, handbrake) end
 	end
 
 	local pedals = misc:FindFirstChild("Pedals")
 	if pedals then
 		for _, pedal in pedals:GetChildren() do
-			MakeMotor(pedal, self.Vehicle.Instance.DriveSeat)
+			MakeUtil.Motor(pedal, self.Vehicle.Instance.DriveSeat)
 			local parts = pedal:FindFirstChild("Parts")
-			if parts then ModelWeld(parts, pedal) end
+			if parts then MakeUtil.ModelWeld(parts, pedal) end
 		end
 	end
 
 	local gearLever = misc:FindFirstChild("GearLever")
 	if gearLever then
-		MakeMotor(gearLever, self.Vehicle.Instance.DriveSeat)
+		MakeUtil.Motor(gearLever, self.Vehicle.Instance.DriveSeat)
 		local parts = gearLever:FindFirstChild("Parts")
-		if parts then ModelWeld(parts, gearLever) end
+		if parts then MakeUtil.ModelWeld(parts, gearLever) end
 	end
 
 	return self

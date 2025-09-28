@@ -4,7 +4,7 @@ local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
-local SplitPascalCase = require(ReplicatedStorage.Shared.Utils.SplitPascalCase)
+local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local SettingsTab = {}
@@ -53,7 +53,7 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local contextInstance = self.Instance.ControlContext
 	for _, inputContext in ReplicatedStorage.Input:GetChildren() :: { InputContext } do
 		local context = contextInstance:Clone()
-		context.Title.Text = SplitPascalCase(inputContext.Name)
+		context.Title.Text = StringUtil.SplitPascalCase(inputContext.Name)
 		context.Visible = true
 		local contextOrder, actionsOrder = getOrder(inputContext.Name)
 		context.LayoutOrder = contextOrder
@@ -62,7 +62,7 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 			if string.match(inputAction.Name, "Mouse") then continue end
 
 			local properties = {
-				Title = SplitPascalCase(inputAction.Name),
+				Title = StringUtil.SplitPascalCase(inputAction.Name),
 				Type = "Binding",
 				Value = {},
 				Default = {},

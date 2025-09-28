@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -145,9 +145,12 @@ function InitializeTorso(self: BodyController)
 
 	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration =
-			Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
-		angularVelocity =
-			Lerp(angularVelocity, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity), deltaTime * 20)
+			MathUtil.Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		angularVelocity = MathUtil.Lerp(
+			angularVelocity,
+			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
+			deltaTime * 20
+		)
 
 		-- Apply acceleration
 		rotation -= Vector3.new(acceleration.Z + acceleration.Y, 0, acceleration.X) * 0.025 * deltaTime
@@ -180,9 +183,12 @@ function InitializeNeck(self: BodyController)
 
 	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration =
-			Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
-		angularVelocity =
-			Lerp(angularVelocity, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity), deltaTime * 20)
+			MathUtil.Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		angularVelocity = MathUtil.Lerp(
+			angularVelocity,
+			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
+			deltaTime * 20
+		)
 
 		-- Calculate look direction
 		local direction = self.Vehicle.WeightPart.CFrame.LookVector

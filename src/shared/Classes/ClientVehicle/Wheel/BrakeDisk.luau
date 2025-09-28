@@ -2,8 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local BrakeDiskPacket = require(ReplicatedStorage.Shared.Packets.BrakeDiskPacket)
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
-local MapToRange = require(ReplicatedStorage.Shared.Utils.MapToRange)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -70,19 +69,20 @@ function Update(self: ClientBrakeDisk, deltaTime: number)
 	self.Sound.Playing = true
 	if inBrake then
 		self.Temperature += self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed * deltaTime
-		self.Volume = Lerp(self.Volume, self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 5000, deltaTime * 5)
+		self.Volume =
+			MathUtil.Lerp(self.Volume, self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 5000, deltaTime * 5)
 		self.Sound.PitchEffect.Octave = 0.9 + self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 1000
 	else
-		self.Volume = Lerp(self.Volume, 0, deltaTime * 5)
+		self.Volume = MathUtil.Lerp(self.Volume, 0, deltaTime * 5)
 	end
-	self.Temperature = Lerp(self.Temperature, GlobalTemperature, deltaTime * 0.3)
+	self.Temperature = MathUtil.Lerp(self.Temperature, GlobalTemperature, deltaTime * 0.3)
 	self.Sound.Volume = self.Volume
 
 	updateColor(self)
 end
 
 function updateColor(self: ClientBrakeDisk)
-	local colorDelta = math.clamp(MapToRange(self.Temperature, 80, 200), 0, 1)
+	local colorDelta = math.clamp(MathUtil.MapToRange(self.Temperature, 80, 200), 0, 1)
 	self.Instance.Color = self._startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
 end
 

@@ -5,7 +5,7 @@ local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
-local ModelWeld = require(ReplicatedStorage.Shared.Utils.ModelWeld)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
@@ -201,8 +201,8 @@ function CreateFlip(self: ServerVehicle)
 end
 
 function Finalize(self: ServerVehicle)
-	ModelWeld(self.Instance.Body, self.Instance.DriveSeat)
-	ModelWeld(self.Instance.Seats, self.Instance.DriveSeat)
+	MakeUtil.ModelWeld(self.Instance.Body, self.Instance.DriveSeat)
+	MakeUtil.ModelWeld(self.Instance.Seats, self.Instance.DriveSeat)
 
 	-- Unanchor
 	for _, v in self.Instance:GetDescendants() do

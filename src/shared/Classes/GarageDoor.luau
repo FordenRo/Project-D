@@ -1,7 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Lerp = require(ReplicatedStorage.Shared.Utils.Lerp)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 
 local GarageDoor = {}
 GarageDoor.__index = GarageDoor
@@ -88,7 +88,7 @@ end
 function Update(self: GarageDoor, deltaTime: number)
 	if not self.Closing and not self.Opening then return end
 
-	self.Speed = Lerp(self.Speed, self.Opening and 1 or self.Closing and -1 or 0, deltaTime)
+	self.Speed = MathUtil.Lerp(self.Speed, self.Opening and 1 or self.Closing and -1 or 0, deltaTime)
 	self.Position = math.clamp(self.Position + deltaTime / 5 * self.Speed, 0, 1 + self._sep * 2)
 
 	for k, part in self.Parts do
