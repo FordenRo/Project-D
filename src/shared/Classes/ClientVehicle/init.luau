@@ -102,6 +102,7 @@ function Seated(
 
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
+	self.IsSitting = true
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = true
@@ -126,6 +127,7 @@ function Leaved(
 
 	if leavedPlayer ~= player then return end
 	togglePrompts(self, true)
+	self.IsSitting = false
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = false

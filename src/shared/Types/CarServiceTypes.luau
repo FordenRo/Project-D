@@ -13,15 +13,12 @@ export type BaseCarService = {
 }
 
 export type CarServiceClient = {
-	__index: CarServiceClient,
 	_GarageDoors: { GarageDoor.GarageDoor },
 
 	new: (instance: Model) -> CarServiceClient,
 } & BaseCarService
 
 export type CarServiceServer = {
-	__index: CarServiceServer,
-
 	new: (instance: Model) -> CarServiceServer,
 } & BaseCarService
 

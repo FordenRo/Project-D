@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 export type InterfaceController = {
-	__index: InterfaceController,
 	Interface: Interface,
 	MainWindow: MainWindow,
 
@@ -15,7 +14,6 @@ export type InterfaceController = {
 }
 
 export type Interface = {
-	__index: Interface,
 	_trove: Trove.Trove,
 	InterfaceController: InterfaceController,
 	Instance: ScreenGui & {
@@ -36,7 +34,6 @@ type TabModule = any & {
 }
 
 export type MainWindow = {
-	__index: MainWindow,
 	_trove: Trove.Trove,
 	_TabPositions: { [ScrollingFrame]: number },
 	_TabModules: { [string]: TabModule },

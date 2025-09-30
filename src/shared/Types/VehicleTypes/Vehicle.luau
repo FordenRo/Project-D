@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Controls = require(script.Parent.Controls)
 local EngineTune = require(script.Parent.EngineTune)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.Parent.SoundData)
@@ -8,7 +7,6 @@ local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Tune = require(script.Parent.Tune)
 
 export type BaseVehicle = {
-	__index: BaseVehicle,
 	_Remote: UnreliableRemoteEvent,
 	Instance: Instance & {
 		Wheels: Model & any,
@@ -93,7 +91,6 @@ export type BaseVehicle = {
 }
 
 export type DeformationController = {
-	__index: DeformationController,
 	_RE: RemoteEvent,
 	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
@@ -104,7 +101,6 @@ export type DeformationController = {
 }
 
 export type DeformationHandler = {
-	__index: DeformationHandler,
 	_RE: RemoteEvent,
 	Vehicle: ServerVehicle,
 
@@ -112,7 +108,6 @@ export type DeformationHandler = {
 }
 
 export type SoundTypesHandler = {
-	__index: SoundTypesHandler,
 	_UpdateBOV: boolean,
 	_PrevBoostTurbo: number,
 	_LastBOV: number,
@@ -126,7 +121,6 @@ export type SoundTypesHandler = {
 }
 
 export type SoundController = {
-	__index: SoundController,
 	Vehicle: ClientVehicle,
 	Sounds: { [string]: SoundData.CachedSoundData },
 	Emitters: { [string]: AudioEmitter },
@@ -135,8 +129,12 @@ export type SoundController = {
 }
 
 export type ClientVehicle = {
-	__index: ClientVehicle,
+	--- Is the vehicle driven by a local player
 	IsDriven: boolean,
+	--- Is local player sitting in the vehicle
+	IsSitting: boolean,
+	--- Is the vehicle owned by a local player
+	IsOwned: boolean,
 	MeshParts: { MeshPart },
 	Meshes: { [MeshPart]: EditableMesh },
 	Textures: { [MeshPart]: EditableImage },
@@ -149,7 +147,6 @@ export type ClientVehicle = {
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: Engine,
-	Controls: Controls.VehicleControls,
 	Interface: VehicleInterface,
 	-- Transmission
 	_ShiftUp: boolean,
@@ -163,7 +160,6 @@ export type ClientVehicle = {
 } & BaseVehicle
 
 export type CameraController = {
-	__index: CameraController,
 	_trove: Trove.Trove,
 	_LastCameraRotation: number,
 	_CharacterVisible: boolean,
@@ -181,7 +177,6 @@ export type CameraController = {
 }
 
 export type Engine = {
-	__index: Engine,
 	_LastOnTime: number,
 	_LastOffTime: number,
 	_RevLimiting: boolean,
@@ -200,7 +195,6 @@ export type Engine = {
 } & EngineTable
 
 export type InputController = {
-	__index: InputController,
 	_trove: Trove.Trove,
 	_RawThrottle: number,
 	_RawBrake: number,
@@ -239,14 +233,11 @@ export type EngineTable = {
 }
 
 export type ServerVehicle = {
-	__index: ServerVehicle,
-
 	new: (instance: Instance) -> ServerVehicle,
 	InitializeWheels: (self: ServerVehicle) -> (),
 } & BaseVehicle
 
 export type BaseWheel = {
-	__index: BaseWheel,
 	Instance: BasePart & {
 		Base: BasePart,
 		Arm: BasePart & {
@@ -280,7 +271,6 @@ export type BaseWheel = {
 }
 
 export type ClientWheel = {
-	__index: ClientWheel,
 	Vehicle: ClientVehicle,
 	Tire: ClientWheelTire,
 	BrakeDisk: ClientBrakeDisk,
@@ -298,7 +288,6 @@ export type ClientWheel = {
 } & BaseWheel
 
 export type ServerWheel = {
-	__index: ServerWheel,
 	Vehicle: ServerVehicle,
 	Tire: ServerWheelTire,
 	BrakeDisk: ServerBrakeDisk,
@@ -307,7 +296,6 @@ export type ServerWheel = {
 } & BaseWheel
 
 export type ClientWheelTire = {
-	__index: ClientWheelTire,
 	_RE: UnreliableRemoteEvent,
 	_LastMaterial: string,
 	Instance: BasePart,
@@ -340,7 +328,6 @@ export type ClientWheelTire = {
 }
 
 export type ServerWheelTire = {
-	__index: ServerWheelTire,
 	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
 	Wheel: ServerWheel,
@@ -350,7 +337,6 @@ export type ServerWheelTire = {
 }
 
 export type ClientBrakeDisk = {
-	__index: ClientBrakeDisk,
 	_startColor: Color3,
 	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
@@ -366,7 +352,6 @@ export type ClientBrakeDisk = {
 }
 
 export type ServerBrakeDisk = {
-	__index: ServerBrakeDisk,
 	_RE: UnreliableRemoteEvent,
 	Wheel: ServerWheel,
 	Instance: BasePart,
@@ -375,7 +360,6 @@ export type ServerBrakeDisk = {
 }
 
 export type VehicleSpeedometer = {
-	__index: VehicleSpeedometer,
 	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
 	Instance: Frame & any,
@@ -394,7 +378,6 @@ export type VehicleSpeedometer = {
 
 type VISlider = Frame & { Fill: Frame }
 export type VehicleInterface = {
-	__index: VehicleInterface,
 	_cursorTransparency: number,
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui & {
@@ -428,7 +411,6 @@ export type VehicleInterface = {
 }
 
 export type Headlight = {
-	__index: Headlight,
 	_task: thread,
 	_lightBrightness: number,
 	_currentBrightness: number,
@@ -445,7 +427,6 @@ export type Headlight = {
 }
 
 export type ClientLights = {
-	__index: ClientLights,
 	_RE: RemoteEvent,
 	_typesBrightness: { [string]: number },
 	_lastToggleTime: number,

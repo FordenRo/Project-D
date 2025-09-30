@@ -11,7 +11,6 @@ local Aerodynamics = {}
 Aerodynamics.__index = Aerodynamics
 
 export type Aerodynamics = {
-	__index: Aerodynamics,
 	_DragFactor: number,
 	_Forces: {
 		Drag: VectorForce,

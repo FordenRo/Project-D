@@ -17,7 +17,6 @@ export type EffectFrame = {
 }
 
 export type SpeedEffect = {
-	__index: SpeedEffect,
 	_trove: Trove.Trove,
 	_LastSpawn: number,
 	Vehicle: VehicleTypes.ClientVehicle,
