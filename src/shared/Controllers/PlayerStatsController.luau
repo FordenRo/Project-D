@@ -1,15 +1,15 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local RF = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
 
 local PlayerStatsController = {}
 PlayerStatsController.__index = PlayerStatsController
 
-export type PlayerStatsController = typeof(setmetatable(
-	{} :: {},
-	PlayerStatsController
-))
-
-local remoteFunction =
-	ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
+export type PlayerStatsController = {
+	GetCash: (self: PlayerStatsController) -> number,
+	GetLaps: (self: PlayerStatsController) -> number,
+}
 
 function PlayerStatsController.new(): PlayerStatsController
 	local self: PlayerStatsController =
@@ -19,11 +19,11 @@ function PlayerStatsController.new(): PlayerStatsController
 end
 
 function PlayerStatsController.GetCash(self: PlayerStatsController): number
-	return remoteFunction:InvokeServer("GetPlayerCash")
+	return RF:InvokeServer("GetPlayerCash")
 end
 
 function PlayerStatsController.GetLaps(self: PlayerStatsController): number
-	return remoteFunction:InvokeServer("GetPlayerLaps")
+	return RF:InvokeServer("GetPlayerLaps")
 end
 
 return PlayerStatsController.new()

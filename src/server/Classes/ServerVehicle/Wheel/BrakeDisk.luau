@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -9,45 +10,47 @@ ServerBrakeDisk.__index = ServerBrakeDisk
 
 type ServerBrakeDisk = VehicleTypes.ServerBrakeDisk
 
+type ServerBrakeDiskImpl = {
+	RE: UnreliableRemoteEvent,
+} & ServerBrakeDisk
+
 function ServerBrakeDisk.new(
 	wheel: VehicleTypes.ServerWheel,
 	instance: BasePart
 ): ServerBrakeDisk
-	local self: ServerBrakeDisk = setmetatable({}, ServerBrakeDisk) :: any
+	local self: ServerBrakeDiskImpl = setmetatable({}, ServerBrakeDisk) :: any
 
 	self.Instance = instance
 	self.Wheel = wheel
 
-	self._RE = Instance.new("UnreliableRemoteEvent")
-	self._RE.Name = "_DiskRE"
-	self._RE.Parent = instance
+	self.RE = Instance.new("UnreliableRemoteEvent")
+	self.RE.Name = "_DiskRE"
+	self.RE.Parent = instance
 
 	local trove = Trove.new()
-	trove:Connect(
-		self._RE.OnServerEvent,
-		function(...) Replicate(self, ...) end
-	)
+	trove:Connect(self.RE.OnServerEvent, function(...) Replicate(self, ...) end)
 	trove:AttachToInstance(instance)
 
 	return self
 end
 
-function Replicate(self: ServerBrakeDisk, sender: Player, buf: buffer)
+function Replicate(self: ServerBrakeDiskImpl, sender: Player, buf: buffer)
 	for _, player in Players:GetPlayers() do
 		if player == sender then continue end
 		if
 			not player.Character
 			or (
-					player.Character:GetPivot().Position - self.Instance.Position
+					player.Character:GetPivot().Position
+					- self.Instance.Position
 				).Magnitude
 				> 100
 		then
-			self._RE:FireClient(player)
+			self.RE:FireClient(player)
 			continue
 		end
 
-		self._RE:FireClient(player, buf)
+		self.RE:FireClient(player, buf)
 	end
 end
 
-return ServerBrakeDisk
+return table.freeze({ new = ServerBrakeDisk.new })

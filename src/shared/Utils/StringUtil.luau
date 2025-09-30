@@ -1,3 +1,5 @@
+--!strict
+--!native
 local StringUtil = {}
 
 local abbreviations = {
@@ -7,7 +9,10 @@ local abbreviations = {
 	Qa = 12,
 } :: { [string]: number }
 
-table.sort(abbreviations, function(a, b) return a > b end)
+table.sort(
+	abbreviations :: any,
+	function(a: number, b: number) return a > b end
+)
 
 function StringUtil.AbbreviateNumber(number: number): string
 	for k, v in abbreviations do
@@ -27,4 +32,4 @@ function StringUtil.SplitPascalCase(s: string): string
 	return string.gsub(s, "([A-Za-z])([A-Z][a-z])", "%1 %2")
 end
 
-return StringUtil
+return table.freeze(StringUtil)

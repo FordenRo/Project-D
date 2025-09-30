@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -11,19 +12,20 @@ local Aerodynamics = {}
 Aerodynamics.__index = Aerodynamics
 
 export type Aerodynamics = {
-	_DragFactor: number,
-	_Forces: {
-		Drag: VectorForce,
-		FDownforce: VectorForce,
-		RDownforce: VectorForce,
-	},
 	Vehicle: VehicleTypes.ClientVehicle,
-
-	new: (vehicle: VehicleTypes.ClientVehicle) -> Aerodynamics,
 }
 
+type AerodynamicsImpl = {
+	dragFactor: number,
+	forces: {
+		drag: VectorForce,
+		fDownforce: VectorForce,
+		rDownforce: VectorForce,
+	},
+} & Aerodynamics
+
 function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
-	local self: Aerodynamics = setmetatable({}, Aerodynamics) :: any
+	local self: AerodynamicsImpl = setmetatable({}, Aerodynamics) :: any
 
 	self.Vehicle = vehicle
 
@@ -37,8 +39,8 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 		end
 	end))
 	trove:Add(function()
-		for _, v in self._Forces do
-			v.Attachment0:Destroy()
+		for _, v in self.forces :: { VectorForce } do
+			if v.Attachment0 then v.Attachment0:Destroy() end
 			v:Destroy()
 		end
 	end)
@@ -47,7 +49,7 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 	return self
 end
 
-function Initialize(self: Aerodynamics)
+function Initialize(self: AerodynamicsImpl)
 	-- Attachments
 	local dragAttach = Instance.new("Attachment")
 	dragAttach.Parent = self.Vehicle.Instance.Body.Aerodynamics.Drag
@@ -77,14 +79,14 @@ function Initialize(self: Aerodynamics)
 	rDownforce.RelativeTo = Enum.ActuatorRelativeTo.World
 	rDownforce.Parent = self.Vehicle.Instance.Body.Aerodynamics.RDownforce
 
-	self._Forces = {
-		Drag = dragForce,
-		FDownforce = fDownforce,
-		RDownforce = rDownforce,
+	self.forces = {
+		drag = dragForce,
+		fDownforce = fDownforce,
+		rDownforce = rDownforce,
 	}
 end
 
-function Update(self: Aerodynamics)
+function Update(self: AerodynamicsImpl)
 	if
 		(
 			self.Vehicle.WeightPart.AssemblyLinearVelocity
@@ -115,7 +117,7 @@ function Update(self: Aerodynamics)
 	local toRayParams = RaycastParams.new()
 	toRayParams.FilterType = Enum.RaycastFilterType.Exclude
 	toRayParams.FilterDescendantsInstances =
-		{ self.Vehicle.Instance, player.Character }
+		{ self.Vehicle.Instance, player.Character :: Model }
 
 	local toRay = game.Workspace:Raycast(
 		self.Vehicle.WeightPart.Position,
@@ -125,11 +127,14 @@ function Update(self: Aerodynamics)
 	if toRay then
 		local fromRayParams = RaycastParams.new()
 		fromRayParams.FilterType = Enum.RaycastFilterType.Exclude
-		fromRayParams.FilterDescendantsInstances = (toRay.Instance :: BasePart):GetConnectedParts()
+		fromRayParams.FilterDescendantsInstances = (
+				toRay.Instance :: BasePart
+			):GetConnectedParts() :: any
 
 		local fromRay = game.Workspace:Raycast(
 			toRay.Position,
-			-toRay.Instance.Velocity * self.Vehicle.Tune.AeroSlipstreamTime,
+			-(toRay.Instance :: BasePart).AssemblyLinearVelocity
+				* self.Vehicle.Tune.AeroSlipstreamTime,
 			fromRayParams
 		)
 		if
@@ -139,7 +144,7 @@ function Update(self: Aerodynamics)
 				+ (
 					fromRay.Distance
 					/ (
-						toRay.Instance.Velocity
+						(toRay.Instance :: BasePart).AssemblyLinearVelocity
 						* self.Vehicle.Tune.AeroSlipstreamTime
 					).Magnitude
 					* self.Vehicle.Tune.AeroSlipstreamFactor
@@ -169,15 +174,15 @@ function Update(self: Aerodynamics)
 		* ((self.Vehicle.Tune.AeroDragCoeff * 1.5) / 100)
 		* AirPressurePercent
 
-	self._Forces.FDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+	self.forces.fDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
 		* fDownforce
 		* 9.81
 		* Units.Force_N
-	self._Forces.RDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+	self.forces.rDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
 		* rDownforce
 		* 9.81
 		* Units.Force_N
-	self._Forces.Drag.Force = combinedForce * 9.81 * Units.Force_N
+	self.forces.drag.Force = combinedForce * 9.81 * Units.Force_N
 
 	-- Apply sounds
 	local wind =
@@ -196,4 +201,4 @@ function Update(self: Aerodynamics)
 		/ 200 ^ 2
 end
 
-return Aerodynamics
+return table.freeze({ new = Aerodynamics.new })

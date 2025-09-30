@@ -1,4 +1,8 @@
-return {
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+
+return TableUtil.DeepFreeze({
 	Road = {
 		"Plastic",
 		"Slate",
@@ -29,4 +33,4 @@ return {
 		"Glacier",
 		"Snow",
 	},
-}
+})

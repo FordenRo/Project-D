@@ -9,4 +9,4 @@ VehicleConstants.Haptics = "Controller" -- implement this
 VehicleConstants.GravComp = 35
 VehicleConstants.WBVisible = false
 
-return VehicleConstants
+return table.freeze(VehicleConstants) :: VehicleTypes.VehicleConstants

@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CarServiceTypes = require(ReplicatedStorage.Shared.Types.CarServiceTypes)
@@ -7,31 +8,36 @@ CarService.__index = CarService
 
 type CarServiceServer = CarServiceTypes.CarServiceServer
 
-function CarService.new(instance: Model): CarServiceServer
-	local self: CarServiceServer = setmetatable({}, CarService) :: any
+type CarServiceServerImpl = {
+	RE: RemoteEvent,
+	RF: RemoteFunction,
+} & CarServiceServer
+
+function CarService.new(instance: Instance): CarServiceServer
+	local self: CarServiceServerImpl = setmetatable({}, CarService) :: any
 
 	self.Instance = instance :: any
 	self.Occupants = {}
 
-	self._RE = Instance.new("RemoteEvent")
-	self._RE.OnServerEvent:Connect(
+	self.RE = Instance.new("RemoteEvent")
+	self.RE.OnServerEvent:Connect(
 		function(player: Player, event: string, ...)
 			self[event](self, player, ...)
 		end
 	)
-	self._RE.Parent = self.Instance
+	self.RE.Parent = self.Instance
 
-	self._RF = Instance.new("RemoteFunction")
-	self._RF.OnServerInvoke = function(player, event: string, ...)
+	self.RF = Instance.new("RemoteFunction")
+	self.RF.OnServerInvoke = function(player, event: string, ...)
 		if typeof(self[event]) == "function" then
 			return self[event](self, player, ...)
 		else
 			return self[event]
 		end
 	end
-	self._RF.Parent = self.Instance
+	self.RF.Parent = self.Instance
 
 	return self
 end
 
-return CarService
+return table.freeze({ new = CarService.new })

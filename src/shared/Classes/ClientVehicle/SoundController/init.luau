@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -97,4 +98,4 @@ function SoundController.new(
 	return self
 end
 
-return SoundController
+return table.freeze({ new = SoundController.new })

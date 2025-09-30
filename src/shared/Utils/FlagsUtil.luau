@@ -1,3 +1,5 @@
+--!strict
+--!native
 local FlagsUtil = {}
 
 function FlagsUtil.BoolsToFlags(...: boolean): number
@@ -18,7 +20,7 @@ function FlagsUtil.FlagsToBools(flags: number, size: number?): ...boolean
 	for i = 0, size - 1 do
 		table.insert(array, bit32.band(flags, math.pow(2, i)) ~= 0)
 	end
-	return array
+	return table.unpack(array)
 end
 
-return FlagsUtil
+return table.freeze(FlagsUtil)

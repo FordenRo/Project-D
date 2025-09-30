@@ -729,7 +729,7 @@ end
 	TableUtil.IsEmpty({abc = 32}) -- false
 	```
 ]]
-function TableUtil.IsEmpty(tbl: { any }): boolean return next(tbl) == nil end
+function TableUtil.IsEmpty(tbl: any): boolean return next(tbl) == nil end
 
 --- Proxy for [`HttpService:JSONEncode`](https://developer.roblox.com/en-us/api-reference/function/HttpService/JSONEncode).
 function TableUtil.EncodeJSON(value: any): string

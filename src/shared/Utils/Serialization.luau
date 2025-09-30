@@ -795,16 +795,13 @@ function Serialization.Packet(
 		then
 			error(`[{script.Name}]: Expected SeraType for field "{key}"`)
 		end
-		table.insert(
-			fields,
-			{
-				Key = key,
-				Name = sera_type.Name,
-				Ser = sera_type.Ser,
-				Des = sera_type.Des,
-				Index = 0,
-			}
-		)
+		table.insert(fields, {
+			Key = key,
+			Name = sera_type.Name,
+			Ser = sera_type.Ser,
+			Des = sera_type.Des,
+			Index = 0,
+		})
 	end
 
 	if #fields == 0 then error(`[{script.Name}]: Packet must have fields`) end
@@ -851,4 +848,4 @@ function Serialization.Packet(
 	})
 end
 
-return Serialization
+return table.freeze(Serialization)

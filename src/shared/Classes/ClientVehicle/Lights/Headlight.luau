@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -8,15 +9,20 @@ Headlight.__index = Headlight
 
 type Headlight = VehicleTypes.Headlight
 
+type HeadlightImpl = {
+	currentBrightness: number,
+	lightBrightness: number,
+} & Headlight
+
 function Headlight.new(instance: BasePart): Headlight
-	local self: Headlight = setmetatable({}, Headlight) :: any
+	local self: HeadlightImpl = setmetatable({}, Headlight) :: any
 
 	self.Instance = instance
 	self.Light = self.Instance:FindFirstChildWhichIsA("Light", true)
 	self.Enabled = false
 
-	if self.Light then self._lightBrightness = self.Light.Brightness end
-	self._currentBrightness = 0
+	if self.Light then self.lightBrightness = self.Light.Brightness end
+	self.currentBrightness = 0
 	self.Brightness = 0
 	self.DisabledColor = self.Instance.Color
 	self.EnabledColor = self.Light and self.Light.Color
@@ -38,25 +44,21 @@ function Headlight.new(instance: BasePart): Headlight
 	return self
 end
 
-function Update(self: Headlight, deltaTime: number)
-	if self._currentBrightness < self.Brightness then
-		self._currentBrightness =
-			math.min(self._currentBrightness + deltaTime / 0.2, self.Brightness)
-	elseif self._currentBrightness > self.Brightness then
-		self._currentBrightness =
-			math.max(self._currentBrightness - deltaTime / 0.2, self.Brightness)
+function Update(self: HeadlightImpl, deltaTime: number)
+	if self.currentBrightness < self.Brightness then
+		self.currentBrightness =
+			math.min(self.currentBrightness + deltaTime / 0.2, self.Brightness)
+	elseif self.currentBrightness > self.Brightness then
+		self.currentBrightness =
+			math.max(self.currentBrightness - deltaTime / 0.2, self.Brightness)
 	end
 
-	local brightness = self._currentBrightness ^ 2
+	local brightness = self.currentBrightness ^ 2
 	if self.Light then
-		self.Light.Brightness = self._lightBrightness * brightness
+		self.Light.Brightness = self.lightBrightness * brightness
 	end
 	self.Instance.Color =
-		self.DisabledColor:Lerp(self.EnabledColor, self._currentBrightness)
+		self.DisabledColor:Lerp(self.EnabledColor, self.currentBrightness)
 end
 
-function Headlight.SetBrightness(self: Headlight, brightness: number)
-	self.Brightness = brightness
-end
-
-return Headlight
+return table.freeze({ new = Headlight.new })

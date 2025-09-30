@@ -39,4 +39,4 @@ function MakeUtil.ModelWeld(a: any, b: BasePart)
 	end
 end
 
-return MakeUtil
+return table.freeze(MakeUtil)

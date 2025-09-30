@@ -30,4 +30,4 @@ end
 
 function WelcomeTab.Destroy(self: WelcomeTab) end
 
-return WelcomeTab
+return table.freeze({ new = WelcomeTab.new })

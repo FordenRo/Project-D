@@ -7,7 +7,7 @@ local CarServiceClient =
 local CarServiceController = {}
 CarServiceController.__index = CarServiceController
 
-export type CarServiceController = typeof(setmetatable({}, CarServiceController))
+export type CarServiceController = {}
 
 function CarServiceController.new(): CarServiceController
 	local self: CarServiceController =

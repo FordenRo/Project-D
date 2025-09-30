@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local EngineTune = require(script.Parent.EngineTune)
@@ -84,36 +85,25 @@ export type BaseVehicle = {
 	CSActive: boolean,
 	IsOn: boolean,
 
-	new: (instance: Instance) -> BaseVehicle,
 	GetCenter: (self: BaseVehicle) -> CFrame,
 	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
 }
 
 export type DeformationController = {
-	_RE: RemoteEvent,
-	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
 	ScratchTexture: EditableImage,
 
-	new: (vehicle: ClientVehicle) -> DeformationController,
 	BlowEngine: (self: DeformationController) -> (),
 }
 
 export type DeformationHandler = {
-	_RE: RemoteEvent,
 	Vehicle: ServerVehicle,
-
-	new: (vehicle: ServerVehicle) -> DeformationHandler,
 }
 
 export type SoundTypesHandler = {
-	_UpdateBOV: boolean,
-	_PrevBoostTurbo: number,
-	_LastBOV: number,
 	Vehicle: ClientVehicle,
 
-	new: (vehicle: ClientVehicle) -> SoundTypesHandler,
 	HandleSounds: (
 		self: SoundTypesHandler,
 		sounds: { [string]: SoundData.CachedSoundData }
@@ -124,8 +114,6 @@ export type SoundController = {
 	Vehicle: ClientVehicle,
 	Sounds: { [string]: SoundData.CachedSoundData },
 	Emitters: { [string]: AudioEmitter },
-
-	new: (vehicle: ClientVehicle) -> SoundController,
 }
 
 export type ClientVehicle = {
@@ -154,15 +142,11 @@ export type ClientVehicle = {
 	-- Velocity
 	_OldVelocity: Vector3,
 
-	new: (instance: Instance) -> ClientVehicle,
 	InitializeWheels: (self: ClientVehicle) -> (),
 	Leave: (self: ClientVehicle) -> (),
 } & BaseVehicle
 
 export type CameraController = {
-	_trove: Trove.Trove,
-	_LastCameraRotation: number,
-	_CharacterVisible: boolean,
 	Vehicle: ClientVehicle,
 	Distance: number,
 	Offset: Vector3,
@@ -172,39 +156,26 @@ export type CameraController = {
 	FirstPerson: boolean,
 	CameraCFrame: CFrame,
 
-	new: (vehicle: ClientVehicle) -> CameraController,
 	Destroy: (self: CameraController) -> (),
 }
 
 export type Engine = {
-	_LastOnTime: number,
-	_LastOffTime: number,
-	_RevLimiting: boolean,
-	_GoalRPM: number,
-	_FuelSupply: number,
 	Throttle: number,
 	Brake: number,
 	Clutch: number,
 	Tune: EngineTune.Engine,
 	Vehicle: ClientVehicle,
 
-	new: (vehicle: ClientVehicle) -> Engine,
 	Update: (self: Engine, deltaTime: number) -> (),
 	AsTable: (self: Engine) -> EngineTable,
 	Destroy: (self: Engine) -> (),
 } & EngineTable
 
 export type InputController = {
-	_trove: Trove.Trove,
-	_RawThrottle: number,
-	_RawBrake: number,
-	_RawClutch: number,
-	_RawSteering: number,
 	Vehicle: ClientVehicle,
 	MousePosition: Vector2,
 	MouseSteerOn: boolean,
 
-	new: (vehicle: ClientVehicle) -> InputController,
 	Destroy: (self: InputController) -> (),
 }
 
@@ -233,7 +204,6 @@ export type EngineTable = {
 }
 
 export type ServerVehicle = {
-	new: (instance: Instance) -> ServerVehicle,
 	InitializeWheels: (self: ServerVehicle) -> (),
 } & BaseVehicle
 
@@ -266,8 +236,6 @@ export type BaseWheel = {
 	IsRight: boolean,
 	IsFront: boolean,
 	IsDriven: boolean,
-
-	new: (vehicle: BaseVehicle, instance: BasePart) -> BaseWheel,
 }
 
 export type ClientWheel = {
@@ -277,7 +245,6 @@ export type ClientWheel = {
 	CanSteer: number,
 	OppositeWheel: BasePart,
 
-	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, deltaTime: number) -> (),
 	UpdateForces: (
 		self: ClientWheel,
@@ -291,54 +258,29 @@ export type ServerWheel = {
 	Vehicle: ServerVehicle,
 	Tire: ServerWheelTire,
 	BrakeDisk: ServerBrakeDisk,
-
-	new: (vehicle: ServerVehicle, instance: BasePart) -> ServerWheel,
 } & BaseWheel
 
 export type ClientWheelTire = {
-	_RE: UnreliableRemoteEvent,
-	_LastMaterial: string,
 	Instance: BasePart,
-	WearInstance: BasePart,
-	DirtInstance: BasePart,
-	WheelDirtInstances: { BasePart },
 	Wheel: ClientWheel,
 	Vehicle: ClientVehicle,
 	Health: number,
 	Stress: number,
 	Dirt: number,
-	RayParams: RaycastParams,
-	Material: string,
 	SmokePart: Part,
 	Collision: Part & {
 		AlignPosition: AlignPosition,
 		["#GRAVCOMP"]: VectorForce,
 	},
-	TrailAttachmentPart: Part & {
-		TrailAttachment1: Attachment,
-		TrailAttachment2: Attachment,
-		AlignOrientation: AlignOrientation,
-	},
-	AudioPlayers: { [string]: AudioPlayer },
-	Emitters: { [string]: ParticleEmitter },
-	Trails: { [string]: { Trail } },
-	TrailStress: number,
-
-	new: (wheel: ClientWheel, instance: BasePart) -> ClientWheelTire,
 }
 
 export type ServerWheelTire = {
-	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
 	Wheel: ServerWheel,
 	Vehicle: ServerVehicle,
-
-	new: (wheel: ServerWheel, instance: BasePart) -> ServerWheelTire,
 }
 
 export type ClientBrakeDisk = {
-	_startColor: Color3,
-	_RE: UnreliableRemoteEvent,
 	Instance: BasePart,
 	Vehicle: ClientVehicle,
 	Wheel: ClientWheel,
@@ -347,16 +289,11 @@ export type ClientBrakeDisk = {
 		PitchEffect: PitchShiftSoundEffect,
 	},
 	Volume: number,
-
-	new: (wheel: ClientWheel, instance: BasePart) -> ClientBrakeDisk,
 }
 
 export type ServerBrakeDisk = {
-	_RE: UnreliableRemoteEvent,
 	Wheel: ServerWheel,
 	Instance: BasePart,
-
-	new: (wheel: ServerWheel, instance: BasePart) -> ServerBrakeDisk,
 }
 
 export type VehicleSpeedometer = {
@@ -372,8 +309,6 @@ export type VehicleSpeedometer = {
 			MaxSpeed: number,
 		}
 	},
-
-	new: (vehicle: ClientVehicle, instance: Frame) -> VehicleSpeedometer,
 }
 
 type VISlider = Frame & { Fill: Frame }
@@ -406,14 +341,10 @@ export type VehicleInterface = {
 	Speedometer: VehicleSpeedometer,
 	CursorInstance: Frame,
 
-	new: (vehicle: ClientVehicle) -> VehicleInterface,
 	Destroy: (self: VehicleInterface) -> (),
 }
 
 export type Headlight = {
-	_task: thread,
-	_lightBrightness: number,
-	_currentBrightness: number,
 	Instance: BasePart,
 	Light: Light?,
 	Enabled: boolean,
@@ -421,21 +352,15 @@ export type Headlight = {
 	DisabledColor: Color3,
 	EnabledColor: Color3,
 
-	new: (instance: BasePart) -> Headlight,
-	SetBrightness: (self: Headlight, brightness: number) -> (),
 	Destroy: (self: Headlight) -> (),
 }
 
 export type ClientLights = {
-	_RE: RemoteEvent,
-	_typesBrightness: { [string]: number },
-	_lastToggleTime: number,
 	Vehicle: ClientVehicle,
 	Headlights: { [string]: { Headlight } },
 	State: "Low" | "High" | "Off",
 	TurnState: "Left" | "Right" | "Both" | "Off",
 
-	new: (vehicle: ClientVehicle) -> ClientLights,
 	ToggleLights: (self: ClientLights) -> (),
 	ToggleTurnState: (
 		self: ClientLights,

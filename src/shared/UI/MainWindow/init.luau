@@ -24,10 +24,21 @@ type TabBarButton = TextButton & {
 	TabSelection: Frame,
 }
 
+type TabModule = any & {
+	new: (instance: ScrollingFrame) -> TabModule,
+	Destroy: (self: TabModule) -> (),
+}
+
 type MainWindow = UITypes.MainWindow
 
+type MainWindowImpl = {
+	trove: Trove.Trove,
+	tabModules: { [string]: TabModule },
+	tabPositions: { [ScrollingFrame]: number },
+} & MainWindow
+
 function MainWindow.new(): MainWindow
-	local self: MainWindow = setmetatable({}, MainWindow) :: any
+	local self: MainWindowImpl = setmetatable({}, MainWindow) :: any
 
 	self.Instance = ReplicatedStorage.UI.MainWindow:Clone()
 	self.Instance.Enabled = false
@@ -35,16 +46,16 @@ function MainWindow.new(): MainWindow
 	self.Instance.Background.BackgroundTransparency = 1
 	self.Instance.Parent = player.PlayerGui
 
-	self._TabPositions = {}
+	self.tabPositions = {}
 	for _, content in self.Instance.Window.Content:GetChildren() do
 		if not content:IsA("ScrollingFrame") then continue end
 
-		self._TabPositions[content] = content.Position.X.Scale
+		self.tabPositions[content] = content.Position.X.Scale
 	end
 
-	self._TabModules = {}
-	self._trove = Trove.new()
-	self._trove:AttachToInstance(self.Instance)
+	self.tabModules = {}
+	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Instance)
 	self.CurrentTab = nil
 	self.Visible = false
 
@@ -53,23 +64,23 @@ function MainWindow.new(): MainWindow
 	return self
 end
 
-function Initialize(self: MainWindow)
+function Initialize(self: MainWindowImpl)
 	for _, button in self.Instance.Window.TabBar.Container:GetChildren() do
 		if not button:IsA("TextButton") then continue end
 
-		self._trove:Connect(button.Activated, function()
+		self.trove:Connect(button.Activated, function()
 			local tab = string.gsub(button.Name, "Tab", "")
 			self:SetTab(tab)
 		end)
 	end
 
-	self._trove:Connect(
+	self.trove:Connect(
 		self.Instance.Background.Activated,
 		function() self:Hide() end
 	)
 end
 
-function MainWindow.Show(self: MainWindow, tab: string?)
+function MainWindow.Show(self: MainWindowImpl, tab: string?)
 	if self.Visible then
 		if tab then self:SetTab(tab) end
 		return
@@ -100,7 +111,7 @@ function MainWindow.Show(self: MainWindow, tab: string?)
 	end)
 end
 
-function MainWindow.Hide(self: MainWindow)
+function MainWindow.Hide(self: MainWindowImpl)
 	if not self.Visible then return end
 	self.Visible = false
 
@@ -118,7 +129,11 @@ function MainWindow.Hide(self: MainWindow)
 	self.Instance.Background.BackgroundTransparency = 1
 end
 
-function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
+function MainWindow.SetTab(
+	self: MainWindowImpl,
+	tab: string,
+	skipAnim: boolean?
+)
 	if self.CurrentTab == tab then return end
 	local lastTab = self.CurrentTab
 	self.CurrentTab = tab
@@ -142,13 +157,13 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	tabButton.TabSelection.Visible = true
 	tabButton.Interactable = false
 
-	if not self._TabModules[tab] then
+	if not self.tabModules[tab] then
 		local tabModule = require(script:FindFirstChild(tab .. "Tab")) :: any
-		self._TabModules[tab] =
+		self.tabModules[tab] =
 			tabModule.new(self.Instance.Window.Content:FindFirstChild(tab))
 	end
 
-	for tabContent: ScrollingFrame, position in self._TabPositions do
+	for tabContent: ScrollingFrame, position in self.tabPositions do
 		tabContent.Visible = tabContent.Name == lastTab
 			or tabContent.Name == tab
 
@@ -170,6 +185,6 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	end
 end
 
-function MainWindow.Destroy(self: MainWindow) self.Instance:Destroy() end
+function MainWindow.Destroy(self: MainWindowImpl) self.Instance:Destroy() end
 
-return MainWindow
+return table.freeze({ new = MainWindow.new })

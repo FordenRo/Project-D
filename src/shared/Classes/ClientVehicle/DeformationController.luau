@@ -1,3 +1,4 @@
+--!strict
 local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -21,12 +22,18 @@ DeformationController.__index = DeformationController
 
 type DeformationController = VehicleTypes.DeformationController
 
+type DeformationControllerImpl = {
+	RE: RemoteEvent,
+	trove: Trove.Trove,
+} & DeformationController
+
 -- Compile scratch textures
 local compiledScratchTextures = {}
 do
 	local taskCount = 0
-	local initialImage =
-		AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+	local initialImage = AssetService:CreateEditableImageAsync(
+		Content.fromUri("rbxassetid://107123302684595")
+	)
 	compiledScratchTextures[10] = initialImage
 
 	for i = 2, 9 do
@@ -52,16 +59,16 @@ local RemoteAction = {
 function DeformationController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): DeformationController
-	local self: DeformationController =
+	local self: DeformationControllerImpl =
 		setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = vehicle
-	self._RE = self.Vehicle.Instance:WaitForChild("_DeformRE") :: RemoteEvent
+	self.RE = self.Vehicle.Instance:WaitForChild("_DeformRE") :: RemoteEvent
 
-	self._trove = Trove.new()
+	self.trove = Trove.new()
 
-	self._trove:Connect(
-		self._RE.OnClientEvent,
+	self.trove:Connect(
+		self.RE.OnClientEvent,
 		function(...) Replicate(self, ...) end
 	)
 
@@ -71,7 +78,7 @@ function DeformationController.new(
 	return self
 end
 
-function InitializeDeformation(self: DeformationController)
+function InitializeDeformation(self: DeformationControllerImpl)
 	local collider = self.Vehicle.Instance.Body.Collider
 	local colliderMesh = CreateEditableMesh(collider)
 
@@ -89,7 +96,12 @@ function InitializeDeformation(self: DeformationController)
 			if touchingPart:IsDescendantOf(self.Vehicle.Instance) then
 				return
 			end
-			if touchingPart:IsDescendantOf(player.Character) then return end
+			if
+				player.Character
+				and touchingPart:IsDescendantOf(player.Character)
+			then
+				return
+			end
 			lastTouch = tick()
 
 			debug.profilebegin("CheckColliding")
@@ -222,7 +234,7 @@ function InitializeDeformation(self: DeformationController)
 					DrawScratch(mesh, texture, scratch, projection)
 					scratch:Destroy()
 
-					self._RE:FireServer(
+					self.RE:FireServer(
 						RemoteAction.Scratch,
 						table.find(self.Vehicle.MeshParts, meshPart),
 						scratchIdx,
@@ -266,13 +278,13 @@ function InitializeDeformation(self: DeformationController)
 				debug.profileend()
 			end
 			if not TableUtil.IsEmpty(affectedMeshParts) then
-				self._RE:FireServer(RemoteAction.Deform, affectedMeshParts)
+				self.RE:FireServer(RemoteAction.Deform, affectedMeshParts)
 			end
 			debug.profileend()
 		end)
 	end
 
-	self._trove:Connect(self.Vehicle.DrivenChanged, function(state: boolean)
+	self.trove:Connect(self.Vehicle.DrivenChanged, function(state: boolean)
 		if state and not trove then
 			makeConnections()
 		elseif not state and trove then
@@ -282,7 +294,7 @@ function InitializeDeformation(self: DeformationController)
 	end)
 end
 
-function InitializeDirt(self: DeformationController)
+function InitializeDirt(self: DeformationControllerImpl)
 	-- Compile dirt textures
 	local compiledDirtTextures = {}
 	do
@@ -292,8 +304,9 @@ function InitializeDirt(self: DeformationController)
 			if typeof(dirtTextureId) ~= "string" then continue end
 
 			task.spawn(function()
-				local image =
-					AssetService:CreateEditableImageAsync(dirtTextureId)
+				local image = AssetService:CreateEditableImageAsync(
+					Content.fromUri(dirtTextureId)
+				)
 				ImageUtil.SetImageAlpha(image, 0.05)
 				compiledDirtTextures[texture] = image
 				taskCount -= 1
@@ -307,7 +320,7 @@ function InitializeDirt(self: DeformationController)
 	end
 
 	-- Dirt update
-	self._trove:Add(task.spawn(function()
+	self.trove:Add(task.spawn(function()
 		local lastDirt = 0
 		while true do
 			task.wait(1)
@@ -344,8 +357,8 @@ function DrawScratch(
 	texture:DrawImageProjected(mesh, projection, config)
 end
 
-function Replicate(self: DeformationController, action: number, ...)
-	local actions = {}
+function Replicate(self: DeformationControllerImpl, action: number, ...)
+	local actions = {} :: any
 
 	actions[RemoteAction.Deform] = function(
 		affectedMeshParts: { [number]: { Vector3 } }
@@ -382,7 +395,7 @@ function Replicate(self: DeformationController, action: number, ...)
 	actions[action](...)
 end
 
-function DeformationController.BlowEngine(self: DeformationController)
+function DeformationController.BlowEngine(self: DeformationControllerImpl)
 	task.spawn(function()
 		-- Apply texture
 		for meshPart, texture in self.Vehicle.Textures do
@@ -444,4 +457,4 @@ function DeformationController.BlowEngine(self: DeformationController)
 	end)
 end
 
-return DeformationController
+return table.freeze({ new = DeformationController.new })

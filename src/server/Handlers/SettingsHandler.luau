@@ -1,11 +1,6 @@
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local SettingsHandler = {}
-SettingsHandler.__index = SettingsHandler
-
-export type SettingsHandler = typeof(setmetatable({} :: {}, SettingsHandler))
-
 local SettingsDataStore = DataStoreService:GetDataStore("PlayerSettings")
 local KeybindsDataStore = DataStoreService:GetDataStore("PlayerKeybinds")
 
@@ -23,6 +18,11 @@ local Actions = {
 	SaveKeybinds = 2,
 	SaveSettings = 3,
 }
+
+local SettingsHandler = {}
+SettingsHandler.__index = SettingsHandler
+
+export type SettingsHandler = {}
 
 function SettingsHandler.new(): SettingsHandler
 	local self: SettingsHandler = setmetatable({}, SettingsHandler) :: any

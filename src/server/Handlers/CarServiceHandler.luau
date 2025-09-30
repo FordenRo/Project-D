@@ -1,3 +1,4 @@
+--!strict
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -7,7 +8,7 @@ local CarServiceServer =
 local CarServiceHandler = {}
 CarServiceHandler.__index = CarServiceHandler
 
-export type CarServiceHandler = typeof(setmetatable({}, CarServiceHandler))
+export type CarServiceHandler = {}
 
 function CarServiceHandler.new(): CarServiceHandler
 	local self: CarServiceHandler = setmetatable({}, CarServiceHandler) :: any

@@ -388,4 +388,4 @@ function InitializeSeats(self: ServerVehicle)
 	end
 end
 
-return ServerVehicle
+return table.freeze({ new = ServerVehicle.new })

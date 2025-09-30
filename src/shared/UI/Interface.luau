@@ -70,4 +70,4 @@ function Interface.Hide(self: Interface) self.Instance.Enabled = false end
 
 function Interface.Destroy(self: Interface) self.Instance:Destroy() end
 
-return Interface
+return table.freeze({ new = Interface.new })

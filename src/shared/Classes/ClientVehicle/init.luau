@@ -322,4 +322,4 @@ function Update(self: ClientVehicle, deltaTime: number)
 	UpdateMileage(self, deltaTime)
 end
 
-return ClientVehicle
+return table.freeze({ new = ClientVehicle.new })

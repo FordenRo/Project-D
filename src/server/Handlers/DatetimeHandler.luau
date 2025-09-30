@@ -1,3 +1,4 @@
+--!strict
 local Lighting = game:GetService("Lighting")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -12,7 +13,7 @@ local NIGHT_BRIGHTNESS = 1
 local DatetimeHandler = {}
 DatetimeHandler.__index = DatetimeHandler
 
-export type DatetimeHandler = typeof(setmetatable({} :: {}, DatetimeHandler))
+export type DatetimeHandler = {}
 
 function DatetimeHandler.new(): DatetimeHandler
 	local self: DatetimeHandler = setmetatable({}, DatetimeHandler) :: any

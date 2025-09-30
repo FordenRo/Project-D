@@ -151,4 +151,4 @@ function BaseVehicle.GetCenter(self: BaseVehicle)
 	return center
 end
 
-return BaseVehicle
+return table.freeze({ new = BaseVehicle.new })

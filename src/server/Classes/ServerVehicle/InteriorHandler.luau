@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
@@ -6,12 +7,9 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local InteriorHandler = {}
 InteriorHandler.__index = InteriorHandler
 
-export type InteriorHandler = typeof(setmetatable(
-	{} :: {
-		Vehicle: VehicleTypes.ServerVehicle,
-	},
-	InteriorHandler
-))
+export type InteriorHandler = {
+	Vehicle: VehicleTypes.ServerVehicle,
+}
 
 function InteriorHandler.new(
 	vehicle: VehicleTypes.ServerVehicle
@@ -22,30 +20,32 @@ function InteriorHandler.new(
 
 	local misc = self.Vehicle.Instance.Misc
 
-	local steeringWheel = misc:FindFirstChild("SteeringWheel")
+	local steeringWheel = misc:FindFirstChild("SteeringWheel") :: BasePart?
 	if steeringWheel then
 		MakeUtil.Motor(steeringWheel, self.Vehicle.Instance.DriveSeat)
 		local parts = steeringWheel:FindFirstChild("Parts")
 		if parts then MakeUtil.ModelWeld(parts, steeringWheel) end
 	end
 
-	local handbrake = misc:FindFirstChild("Handbrake")
+	local handbrake = misc:FindFirstChild("Handbrake") :: BasePart?
 	if handbrake then
 		MakeUtil.Motor(handbrake, self.Vehicle.Instance.DriveSeat)
 		local parts = handbrake:FindFirstChild("Parts")
 		if parts then MakeUtil.ModelWeld(parts, handbrake) end
 	end
 
-	local pedals = misc:FindFirstChild("Pedals")
+	local pedals = misc:FindFirstChild("Pedals") :: BasePart?
 	if pedals then
 		for _, pedal in pedals:GetChildren() do
+			if not pedal:IsA("BasePart") then continue end
+
 			MakeUtil.Motor(pedal, self.Vehicle.Instance.DriveSeat)
 			local parts = pedal:FindFirstChild("Parts")
 			if parts then MakeUtil.ModelWeld(parts, pedal) end
 		end
 	end
 
-	local gearLever = misc:FindFirstChild("GearLever")
+	local gearLever = misc:FindFirstChild("GearLever") :: BasePart?
 	if gearLever then
 		MakeUtil.Motor(gearLever, self.Vehicle.Instance.DriveSeat)
 		local parts = gearLever:FindFirstChild("Parts")
@@ -55,4 +55,4 @@ function InteriorHandler.new(
 	return self
 end
 
-return InteriorHandler
+return table.freeze({ new = InteriorHandler.new })

@@ -1,3 +1,4 @@
+--!strict
 local AssetService = game:GetService("AssetService")
 
 return function(meshPart: MeshPart, dynamic: boolean?): EditableMesh

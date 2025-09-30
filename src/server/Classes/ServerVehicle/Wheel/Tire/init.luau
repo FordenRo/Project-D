@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -12,11 +13,15 @@ ServerTire.__index = ServerTire
 
 type ServerTire = VehicleTypes.ServerWheelTire
 
+type ServerTireImpl = {
+	RE: UnreliableRemoteEvent,
+} & ServerTire
+
 function ServerTire.new(
 	wheel: VehicleTypes.ServerWheel,
 	instance: BasePart
 ): ServerTire
-	local self: ServerTire = setmetatable({}, ServerTire) :: any
+	local self: ServerTireImpl = setmetatable({}, ServerTire) :: any
 
 	self.Wheel = wheel
 	self.Vehicle = wheel.Vehicle
@@ -24,23 +29,20 @@ function ServerTire.new(
 	self.Instance.Material = Enum.Material.Rubber
 	self.Instance.Color = Color3.new()
 
-	self._RE = Instance.new("UnreliableRemoteEvent")
-	self._RE.Name = "_RE"
-	self._RE.Parent = self.Instance
+	self.RE = Instance.new("UnreliableRemoteEvent")
+	self.RE.Name = "_RE"
+	self.RE.Parent = self.Instance
 
 	Initialize(self)
 
 	local trove = Trove.new()
-	trove:Connect(
-		self._RE.OnServerEvent,
-		function(...) Replicate(self, ...) end
-	)
+	trove:Connect(self.RE.OnServerEvent, function(...) Replicate(self, ...) end)
 	trove:AttachToInstance(instance)
 
 	return self
 end
 
-function Initialize(self: ServerTire)
+function Initialize(self: ServerTireImpl)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
 		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster
 			or self.Vehicle.Tune.RCaster
@@ -118,8 +120,14 @@ function Initialize(self: ServerTire)
 		ta1.Position = Vector3.new(0, self.Wheel.Instance.Size.Y / 2, 0)
 
 		for _, v in self.Wheel.Instance:GetNoCollisionConstraints() do
-			if v.Part0 == self.Wheel.Instance then v.Part0 = collision end
-			if v.Part1 == self.Wheel.Instance then v.Part1 = collision end
+			if not v:IsA("NoCollisionConstraint") then continue end
+
+			if v.Part0 == self.Wheel.Instance :: any then
+				v.Part0 = collision
+			end
+			if v.Part1 == self.Wheel.Instance :: any then
+				v.Part1 = collision
+			end
 		end
 
 		local attachment = Instance.new("Attachment")
@@ -194,22 +202,23 @@ function Initialize(self: ServerTire)
 	end
 end
 
-function Replicate(self: ServerTire, sender: Player, buf: buffer)
+function Replicate(self: ServerTireImpl, sender: Player, buf: buffer)
 	for _, player in Players:GetPlayers() do
 		if player == sender then continue end
 		if
 			not player.Character
 			or (
-					player.Character:GetPivot().Position - self.Instance.Position
+					player.Character:GetPivot().Position
+					- self.Instance.Position
 				).Magnitude
 				> 1000
 		then
-			self._RE:FireClient(player)
+			self.RE:FireClient(player)
 			continue
 		end
 
-		self._RE:FireClient(player, buf)
+		self.RE:FireClient(player, buf)
 	end
 end
 
-return ServerTire
+return table.freeze({ new = ServerTire.new })

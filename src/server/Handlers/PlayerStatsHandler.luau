@@ -4,20 +4,28 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 
-local PlayerStatsHandler = {}
-PlayerStatsHandler.__index = PlayerStatsHandler
-
-local remoteFunction = Instance.new("RemoteFunction")
-remoteFunction.Name = "PlayerStatsRF"
-remoteFunction.Parent = ReplicatedStorage
+local RF = Instance.new("RemoteFunction")
+RF.Name = "PlayerStatsRF"
+RF.Parent = ReplicatedStorage
 
 local playerJoinedTime: { [Player]: number } = {}
 local playerPlaytime: { [Player]: number } = {}
 
-export type PlayerStatsHandler = typeof(setmetatable(
-	{} :: {},
-	PlayerStatsHandler
-))
+local PlayerStatsHandler = {}
+PlayerStatsHandler.__index = PlayerStatsHandler
+
+export type PlayerStatsHandler = {
+	GetPlayerCash: (self: PlayerStatsHandler, player: Player) -> number,
+	SetPlayerCash: (
+		self: PlayerStatsHandler,
+		player: Player,
+		cash: number
+	) -> (),
+	GetPlayerLaps: (self: PlayerStatsHandler, player: Player) -> number,
+	AddPlayerLap: (self: PlayerStatsHandler, player: Player) -> number,
+	--- Get player playtime in seconds
+	GetPlayerPlaytime: (self: PlayerStatsHandler, player: Player) -> number,
+}
 
 function PlayerStatsHandler.new(): PlayerStatsHandler
 	local self: PlayerStatsHandler = setmetatable({}, PlayerStatsHandler) :: any
@@ -28,11 +36,7 @@ function PlayerStatsHandler.new(): PlayerStatsHandler
 	Players.PlayerRemoving:Connect(
 		function(player) OnPlayerRemoving(self, player) end
 	)
-	remoteFunction.OnServerInvoke = function(
-		player: Player,
-		event: string,
-		...
-	)
+	RF.OnServerInvoke = function(player: Player, event: string, ...)
 		return self[event](self, player, ...)
 	end
 
@@ -49,20 +53,18 @@ function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
-	local playtime = Instance.new("StringValue")
-	playtime.Name = "Hours"
-	playtime.Value = "-"
-	playtime.Parent = leaderstats
+	local function createValue(name: string): StringValue
+		local value = Instance.new("StringValue")
+		value.Name = name
+		value.Value = "-"
+		value.Parent = leaderstats
 
-	local laps = Instance.new("StringValue")
-	laps.Name = "Laps"
-	laps.Value = "-"
-	laps.Parent = leaderstats
+		return value
+	end
 
-	local cash = Instance.new("StringValue")
-	cash.Name = "Cash"
-	cash.Value = "-"
-	cash.Parent = leaderstats
+	local playtime = createValue("Hours")
+	local laps = createValue("Laps")
+	local cash = createValue("Cash")
 
 	cash.Value = StringUtil.AbbreviateNumber(self:GetPlayerCash(player))
 	laps.Value = StringUtil.AbbreviateNumber(self:GetPlayerLaps(player))

@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)

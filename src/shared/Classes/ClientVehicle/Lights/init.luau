@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -11,7 +12,7 @@ local LIGHT_POWER = {
 	Off = 0,
 	Low = 0.5,
 	High = 1,
-} :: { { LightsState: number } }
+}
 
 local LIGHT_TYPES = {
 	"Front",
@@ -26,28 +27,41 @@ local ClientLights = {}
 ClientLights.__index = ClientLights
 
 type ClientLights = VehicleTypes.ClientLights
+
+type ClientLightsImpl = {
+	lastToggleTime: number,
+	RE: RemoteEvent,
+	typesBrightness: { [string]: number },
+} & ClientLights
+
 type Side = "Right" | "Left" | "Both"
 
 function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
-	local self: ClientLights = setmetatable({}, ClientLights) :: any
+	local self: ClientLightsImpl = setmetatable({}, ClientLights) :: any
 
 	self.Vehicle = vehicle
 	self.State = "Off"
 	self.TurnState = "Off"
 
-	self._RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
+	self.RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
 
-	self._lastToggleTime = tick()
-	self._typesBrightness = {}
+	self.lastToggleTime = tick()
+	self.typesBrightness = {}
 	self.Headlights = {} :: any
 
 	for _, lightPart in self.Vehicle.Instance:GetDescendants() do
-		if not lightPart:HasTag("Headlight") then continue end
+		if
+			not lightPart:IsA("BasePart") or not lightPart:HasTag("Headlight")
+		then
+			continue
+		end
 
-		local typeHeadlights = self.Headlights[lightPart:GetAttribute("Type")]
+		local headlightType = lightPart:GetAttribute("Type") :: string
+
+		local typeHeadlights = self.Headlights[headlightType]
 		if not typeHeadlights then
 			typeHeadlights = {}
-			self.Headlights[lightPart:GetAttribute("Type")] = typeHeadlights
+			self.Headlights[headlightType] = typeHeadlights
 		end
 
 		table.insert(typeHeadlights, Headlight.new(lightPart))
@@ -55,7 +69,7 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
-	trove:Connect(self._RE.OnClientEvent, function(buf: buffer)
+	trove:Connect(self.RE.OnClientEvent, function(buf: buffer)
 		if self.Vehicle.IsDriven then return end
 
 		local data = Serialization.Deserialize(LightPacket, buf)
@@ -67,14 +81,14 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 	return self
 end
 
-function processInput(self: ClientLights)
-	if tick() - self._lastToggleTime < 0.2 then return end
-	self._lastToggleTime = tick()
+function processInput(self: ClientLightsImpl)
+	if tick() - self.lastToggleTime < 0.2 then return end
+	self.lastToggleTime = tick()
 	task.defer(Replicate, self)
 	return true
 end
 
-function ClientLights.ToggleLights(self: ClientLights)
+function ClientLights.ToggleLights(self: ClientLightsImpl)
 	if not processInput(self) then return end
 	self.State = self.State == "Off" and "Low"
 		or self.State == "Low" and "High"
@@ -82,7 +96,7 @@ function ClientLights.ToggleLights(self: ClientLights)
 end
 
 function ClientLights.ToggleTurnState(
-	self: ClientLights,
+	self: ClientLightsImpl,
 	turnState: "Left" | "Right" | "Both"
 )
 	if not processInput(self) then return end
@@ -90,7 +104,7 @@ function ClientLights.ToggleTurnState(
 end
 
 function setTypeBrightness(
-	self: ClientLights,
+	self: ClientLightsImpl,
 	type: string,
 	brightness: boolean | number,
 	side: Side?
@@ -102,20 +116,20 @@ function setTypeBrightness(
 	end
 
 	if not self.Headlights[type] then return end
-	if self._typesBrightness[type] == brightness then return end
-	self._typesBrightness[type] = brightness :: number
+	if self.typesBrightness[type] == brightness then return end
+	self.typesBrightness[type] = brightness :: number
 
 	for k, v in self.Headlights[type] do
 		local sideAttr = v.Instance:GetAttribute("Side")
 		if side and side ~= "Both" and sideAttr ~= side then continue end
 
-		v:SetBrightness(brightness)
+		v.Brightness = brightness :: number
 	end
 end
 
-function Replicate(self: ClientLights, buf: buffer?)
+function Replicate(self: ClientLightsImpl, buf: buffer?)
 	if self.Vehicle.IsDriven then
-		self._RE:FireServer(Serialization.Serialize(LightPacket, self))
+		self.RE:FireServer(Serialization.Serialize(LightPacket, self))
 	elseif buf then
 		for k, v in Serialization.Deserialize(LightPacket, buf) do
 			self[k] = v
@@ -127,7 +141,7 @@ function Replicate(self: ClientLights, buf: buffer?)
 	end
 end
 
-function Update(self: ClientLights)
+function Update(self: ClientLightsImpl)
 	setTypeBrightness(
 		self,
 		"Rear",
@@ -152,4 +166,4 @@ function Update(self: ClientLights)
 	)
 end
 
-return ClientLights
+return table.freeze({ new = ClientLights.new })

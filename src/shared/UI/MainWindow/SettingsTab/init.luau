@@ -11,18 +11,15 @@ local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local SettingsTab = {}
 SettingsTab.__index = SettingsTab
 
-export type SettingsTab = typeof(setmetatable(
-	{} :: {
-		Instance: ScrollingFrame & {
-			Setting: Frame,
-			SettingFolder: Frame,
-			ControlContext: Frame & {
-				Title: TextLabel,
-			},
+export type SettingsTab = {
+	Instance: ScrollingFrame & {
+		Setting: Frame,
+		SettingFolder: Frame,
+		ControlContext: Frame & {
+			Title: TextLabel,
 		},
 	},
-	SettingsTab
-))
+}
 
 function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
@@ -124,4 +121,4 @@ function getOrder(context: string)
 	return 0
 end
 
-return SettingsTab
+return table.freeze({ new = SettingsTab.new })

@@ -1,9 +1,11 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local HittableService = {}
 HittableService.__index = HittableService
 
+--- TODO: Rewrite
 export type HittableService = typeof(setmetatable({} :: {}, HittableService))
 
 export type HitResult = {
@@ -30,7 +32,7 @@ function HittableService.new(): HittableService
 			function(_, hit: HitResult) silentHit(hit) end
 		)
 	else
-		hittableRE = ReplicatedStorage:WaitForChild("HittableRE")
+		hittableRE = ReplicatedStorage:WaitForChild("HittableRE") :: RemoteEvent
 
 		hittableRE.OnClientEvent:Connect(
 			function(hit: HitResult) silentHit(hit) end

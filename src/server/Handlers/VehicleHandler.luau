@@ -8,14 +8,32 @@ local ServerVehicle = require(ServerScriptService.Server.Classes.ServerVehicle)
 local Tune = require(ReplicatedStorage.Shared.Types.VehicleTypes.Tune)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
+local RF = Instance.new("RemoteFunction")
+RF.Name = "VehicleRF"
+RF.Parent = ReplicatedStorage
+
 local VehicleHandler = {}
 VehicleHandler.__index = VehicleHandler
 
-export type VehicleHandler = typeof(setmetatable({} :: {}, VehicleHandler))
-
-local remoteFunction = Instance.new("RemoteFunction")
-remoteFunction.Name = "VehicleRF"
-remoteFunction.Parent = ReplicatedStorage
+export type VehicleHandler = {
+	GetPlayerVehicles: (self: VehicleHandler, player: Player) -> (),
+	GetPlayerVehicleInfo: (
+		self: VehicleHandler,
+		player: Player,
+		id: string
+	) -> VehicleTypes.PlayerVehicleInfo,
+	--- Registering new vehicle and returns ID
+	RegisterNewPlayerVehicle: (
+		self: VehicleHandler,
+		player: Player,
+		name: string
+	) -> string,
+	UpdatePlayerVehicleInfo: (
+		self: VehicleHandler,
+		player: Player,
+		vehicle: VehicleTypes.BaseVehicle
+	) -> (),
+}
 
 function VehicleHandler.new(): VehicleHandler
 	local self: VehicleHandler = setmetatable({}, VehicleHandler) :: any
@@ -33,11 +51,7 @@ function VehicleHandler.new(): VehicleHandler
 			ServerVehicle.new(vehicle)
 		end)
 
-	remoteFunction.OnServerInvoke = function(
-		player: Player,
-		event: string,
-		...
-	)
+	RF.OnServerInvoke = function(player: Player, event: string, ...)
 		return self[event](self, player, ...)
 	end
 

@@ -1,3 +1,8 @@
+--!strict
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+
 export type SettingType = "Slider" | "Binding" | "Checkbox"
 type SettingCategory = "Controls" | "Gameplay" | "Graphics"
 type ActionType = "Mouse" | "Controller" | "Keyboard"
@@ -169,4 +174,4 @@ local Info = {
 	},
 } :: { [string]: SettingInfo }
 
-return Info
+return TableUtil.DeepFreeze(Info)

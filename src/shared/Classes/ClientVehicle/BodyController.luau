@@ -10,33 +10,31 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local BodyController = {}
 BodyController.__index = BodyController
 
-export type BodyController = typeof(setmetatable(
-	{} :: {
-		_RightHanded: boolean,
-		_trove: Trove.Trove,
-		Player: Player,
-		Vehicle: VehicleTypes.ClientVehicle,
-		IKControls: { [string]: IKControl },
-		Attachments: { [string]: Attachment },
-	},
-	BodyController
-))
+export type BodyController = {
+	Player: Player,
+	Vehicle: VehicleTypes.ClientVehicle,
+}
+
+type BodyControllerImpl = {
+	isRightHanded: boolean,
+	trove: Trove.Trove,
+	IKControls: { [string]: IKControl },
+} & BodyController
 
 function BodyController.new(
 	vehicle: VehicleTypes.ClientVehicle,
 	player: Player,
 	seat: VehicleSeat | Seat
 ): BodyController
-	local self: BodyController = setmetatable({}, BodyController) :: any
+	local self: BodyControllerImpl = setmetatable({}, BodyController) :: any
 
 	self.Vehicle = vehicle
 	self.Player = player
 	self.IKControls = {}
-	self.Attachments = {}
 
-	self._trove = Trove.new()
+	self.trove = Trove.new()
 	seat:GetPropertyChangedSignal("Occupant")
-		:Once(function() self._trove:Destroy() end)
+		:Once(function() self.trove:Destroy() end)
 
 	InitializeIKControls(self)
 	InitializeTorso(self)
@@ -50,7 +48,7 @@ function BodyController.new(
 	return self
 end
 
-function InitializeIKControls(self: BodyController)
+function InitializeIKControls(self: BodyControllerImpl)
 	local function make(
 		name: string,
 		chainRoot: string,
@@ -72,10 +70,9 @@ function InitializeIKControls(self: BodyController)
 		IKControl.Weight = 0
 		IKControl.Target = target
 		IKControl.Parent = self.Player.Character
-		self._trove:Add(IKControl)
+		self.trove:Add(IKControl)
 
 		self.IKControls[name] = IKControl
-		self.Attachments[name] = target
 	end
 	local function makeSided(
 		name: string,
@@ -162,7 +159,7 @@ function InitializeIKControls(self: BodyController)
 	end
 end
 
-function InitializeTorso(self: BodyController)
+function InitializeTorso(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -178,7 +175,7 @@ function InitializeTorso(self: BodyController)
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
 
-	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
+	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration = MathUtil.Lerp(
 			acceleration,
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
@@ -208,7 +205,7 @@ function InitializeTorso(self: BodyController)
 	end)
 end
 
-function InitializeNeck(self: BodyController)
+function InitializeNeck(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -225,7 +222,7 @@ function InitializeNeck(self: BodyController)
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
 
-	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
+	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration = MathUtil.Lerp(
 			acceleration,
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
@@ -275,7 +272,7 @@ function InitializeNeck(self: BodyController)
 	end)
 end
 
-function InitializeSteeringWheel(self: BodyController)
+function InitializeSteeringWheel(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local rightIK = self.IKControls.RightHandWheel
@@ -294,7 +291,7 @@ function InitializeSteeringWheel(self: BodyController)
 	leftShoulderAttachment.CFrame *= CFrame.new(0, 0.2, 0)
 	rightShoulderAttachment.CFrame *= CFrame.new(0, 0.2, 0)
 
-	self._trove:Add(function()
+	self.trove:Add(function()
 		leftShoulderAttachment.CFrame = startLeftShoulderCFrame
 		rightShoulderAttachment.CFrame = startRightShoulderCFrame
 	end)
@@ -305,7 +302,7 @@ function InitializeSteeringWheel(self: BodyController)
 	leftIK.Weight = 1
 end
 
-function InitializeHandbrake(self: BodyController)
+function InitializeHandbrake(self: BodyControllerImpl)
 	local IKControl = self.IKControls.Handbrake
 	if not IKControl then return end
 
@@ -313,7 +310,7 @@ function InitializeHandbrake(self: BodyController)
 
 	local lastPBrake = false
 	local curTask
-	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
+	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		if self.Vehicle.PBrake == lastPBrake then return end
 
 		lastPBrake = self.Vehicle.PBrake
@@ -325,13 +322,13 @@ function InitializeHandbrake(self: BodyController)
 	end)
 end
 
-function InitializeGearLever(self: BodyController)
+function InitializeGearLever(self: BodyControllerImpl)
 	local IKControl = self.IKControls.GearLever
 	if not IKControl then return end
 
 	local lastGear = 0
 	local curTask
-	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
+	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local oneHanded = SettingsController:GetSetting("OneHandedSteering")
 		if oneHanded then
 			IKControl.Weight = (not self.Vehicle.PBrake or curTask) and 1 or 0
@@ -358,7 +355,7 @@ function InitializeGearLever(self: BodyController)
 	end)
 end
 
-function InitializePedals(self: BodyController)
+function InitializePedals(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local throttleIK = self.IKControls.Throttle
@@ -383,12 +380,12 @@ function InitializePedals(self: BodyController)
 	leftHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
 	rightHipAttachment.CFrame *= CFrame.new(0, 0.5, 0)
 
-	self._trove:Add(function()
+	self.trove:Add(function()
 		leftHipAttachment.CFrame = startLeftHipCFrame
 		rightHipAttachment.CFrame = startRightHipCFrame
 	end)
 
-	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
+	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		throttleIK.Weight = 0.05
 			+ self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
 		brakeIK.Weight = 0.05
@@ -397,10 +394,10 @@ function InitializePedals(self: BodyController)
 	end)
 end
 
-function InitializeIgnition(self: BodyController)
+function InitializeIgnition(self: BodyControllerImpl)
 	local IKControl = self.IKControls.Ignition
 
-	self._trove:Connect(
+	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
 			IKControl.Weight = self.Vehicle.Starting and 1 or 0
@@ -408,4 +405,4 @@ function InitializeIgnition(self: BodyController)
 	)
 end
 
-return BodyController
+return table.freeze({ new = BodyController.new })

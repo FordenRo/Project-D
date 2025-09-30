@@ -15,57 +15,57 @@ type BindingButton = TextButton & {
 	Revert: TextButton,
 }
 
-export type Setting = typeof(setmetatable(
-	{} :: {
-		_trove: Trove.Trove,
-		Instance: Frame & {
-			Info: Frame & {
-				Title: TextLabel,
-				Description: TextLabel,
-			},
+export type Setting = {
+	Instance: Frame & {
+		Info: Frame & {
+			Title: TextLabel,
+			Description: TextLabel,
+		},
+		Slider: Frame & {
 			Slider: Frame & {
-				Slider: Frame & {
-					Fill: Frame,
-					Handle: Frame & { Dragger: UIDragDetector },
-				},
-				Value: Frame & {
-					Input: TextBox,
-					Revert: TextButton,
-				},
+				Fill: Frame,
+				Handle: Frame & { Dragger: UIDragDetector },
 			},
-			Checkbox: Frame & {
-				Button: TextButton & {
-					Box: Frame & { Enabled: ImageLabel },
-				},
-			},
-			Binding: Frame & {
-				Mouse: BindingButton,
-				Controller: BindingButton,
-				Keyboard: BindingButton,
+			Value: Frame & {
+				Input: TextBox,
+				Revert: TextButton,
 			},
 		},
-		Type: SettingsInfo.SettingType,
-		Properties: SettingsInfo.SettingInfo,
-		Changed: Signal.Signal<...any>,
-		Value: any,
+		Checkbox: Frame & {
+			Button: TextButton & {
+				Box: Frame & { Enabled: ImageLabel },
+			},
+		},
+		Binding: Frame & {
+			Mouse: BindingButton,
+			Controller: BindingButton,
+			Keyboard: BindingButton,
+		},
 	},
-	Setting
-))
+	Type: SettingsInfo.SettingType,
+	Properties: SettingsInfo.SettingInfo,
+	Changed: Signal.Signal<...any>,
+	Value: any,
+}
+
+export type SettingImpl = {
+	trove: Trove.Trove,
+} & Setting
 
 function Setting.new(
 	instance: Frame,
 	properties: SettingsInfo.SettingInfo
 ): Setting
-	local self: Setting = setmetatable({}, Setting) :: any
+	local self: SettingImpl = setmetatable({}, Setting) :: any
 
 	self.Instance = instance :: any
 	self.Type = properties.Type
 	self.Properties = properties
 	self.Value = self.Properties.Value
 
-	self._trove = Trove.new()
+	self.trove = Trove.new()
 
-	self.Changed = self._trove:Construct(Signal)
+	self.Changed = self.trove:Construct(Signal)
 
 	self.Instance.Info.Title.Text = self.Properties.Title
 	self.Instance.Info.Description.Text = self.Properties.Description or ""
@@ -80,22 +80,22 @@ function Setting.new(
 		InitCheckbox(self)
 	end
 
-	self._trove:Connect(
+	self.trove:Connect(
 		self.Instance.MouseEnter,
 		function() self.Instance.BackgroundTransparency = 0.5 end
 	)
-	self._trove:Connect(
+	self.trove:Connect(
 		self.Instance.MouseLeave,
 		function() self.Instance.BackgroundTransparency = 1 end
 	)
-	self._trove:AttachToInstance(self.Instance)
+	self.trove:AttachToInstance(self.Instance)
 
 	self.Instance.Visible = true
 
 	return self
 end
 
-function InitSlider(self: Setting)
+function InitSlider(self: SettingImpl)
 	local step = self.Properties.Step or 0.05
 	local min = self.Properties.Min or 0
 	local max = self.Properties.Max or 2
@@ -126,11 +126,11 @@ function InitSlider(self: Setting)
 	end
 
 	local start = MathUtil.MapToRange(self.Value, min, max)
-	self._trove:Connect(
+	self.trove:Connect(
 		slider.Handle.Dragger.DragStart,
 		function() start = MathUtil.MapToRange(self.Value, min, max) end
 	)
-	self._trove:Connect(
+	self.trove:Connect(
 		slider.Handle.Dragger.DragContinue,
 		function()
 			updateValue(
@@ -142,7 +142,7 @@ function InitSlider(self: Setting)
 			)
 		end
 	)
-	self._trove:Connect(
+	self.trove:Connect(
 		slider.Handle.Dragger.DragEnd,
 		function()
 			updateValue(
@@ -156,7 +156,7 @@ function InitSlider(self: Setting)
 			)
 		end
 	)
-	self._trove:Connect(
+	self.trove:Connect(
 		valueFrame.Input.FocusLost,
 		function(enterPressed: boolean)
 			if enterPressed then
@@ -172,7 +172,7 @@ function InitSlider(self: Setting)
 			end
 		end
 	)
-	self._trove:Connect(
+	self.trove:Connect(
 		valueFrame.Revert.Activated,
 		function() updateValue(self.Properties.Default, true, true) end
 	)
@@ -181,7 +181,7 @@ function InitSlider(self: Setting)
 	self.Instance.Slider.Visible = true
 end
 
-function InitBinding(self: Setting)
+function InitBinding(self: SettingImpl)
 	assert(self.Properties.ActionTypes, "Type check")
 
 	for _, v in self.Instance.Binding:GetChildren() do
@@ -212,7 +212,7 @@ function InitBinding(self: Setting)
 			if fireEvent then self.Changed:Fire(v, self.Value[v]) end
 		end
 
-		self._trove:Connect(binding.Activated, function()
+		self.trove:Connect(binding.Activated, function()
 			local t = 5
 			local thread = task.spawn(function()
 				while true do
@@ -239,7 +239,7 @@ function InitBinding(self: Setting)
 
 			updateBinding(input.KeyCode, true)
 		end)
-		self._trove:Connect(
+		self.trove:Connect(
 			binding.Revert.Activated,
 			function() updateBinding(self.Properties.Default[v], true) end
 		)
@@ -251,7 +251,7 @@ function InitBinding(self: Setting)
 	self.Instance.Binding.Visible = true
 end
 
-function InitCheckbox(self: Setting)
+function InitCheckbox(self: SettingImpl)
 	local function updateCheckbox(value: boolean)
 		self.Value = value
 		self.Instance.Checkbox.Button.Box.Enabled.Visible = self.Value
@@ -260,7 +260,7 @@ function InitCheckbox(self: Setting)
 		self.Changed:Fire(self.Value)
 	end
 
-	self._trove:Connect(
+	self.trove:Connect(
 		self.Instance.Checkbox.Button.Activated,
 		function() updateCheckbox(not self.Value) end
 	)
@@ -269,4 +269,4 @@ function InitCheckbox(self: Setting)
 	self.Instance.Checkbox.Visible = true
 end
 
-return Setting
+return table.freeze({ new = Setting.new })

@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Interface = require(ReplicatedStorage.Shared.UI.Interface)

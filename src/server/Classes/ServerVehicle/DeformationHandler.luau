@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
@@ -9,29 +10,34 @@ DeformationHandler.__index = DeformationHandler
 
 type DeformationHandler = VehicleTypes.DeformationHandler
 
+type DeformationHandlerImpl = {
+	RE: RemoteEvent,
+} & DeformationHandler
+
 function DeformationHandler.new(
 	vehicle: VehicleTypes.ServerVehicle
 ): DeformationHandler
-	local self: DeformationHandler = setmetatable({}, DeformationHandler) :: any
+	local self: DeformationHandlerImpl =
+		setmetatable({}, DeformationHandler) :: any
 
 	self.Vehicle = vehicle
 
 	local trove = Trove.new()
 	trove:AttachToInstance(self.Vehicle.Instance)
 
-	self._RE = Instance.new("RemoteEvent")
-	self._RE.Name = "_DeformRE"
-	self._RE.Parent = self.Vehicle.Instance
+	self.RE = Instance.new("RemoteEvent")
+	self.RE.Name = "_DeformRE"
+	self.RE.Parent = self.Vehicle.Instance
 
-	trove:Connect(self._RE.OnServerEvent, function(sender: Player, ...)
+	trove:Connect(self.RE.OnServerEvent, function(sender: Player, ...)
 		for _, player in Players:GetPlayers() do
 			if sender == player then continue end
 
-			self._RE:FireClient(player, ...)
+			self.RE:FireClient(player, ...)
 		end
 	end)
 
 	return self
 end
 
-return DeformationHandler
+return table.freeze({ new = DeformationHandler.new })

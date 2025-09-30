@@ -1,3 +1,4 @@
+--!strict
 local ContentProvider = game:GetService("ContentProvider")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -39,7 +40,7 @@ for k, v in controllers do
 		VehicleController = "Spawning vehicles",
 	}
 	screen:SetCurrentAsset(overrides[v.Name] or "Initializing scripts")
-	local success, err = pcall(function() require(v) end)
+	local success, err = pcall(function() local _ = require(v) :: any end)
 	screen:SetProgress((#assets + k) / count)
 
 	if not success then warn(`Error loading {v.Name}: {err}`) end

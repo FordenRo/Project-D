@@ -6,7 +6,6 @@ export type InterfaceController = {
 	Interface: Interface,
 	MainWindow: MainWindow,
 
-	new: () -> InterfaceController,
 	Show: (self: InterfaceController) -> (),
 	Hide: (self: InterfaceController) -> (),
 	OpenWelcome: (self: InterfaceController) -> (),
@@ -22,21 +21,12 @@ export type Interface = {
 		FPS: TextLabel,
 	},
 
-	new: (interfaceController: InterfaceController) -> Interface,
 	Show: (self: Interface) -> (),
 	Hide: (self: Interface) -> (),
 	Destroy: (self: Interface) -> (),
 }
 
-type TabModule = any & {
-	new: (instance: ScrollingFrame) -> TabModule,
-	Destroy: (self: TabModule) -> (),
-}
-
 export type MainWindow = {
-	_trove: Trove.Trove,
-	_TabPositions: { [ScrollingFrame]: number },
-	_TabModules: { [string]: TabModule },
 	CurrentTab: string?,
 	Visible: boolean,
 	Instance: ScreenGui & {
@@ -49,7 +39,6 @@ export type MainWindow = {
 		Background: TextButton,
 	},
 
-	new: () -> MainWindow,
 	Show: (self: MainWindow, tab: string?) -> (),
 	Hide: (self: MainWindow) -> (),
 	SetTab: (self: MainWindow, tab: string, skipAnim: boolean?) -> (),

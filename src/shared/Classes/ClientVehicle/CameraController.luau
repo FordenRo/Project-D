@@ -1,3 +1,4 @@
+--!strict
 local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -34,10 +35,16 @@ CameraController.__index = CameraController
 
 type CameraController = VehicleTypes.CameraController
 
+type CameraControllerImpl = {
+	lastCameraRotation: number,
+	isCharacterVisible: boolean,
+	trove: Trove.Trove,
+} & CameraController
+
 function CameraController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): CameraController
-	local self: CameraController = setmetatable({}, CameraController) :: any
+	local self: CameraControllerImpl = setmetatable({}, CameraController) :: any
 
 	self.Vehicle = vehicle
 	self.Distance = 22
@@ -46,14 +53,14 @@ function CameraController.new(
 	self.Angles = Vector3.new()
 	self.Bumping = Vector3.new()
 	self.FirstPerson = false
-	self._LastCameraRotation = 0
-	self._CharacterVisible = true
+	self.lastCameraRotation = 0
+	self.isCharacterVisible = true
 	self.CameraCFrame = CFrame.new()
 	Camera.CameraType = Enum.CameraType.Scriptable
 
-	self._trove = Trove.new()
+	self.trove = Trove.new()
 
-	self._trove:BindToRenderStep(
+	self.trove:BindToRenderStep(
 		"CameraUpdate",
 		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) Update(self, deltaTime) end
@@ -61,19 +68,19 @@ function CameraController.new(
 
 	ContextActionService:BindAction(
 		"CameraZoom",
-		function(_, _, input) UpdateZoom(self, input) end,
+		function(_, _, input) return UpdateZoom(self, input) end,
 		false,
 		Enum.UserInputType.MouseWheel
 	)
 
 	ContextActionService:BindAction(
 		"CameraRotation",
-		function(_, _, input) UpdateRotation(self, input) end,
+		function(_, _, input) return UpdateRotation(self, input) end,
 		false,
 		Enum.UserInputType.MouseMovement
 	)
 
-	self._trove:Add(function()
+	self.trove:Add(function()
 		ContextActionService:UnbindAction("CameraZoom")
 		ContextActionService:UnbindAction("CameraRotation")
 
@@ -83,12 +90,12 @@ function CameraController.new(
 	return self
 end
 
-function UpdateZoom(self: CameraController, input: InputObject)
+function UpdateZoom(self: CameraControllerImpl, input: InputObject)
 	self.Distance -= input.Position.Z * 0.4
 	self.Distance = math.clamp(self.Distance, MIN_DISTANCE, MAX_DISTANCE)
 end
 
-function UpdateRotation(self: CameraController, input: InputObject)
+function UpdateRotation(self: CameraControllerImpl, input: InputObject)
 	if
 		not (
 			UserInputService:IsMouseButtonPressed(
@@ -107,12 +114,14 @@ function UpdateRotation(self: CameraController, input: InputObject)
 	x = math.clamp(x, math.rad(-25), math.rad(15))
 	y -= math.rad(input.Delta.X)
 	self.CameraCFrame = CFrame.fromOrientation(x, y, z)
-	self._LastCameraRotation = tick()
+	self.lastCameraRotation = tick()
 end
 
-function Update(self: CameraController, deltaTime: number)
-	if self._CharacterVisible == self.FirstPerson then
-		self._CharacterVisible = not self.FirstPerson
+function Update(self: CameraControllerImpl, deltaTime: number)
+	if not player.Character then return end
+
+	if self.isCharacterVisible == self.FirstPerson then
+		self.isCharacterVisible = not self.FirstPerson
 		for _, v in player.Character:GetDescendants() do
 			if
 				not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name)
@@ -120,7 +129,7 @@ function Update(self: CameraController, deltaTime: number)
 				continue
 			end
 
-			v.LocalTransparencyModifier = self._CharacterVisible and 0 or 1
+			v.LocalTransparencyModifier = self.isCharacterVisible and 0 or 1
 		end
 	end
 
@@ -131,7 +140,9 @@ function Update(self: CameraController, deltaTime: number)
 	end
 end
 
-function UpdateFirstPerson(self: CameraController, deltaTime: number)
+function UpdateFirstPerson(self: CameraControllerImpl, deltaTime: number)
+	if not player.Character then return end
+
 	local head = player.Character:FindFirstChild("Head") :: BasePart
 
 	-- Update camera
@@ -146,7 +157,7 @@ function UpdateFirstPerson(self: CameraController, deltaTime: number)
 	)
 end
 
-function UpdateThirdPerson(self: CameraController, deltaTime: number)
+function UpdateThirdPerson(self: CameraControllerImpl, deltaTime: number)
 	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
 
 	local heightOffset = self.Vehicle.WeightPart.CFrame.UpVector * 7
@@ -191,7 +202,7 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 
 	if
 		self.Vehicle.Velocity.Magnitude > 10
-		and tick() - self._LastCameraRotation > 2
+		and tick() - self.lastCameraRotation > 2
 	then
 		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
 	end
@@ -240,6 +251,8 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
 end
 
-function CameraController.Destroy(self: CameraController) self._trove:Destroy() end
+function CameraController.Destroy(self: CameraControllerImpl)
+	self.trove:Destroy()
+end
 
-return CameraController
+return table.freeze({ new = CameraController.new })

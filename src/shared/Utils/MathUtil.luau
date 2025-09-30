@@ -1,3 +1,5 @@
+--!strict
+--!native
 local MathUtil = {}
 
 function MathUtil.Lerp(a: number, b: number, t: number): number
@@ -8,4 +10,4 @@ function MathUtil.MapToRange(a: number, min: number, max: number): number
 	return (a - min) / (max - min)
 end
 
-return MathUtil
+return table.freeze(MathUtil)

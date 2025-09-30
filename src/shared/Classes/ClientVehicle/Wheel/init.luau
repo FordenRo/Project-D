@@ -501,4 +501,4 @@ function ClientWheel.UpdateForces(
 	end
 end
 
-return ClientWheel
+return table.freeze({ new = ClientWheel.new })

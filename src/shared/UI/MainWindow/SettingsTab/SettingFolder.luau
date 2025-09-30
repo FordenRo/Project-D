@@ -6,24 +6,21 @@ local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local SettingFolder = {}
 SettingFolder.__index = SettingFolder
 
-export type SettingFolder = typeof(setmetatable(
-	{} :: {
-		Instance: Frame & {
-			Content: Frame,
-			Button: TextButton & {
-				Info: Frame & {
-					Title: TextLabel,
-					Description: TextLabel,
-				},
-				Expand: Frame & {
-					Image: ImageLabel,
-				},
+export type SettingFolder = {
+	Instance: Frame & {
+		Content: Frame,
+		Button: TextButton & {
+			Info: Frame & {
+				Title: TextLabel,
+				Description: TextLabel,
+			},
+			Expand: Frame & {
+				Image: ImageLabel,
 			},
 		},
-		Expanded: boolean,
 	},
-	SettingFolder
-))
+	Expanded: boolean,
+}
 
 function SettingFolder.new(instance: Frame, name: string): SettingFolder
 	local self: SettingFolder = setmetatable({}, SettingFolder) :: any
@@ -71,4 +68,4 @@ function SettingFolder.new(instance: Frame, name: string): SettingFolder
 	return self
 end
 
-return SettingFolder
+return table.freeze({ new = SettingFolder.new })

@@ -13,11 +13,16 @@ ClientBrakeDisk.__index = ClientBrakeDisk
 
 type ClientBrakeDisk = VehicleTypes.ClientBrakeDisk
 
+type ClientBrakeDiskImpl = {
+	RE: UnreliableRemoteEvent,
+	startColor: Color3,
+} & ClientBrakeDisk
+
 function ClientBrakeDisk.new(
 	wheel: VehicleTypes.ClientWheel,
 	instance: BasePart
 ): ClientBrakeDisk
-	local self: ClientBrakeDisk = setmetatable({}, ClientBrakeDisk) :: any
+	local self: ClientBrakeDiskImpl = setmetatable({}, ClientBrakeDisk) :: any
 
 	self.Instance = instance
 	self.Wheel = wheel
@@ -25,7 +30,7 @@ function ClientBrakeDisk.new(
 	self.Volume = 0
 	self.Temperature =
 		game.Workspace:GetAttribute("GlobalTemperature") :: number
-	self._startColor = self.Instance.Color
+	self.startColor = self.Instance.Color
 
 	self.Sound = Instance.new("Sound") :: any
 	self.Sound.Volume = 0
@@ -40,17 +45,14 @@ function ClientBrakeDisk.new(
 
 	self.Sound.Parent = instance
 
-	self._RE = instance:WaitForChild("_DiskRE") :: UnreliableRemoteEvent
+	self.RE = instance:WaitForChild("_DiskRE") :: UnreliableRemoteEvent
 
 	local trove = Trove.new()
 	trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime) Update(self, deltaTime) end
 	)
-	trove:Connect(
-		self._RE.OnClientEvent,
-		function(buf) Replicate(self, buf) end
-	)
+	trove:Connect(self.RE.OnClientEvent, function(buf) Replicate(self, buf) end)
 	trove:Add(task.spawn(function()
 		while true do
 			task.wait(1 / 20)
@@ -62,7 +64,7 @@ function ClientBrakeDisk.new(
 				Volume = self.Volume,
 				Pitch = self.Sound.PitchEffect.Octave,
 			}
-			self._RE:FireServer(Serialization.Serialize(BrakeDiskPacket, data))
+			self.RE:FireServer(Serialization.Serialize(BrakeDiskPacket, data))
 		end
 	end))
 	trove:AttachToInstance(self.Instance)
@@ -70,7 +72,7 @@ function ClientBrakeDisk.new(
 	return self
 end
 
-function Update(self: ClientBrakeDisk, deltaTime: number)
+function Update(self: ClientBrakeDiskImpl, deltaTime: number)
 	if not self.Vehicle.IsDriven then return end
 
 	local GlobalTemperature =
@@ -99,17 +101,17 @@ function Update(self: ClientBrakeDisk, deltaTime: number)
 	updateColor(self)
 end
 
-function updateColor(self: ClientBrakeDisk)
+function updateColor(self: ClientBrakeDiskImpl)
 	local colorDelta =
 		math.clamp(MathUtil.MapToRange(self.Temperature, 80, 200), 0, 1)
 	self.Instance.Color =
-		self._startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
+		self.startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
 end
 
-function Replicate(self: ClientBrakeDisk, buf: buffer?)
+function Replicate(self: ClientBrakeDiskImpl, buf: buffer?)
 	if not buf then
 		self.Sound.Playing = false
-		self.Instance.Color = self._startColor
+		self.Instance.Color = self.startColor
 		return
 	end
 
@@ -123,4 +125,4 @@ function Replicate(self: ClientBrakeDisk, buf: buffer?)
 	updateColor(self)
 end
 
-return ClientBrakeDisk
+return table.freeze({ new = ClientBrakeDisk.new })

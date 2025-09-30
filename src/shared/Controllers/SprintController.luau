@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local StarterPlayer = game:GetService("StarterPlayer")
@@ -9,27 +10,30 @@ local SPRINT_MULTIPLIER = 1.5
 local SprintController = {}
 SprintController.__index = SprintController
 
-export type SprintController = typeof(setmetatable(
-	{} :: {
-		Humanoid: Humanoid?,
-	},
-	SprintController
-))
+export type SprintController = {}
+
+type SprintControllerImpl = {
+	humanoid: Humanoid?,
+} & SprintController
 
 function SprintController.new(): SprintController
-	local self: SprintController = setmetatable({}, SprintController) :: any
+	local self: SprintControllerImpl = setmetatable({}, SprintController) :: any
 
 	player.CharacterAdded:Connect(
-		function() self.Humanoid = player.Character:WaitForChild("Humanoid") end
+		function()
+			self.humanoid = (player.Character :: Model):WaitForChild(
+					"Humanoid"
+				) :: Humanoid
+		end
 	)
 	if player.Character then
-		self.Humanoid = player.Character:WaitForChild("Humanoid")
+		self.humanoid = player.Character:WaitForChild("Humanoid") :: Humanoid
 	end
 
 	ReplicatedStorage.Input.Player.Sprint.StateChanged:Connect(function(value)
-		if not self.Humanoid then return end
+		if not self.humanoid then return end
 
-		self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+		self.humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
 			* (value and SPRINT_MULTIPLIER or 1)
 	end)
 

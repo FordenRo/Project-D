@@ -9,27 +9,28 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local InteriorController = {}
 InteriorController.__index = InteriorController
 
-export type InteriorController = typeof(setmetatable(
-	{} :: {
-		_trove: Trove.Trove,
-		Vehicle: VehicleTypes.ClientVehicle,
-		Instance: Model & {
-			Pedals: (Model & {
-				Throttle: BasePart,
-				Brake: BasePart,
-				Clutch: BasePart,
-			})?,
-			Handbrake: BasePart?,
-			SteeringWheel: BasePart?,
-		},
+export type InteriorController = {
+	Vehicle: VehicleTypes.ClientVehicle,
+	Instance: Model & {
+		Pedals: (Model & {
+			Throttle: BasePart,
+			Brake: BasePart,
+			Clutch: BasePart,
+		})?,
+		Handbrake: BasePart?,
+		SteeringWheel: BasePart?,
 	},
-	InteriorController
-))
+}
+
+type InteriorControllerImpl = {
+	trove: Trove.Trove,
+} & InteriorController
 
 function InteriorController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): InteriorController
-	local self: InteriorController = setmetatable({}, InteriorController) :: any
+	local self: InteriorControllerImpl =
+		setmetatable({}, InteriorController) :: any
 
 	self.Vehicle = vehicle
 	self.Instance = self.Vehicle.Instance.Body:FindFirstChild("Interior") :: any
@@ -38,8 +39,8 @@ function InteriorController.new(
 		return self
 	end
 
-	self._trove = Trove.new()
-	self._trove:AttachToInstance(self.Instance)
+	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Instance)
 
 	InitializeSteeringWheel(self)
 	InitializePedals(self)
@@ -49,7 +50,7 @@ function InteriorController.new(
 	return self
 end
 
-function InitializeSteeringWheel(self: InteriorController)
+function InitializeSteeringWheel(self: InteriorControllerImpl)
 	local steeringWheel =
 		self.Vehicle.Instance.Misc:FindFirstChild("SteeringWheel")
 	if not steeringWheel then return end
@@ -57,7 +58,7 @@ function InitializeSteeringWheel(self: InteriorController)
 	local motor = steeringWheel:FindFirstChildOfClass("Motor6D")
 	if not motor then return end
 
-	self._trove:Connect(
+	self.trove:Connect(
 		RunService.Heartbeat,
 		function()
 			motor.CurrentAngle = -self.Vehicle.Steering
@@ -67,7 +68,7 @@ function InitializeSteeringWheel(self: InteriorController)
 	)
 end
 
-function InitializeHandbrake(self: InteriorController)
+function InitializeHandbrake(self: InteriorControllerImpl)
 	local handbrake = self.Vehicle.Instance.Misc:FindFirstChild("Handbrake")
 	if not handbrake then return end
 
@@ -75,7 +76,7 @@ function InitializeHandbrake(self: InteriorController)
 	if not motor then return end
 
 	local maxAngle = math.rad(handbrake:GetAttribute("MaxAngle"))
-	self._trove:Connect(
+	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
 			motor.CurrentAngle = MathUtil.Lerp(
@@ -87,7 +88,7 @@ function InitializeHandbrake(self: InteriorController)
 	)
 end
 
-function InitializePedals(self: InteriorController)
+function InitializePedals(self: InteriorControllerImpl)
 	local pedals = self.Vehicle.Instance.Misc:FindFirstChild("Pedals")
 	if not pedals then return end
 
@@ -100,14 +101,14 @@ function InitializePedals(self: InteriorController)
 		motors[pedal.Name] = pedal:FindFirstChildOfClass("Motor6D")
 	end
 
-	self._trove:Connect(RunService.Heartbeat, function()
+	self.trove:Connect(RunService.Heartbeat, function()
 		motors.Throttle.CurrentAngle = self.Vehicle.Throttle * angles.Throttle
 		motors.Brake.CurrentAngle = self.Vehicle.Brake * angles.Brake
 		motors.Clutch.CurrentAngle = self.Vehicle.Clutch * angles.Clutch
 	end)
 end
 
-function InitializeGearLever(self: InteriorController)
+function InitializeGearLever(self: InteriorControllerImpl)
 	local gearLever = self.Vehicle.Instance.Misc:FindFirstChild("GearLever")
 	if not gearLever then return end
 
@@ -163,7 +164,7 @@ function InitializeGearLever(self: InteriorController)
 
 	local shifting = false
 	local lastGear = 0
-	self._trove:Connect(RunService.Heartbeat, function()
+	self.trove:Connect(RunService.Heartbeat, function()
 		if shifting then return end
 
 		local gear = self.Vehicle.Gear ~= -1 and self.Vehicle.Gear
@@ -177,4 +178,4 @@ function InitializeGearLever(self: InteriorController)
 	end)
 end
 
-return InteriorController
+return table.freeze({ new = InteriorController.new })

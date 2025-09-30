@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -5,7 +6,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local PlayerModule =
-	require(Players.LocalPlayer.PlayerScripts.PlayerModule) :: any
+	require((Players.LocalPlayer.PlayerScripts :: any).PlayerModule) :: any
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -21,17 +22,25 @@ InputController.__index = InputController
 
 type InputController = VehicleTypes.InputController
 
+type InputControllerImpl = {
+	trove: Trove.Trove,
+	rawThrottle: number,
+	rawBrake: number,
+	rawClutch: number,
+	rawSteering: number,
+} & InputController
+
 function InputController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): InputController
-	local self: InputController = setmetatable({}, InputController) :: any
+	local self: InputControllerImpl = setmetatable({}, InputController) :: any
 
 	self.Vehicle = vehicle
 
-	self._RawThrottle = 0
-	self._RawBrake = 0
-	self._RawClutch = 0
-	self._RawSteering = 0
+	self.rawThrottle = 0
+	self.rawBrake = 0
+	self.rawClutch = 0
+	self.rawSteering = 0
 
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
@@ -44,26 +53,26 @@ function InputController.new(
 
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
-	self._trove = Trove.new()
-	self._trove:AttachToInstance(self.Vehicle.Instance)
+	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Vehicle.Instance)
 
 	InitializeConnections(self)
 
-	self._trove:Connect(
+	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime) Update(self, deltaTime) end
 	)
-	self._trove:BindToRenderStep(
+	self.trove:BindToRenderStep(
 		"MouseSteerUpdate",
 		Enum.RenderPriority.Camera.Value - 2,
 		function() UpdateMouseInput(self) end
 	)
-	self._trove:Add(function()
+	self.trove:Add(function()
 		Context.Enabled = false
 
-		self._RawBrake = 0
-		self._RawThrottle = 0
-		self._RawSteering = 0
+		self.rawBrake = 0
+		self.rawThrottle = 0
+		self.rawSteering = 0
 
 		UserInputService.MouseBehavior = Enum.MouseBehavior.Default
 		PlayerModule:GetControls():GetActiveController().jumpEnabled = true
@@ -72,7 +81,7 @@ function InputController.new(
 	return self
 end
 
-function Update(self: InputController, deltaTime: number)
+function Update(self: InputControllerImpl, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
 
 	UserInputService.MouseBehavior = self.MouseSteerOn
@@ -112,15 +121,15 @@ function Update(self: InputController, deltaTime: number)
 	ApplyInputs(self, deltaTime)
 end
 
-function ApplyInputs(self: InputController, deltaTime: number)
+function ApplyInputs(self: InputControllerImpl, deltaTime: number)
 	-- Update throttle
 	local throttle = (
 		self.Vehicle.Tune.AutoShiftVers == "Old"
 		and self.Vehicle.Gear == -1
 		and self.Vehicle.TransmissionMode == "Manual"
 	)
-			and self._RawBrake
-		or self._RawThrottle
+			and self.rawBrake
+		or self.rawThrottle
 	if self.Vehicle.Throttle <= throttle then
 		self.Vehicle.Throttle = math.min(
 			throttle,
@@ -149,8 +158,8 @@ function ApplyInputs(self: InputController, deltaTime: number)
 		and self.Vehicle.Gear == -1
 		and self.Vehicle.TransmissionMode == "Manual"
 	)
-			and self._RawThrottle
-		or self._RawBrake
+			and self.rawThrottle
+		or self.rawBrake
 	if self.Vehicle.Brake <= brake then
 		self.Vehicle.Brake = math.min(
 			brake,
@@ -174,9 +183,9 @@ function ApplyInputs(self: InputController, deltaTime: number)
 	end
 
 	-- Update clutch
-	if self.Vehicle.Clutch <= self._RawClutch then
+	if self.Vehicle.Clutch <= self.rawClutch then
 		self.Vehicle.Clutch = math.min(
-			self._RawClutch,
+			self.rawClutch,
 			self.Vehicle.Clutch
 				+ (
 					1
@@ -186,7 +195,7 @@ function ApplyInputs(self: InputController, deltaTime: number)
 		)
 	else
 		self.Vehicle.Clutch = math.max(
-			self._RawClutch,
+			self.rawClutch,
 			self.Vehicle.Clutch
 				- (
 					1
@@ -199,7 +208,7 @@ function ApplyInputs(self: InputController, deltaTime: number)
 	ApplySteering(self, deltaTime)
 end
 
-function ApplySteering(self: InputController, deltaTime: number)
+function ApplySteering(self: InputControllerImpl, deltaTime: number)
 	deltaTime = (60 / (1 / deltaTime))
 
 	local isController = UserInputService.PreferredInput
@@ -252,7 +261,7 @@ function ApplySteering(self: InputController, deltaTime: number)
 	-- Interpolate Steering
 	local CSAmt = 0
 	if
-		math.abs(self._RawSteering) < self.Vehicle.Tune.CSSteerThresh / 100
+		math.abs(self.rawSteering) < self.Vehicle.Tune.CSSteerThresh / 100
 		and self.Vehicle.CS
 		and self.Vehicle.Velocity.Magnitude
 				* (Units.Length_mm / 1000)
@@ -275,7 +284,7 @@ function ApplySteering(self: InputController, deltaTime: number)
 		> (self.Vehicle.Tune.CSAmt / 100) * 0.01
 
 	local SteerWithCounter =
-		math.clamp(self._RawSteering * sDecay + CSAmt, -1, 1)
+		math.clamp(self.rawSteering * sDecay + CSAmt, -1, 1)
 	local SteerSmoothing = math.clamp(
 		math.abs(SteerWithCounter - self.Vehicle.Steering)
 			^ (1 / math.max(self.Vehicle.Tune.SteerSmoothing, 0.001)),
@@ -313,7 +322,7 @@ function ApplySteering(self: InputController, deltaTime: number)
 	end
 end
 
-function UpdateMouseInput(self: InputController)
+function UpdateMouseInput(self: InputControllerImpl)
 	if
 		not self.MouseSteerOn
 		or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
@@ -337,9 +346,9 @@ function UpdateMouseInput(self: InputController)
 		/ (SettingsController:GetSetting("MSteerWidth") :: number)
 		* 2
 	if math.abs(mST) <= mdZone then
-		self._RawSteering = 0
+		self.rawSteering = 0
 	else
-		self._RawSteering = (math.max(
+		self.rawSteering = (math.max(
 			math.min((math.abs(mST) - mdZone), (1 - mdZone)),
 			0
 		) / (1 - mdZone)) ^ SettingsController:GetSetting("MSteerExp") * (mST / math.abs(
@@ -348,28 +357,28 @@ function UpdateMouseInput(self: InputController)
 	end
 end
 
-function InitializeConnections(self: InputController)
+function InitializeConnections(self: InputControllerImpl)
 	local onChangeActions = {
-		Throttle = function(value) self._RawThrottle = value end,
-		Brake = function(value) self._RawBrake = value end,
-		MouseThrottle = function(value) self._RawThrottle = value end,
-		MouseBrake = function(value) self._RawBrake = value end,
-		TurnLeft = function(value) self._RawSteering = -value end,
-		TurnRight = function(value) self._RawSteering = value end,
+		Throttle = function(value) self.rawThrottle = value end,
+		Brake = function(value) self.rawBrake = value end,
+		MouseThrottle = function(value) self.rawThrottle = value end,
+		MouseBrake = function(value) self.rawBrake = value end,
+		TurnLeft = function(value) self.rawSteering = -value end,
+		TurnRight = function(value) self.rawSteering = value end,
 		ControllerSteering = function(value: Vector2)
 			local cDZone =
 				math.min(0.99, SettingsController:GetSetting("ControllerDZone"))
 			if math.abs(value.X) > cDZone then
-				self._RawSteering = MathUtil.MapToRange(
+				self.rawSteering = MathUtil.MapToRange(
 					math.abs(value.X),
 					cDZone,
 					1
 				) * math.sign(value.X)
 			else
-				self._RawSteering = 0
+				self.rawSteering = 0
 			end
 		end,
-		Clutch = function(value) self._RawClutch = value end,
+		Clutch = function(value) self.rawClutch = value end,
 		Handbrake = function(value)
 			if value then
 				self.Vehicle.PBrake = not self.Vehicle.PBrake
@@ -387,7 +396,7 @@ function InitializeConnections(self: InputController)
 				self.Vehicle.Starting = value
 			end
 		end,
-	}
+	} :: { [string]: (any) -> () }
 
 	local onPressActions = {
 		TransmissionMode = function()
@@ -404,7 +413,7 @@ function InitializeConnections(self: InputController)
 		end,
 		ToggleMouseSteering = function()
 			self.MouseSteerOn = not self.MouseSteerOn
-			self._RawSteering = 0
+			self.rawSteering = 0
 		end,
 		ToggleFirstPersonView = function()
 			self.Vehicle.CameraController.FirstPerson =
@@ -436,19 +445,19 @@ function InitializeConnections(self: InputController)
 			self.Vehicle.Lights:ToggleTurnState("Right")
 		end,
 		Hazards = function() self.Vehicle.Lights:ToggleTurnState("Both") end,
-	}
+	} :: { [string]: () -> () }
 
 	for k, v in onChangeActions do
-		local action = Context[k] :: InputAction
-		self._trove:Connect(action.StateChanged, v)
+		local action = Context:FindFirstChild(k) :: InputAction
+		self.trove:Connect(action.StateChanged, v)
 	end
 
 	for k, v in onPressActions do
-		local action = Context[k] :: InputAction
-		self._trove:Connect(action.Pressed, v)
+		local action = Context:FindFirstChild(k) :: InputAction
+		self.trove:Connect(action.Pressed, v)
 	end
 end
 
-function InputController.Destroy(self: InputController) self._trove:Destroy() end
+function InputController.Destroy(self: InputControllerImpl) self.trove:Destroy() end
 
-return InputController
+return table.freeze({ new = InputController.new })

@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CreateEditableMesh =
@@ -8,21 +9,24 @@ local HittableService =
 local RoadBump = {}
 RoadBump.__index = RoadBump
 
-export type RoadBump = typeof(setmetatable(
-	{} :: {
-		bump: MeshPart,
-		legs: { MeshPart },
-		meshes: {
-			bump: EditableMesh,
-			legs: { EditableMesh },
-		},
-		startVertexPositions: { [number]: Vector3 },
-	},
-	RoadBump
-))
+export type RoadBump = {
+	Instance: Instance,
+}
 
-function RoadBump.new(instance: Instance): RoadBump
-	local self: RoadBump = setmetatable({}, RoadBump) :: any
+type RoadBumpImpl = {
+	bump: MeshPart,
+	legs: { MeshPart },
+	meshes: {
+		bump: EditableMesh,
+		legs: { EditableMesh },
+	},
+	startVertexPositions: { [number]: Vector3 },
+} & RoadBump
+
+function RoadBump.new(instance: Instance): RoadBumpImpl
+	local self: RoadBumpImpl = setmetatable({}, RoadBump) :: any
+
+	self.Instance = instance
 
 	self.bump = instance:WaitForChild("Bump") :: any
 	-- self.legs = instance:WaitForChild("Legs"):GetChildren()
@@ -53,7 +57,7 @@ function RoadBump.new(instance: Instance): RoadBump
 	return self
 end
 
-function OnHit(self: RoadBump, hit: HittableService.HitResult)
+function OnHit(self: RoadBumpImpl, hit: HittableService.HitResult)
 	local origin = self.meshes.bump:GetPosition(
 		self.meshes.bump:FindClosestVertex(
 			self.bump.CFrame:PointToObjectSpace(hit.Position)
@@ -116,4 +120,4 @@ function OnHit(self: RoadBump, hit: HittableService.HitResult)
 	-- end
 end
 
-return RoadBump
+return table.freeze({ new = RoadBump.new })

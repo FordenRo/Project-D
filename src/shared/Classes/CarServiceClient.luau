@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CarServiceTypes = require(ReplicatedStorage.Shared.Types.CarServiceTypes)
@@ -8,19 +9,25 @@ CarService.__index = CarService
 
 type CarServiceClient = CarServiceTypes.CarServiceClient
 
+type CarServiceClientImpl = {
+	RE: RemoteEvent,
+	RF: RemoteFunction,
+	garageDoors: { GarageDoor.GarageDoor },
+} & CarServiceClient
+
 function CarService.new(instance: Model): CarServiceClient
-	local self: CarServiceClient = setmetatable({}, CarService) :: any
+	local self: CarServiceClientImpl = setmetatable({}, CarService) :: any
 
 	self.Instance = instance :: any
 
-	self._RE = self.Instance:FindFirstChildOfClass("RemoteEvent") :: RemoteEvent
-	self._RE.OnClientEvent:Connect(
+	self.RE = self.Instance:FindFirstChildOfClass("RemoteEvent") :: RemoteEvent
+	self.RE.OnClientEvent:Connect(
 		function(event: string, ...) self[event](self, ...) end
 	)
 
-	self._RF =
+	self.RF =
 		self.Instance:FindFirstChildOfClass("RemoteFunction") :: RemoteFunction
-	self._RF.OnClientInvoke = function(event: string, ...)
+	self.RF.OnClientInvoke = function(event: string, ...)
 		if typeof(self[event]) == "function" then
 			return self[event](self, ...)
 		else
@@ -28,29 +35,31 @@ function CarService.new(instance: Model): CarServiceClient
 		end
 	end
 
-	self.Occupants = self._RF:InvokeServer("Occupants")
+	self.Occupants = self.RF:InvokeServer("Occupants")
 
 	task.wait(1)
 
-	self._GarageDoors = {}
+	self.garageDoors = {}
 	for _, v in self.Instance.GarageDoors:GetChildren() do
 		local sk = string.gsub(v.Name, "Door", "")
 		local k = tonumber(sk)
-		self._GarageDoors[k] = GarageDoor.new(v)
+		if not k then continue end
 
-		if not self.Occupants[k] then self._GarageDoors[k]:Open() end
+		self.garageDoors[k] = GarageDoor.new(v)
+
+		if not self.Occupants[k] then self.garageDoors[k]:Open() end
 	end
 
 	return self
 end
 
 function CarService.Occupied(
-	self: CarServiceClient,
+	self: CarServiceClientImpl,
 	player: Player,
 	index: number
 )
 	self.Occupants[index] = player
-	self._GarageDoors[index]:Close()
+	self.garageDoors[index]:Close()
 end
 
-return CarService
+return table.freeze({ new = CarService.new })

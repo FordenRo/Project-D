@@ -126,4 +126,4 @@ function VehicleInterface.Destroy(self: VehicleInterface)
 	self.Instance:Destroy()
 end
 
-return VehicleInterface
+return table.freeze({ new = VehicleInterface.new })

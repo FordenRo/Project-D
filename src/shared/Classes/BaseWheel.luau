@@ -33,4 +33,4 @@ function BaseWheel.new(
 	return self
 end
 
-return BaseWheel
+return table.freeze({ new = BaseWheel.new })

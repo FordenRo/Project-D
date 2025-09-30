@@ -17,11 +17,30 @@ ClientTire.__index = ClientTire
 
 type ClientTire = VehicleTypes.ClientWheelTire
 
+type ClientTireImpl = {
+	RE: UnreliableRemoteEvent,
+	lastMaterial: string,
+	wearInstance: BasePart,
+	dirtInstance: BasePart,
+	whDirtInstances: { BasePart },
+	rayParams: RaycastParams,
+	currentMaterial: string,
+	audioPlayers: { [string]: AudioPlayer },
+	emitters: { [string]: ParticleEmitter },
+	trails: { [string]: { Trail } },
+	trailStress: number,
+	trailAttachPart: Part & {
+		TrailAttachment1: Attachment,
+		TrailAttachment2: Attachment,
+		AlignOrientation: AlignOrientation,
+	},
+} & ClientTire
+
 function ClientTire.new(
 	wheel: VehicleTypes.ClientWheel,
 	instance: BasePart
 ): ClientTire
-	local self: ClientTire = setmetatable({}, ClientTire) :: any
+	local self: ClientTireImpl = setmetatable({}, ClientTire) :: any
 
 	self.Wheel = wheel
 	self.Vehicle = self.Wheel.Vehicle
@@ -29,17 +48,14 @@ function ClientTire.new(
 
 	Initialize(self)
 
-	self._RE = self.Instance:WaitForChild("_RE") :: UnreliableRemoteEvent
+	self.RE = self.Instance:WaitForChild("_RE") :: UnreliableRemoteEvent
 
 	local trove = Trove.new()
 	trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime) FlexPhysicsUpdate(self, deltaTime) end
 	)
-	trove:Connect(
-		self._RE.OnClientEvent,
-		function(buf) Replicate(self, buf) end
-	)
+	trove:Connect(self.RE.OnClientEvent, function(buf) Replicate(self, buf) end)
 	trove:Add(task.spawn(function()
 		while true do
 			local deltaTime = task.wait(1 / 30)
@@ -52,42 +68,42 @@ function ClientTire.new(
 	return self
 end
 
-function InitializeVariables(self: ClientTire)
+function InitializeVariables(self: ClientTireImpl)
 	self.Stress = 0
 	self.Dirt = 0
 	self.Health = 1
-	self.TrailStress = 0
-	self.Material = ""
-	self._LastMaterial = ""
+	self.trailStress = 0
+	self.currentMaterial = ""
+	self.lastMaterial = ""
 	self.SmokePart = self.Wheel.Instance.SmokePart :: any
 	self.Collision = self.Wheel.Instance.Collision :: any
-	self.TrailAttachmentPart = self.Wheel.Instance.TrailAttachmentPart :: any
+	self.trailAttachPart = self.Wheel.Instance.TrailAttachmentPart :: any
 
-	self.RayParams = RaycastParams.new()
-	self.RayParams.FilterDescendantsInstances = { self.Vehicle.Instance }
-	self.RayParams.FilterType = Enum.RaycastFilterType.Exclude
+	self.rayParams = RaycastParams.new()
+	self.rayParams.FilterDescendantsInstances = { self.Vehicle.Instance }
+	self.rayParams.FilterType = Enum.RaycastFilterType.Exclude
 end
 
-function Initialize(self: ClientTire)
-	self.WearInstance = self.Instance:Clone()
-	self.WearInstance:ClearAllChildren()
-	self.WearInstance.Transparency = 1
-	self.WearInstance.Color = Color3.new()
-	self.WearInstance.Material = Enum.Material.Rock
-	self.WearInstance.Size *= 1.006
-	self.WearInstance.Parent = self.Instance
-	MakeUtil.Weld(self.WearInstance, self.Instance)
+function Initialize(self: ClientTireImpl)
+	self.wearInstance = self.Instance:Clone()
+	self.wearInstance:ClearAllChildren()
+	self.wearInstance.Transparency = 1
+	self.wearInstance.Color = Color3.new()
+	self.wearInstance.Material = Enum.Material.Rock
+	self.wearInstance.Size *= 1.006
+	self.wearInstance.Parent = self.Instance
+	MakeUtil.Weld(self.wearInstance, self.Instance)
 
-	self.DirtInstance = self.Instance:Clone()
-	self.DirtInstance:ClearAllChildren()
-	self.DirtInstance.Transparency = 1
-	self.DirtInstance.Color = Color3.new(0.6, 0.3, 0)
-	self.DirtInstance.Size *= 1.003
-	self.DirtInstance.Material = Enum.Material.Rock
-	self.DirtInstance.Parent = self.Instance
-	MakeUtil.Weld(self.DirtInstance, self.Instance)
+	self.dirtInstance = self.Instance:Clone()
+	self.dirtInstance:ClearAllChildren()
+	self.dirtInstance.Transparency = 1
+	self.dirtInstance.Color = Color3.new(0.6, 0.3, 0)
+	self.dirtInstance.Size *= 1.003
+	self.dirtInstance.Material = Enum.Material.Rock
+	self.dirtInstance.Parent = self.Instance
+	MakeUtil.Weld(self.dirtInstance, self.Instance)
 
-	self.WheelDirtInstances = {}
+	self.whDirtInstances = {}
 	for k, v in self.Wheel.Instance.Parts:GetChildren() do
 		if not v:IsA("BasePart") or v.Name == "Tire" then continue end
 
@@ -99,18 +115,18 @@ function Initialize(self: ClientTire)
 		instance.Size *= 1.003
 		instance.Parent = v
 		MakeUtil.Weld(instance, v)
-		table.insert(self.WheelDirtInstances, instance)
+		table.insert(self.whDirtInstances, instance)
 	end
 
 	InitializeVariables(self)
 
 	local trailAttachment1 = Instance.new("Attachment")
 	trailAttachment1.Name = "TrailAttachment1"
-	trailAttachment1.Parent = self.TrailAttachmentPart
+	trailAttachment1.Parent = self.trailAttachPart
 
 	local trailAttachment2 = Instance.new("Attachment")
 	trailAttachment2.Name = "TrailAttachment2"
-	trailAttachment2.Parent = self.TrailAttachmentPart
+	trailAttachment2.Parent = self.trailAttachPart
 
 	local trailColors = {
 		Road = ColorSequence.new(Color3.new(0, 0, 0)),
@@ -120,20 +136,20 @@ function Initialize(self: ClientTire)
 	}
 
 	task.defer(function()
-		self.AudioPlayers = {}
-		self.Emitters = {}
-		self.Trails = {}
+		self.audioPlayers = {}
+		self.emitters = {}
+		self.trails = {}
 		for k, v in MaterialGroups do
-			self.AudioPlayers[k] =
+			self.audioPlayers[k] =
 				self.Vehicle.SoundController.Sounds[`{self.Wheel.Instance.Name}Tire{k}`].AudioPlayer
 
 			local emitter = ReplicatedStorage.Vehicle.Effects.Tires
 				:FindFirstChild(k)
 				:Clone()
 			emitter.Parent = self.SmokePart
-			self.Emitters[k] = emitter
+			self.emitters[k] = emitter
 
-			self.Trails[k] = {}
+			self.trails[k] = {}
 			for i = 1, self.Vehicle.Tune.TireMarkTransparencyLevels do
 				local trail = Instance.new("Trail")
 				trail.Transparency =
@@ -146,33 +162,33 @@ function Initialize(self: ClientTire)
 				trail.Attachment1 = trailAttachment2
 				trail.Color = trailColors[k]
 				trail.Parent = self.SmokePart
-				self.Trails[k][i] = trail
+				self.trails[k][i] = trail
 			end
 		end
 	end)
 end
 
-function Replicate(self: ClientTire, buf: buffer?)
+function Replicate(self: ClientTireImpl, buf: buffer?)
 	if self.Vehicle.IsDriven then
-		self._RE:FireServer(Serialization.Serialize(TirePacket, self))
+		self.RE:FireServer(Serialization.Serialize(TirePacket, self))
 	elseif buf then
 		local data = Serialization.Deserialize(TirePacket, buf)
 		for k, v in data do
 			self[k] = v
 		end
 	else
-		for _, v in self.Trails do
+		for _, v in self.trails do
 			for _, trail in v do
 				trail.Enabled = false
 			end
 		end
-		for _, v in self.Emitters do
+		for _, v in self.emitters do
 			v.Enabled = false
 		end
 	end
 end
 
-function FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
+function FlexPhysicsUpdate(self: ClientTireImpl, deltaTime: number)
 	if not self.Vehicle.IsDriven then return end
 
 	local pressureForce = self.Wheel.IsFront
@@ -185,7 +201,7 @@ function FlexPhysicsUpdate(self: ClientTire, deltaTime: number)
 		)
 end
 
-function Update(self: ClientTire, deltaTime: number)
+function Update(self: ClientTireImpl, deltaTime: number)
 	local materialChanged = false
 
 	-- Inner
@@ -198,7 +214,7 @@ function Update(self: ClientTire, deltaTime: number)
 				0
 			)).Position - self.Wheel.Instance.Position
 		) * 1.1,
-		self.RayParams
+		self.rayParams
 	) -- Outer
 		or game.Workspace:Raycast(
 			self.Wheel.Instance.Position,
@@ -209,7 +225,7 @@ function Update(self: ClientTire, deltaTime: number)
 					0
 				)).Position - self.Wheel.Instance.Position
 			) * 1.1,
-			self.RayParams
+			self.rayParams
 		)
 
 	if self.Vehicle.IsDriven then
@@ -226,10 +242,10 @@ function Update(self: ClientTire, deltaTime: number)
 			for k, v in MaterialGroups do
 				if not table.find(v, ray.Material.Name) then continue end
 
-				self.Material = k
+				self.currentMaterial = k
 				break
 			end
-			if self._LastMaterial ~= self.Material then
+			if self.lastMaterial ~= self.currentMaterial then
 				materialChanged = true
 			end
 		end
@@ -239,8 +255,8 @@ function Update(self: ClientTire, deltaTime: number)
 			math.max(
 				ray and diff / 20 or 0,
 				ray
-						and self.Material ~= "Road"
-						and self.Material ~= ""
+						and self.currentMaterial ~= "Road"
+						and self.currentMaterial ~= ""
 						and rotSpeed / 50
 					or 0
 			)
@@ -248,7 +264,11 @@ function Update(self: ClientTire, deltaTime: number)
 				* (rotLinearSpeed / (Units.Velocity_mdivs / 3.6) / 100)
 		)
 
-		if ray and self.Material ~= "Road" and self.Material ~= "" then
+		if
+			ray
+			and self.currentMaterial ~= "Road"
+			and self.currentMaterial ~= ""
+		then
 			local random = Random.new():NextNumber() * speed
 			if random > 20 then
 				self.Wheel.Instance.AssemblyLinearVelocity += Vector3.new(
@@ -273,7 +293,7 @@ function Update(self: ClientTire, deltaTime: number)
 		end
 
 		-- Update dirt
-		if self.Material ~= "Road" and self.Material ~= "" then
+		if self.currentMaterial ~= "Road" and self.currentMaterial ~= "" then
 			self.Dirt =
 				MathUtil.Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
 			self.Vehicle.Dirt =
@@ -284,7 +304,7 @@ function Update(self: ClientTire, deltaTime: number)
 		end
 
 		-- Apply friction
-		local materialHeatFactor = self.Material ~= "Road" and 0.01 or 1
+		local materialHeatFactor = self.currentMaterial ~= "Road" and 0.01 or 1
 		local currentPhysicalProperties =
 			self.Wheel.Instance.CurrentPhysicalProperties
 		self.Health = math.clamp(
@@ -360,7 +380,7 @@ function Update(self: ClientTire, deltaTime: number)
 				)
 		end
 
-		if ray and self.Material == "Sand" then
+		if ray and self.currentMaterial == "Sand" then
 			self.Wheel.Instance:ApplyImpulseAtPosition(
 				-self.Wheel.Instance.AssemblyLinearVelocity
 					* self.Vehicle.Tune.TireSandForce
@@ -413,27 +433,29 @@ function Update(self: ClientTire, deltaTime: number)
 			0
 		)
 	else
-		if self.Material ~= self._LastMaterial then materialChanged = true end
+		if self.currentMaterial ~= self.lastMaterial then
+			materialChanged = true
+		end
 	end
 
-	self._LastMaterial = self.Material
+	self.lastMaterial = self.currentMaterial
 
 	-- Disable sounds, smokes and trails
 	if materialChanged then
-		for _, v in self.AudioPlayers do
+		for _, v in self.audioPlayers do
 			v:Stop()
 		end
-		for _, v in self.Emitters do
+		for _, v in self.emitters do
 			v.Enabled = false
 		end
-		for _, v in self.Trails do
+		for _, v in self.trails do
 			for _, trail in v do
 				trail.Enabled = false
 			end
 		end
 	end
 
-	-- Set Trails
+	-- Set trails
 	local smokeStress = math.clamp(
 		self.Stress - self.Vehicle.Tune.TireSmokeStressOffset / 100,
 		0,
@@ -442,15 +464,15 @@ function Update(self: ClientTire, deltaTime: number)
 	local trailStress = math.floor(
 		smokeStress ^ 3 * self.Vehicle.Tune.TireMarkTransparencyLevels
 	)
-	if self.Trails[self.Material] then
-		for i = 1, (trailStress > self.TrailStress and trailStress or self.TrailStress) do
-			self.Trails[self.Material][i].Enabled = trailStress >= i
+	if self.trails[self.currentMaterial] then
+		for i = 1, (trailStress > self.trailStress and trailStress or self.trailStress) do
+			self.trails[self.currentMaterial][i].Enabled = trailStress >= i
 		end
 	end
-	self.TrailStress = trailStress
+	self.trailStress = trailStress
 
 	-- Play sound
-	local audioPlayer = self.AudioPlayers[self.Material]
+	local audioPlayer = self.audioPlayers[self.currentMaterial]
 	if audioPlayer then
 		if not audioPlayer.IsPlaying then
 			audioPlayer.TimePosition = math.random() * audioPlayer.TimeLength -- Avoid overlapping sounds
@@ -460,7 +482,7 @@ function Update(self: ClientTire, deltaTime: number)
 		audioPlayer.PlaybackSpeed = 1.6 - 0.5 * smokeStress
 	end
 
-	local emitter = self.Emitters[self.Material]
+	local emitter = self.emitters[self.currentMaterial]
 	if emitter then
 		emitter.Enabled = true
 		emitter.Rate = smokeStress ^ 10 * 100
@@ -476,21 +498,21 @@ function Update(self: ClientTire, deltaTime: number)
 		)
 	end
 	if
-		self.TrailAttachmentPart
+		self.trailAttachPart
 		and smokeStress > 0.05
 		and self.Wheel.Instance.AssemblyLinearVelocity.Magnitude > 10
 	then
-		self.TrailAttachmentPart.TrailAttachment1.Position = Vector3.new(
+		self.trailAttachPart.TrailAttachment1.Position = Vector3.new(
 			self.Wheel.Instance.Size.X / 2 - 0.2 + 0.1 * compression,
 			0.02,
 			0
 		)
-		self.TrailAttachmentPart.TrailAttachment2.Position = Vector3.new(
+		self.trailAttachPart.TrailAttachment2.Position = Vector3.new(
 			-self.Wheel.Instance.Size.X / 2 + 0.2 - 0.1 * compression,
 			0.02,
 			0
 		)
-		self.TrailAttachmentPart.AlignOrientation.CFrame = CFrame.lookAt(
+		self.trailAttachPart.AlignOrientation.CFrame = CFrame.lookAt(
 			self.SmokePart.Position,
 			(self.SmokePart.CFrame * CFrame.new(
 				0,
@@ -507,13 +529,13 @@ function Update(self: ClientTire, deltaTime: number)
 
 	-- Visual
 	self.Instance.Color = Color3.fromHSV(0, 0, (1 - self.Health) * 0.2)
-	self.WearInstance.Color = Color3.fromHSV(0, 0, (1 - self.Health) * 0.6)
-	self.WearInstance.Transparency = self.Health * 0.5 + 0.5
-	self.DirtInstance.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
+	self.wearInstance.Color = Color3.fromHSV(0, 0, (1 - self.Health) * 0.6)
+	self.wearInstance.Transparency = self.Health * 0.5 + 0.5
+	self.dirtInstance.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
 
-	for _, v in self.WheelDirtInstances do
+	for _, v in self.whDirtInstances do
 		v.Transparency = 1 - self.Dirt ^ 1.5 * 0.5
 	end
 end
 
-return ClientTire
+return table.freeze({ new = ClientTire.new })

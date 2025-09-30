@@ -1,3 +1,4 @@
+--!strict
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,12 +11,19 @@ local player = Players.LocalPlayer
 local VehicleController = {}
 VehicleController.__index = VehicleController
 
-export type VehicleController = typeof(setmetatable(
-	{} :: {
-		DrivenVehicle: VehicleTypes.ClientVehicle?,
-	},
-	VehicleController
-))
+export type VehicleController = {
+	DrivenVehicle: VehicleTypes.ClientVehicle?,
+
+	GetVehicles: (self: VehicleController) -> { VehicleTypes.PlayerVehicle },
+	GetVehicleInfo: (
+		self: VehicleController,
+		id: string
+	) -> VehicleTypes.PlayerVehicleInfo,
+	GetVehiclesByName: (
+		self: VehicleController,
+		name: string
+	) -> { VehicleTypes.PlayerVehicle },
+}
 
 local remoteFunction =
 	ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
@@ -51,7 +59,7 @@ function registerVehicle(
 			local humanoid = vehicle.Instance.DriveSeat.Occupant
 			if not humanoid then return end
 
-			local character = humanoid.Parent
+			local character = humanoid.Parent :: Model
 			if not character then return end
 
 			local seatedPlayer = Players:GetPlayerFromCharacter(character)
@@ -74,7 +82,7 @@ end
 
 function VehicleController.GetVehicleInfo(
 	self: VehicleController,
-	id: number
+	id: string
 ): VehicleTypes.PlayerVehicleInfo
 	return remoteFunction:InvokeServer("GetPlayerVehicleInfo", id)
 end

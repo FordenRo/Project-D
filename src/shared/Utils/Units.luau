@@ -40,4 +40,4 @@ Units.Velocity_mdivs = 1 / (Units.Length_mm / 1000)
 --- `Torque in Nm` * `Units.Torque_nm` = `Roblox torque`
 Units.Torque_nm = Units.Force_N / (Units.Length_mm / 1000)
 
-return Units
+return table.freeze(Units)

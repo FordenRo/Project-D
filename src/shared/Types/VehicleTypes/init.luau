@@ -1,11 +1,9 @@
-local Controls = require(script.Controls)
 local PlayerVehicle = require(script.PlayerVehicle)
 local SoundData = require(script.SoundData)
 local Tune = require(script.Tune)
 local Vehicle = require(script.Vehicle)
 local VehicleConstants = require(script.VehicleConstantsType)
 
-export type VehicleControls = Controls.VehicleControls
 export type VehicleInterface = Vehicle.VehicleInterface
 export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
 

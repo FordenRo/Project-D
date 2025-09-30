@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MaterialGroups = require(
@@ -6,7 +7,7 @@ local MaterialGroups = require(
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 local groups = {}
-for k, _ in MaterialGroups do
+for k, _ in MaterialGroups :: { [string]: { string } } do
 	table.insert(groups, k)
 end
 

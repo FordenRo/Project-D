@@ -17,4 +17,4 @@ function ImageUtil.SetImageAlpha(image: EditableImage, alpha: number)
 	image:WritePixelsBuffer(Vector2.zero, image.Size, imageBuffer)
 end
 
-return ImageUtil
+return table.freeze(ImageUtil)

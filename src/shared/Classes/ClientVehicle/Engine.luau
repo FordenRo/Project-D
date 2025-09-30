@@ -15,8 +15,17 @@ Engine.__index = Engine
 
 type Engine = VehicleTypes.Engine
 
+type EngineImpl = {
+	lastOnTime: number,
+	lastOffTime: number,
+	revLimiting: boolean,
+	goalRPM: number,
+	fuelSupply: number,
+} & Engine
+
 function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
-	local self: Engine = setmetatable(table.clone(EngineTable), Engine) :: any
+	local self: EngineImpl =
+		setmetatable(table.clone(EngineTable), Engine) :: any
 
 	self.Vehicle = vehicle
 	self.Tune = require(
@@ -30,11 +39,11 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	self.Throttle = 0
 	self.Brake = 0
 	self.Clutch = 0
-	self._GoalRPM = 0
-	self._FuelSupply = 0
-	self._LastOnTime = 0
-	self._LastOffTime = 0
-	self._RevLimiting = false
+	self.goalRPM = 0
+	self.fuelSupply = 0
+	self.lastOnTime = 0
+	self.lastOffTime = 0
+	self.revLimiting = false
 
 	return self
 end
@@ -55,7 +64,7 @@ function calcPower(
 	)
 end
 
-function Engine.Update(self: Engine, deltaTime: number)
+function Engine.Update(self: EngineImpl, deltaTime: number)
 	deltaTime = math.max(60 / (1 / deltaTime), 1 / 1000)
 
 	local driveWheelSpeed = 0
@@ -115,9 +124,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	if self.Vehicle.IsOn then
-		self._LastOnTime = tick()
+		self.lastOnTime = tick()
 	else
-		self._LastOffTime = tick()
+		self.lastOffTime = tick()
 		if self.Vehicle.AutoClutch then self.Clutch = 1 end
 		self.Throttle = 0
 	end
@@ -143,11 +152,11 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Rev limiter/speed limiter
 	if self.Vehicle.RPM >= self.Tune.Redline then
-		self._RevLimiting = true
+		self.revLimiting = true
 	elseif self.Vehicle.RPM < goalMax - self.Tune.RevBounce then
-		self._RevLimiting = false
+		self.revLimiting = false
 	end
-	if self._RevLimiting then self.Throttle = self.Tune.IdleThrottle / 100 end
+	if self.revLimiting then self.Throttle = self.Tune.IdleThrottle / 100 end
 
 	local speedLimit = self.Vehicle.Gear < 0 and self.Vehicle.Tune.ReverseSpeed
 		or self.Vehicle.Tune.SpeedLimit
@@ -208,13 +217,13 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Apply fuel supply
-	self.Throttle *= self._FuelSupply
+	self.Throttle *= self.fuelSupply
 
 	if
 		(self.Vehicle.Tune.Engine or self.Tune.Electric)
 		and not self.Vehicle.Starting
 	then
-		self._GoalRPM = math.clamp(
+		self.goalRPM = math.clamp(
 			self.Vehicle.RPM
 				- (self.Tune.RevDecay * deltaTime)
 				+ (self.Tune.RevAccel * self.Throttle * deltaTime)
@@ -232,13 +241,13 @@ function Engine.Update(self: Engine, deltaTime: number)
 			goalMax
 		)
 
-		if not self.Vehicle.IsOn then self._GoalRPM = 0 end
+		if not self.Vehicle.IsOn then self.goalRPM = 0 end
 	end
 
 	-- Starting
 	if self.Vehicle.Starting then
-		self._GoalRPM = math.clamp(
-			self._GoalRPM + self.Tune.IgnitionAccel * deltaTime,
+		self.goalRPM = math.clamp(
+			self.goalRPM + self.Tune.IgnitionAccel * deltaTime,
 			0,
 			math.max(self.Tune.IgnitionRPM, wheelRPM)
 		)
@@ -246,9 +255,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Set RPM
 	local aRPM = math.max(
-		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime)
+		(self.goalRPM * (1 - deltaTime) + wheelRPM * deltaTime)
 				* (1 - self.Clutch ^ 0.5)
-			+ self._GoalRPM * self.Clutch ^ 0.5,
+			+ self.goalRPM * self.Clutch ^ 0.5,
 		revMin
 	)
 	local clutchP = math.min(
@@ -263,7 +272,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	if
 		self.Vehicle.RPM <= (self.Tune.IdleRPM / 4)
-		and (tick() - self._LastOffTime >= 0.2)
+		and (tick() - self.lastOffTime >= 0.2)
 		and self.Vehicle.Tune.Stall
 	then
 		self.Vehicle.IsOn = false
@@ -271,7 +280,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	if
 		self.Vehicle.RPM > self.Tune.IgnitionMinRPM
-		and (tick() - self._LastOnTime > 0.2)
+		and (tick() - self.lastOnTime > 0.2)
 		and self.Health > 0
 	then
 		self.Vehicle.IsOn = true
@@ -372,7 +381,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 		and (
 			self.Vehicle.Starting
 			or (self.Tune.RemoveCreep and self.Vehicle.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) and self.Vehicle.Throttle < 0.1)
-			or (self._RevLimiting and self.Tune.OverRev == false)
+			or (self.revLimiting and self.Tune.OverRev == false)
 		)
 	then
 		self.Clutch = 1
@@ -571,7 +580,7 @@ function Engine.Update(self: Engine, deltaTime: number)
 	UpdateFuel(self, deltaTime)
 end
 
-function UpdateHealth(self: Engine, deltaTime: number)
+function UpdateHealth(self: EngineImpl, deltaTime: number)
 	if
 		not self.Vehicle.Tune.Engine
 		or self.Tune.Electric
@@ -602,7 +611,7 @@ function UpdateHealth(self: Engine, deltaTime: number)
 	end
 end
 
-function UpdateTemperature(self: Engine, deltaTime: number)
+function UpdateTemperature(self: EngineImpl, deltaTime: number)
 	if not self.Vehicle.Tune.Engine or self.Health == 0 then return end
 
 	local kW = self.Horsepower / 1.35962
@@ -618,7 +627,7 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 	if self.Temperature > self.Tune.EngineBurnTemp then self.Health = 0 end
 end
 
-function UpdateFuel(self: Engine, deltaTime: number)
+function UpdateFuel(self: EngineImpl, deltaTime: number)
 	if
 		not self.Vehicle.Tune.Engine
 		or self.Tune.Electric
@@ -636,17 +645,18 @@ function UpdateFuel(self: Engine, deltaTime: number)
 		* deltaTime
 	self.Vehicle.Fuel = math.max(self.Vehicle.Fuel - consumption, 0)
 
-	local fuelSupply = self._FuelSupply + deltaTime * 3
+	local fuelSupply = self.fuelSupply + deltaTime * 3
 	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.05 then
 		local delta = 1
 			- self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity / 0.05
 		fuelSupply -= math.abs(math.noise(tick() / 3 % 1000)) ^ 0.6 * delta * 10 * deltaTime
 	end
-	self._FuelSupply = math.clamp(fuelSupply, 0, 1)
+	self.fuelSupply = math.clamp(fuelSupply, 0, 1)
 
 	if self.Vehicle.Fuel == 0 then self.Vehicle.IsOn = false end
 end
 
-function Engine.Destroy(self: Engine) end
+--- TODO: Destroy method
+function Engine.Destroy(self: EngineImpl) end
 
-return Engine
+return table.freeze({ new = Engine.new })

@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -14,26 +15,27 @@ local STRENGTH = 0.08
 local ExhaustController = {}
 ExhaustController.__index = ExhaustController
 
-export type ExhaustController = typeof(setmetatable(
-	{} :: {
-		_startEmitter: {
-			Color: ColorSequence,
-			Size: NumberSequence,
-			Transparency: NumberSequence,
-		},
-		_startCFrame: CFrame,
-		Vehicle: VehicleTypes.ClientVehicle,
-		Instance: BasePart,
-		Emitter: ParticleEmitter,
-		Motor: Motor6D,
+export type ExhaustController = {
+	Vehicle: VehicleTypes.ClientVehicle,
+	Instance: BasePart,
+}
+
+type ExhaustControllerImpl = {
+	emitter: ParticleEmitter,
+	motor: Motor6D,
+	startEmitter: {
+		Color: ColorSequence,
+		Size: NumberSequence,
+		Transparency: NumberSequence,
 	},
-	ExhaustController
-))
+	startCFrame: CFrame,
+} & ExhaustController
 
 function ExhaustController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): ExhaustController
-	local self: ExhaustController = setmetatable({}, ExhaustController) :: any
+	local self: ExhaustControllerImpl =
+		setmetatable({}, ExhaustController) :: any
 
 	self.Vehicle = vehicle
 
@@ -51,15 +53,15 @@ function ExhaustController.new(
 		return self
 	end
 
-	self._startCFrame = self.Instance.CFrame
+	self.startCFrame = self.Instance.CFrame
 
 	-- Create emitter
-	self.Emitter = ReplicatedStorage.Vehicle.ExhaustEmitter:Clone()
-	self.Emitter.Parent = attachment
-	self._startEmitter = {
-		Color = self.Emitter.Color,
-		Size = self.Emitter.Size,
-		Transparency = self.Emitter.Transparency,
+	self.emitter = ReplicatedStorage.Vehicle.ExhaustEmitter:Clone()
+	self.emitter.Parent = attachment
+	self.startEmitter = {
+		Color = self.emitter.Color,
+		Size = self.emitter.Size,
+		Transparency = self.emitter.Transparency,
 	}
 
 	-- Remove welds
@@ -67,7 +69,7 @@ function ExhaustController.new(
 		v:Destroy()
 	end
 
-	self.Motor = MakeUtil.Motor(self.Vehicle.Instance.DriveSeat, self.Instance)
+	self.motor = MakeUtil.Motor(self.Vehicle.Instance.DriveSeat, self.Instance)
 
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
@@ -76,15 +78,16 @@ function ExhaustController.new(
 	return self
 end
 
-function Update(self: ExhaustController)
-	local canUpdate = (self.Vehicle.IsOn or self.Vehicle.Starting)
+function Update(self: ExhaustControllerImpl)
+	local canUpdate = player.Character ~= nil
+		and (self.Vehicle.IsOn or self.Vehicle.Starting)
 		and (
 				player.Character:GetPivot().Position
 				- self.Vehicle.WeightPart.Position
 			).Magnitude
 			< 70
 
-	self.Emitter.Enabled = canUpdate
+	self.emitter.Enabled = canUpdate
 	if not canUpdate then return end
 
 	local rpmDelta = math.clamp(
@@ -109,7 +112,7 @@ function Update(self: ExhaustController)
 		math.noise(0, 0, t) * (1 - rpmDelta) * STRENGTH
 	)
 
-	self.Motor.Transform = CFrame.new(offset)
+	self.motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
 	rpmDelta = MathUtil.MapToRange(
@@ -120,13 +123,13 @@ function Update(self: ExhaustController)
 	local speed = rpmDelta * 7
 	local rate = rpmDelta * 30
 
-	self.Emitter.Rate = rate
-	self.Emitter.Speed = NumberRange.new(speed / 1.2, speed * 1.2)
+	self.emitter.Rate = rate
+	self.emitter.Speed = NumberRange.new(speed / 1.2, speed * 1.2)
 
 	if self.Vehicle.RPM > self.Vehicle.Engine.Tune.Redline then
-		self.Emitter.Rate *= 2
-		self.Emitter.Transparency = self._startEmitter.Transparency
-		self.Emitter.Color = ColorSequence.new(Color3.new())
+		self.emitter.Rate *= 2
+		self.emitter.Transparency = self.startEmitter.Transparency
+		self.emitter.Color = ColorSequence.new(Color3.new())
 
 		local damage = math.clamp(
 			(self.Vehicle.RPM - self.Vehicle.Engine.Tune.Redline) / 1000,
@@ -134,7 +137,7 @@ function Update(self: ExhaustController)
 			1
 		)
 		local keypoints = {}
-		for k, v in self._startEmitter.Size.Keypoints do
+		for k, v in self.startEmitter.Size.Keypoints do
 			table.insert(
 				keypoints,
 				NumberSequenceKeypoint.new(
@@ -144,10 +147,10 @@ function Update(self: ExhaustController)
 				)
 			)
 		end
-		self.Emitter.Size = NumberSequence.new(keypoints)
+		self.emitter.Size = NumberSequence.new(keypoints)
 	else
-		self.Emitter.Color = self._startEmitter.Color
-		self.Emitter.Size = self._startEmitter.Size
+		self.emitter.Color = self.startEmitter.Color
+		self.emitter.Size = self.startEmitter.Size
 
 		local transparency = 1
 			- math.clamp(
@@ -156,7 +159,7 @@ function Update(self: ExhaustController)
 				0.8
 			)
 		local keypoints = {}
-		for k, v in self._startEmitter.Transparency.Keypoints do
+		for k, v in self.startEmitter.Transparency.Keypoints do
 			table.insert(
 				keypoints,
 				NumberSequenceKeypoint.new(
@@ -166,8 +169,8 @@ function Update(self: ExhaustController)
 				)
 			)
 		end
-		self.Emitter.Transparency = NumberSequence.new(keypoints)
+		self.emitter.Transparency = NumberSequence.new(keypoints)
 	end
 end
 
-return ExhaustController
+return table.freeze({ new = ExhaustController.new })

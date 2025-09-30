@@ -1,5 +1,9 @@
 --# selene: allow(shadowing)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local RunService = game:GetService("RunService")
+
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 local function i(s: string) return `<i>{s}</i>` end
 local function t(s: string, t: number)
@@ -55,4 +59,4 @@ Config.Welcome = {
 	`{t(`Current version: {i(Config.Version)}`, 0.1)}`,
 }
 
-return Config
+return TableUtil.DeepFreeze(Config)

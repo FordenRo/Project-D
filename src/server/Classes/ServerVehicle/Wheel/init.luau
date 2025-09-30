@@ -583,4 +583,4 @@ function Initialize(self: ServerWheel)
 		)
 end
 
-return ServerWheel
+return table.freeze({ new = ServerWheel.new })

@@ -384,4 +384,4 @@ function TSCUpdate(self: Speedometer)
 	end
 end
 
-return Speedometer
+return table.freeze({ new = Speedometer.new })

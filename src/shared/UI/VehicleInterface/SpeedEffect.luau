@@ -112,4 +112,4 @@ function Update(self: SpeedEffect, deltaTime: number)
 	end
 end
 
-return SpeedEffect
+return table.freeze({ new = SpeedEffect.new })

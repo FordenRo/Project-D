@@ -1,25 +1,13 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local GarageDoor = require(ReplicatedStorage.Shared.Classes.GarageDoor)
-
 export type BaseCarService = {
 	Instance: Model & {
 		GarageDoors: Folder,
 		Triggers: Folder,
 	},
 	Occupants: { Player },
-	_RE: RemoteEvent,
-	_RF: RemoteFunction,
 }
 
-export type CarServiceClient = {
-	_GarageDoors: { GarageDoor.GarageDoor },
+export type CarServiceClient = BaseCarService
 
-	new: (instance: Model) -> CarServiceClient,
-} & BaseCarService
-
-export type CarServiceServer = {
-	new: (instance: Model) -> CarServiceServer,
-} & BaseCarService
+export type CarServiceServer = BaseCarService
 
 return {}
