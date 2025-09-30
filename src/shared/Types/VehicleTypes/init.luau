@@ -22,6 +22,7 @@ export type ServerBrakeDisk = Vehicle.ServerBrakeDisk
 export type BaseVehicle = Vehicle.BaseVehicle
 export type ClientVehicle = Vehicle.ClientVehicle
 export type DeformationController = Vehicle.DeformationController
+export type DeformationHandler = Vehicle.DeformationHandler
 export type ServerVehicle = Vehicle.ServerVehicle
 export type InputController = Vehicle.InputController
 export type Engine = Vehicle.Engine

@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
+local DeformationHandler = require(script.DeformationHandler)
 local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
@@ -26,6 +27,7 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 	trove:AttachToInstance(instance)
 
 	self.Engine = table.clone(EngineTable)
+	DeformationHandler.new(self)
 	Lights.new(self)
 	InteriorHandler.new(self)
 
@@ -46,6 +48,7 @@ function Initialize(self: ServerVehicle)
 	RemoveMassAndForces(self)
 	MakeCollider(self)
 	self:InitializeWheels()
+	InitializeBody(self)
 	ApplyWeight(self)
 	MakeGravity(self)
 	CreateFlip(self)
@@ -80,6 +83,16 @@ function MakeGravity(self: ServerVehicle)
 			0
 		)
 		force.Parent = v
+	end
+end
+
+function InitializeBody(self: ServerVehicle)
+	local index = 0
+	for _, v in self.Instance.Body:GetDescendants() do
+		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
+
+		index += 1
+		v.Name = string.format("%s.%03d", v.Name, index)
 	end
 end
 

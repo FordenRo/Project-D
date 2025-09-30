@@ -7,6 +7,9 @@ local TweenService = game:GetService("TweenService")
 local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
 local ImageUtil = require(ReplicatedStorage.Shared.Utils.ImageUtil)
+local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -21,7 +24,9 @@ local compiledScratchTextures = {}
 do
 	local taskCount = 0
 	local initialImage = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
-	for i = 2, 10 do
+	compiledScratchTextures[10] = initialImage
+
+	for i = 2, 9 do
 		task.spawn(function()
 			local image = ImageUtil.CopyImage(initialImage)
 			ImageUtil.SetImageAlpha(image, i / 10)
@@ -34,155 +39,208 @@ do
 	repeat
 		task.wait()
 	until taskCount == 0
-	initialImage:Destroy()
 end
+
+local RemoteAction = {
+	Deform = 1,
+	Scratch = 2,
+}
 
 function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): DeformationController
 	local self: DeformationController = setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = vehicle
+	self._RE = self.Vehicle.Instance:WaitForChild("_DeformRE") :: RemoteEvent
 
+	self._trove = Trove.new()
+
+	self._trove:Connect(self._RE.OnClientEvent, function(...) Replicate(self, ...) end)
+
+	InitializeDeformation(self)
+	InitializeDirt(self)
+
+	return self
+end
+
+function InitializeDeformation(self: DeformationController)
 	local collider = self.Vehicle.Instance.Body.Collider
 	local colliderMesh = CreateEditableMesh(collider)
 
-	local lastTouch = 0
-	local touchingParts = {}
-	local touchingPoints = {}
-	collider.Touched:Connect(function(touchingPart: BasePart)
-		if tick() - lastTouch < 1 / 5 then return end
-		if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
-		if touchingPart:IsDescendantOf(player.Character) then return end
-		lastTouch = tick()
+	local trove: Trove.Trove?
 
-		debug.profilebegin("CheckColliding")
-		local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
-		local directionToPart = (touchingPart.Position - collider.Position).Unit
-		for _, vertexId in colliderMesh:GetVertices() do
-			local position = colliderMesh:GetPosition(vertexId)
-			if directionToPart:Dot(position.Unit) > 0.5 then continue end
+	local function makeConnections()
+		trove = Trove.new()
+		assert(trove, "Type check")
 
-			local worldPosition = collider.CFrame:PointToWorldSpace(position / meshScale)
-			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
-				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
-			end
-		end
-		for _, faceId in colliderMesh:GetFaces() do
-			local vertices = colliderMesh:GetFaceVertices(faceId)
-			local center = Vector3.zero
-			for _, vertexId in vertices do
-				center += colliderMesh:GetPosition(vertexId)
-			end
-			center /= #vertices
-			if directionToPart:Dot(center.Unit) > 0.5 then continue end
+		local lastTouch = 0
+		local touchingParts = {}
+		local touchingPoints = {}
+		trove:Connect(collider.Touched, function(touchingPart: BasePart)
+			if tick() - lastTouch < 1 / 5 then return end
+			if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
+			if touchingPart:IsDescendantOf(player.Character) then return end
+			lastTouch = tick()
 
-			local worldPosition = collider.CFrame:PointToWorldSpace(center / meshScale)
-			for _, part in game.Workspace:GetPartBoundsInRadius(worldPosition, 0.1) do
-				if part == touchingPart then table.insert(touchingPoints, worldPosition) end
-			end
-		end
-		table.insert(touchingParts, touchingPart)
-		debug.profileend()
-	end)
+			debug.profilebegin("CheckColliding")
+			local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
 
-	local lastVelocity = Vector3.zero
-	RunService.PreSimulation:Connect(function() lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity end)
+			local positions = TableUtil.Map(colliderMesh:GetVertices(), function(vertexId: number)
+				local position = colliderMesh:GetPosition(vertexId)
+				local worldPosition = collider.CFrame:PointToWorldSpace(position / meshScale)
+				return worldPosition
+			end)
 
-	RunService.PostSimulation:Connect(function()
-		if #touchingPoints == 0 then return end
+			local touchingPartPosition = touchingPart.Position
+			table.sort(
+				positions,
+				function(a, b) return (a - touchingPartPosition).Magnitude < (b - touchingPartPosition).Magnitude end
+			)
 
-		local touchedPoints = table.clone(touchingPoints)
-		local touchedParts = table.clone(touchingParts)
-		table.clear(touchingPoints)
-		table.clear(touchingParts)
-
-		local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - lastVelocity
-		if worldHitVelocity.Magnitude < 1 then return end
-
-		debug.profilebegin("Deformation")
-		local worldHitCenter = Vector3.zero
-		for _, point in touchedPoints do
-			worldHitCenter += point
-		end
-		worldHitCenter /= #touchedPoints
-
-		HittableService:Hit(touchedParts, worldHitCenter, worldHitVelocity)
-
-		-- Play sound
-		local attachment = Instance.new("Attachment")
-		attachment.Parent = game.Workspace
-		attachment.Position = worldHitCenter
-
-		local sound = ReplicatedStorage.Vehicle.Impact:Clone()
-		sound.Ended:Once(function() attachment:Destroy() end)
-		sound.Volume = math.clamp(worldHitVelocity.Magnitude / 50, 0, 0.8)
-		sound.Distortion.Level = math.clamp(worldHitVelocity.Magnitude / 100, 0.2, 0.9)
-		sound.Playing = true
-		sound.Parent = attachment
-
-		local hitCenters = {}
-		for _, meshPart in self.Vehicle.MeshParts do
-			hitCenters[meshPart] = meshPart.CFrame:PointToObjectSpace(worldHitCenter)
-		end
-		local hitVelocities = {}
-		for _, meshPart in self.Vehicle.MeshParts do
-			hitVelocities[meshPart] = meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
-		end
-
-		for meshPart, mesh in self.Vehicle.Meshes do
-			local meshScale = mesh:GetSize() / meshPart.Size
-			local hitCenter = hitCenters[meshPart] * meshScale
-			local hitVelocity = hitVelocities[meshPart] * meshScale
-			local closestVertexDistance = (
-				(mesh:GetPosition(mesh:FindClosestVertex(hitCenter)) - hitCenter) / meshScale
-			).Magnitude
-
-			-- Apply scratch texture
-			debug.profilebegin("DrawScratch")
-			local texture = self.Vehicle.Textures[meshPart]
-			if texture and closestVertexDistance < 1 then
-				local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.2, 1)
-				local scratch = compiledScratchTextures[math.round(alpha * 10)]
-
-				local size = meshScale * 2
-				local projection = {
-					Position = hitCenter,
-					Direction = hitVelocity.Unit,
-					Size = size,
-					Up = Vector3.yAxis,
-				}
-				local config = {
-					AlphaBlendType = Enum.ImageAlphaType.Default,
-					ColorBlendType = Enum.ImageCombineType.AlphaBlend,
-					Decal = scratch,
-					FadeAngle = 0,
-					BlendIntensity = 0,
-				}
-				texture:DrawImageProjected(mesh, projection, config)
-				scratch:Destroy()
-			end
-			debug.profileend()
-
-			-- Deform
-			debug.profilebegin("Deform")
-			if worldHitVelocity.Magnitude > 10 and closestVertexDistance < 3 then
-				local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
-				for k, vertexId in vertices do
-					local position = mesh:GetPosition(vertexId)
-					local distance = ((hitCenter - position) / meshScale).Magnitude
-					if distance > 3 then continue end
-
-					local distanceMul = (3 - distance) / 3 ^ 2
-					local offset = hitVelocity.Unit * hitVelocity.Magnitude ^ 0.7 * 0.1 * distanceMul
-					offset += offset * math.random() * 0.1
-
-					mesh:SetPosition(vertexId, position + offset)
+			local found
+			for _, position in positions do
+				for _, part in game.Workspace:GetPartBoundsInRadius(position, 0.2) do
+					if part == touchingPart then
+						table.insert(touchingPoints, position)
+						found = true
+						break
+					end
 				end
+				if found then break end
+			end
+			if not found then warn("Collide touching point haven't found") end
+
+			table.insert(touchingParts, touchingPart)
+			debug.profileend()
+		end)
+
+		local lastVelocity = Vector3.zero
+		trove:Connect(
+			RunService.PreSimulation,
+			function() lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity end
+		)
+
+		trove:Connect(RunService.PostSimulation, function()
+			if #touchingPoints == 0 then return end
+
+			local touchedPoints = table.clone(touchingPoints)
+			local touchedParts = table.clone(touchingParts)
+			table.clear(touchingPoints)
+			table.clear(touchingParts)
+
+			local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - lastVelocity
+			if worldHitVelocity.Magnitude < 1 then return end
+
+			debug.profilebegin("Deformation")
+			local worldHitCenter = Vector3.zero
+			for _, point in touchedPoints do
+				worldHitCenter += point
+			end
+			worldHitCenter /= #touchedPoints
+
+			HittableService:Hit(touchedParts, worldHitCenter, worldHitVelocity)
+
+			-- Play sound
+			local attachment = Instance.new("Attachment")
+			attachment.Parent = game.Workspace
+			attachment.Position = worldHitCenter
+
+			local emitter = Instance.new("AudioEmitter")
+			emitter.Parent = attachment
+
+			local audioPlayer = Instance.new("AudioPlayer")
+			audioPlayer.Asset = "rbxassetid://7836644875"
+			audioPlayer.Volume = math.min(worldHitVelocity.Magnitude / 50, 1.5)
+			audioPlayer.Ended:Once(function() attachment:Destroy() end)
+			audioPlayer.Parent = emitter
+
+			MakeUtil.Wire(audioPlayer, emitter)
+
+			audioPlayer:Play()
+
+			local hitCenters = {}
+			for _, meshPart in self.Vehicle.MeshParts do
+				hitCenters[meshPart] = meshPart.CFrame:PointToObjectSpace(worldHitCenter)
+			end
+			local hitVelocities = {}
+			for _, meshPart in self.Vehicle.MeshParts do
+				hitVelocities[meshPart] = meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
+			end
+
+			local affectedMeshParts = {}
+			for meshPart, mesh in self.Vehicle.Meshes do
+				local meshScale = mesh:GetSize() / meshPart.Size
+				local hitCenter = hitCenters[meshPart] * meshScale
+				local hitVelocity = hitVelocities[meshPart] * meshScale
+				local closestVertexDistance = (
+					(mesh:GetPosition(mesh:FindClosestVertex(hitCenter)) - hitCenter) / meshScale
+				).Magnitude
+
+				-- Apply scratch texture
+				debug.profilebegin("DrawScratch")
+				local texture = self.Vehicle.Textures[meshPart]
+				if texture and closestVertexDistance < 1 then
+					local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.2, 1)
+					local scratchIdx = math.round(alpha * 10)
+					local scratch = compiledScratchTextures[scratchIdx]
+
+					local size = meshScale * 2
+					local projection = {
+						Position = hitCenter,
+						Direction = hitVelocity.Unit,
+						Size = size,
+						Up = Vector3.yAxis,
+					}
+					DrawScratch(mesh, texture, scratch, projection)
+					scratch:Destroy()
+
+					self._RE:FireServer(
+						RemoteAction.Scratch,
+						table.find(self.Vehicle.MeshParts, meshPart),
+						scratchIdx,
+						projection
+					)
+				end
+				debug.profileend()
+
+				-- Deform
+				debug.profilebegin("Deform")
+				if worldHitVelocity.Magnitude > 10 and closestVertexDistance < 3 then
+					local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
+					local affectedVertices = {}
+					for k, vertexId in vertices do
+						local position = mesh:GetPosition(vertexId)
+						local distance = ((hitCenter - position) / meshScale).Magnitude
+						if distance > 3 then continue end
+
+						local distanceMul = (3 - distance) / 3 ^ 2
+						local offset = hitVelocity.Unit * hitVelocity.Magnitude ^ 0.7 * 0.1 * distanceMul
+						offset += offset * math.random() * 0.1
+
+						mesh:SetPosition(vertexId, position + offset)
+						affectedVertices[vertexId] = position + offset
+					end
+					affectedMeshParts[table.find(self.Vehicle.MeshParts, meshPart)] = affectedVertices
+				end
+				debug.profileend()
+			end
+			if not TableUtil.IsEmpty(affectedMeshParts) then
+				self._RE:FireServer(RemoteAction.Deform, affectedMeshParts)
 			end
 			debug.profileend()
-		end
-		debug.profileend()
-	end)
+		end)
+	end
 
+	self._trove:Connect(self.Vehicle.DrivenChanged, function(state: boolean)
+		if state and not trove then
+			makeConnections()
+		elseif not state and trove then
+			trove:Destroy()
+			trove = nil
+		end
+	end)
+end
+
+function InitializeDirt(self: DeformationController)
 	-- Compile dirt textures
 	local compiledDirtTextures = {}
 	do
@@ -206,7 +264,7 @@ function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): Deforma
 	end
 
 	-- Dirt update
-	task.spawn(function()
+	self._trove:Add(task.spawn(function()
 		local lastDirt = 0
 		while true do
 			task.wait(1)
@@ -220,9 +278,45 @@ function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): Deforma
 				lastDirt = dirt
 			end
 		end
-	end)
+	end))
+end
 
-	return self
+function DrawScratch(mesh: EditableMesh, texture: EditableImage, decal: EditableImage, projection: { [string]: any })
+	local config = {
+		AlphaBlendType = Enum.ImageAlphaType.Default,
+		ColorBlendType = Enum.ImageCombineType.AlphaBlend,
+		Decal = decal,
+		FadeAngle = 0,
+		BlendIntensity = 0,
+	}
+	texture:DrawImageProjected(mesh, projection, config)
+end
+
+function Replicate(self: DeformationController, action: number, ...)
+	local actions = {}
+
+	actions[RemoteAction.Deform] = function(affectedMeshParts: { [number]: { Vector3 } })
+		for meshPartIdx, vertices in affectedMeshParts do
+			local meshPart = self.Vehicle.MeshParts[meshPartIdx]
+			local mesh = self.Vehicle.Meshes[meshPart]
+			if not mesh then continue end
+
+			for vertexId, newPosition in vertices do
+				mesh:SetPosition(vertexId, newPosition)
+			end
+		end
+	end
+
+	actions[RemoteAction.Scratch] = function(meshPartIdx, scratchIdx: number, projection: { [string]: any })
+		local meshPart = self.Vehicle.MeshParts[meshPartIdx]
+		local mesh = self.Vehicle.Meshes[meshPart]
+		local texture = self.Vehicle.Textures[meshPart]
+		if not mesh or not texture then return end
+
+		DrawScratch(mesh, texture, compiledScratchTextures[scratchIdx], projection)
+	end
+
+	actions[action](...)
 end
 
 function DeformationController.BlowEngine(self: DeformationController)

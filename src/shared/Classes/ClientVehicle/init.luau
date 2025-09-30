@@ -53,6 +53,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self:InitializeWheels()
 
 	self.SoundController = SoundController.new(self)
+	self.DeformationController = DeformationController.new(self)
 	ExhaustController.new(self)
 	InteriorController.new(self)
 	self.Lights = Lights.new(self)
@@ -95,7 +96,6 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
-	self.DeformationController = DeformationController.new(self)
 	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end
@@ -165,7 +165,9 @@ function InitializeBody(self: ClientVehicle)
 			end
 
 			self.Meshes[v] = mesh
-			table.insert(self.MeshParts, v)
+
+			local index = tonumber(string.match(v.Name, "%.(%d+)$"))
+			self.MeshParts[index] = v
 
 			taskCount -= 1
 		end)

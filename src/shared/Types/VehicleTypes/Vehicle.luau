@@ -94,11 +94,21 @@ export type BaseVehicle = {
 
 export type DeformationController = {
 	__index: DeformationController,
+	_RE: RemoteEvent,
+	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
 	ScratchTexture: EditableImage,
 
 	new: (vehicle: ClientVehicle) -> DeformationController,
 	BlowEngine: (self: DeformationController) -> (),
+}
+
+export type DeformationHandler = {
+	__index: DeformationHandler,
+	_RE: RemoteEvent,
+	Vehicle: ServerVehicle,
+
+	new: (vehicle: ServerVehicle) -> DeformationHandler,
 }
 
 export type SoundTypesHandler = {
