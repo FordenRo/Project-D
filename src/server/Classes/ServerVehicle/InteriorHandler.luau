@@ -13,7 +13,9 @@ export type InteriorHandler = typeof(setmetatable(
 	InteriorHandler
 ))
 
-function InteriorHandler.new(vehicle: VehicleTypes.ServerVehicle): InteriorHandler
+function InteriorHandler.new(
+	vehicle: VehicleTypes.ServerVehicle
+): InteriorHandler
 	local self: InteriorHandler = setmetatable({}, InteriorHandler) :: any
 
 	self.Vehicle = vehicle

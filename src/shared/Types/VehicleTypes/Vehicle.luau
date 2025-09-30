@@ -119,7 +119,10 @@ export type SoundTypesHandler = {
 	Vehicle: ClientVehicle,
 
 	new: (vehicle: ClientVehicle) -> SoundTypesHandler,
-	HandleSounds: (self: SoundTypesHandler, sounds: { [string]: SoundData.CachedSoundData }) -> (),
+	HandleSounds: (
+		self: SoundTypesHandler,
+		sounds: { [string]: SoundData.CachedSoundData }
+	) -> (),
 }
 
 export type SoundController = {
@@ -286,7 +289,11 @@ export type ClientWheel = {
 
 	new: (vehicle: ClientVehicle, wheel: BasePart) -> ClientWheel,
 	Update: (self: ClientWheel, deltaTime: number) -> (),
-	UpdateForces: (self: ClientWheel, torque: number, flywheelEnergy: number) -> (),
+	UpdateForces: (
+		self: ClientWheel,
+		torque: number,
+		flywheelEnergy: number
+	) -> (),
 	Destroy: (self: ClientWheel) -> (),
 } & BaseWheel
 
@@ -406,7 +413,11 @@ export type VehicleInterface = {
 		},
 		Inputs: Frame & {
 			Steering: Frame & { Left: VISlider, Right: VISlider },
-			Pedals: Frame & { Throttle: VISlider, Brake: VISlider, Clutch: VISlider },
+			Pedals: Frame & {
+				Throttle: VISlider,
+				Brake: VISlider,
+				Clutch: VISlider,
+			},
 		},
 	},
 	Speedometer: VehicleSpeedometer,
@@ -445,7 +456,10 @@ export type ClientLights = {
 
 	new: (vehicle: ClientVehicle) -> ClientLights,
 	ToggleLights: (self: ClientLights) -> (),
-	ToggleTurnState: (self: ClientLights, state: "Left" | "Right" | "Both") -> (),
+	ToggleTurnState: (
+		self: ClientLights,
+		state: "Left" | "Right" | "Both"
+	) -> (),
 }
 
 return {}

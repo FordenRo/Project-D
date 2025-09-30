@@ -1,7 +1,8 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local EngineTune = require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
+local EngineTune =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
 
 local Engine = {} :: EngineTune.Engine
 

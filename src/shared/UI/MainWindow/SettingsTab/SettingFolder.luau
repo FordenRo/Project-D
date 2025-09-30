@@ -39,13 +39,19 @@ function SettingFolder.new(instance: Frame, name: string): SettingFolder
 	-- On mouse enter
 	trove:Connect(
 		self.Instance.Button.MouseEnter,
-		function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0 or 0.5 end
+		function()
+			self.Instance.Button.BackgroundTransparency = self.Expanded and 0
+				or 0.5
+		end
 	)
 
 	-- On mouse leave
 	trove:Connect(
 		self.Instance.Button.MouseLeave,
-		function() self.Instance.Button.BackgroundTransparency = self.Expanded and 0.5 or 1 end
+		function()
+			self.Instance.Button.BackgroundTransparency = self.Expanded and 0.5
+				or 1
+		end
 	)
 
 	-- On press

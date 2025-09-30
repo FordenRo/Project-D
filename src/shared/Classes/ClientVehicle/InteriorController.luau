@@ -26,7 +26,9 @@ export type InteriorController = typeof(setmetatable(
 	InteriorController
 ))
 
-function InteriorController.new(vehicle: VehicleTypes.ClientVehicle): InteriorController
+function InteriorController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): InteriorController
 	local self: InteriorController = setmetatable({}, InteriorController) :: any
 
 	self.Vehicle = vehicle
@@ -48,7 +50,8 @@ function InteriorController.new(vehicle: VehicleTypes.ClientVehicle): InteriorCo
 end
 
 function InitializeSteeringWheel(self: InteriorController)
-	local steeringWheel = self.Vehicle.Instance.Misc:FindFirstChild("SteeringWheel")
+	local steeringWheel =
+		self.Vehicle.Instance.Misc:FindFirstChild("SteeringWheel")
 	if not steeringWheel then return end
 
 	local motor = steeringWheel:FindFirstChildOfClass("Motor6D")
@@ -56,7 +59,11 @@ function InitializeSteeringWheel(self: InteriorController)
 
 	self._trove:Connect(
 		RunService.Heartbeat,
-		function() motor.CurrentAngle = -self.Vehicle.Steering * self.Vehicle.Tune.LockToLock * math.pi end
+		function()
+			motor.CurrentAngle = -self.Vehicle.Steering
+				* self.Vehicle.Tune.LockToLock
+				* math.pi
+		end
 	)
 end
 
@@ -71,8 +78,11 @@ function InitializeHandbrake(self: InteriorController)
 	self._trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
-			motor.CurrentAngle =
-				MathUtil.Lerp(motor.CurrentAngle, self.Vehicle.PBrake and maxAngle or 0, deltaTime * 10)
+			motor.CurrentAngle = MathUtil.Lerp(
+				motor.CurrentAngle,
+				self.Vehicle.PBrake and maxAngle or 0,
+				deltaTime * 10
+			)
 		end
 	)
 end
@@ -111,7 +121,8 @@ function InitializeGearLever(self: InteriorController)
 		if gear == 0 then
 			return 0, 0
 		else
-			return (math.floor((gear - 1) / 2) - 1) * xAngle, (gear % 2 == 1 and 1 or -1) * yAngle
+			return (math.floor((gear - 1) / 2) - 1) * xAngle,
+				(gear % 2 == 1 and 1 or -1) * yAngle
 		end
 	end
 
@@ -120,19 +131,31 @@ function InitializeGearLever(self: InteriorController)
 		local lx = getPosition(lastGear)
 
 		if lx ~= x then -- Centralize
-			local tween = TweenService:Create(motor, TweenInfo.new(0.1), { Transform = CFrame.Angles(lx, 0, 0) })
+			local tween = TweenService:Create(
+				motor,
+				TweenInfo.new(0.1),
+				{ Transform = CFrame.Angles(lx, 0, 0) }
+			)
 			tween:Play()
 			tween.Completed:Wait()
 		end
 
 		do -- Horizontal move
-			local tween = TweenService:Create(motor, TweenInfo.new(0.1), { Transform = CFrame.Angles(x, 0, 0) })
+			local tween = TweenService:Create(
+				motor,
+				TweenInfo.new(0.1),
+				{ Transform = CFrame.Angles(x, 0, 0) }
+			)
 			tween:Play()
 			tween.Completed:Wait()
 		end
 
 		do -- Vertical move
-			local tween = TweenService:Create(motor, TweenInfo.new(0.1), { Transform = CFrame.Angles(x, y, 0) })
+			local tween = TweenService:Create(
+				motor,
+				TweenInfo.new(0.1),
+				{ Transform = CFrame.Angles(x, y, 0) }
+			)
 			tween:Play()
 			tween.Completed:Wait()
 		end
@@ -143,7 +166,8 @@ function InitializeGearLever(self: InteriorController)
 	self._trove:Connect(RunService.Heartbeat, function()
 		if shifting then return end
 
-		local gear = self.Vehicle.Gear ~= -1 and self.Vehicle.Gear or (#self.Vehicle.Tune.Ratios - 1)
+		local gear = self.Vehicle.Gear ~= -1 and self.Vehicle.Gear
+			or (#self.Vehicle.Tune.Ratios - 1)
 		if lastGear ~= gear then
 			shifting = true
 			changeGear(gear, lastGear)

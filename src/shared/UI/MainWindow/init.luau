@@ -11,8 +11,10 @@ local MainWindow = {}
 MainWindow.__index = MainWindow
 
 local SwitchTweenInfo = TweenInfo.new(0.2)
-local OpenTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut)
-local CloseTweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut)
+local OpenTweenInfo =
+	TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut)
+local CloseTweenInfo =
+	TweenInfo.new(0.5, Enum.EasingStyle.Cubic, Enum.EasingDirection.InOut)
 
 type TabBarButton = TextButton & {
 	TabLabel: Frame & {
@@ -61,7 +63,10 @@ function Initialize(self: MainWindow)
 		end)
 	end
 
-	self._trove:Connect(self.Instance.Background.Activated, function() self:Hide() end)
+	self._trove:Connect(
+		self.Instance.Background.Activated,
+		function() self:Hide() end
+	)
 end
 
 function MainWindow.Show(self: MainWindow, tab: string?)
@@ -73,11 +78,19 @@ function MainWindow.Show(self: MainWindow, tab: string?)
 	self.Visible = true
 	self.Instance.Enabled = true
 
-	local tween = TweenService:Create(self.Instance.Window, OpenTweenInfo, { Position = UDim2.fromScale(0.5, 0.5) })
+	local tween = TweenService:Create(
+		self.Instance.Window,
+		OpenTweenInfo,
+		{ Position = UDim2.fromScale(0.5, 0.5) }
+	)
 	tween.Completed:Once(function() tween:Destroy() end)
 	tween:Play()
 
-	local bgTween = TweenService:Create(self.Instance.Background, OpenTweenInfo, { BackgroundTransparency = 0.5 })
+	local bgTween = TweenService:Create(
+		self.Instance.Background,
+		OpenTweenInfo,
+		{ BackgroundTransparency = 0.5 }
+	)
 	bgTween.Completed:Once(function() tween:Destroy() end)
 	bgTween:Play()
 
@@ -91,7 +104,11 @@ function MainWindow.Hide(self: MainWindow)
 	if not self.Visible then return end
 	self.Visible = false
 
-	local tween = TweenService:Create(self.Instance.Window, CloseTweenInfo, { Position = UDim2.fromScale(0.5, 1.5) })
+	local tween = TweenService:Create(
+		self.Instance.Window,
+		CloseTweenInfo,
+		{ Position = UDim2.fromScale(0.5, 1.5) }
+	)
 	tween.Completed:Once(function()
 		self.Instance.Enabled = false
 		tween:Destroy()
@@ -106,7 +123,9 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 	local lastTab = self.CurrentTab
 	self.CurrentTab = tab
 
-	for _, button in self.Instance.Window.TabBar.Container:GetChildren() :: { TabBarButton } do
+	for _, button in
+		self.Instance.Window.TabBar.Container:GetChildren() :: { TabBarButton }
+	do
 		if not button:IsA("TextButton") then continue end
 
 		button.TabLabel.Title.TextTransparency = 0.5
@@ -115,7 +134,9 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 		button.Interactable = true
 	end
 
-	local tabButton = self.Instance.Window.TabBar.Container:FindFirstChild(tab .. "Tab") :: TabBarButton
+	local tabButton = self.Instance.Window.TabBar.Container:FindFirstChild(
+		tab .. "Tab"
+	) :: TabBarButton
 	tabButton.TabLabel.Title.TextTransparency = 0
 	tabButton.TabLabel.Icon.ImageTransparency = 0
 	tabButton.TabSelection.Visible = true
@@ -123,18 +144,24 @@ function MainWindow.SetTab(self: MainWindow, tab: string, skipAnim: boolean?)
 
 	if not self._TabModules[tab] then
 		local tabModule = require(script:FindFirstChild(tab .. "Tab")) :: any
-		self._TabModules[tab] = tabModule.new(self.Instance.Window.Content:FindFirstChild(tab))
+		self._TabModules[tab] =
+			tabModule.new(self.Instance.Window.Content:FindFirstChild(tab))
 	end
 
 	for tabContent: ScrollingFrame, position in self._TabPositions do
-		tabContent.Visible = tabContent.Name == lastTab or tabContent.Name == tab
+		tabContent.Visible = tabContent.Name == lastTab
+			or tabContent.Name == tab
 
 		local newPosition = UDim2.fromScale(position - tabButton.LayoutOrder, 0)
 		if skipAnim then
 			tabContent.Position = newPosition
 			continue
 		end
-		local tween = TweenService:Create(tabContent, SwitchTweenInfo, { Position = newPosition })
+		local tween = TweenService:Create(
+			tabContent,
+			SwitchTweenInfo,
+			{ Position = newPosition }
+		)
 		tween.Completed:Once(function()
 			if tabContent.Name == lastTab then tabContent.Visible = false end
 			tween:Destroy()

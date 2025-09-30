@@ -26,11 +26,15 @@ function HittableService.new(): HittableService
 		hittableRE.Name = "HittableRE"
 		hittableRE.Parent = ReplicatedStorage
 
-		hittableRE.OnServerEvent:Connect(function(_, hit: HitResult) silentHit(hit) end)
+		hittableRE.OnServerEvent:Connect(
+			function(_, hit: HitResult) silentHit(hit) end
+		)
 	else
 		hittableRE = ReplicatedStorage:WaitForChild("HittableRE")
 
-		hittableRE.OnClientEvent:Connect(function(hit: HitResult) silentHit(hit) end)
+		hittableRE.OnClientEvent:Connect(
+			function(hit: HitResult) silentHit(hit) end
+		)
 	end
 
 	return self
@@ -40,7 +44,10 @@ function silentHit(hit: HitResult)
 	if registeredParts[hit.Part] then registeredParts[hit.Part](hit) end
 end
 
-function HittableService:Register(parts: BasePart | { BasePart }, callback: HitCallback)
+function HittableService:Register(
+	parts: BasePart | { BasePart },
+	callback: HitCallback
+)
 	if typeof(parts) == "table" then
 		for _, part in parts do
 			registeredParts[part] = callback
@@ -50,7 +57,11 @@ function HittableService:Register(parts: BasePart | { BasePart }, callback: HitC
 	end
 end
 
-function HittableService:Hit(parts: BasePart | { BasePart }, position: Vector3, velocity: Vector3)
+function HittableService:Hit(
+	parts: BasePart | { BasePart },
+	position: Vector3,
+	velocity: Vector3
+)
 	if typeof(parts) == "table" then
 		for _, part in parts do
 			self:Hit(part, position, velocity)

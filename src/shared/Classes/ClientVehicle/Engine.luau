@@ -2,10 +2,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local EngineTable = require(script.Parent.EngineTable)
-local EngineTune = require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
+local EngineTune =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehicleConstants =
+	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Engine = {}
@@ -19,7 +21,9 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	self.Vehicle = vehicle
 	self.Tune = require(
 		assert(
-			ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(self.Vehicle.Tune.Engine),
+			ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(
+				self.Vehicle.Tune.Engine
+			),
 			"Engine tune not found for vehicle: " .. self.Vehicle.Instance.Name
 		) :: any
 	) :: EngineTune.Engine
@@ -35,8 +39,20 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	return self
 end
 
-function calcPower(m: number, n: number, p: number, q: number, M: number, b: number, x: number)
-	return math.clamp(M - ((q - n) / (b ^ p - b ^ m) * (b ^ x - b ^ m) + n), 0, M)
+function calcPower(
+	m: number,
+	n: number,
+	p: number,
+	q: number,
+	M: number,
+	b: number,
+	x: number
+)
+	return math.clamp(
+		M - ((q - n) / (b ^ p - b ^ m) * (b ^ x - b ^ m) + n),
+		0,
+		M
+	)
 end
 
 function Engine.Update(self: Engine, deltaTime: number)
@@ -47,7 +63,9 @@ function Engine.Update(self: Engine, deltaTime: number)
 	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
 		if not wheel.IsDriven then continue end
 
-		driveWheelSpeed += wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X * (wheel.IsRight and 1 or -1)
+		driveWheelSpeed += wheel.Instance.CFrame:VectorToObjectSpace(
+			wheel.Instance.AssemblyAngularVelocity
+		).X * (wheel.IsRight and 1 or -1)
 		driveCount += 1
 	end
 	driveWheelSpeed /= driveCount
@@ -62,14 +80,16 @@ function Engine.Update(self: Engine, deltaTime: number)
 	local CVTRatio
 	if self.Vehicle.Tune.ClutchType == "CVT" then
 		CVTRatio = math.clamp(
-			(self.Vehicle.Tune.CVTRPM * self.Throttle) / (math.abs(driveWheelSpeed) * self.Vehicle.FinalDriveRatio),
+			(self.Vehicle.Tune.CVTRPM * self.Throttle)
+				/ (math.abs(driveWheelSpeed) * self.Vehicle.FinalDriveRatio),
 			self.Vehicle.Tune.CVTMinRatio,
 			self.Vehicle.Tune.CVTMaxRatio
 		)
 	end
 
 	-- Update ratio
-	self.Vehicle.CurrentRatio = self.Vehicle.Tune.ClutchType == "CVT" and CVTRatio
+	self.Vehicle.CurrentRatio = self.Vehicle.Tune.ClutchType == "CVT"
+			and CVTRatio
 		or self.Vehicle.Tune.Ratios[self.Vehicle.Gear + 2 + (ParkingGearEnabled and 1 or 0)]
 
 	-- Flywheel/clutch-dumping
@@ -90,7 +110,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 	elseif self.Vehicle.Shifting and self.Vehicle._ShiftDown then
 		self.Throttle = self.Vehicle.Tune.ShiftThrot / 100
 	else
-		self.Throttle = math.max(self.Vehicle.Throttle, self.Tune.IdleThrottle / 100)
+		self.Throttle =
+			math.max(self.Vehicle.Throttle, self.Tune.IdleThrottle / 100)
 	end
 
 	if self.Vehicle.IsOn then
@@ -104,12 +125,20 @@ function Engine.Update(self: Engine, deltaTime: number)
 	if
 		self.Vehicle.Clutch > 0
 		and (
-			(self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -2))
+			(
+					self.Vehicle.Gear == 0
+					or (ParkingGearEnabled and self.Vehicle.Gear == -2)
+				)
 				and self.Vehicle.Tune.NeutralLimit
-			or self.Vehicle.Tune.NeutralLimit and self.Vehicle.Tune.LimitClutch
+			or self.Vehicle.Tune.NeutralLimit
+				and self.Vehicle.Tune.LimitClutch
 		)
 	then
-		goalMax = MathUtil.Lerp(self.Tune.Redline, self.Vehicle.Tune.NeutralRevRPM, self.Vehicle.Clutch)
+		goalMax = MathUtil.Lerp(
+			self.Tune.Redline,
+			self.Vehicle.Tune.NeutralRevRPM,
+			self.Vehicle.Clutch
+		)
 	end
 
 	-- Rev limiter/speed limiter
@@ -120,7 +149,8 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 	if self._RevLimiting then self.Throttle = self.Tune.IdleThrottle / 100 end
 
-	local speedLimit = self.Vehicle.Gear < 0 and self.Vehicle.Tune.ReverseSpeed or self.Vehicle.Tune.SpeedLimit
+	local speedLimit = self.Vehicle.Gear < 0 and self.Vehicle.Tune.ReverseSpeed
+		or self.Vehicle.Tune.SpeedLimit
 	if speedLimit > 0 then
 		self.Throttle = math.min(
 			self.Throttle,
@@ -128,7 +158,10 @@ function Engine.Update(self: Engine, deltaTime: number)
 				1
 					- math.clamp(
 						(
-							(self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6))
+							(
+								self.Vehicle.Velocity.Magnitude
+								/ (Units.Velocity_mdivs / 3.6)
+							)
 							- (speedLimit - self.Vehicle.Tune.SLimitGradient)
 						) / self.Vehicle.Tune.SLimitGradient,
 						0,
@@ -143,8 +176,11 @@ function Engine.Update(self: Engine, deltaTime: number)
 			self.Vehicle.Brake,
 			(self.Vehicle.Tune.SLimitBrake and speedLimit > 0)
 					and math.clamp(
-						(self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6) - speedLimit)
-							/ self.Vehicle.Tune.SLimitGradient,
+						(
+							self.Vehicle.Velocity.Magnitude
+								/ (Units.Velocity_mdivs / 3.6)
+							- speedLimit
+						) / self.Vehicle.Tune.SLimitGradient,
 						0,
 						1
 					)
@@ -153,11 +189,18 @@ function Engine.Update(self: Engine, deltaTime: number)
 	end
 
 	-- Idle
-	if self.Vehicle.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) and self.Vehicle.IsOn then
+	if
+		self.Vehicle.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0)
+		and self.Vehicle.IsOn
+	then
 		self.Throttle = math.max(
 			self.Throttle,
 			math.clamp(
-				(self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) - self.Vehicle.RPM) / (self.Tune.IdleDamping or 400),
+				(
+					self.Tune.IdleRPM
+					+ (self.Tune.IdlePadding or 0)
+					- self.Vehicle.RPM
+				) / (self.Tune.IdleDamping or 400),
 				0,
 				1
 			)
@@ -167,7 +210,10 @@ function Engine.Update(self: Engine, deltaTime: number)
 	-- Apply fuel supply
 	self.Throttle *= self._FuelSupply
 
-	if (self.Vehicle.Tune.Engine or self.Tune.Electric) and not self.Vehicle.Starting then
+	if
+		(self.Vehicle.Tune.Engine or self.Tune.Electric)
+		and not self.Vehicle.Starting
+	then
 		self._GoalRPM = math.clamp(
 			self.Vehicle.RPM
 				- (self.Tune.RevDecay * deltaTime)
@@ -200,14 +246,20 @@ function Engine.Update(self: Engine, deltaTime: number)
 
 	-- Set RPM
 	local aRPM = math.max(
-		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime) * (1 - self.Clutch ^ 0.5)
+		(self._GoalRPM * (1 - deltaTime) + wheelRPM * deltaTime)
+				* (1 - self.Clutch ^ 0.5)
 			+ self._GoalRPM * self.Clutch ^ 0.5,
 		revMin
 	)
-	local clutchP = math.min(math.abs(aRPM - self.Vehicle.RPM) / (self.Tune.Flywheel * deltaTime), 0.9)
+	local clutchP = math.min(
+		math.abs(aRPM - self.Vehicle.RPM) / (self.Tune.Flywheel * deltaTime),
+		0.9
+	)
 	self.Vehicle.RPM = aRPM * (1 - clutchP) + self.Vehicle.RPM * clutchP
 
-	if self.Tune.OverRev == false and self.Vehicle.RPM > self.Tune.Redline then self.Vehicle.RPM = self.Tune.Redline end
+	if self.Tune.OverRev == false and self.Vehicle.RPM > self.Tune.Redline then
+		self.Vehicle.RPM = self.Tune.Redline
+	end
 
 	if
 		self.Vehicle.RPM <= (self.Tune.IdleRPM / 4)
@@ -217,23 +269,40 @@ function Engine.Update(self: Engine, deltaTime: number)
 		self.Vehicle.IsOn = false
 	end
 
-	if self.Vehicle.RPM > self.Tune.IgnitionMinRPM and (tick() - self._LastOnTime > 0.2) and self.Health > 0 then
+	if
+		self.Vehicle.RPM > self.Tune.IgnitionMinRPM
+		and (tick() - self._LastOnTime > 0.2)
+		and self.Health > 0
+	then
 		self.Vehicle.IsOn = true
 	end
 
 	-- Clutch
 	local forceClutch = self.Vehicle.Shifting
-		or (self.Vehicle.Gear == 0 or (ParkingGearEnabled and self.Vehicle.Gear == -1))
+		or (
+			self.Vehicle.Gear == 0
+			or (ParkingGearEnabled and self.Vehicle.Gear == -1)
+		)
 	if forceClutch then self.Clutch = 1 end
 
 	local clutchModulate = 0
 	if self.Vehicle.Tune.Clutch then
 		if self.Vehicle.AutoClutch then
-			if self.Vehicle.Tune.ClutchType == "Clutch" or self.Vehicle.Tune.ClutchType == "CVT" then
-				local clutchKick = self.Clutch * (self.Vehicle.Tune.ClutchEngage / 100)
-				local ClRPMInfluence =
-					math.max(self.Vehicle.RPM * self.Vehicle.Tune.ClutchRPMMult / self.Tune.Redline, 0)
-				if self.Vehicle.Tune.ClutchMode == "New" then ClRPMInfluence = 0 end
+			if
+				self.Vehicle.Tune.ClutchType == "Clutch"
+				or self.Vehicle.Tune.ClutchType == "CVT"
+			then
+				local clutchKick = self.Clutch
+					* (self.Vehicle.Tune.ClutchEngage / 100)
+				local ClRPMInfluence = math.max(
+					self.Vehicle.RPM
+						* self.Vehicle.Tune.ClutchRPMMult
+						/ self.Tune.Redline,
+					0
+				)
+				if self.Vehicle.Tune.ClutchMode == "New" then
+					ClRPMInfluence = 0
+				end
 				clutchModulate = math.min(
 					(
 						(
@@ -248,19 +317,29 @@ function Engine.Update(self: Engine, deltaTime: number)
 					),
 					1
 				)
-			elseif self.Vehicle.Tune.ClutchType == "TorqueConverter" and self.Vehicle.Tune.TQLock then
+			elseif
+				self.Vehicle.Tune.ClutchType == "TorqueConverter"
+				and self.Vehicle.Tune.TQLock
+			then
 				if
 					(
 						self.Throttle <= self.Tune.IdleThrottle / 100
-						and self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6)
+						and self.Vehicle.Velocity.Magnitude
+								/ (Units.Velocity_mdivs / 3.6)
 							< self.Vehicle.Tune.SpeedEngage
 					)
 					or (
 						self.Throttle > self.Tune.IdleThrottle / 100
-						and (self.Vehicle.RPM < self.Vehicle.Tune.RPMEngage and wheelRPM < self.Vehicle.Tune.RPMEngage)
+						and (
+							self.Vehicle.RPM < self.Vehicle.Tune.RPMEngage
+							and wheelRPM < self.Vehicle.Tune.RPMEngage
+						)
 					)
 				then
-					clutchModulate = math.min(clutchModulate * (self.Vehicle.Tune.ClutchEngage / 100), 1)
+					clutchModulate = math.min(
+						clutchModulate * (self.Vehicle.Tune.ClutchEngage / 100),
+						1
+					)
 				else
 					clutchModulate = math.min(
 						clutchModulate * (self.Vehicle.Tune.ClutchEngage / 100)
@@ -268,8 +347,12 @@ function Engine.Update(self: Engine, deltaTime: number)
 						1
 					)
 				end
-			elseif self.Vehicle.Tune.ClutchType == "TorqueConverter" and not self.Vehicle.Tune.TQLock then
-				clutchModulate = math.min((self.Vehicle.RPM / self.Tune.Redline) * 0.7, 1)
+			elseif
+				self.Vehicle.Tune.ClutchType == "TorqueConverter"
+				and not self.Vehicle.Tune.TQLock
+			then
+				clutchModulate =
+					math.min((self.Vehicle.RPM / self.Tune.Redline) * 0.7, 1)
 			end
 			if self.Vehicle.Clutch > 0 and not forceClutch then
 				self.Clutch = self.Vehicle.Clutch
@@ -332,10 +415,14 @@ function Engine.Update(self: Engine, deltaTime: number)
 					x
 				)
 			or 0
-		local globalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+		local globalTemperature =
+			game.Workspace:GetAttribute("GlobalTemperature") :: number
 		local AirPressurePercent = math.exp(
-			(-9.80665 * 0.0289644 * (self.Vehicle.Center.Y * Units.Length_mm / 1000))
-				/ (8.3142 * (globalTemperature + 273.15))
+			(
+				-9.80665
+				* 0.0289644
+				* (self.Vehicle.Center.Y * Units.Length_mm / 1000)
+			) / (8.3142 * (globalTemperature + 273.15))
 		) -- look up the barometric formula
 		NTorque = (self.Vehicle.Tune.Engine and 1 or 0)
 			* (self.Tune.PeakTorque - NIdleTorque - NRedlineTorque + VVL)
@@ -345,13 +432,17 @@ function Engine.Update(self: Engine, deltaTime: number)
 		if self.Tune.Turbochargers > 0 then
 			local _TBoostGoal = self.Tune.Turbochargers
 				* (
-					(self.Throttle ^ 3) * (100 / self.Tune.T_Size) * ((NTorque * x) / 5.252)
+					(self.Throttle ^ 3)
+						* (100 / self.Tune.T_Size)
+						* ((NTorque * x) / 5.252)
 					- calcPower(
 						self.Tune.IdleRPM / 1000,
 						self.Tune.T_IdleBoost,
 						self.Tune.T_PeakRPM / 1000,
 						self.Tune.T_Boost,
-						(self.Throttle ^ 3) * (100 / self.Tune.T_Size) * ((NTorque * x) / 5.252),
+						(self.Throttle ^ 3)
+							* (100 / self.Tune.T_Size)
+							* ((NTorque * x) / 5.252),
 						1 / self.Tune.T_Curve,
 						x
 					)
@@ -359,15 +450,24 @@ function Engine.Update(self: Engine, deltaTime: number)
 			if _TBoostGoal > self.BoostTurbo then
 				self.BoostTurbo = self.BoostTurbo
 					+ math.min(
-							self.Tune.T_SpoolIncrease * (_TBoostGoal - self.BoostTurbo),
-							self.Tune.T_SpoolIncrease * (10 / self.Tune.T_Size) * self.Tune.Turbochargers
+							self.Tune.T_SpoolIncrease
+								* (_TBoostGoal - self.BoostTurbo),
+							self.Tune.T_SpoolIncrease
+								* (10 / self.Tune.T_Size)
+								* self.Tune.Turbochargers
 						)
 						* deltaTime -- i should probably base this off of the maximum horsepower instead of the RPM, but it's the same thing anyway
 			elseif self.BoostTurbo > _TBoostGoal then
 				self.BoostTurbo = self.BoostTurbo
-					+ self.Tune.T_SpoolDecrease * (_TBoostGoal - self.BoostTurbo) * deltaTime
+					+ self.Tune.T_SpoolDecrease
+						* (_TBoostGoal - self.BoostTurbo)
+						* deltaTime
 			end
-			self.BoostTurbo = math.clamp(self.BoostTurbo, 0, self.Tune.Turbochargers * self.Tune.T_Boost)
+			self.BoostTurbo = math.clamp(
+				self.BoostTurbo,
+				0,
+				self.Tune.Turbochargers * self.Tune.T_Boost
+			)
 			TTorque = self.BoostTurbo * self.Tune.T_Efficiency
 			self.HpTurbo, self.TqTurbo = (TTorque * x) / 5.252, TTorque
 		end
@@ -394,17 +494,28 @@ function Engine.Update(self: Engine, deltaTime: number)
 				* self.Throttle
 				* (self.Tune.S_Boost - SIdleBoost - SRedlineBoost)
 			if _SBoostGoal > self.BoostSuper then
-				self.BoostSuper =
-					math.min(self.BoostSuper + self.Tune.S_Boost * self.Tune.S_Response * deltaTime, _SBoostGoal)
+				self.BoostSuper = math.min(
+					self.BoostSuper
+						+ self.Tune.S_Boost
+							* self.Tune.S_Response
+							* deltaTime,
+					_SBoostGoal
+				)
 			elseif self.BoostSuper > _SBoostGoal then
-				self.BoostSuper =
-					math.max(self.BoostSuper - self.Tune.S_Boost * self.Tune.S_Response * deltaTime, _SBoostGoal)
+				self.BoostSuper = math.max(
+					self.BoostSuper
+						- self.Tune.S_Boost
+							* self.Tune.S_Response
+							* deltaTime,
+					_SBoostGoal
+				)
 			end
 			STorque = self.BoostSuper * self.Tune.S_Efficiency
 			self.HpSuper, self.TqSuper = (STorque * x) / 5.252, STorque
 		end
 		if self.Tune.Turbochargers > 0 or self.Tune.Superchargers > 0 then
-			self.HpBoosted, self.TqBoosted = ((TTorque + STorque) * x) / 5.252, TTorque + STorque
+			self.HpBoosted, self.TqBoosted =
+				((TTorque + STorque) * x) / 5.252, TTorque + STorque
 			self.Boost = self.BoostTurbo + self.BoostSuper
 		end
 	end
@@ -432,16 +543,26 @@ function Engine.Update(self: Engine, deltaTime: number)
 	self.Horsepower, self.Torque = (TotalTorque * x) / 5.252, TotalTorque
 
 	-- Exit engine
-	local outTorque = self.Torque * self.Vehicle.CurrentRatio * self.Vehicle.FinalDrive
-	local cGrav = (VehicleConstants.GravComp > 0 and VehicleConstants.GravComp or game.Workspace.Gravity)
+	local outTorque = self.Torque
+		* self.Vehicle.CurrentRatio
+		* self.Vehicle.FinalDrive
+	local cGrav = (
+		VehicleConstants.GravComp > 0 and VehicleConstants.GravComp
+		or game.Workspace.Gravity
+	)
 		* self.Tune.InclineComp
 		/ 35
-	local iComp = self.Vehicle.Center.LookVector.Y * cGrav * math.sign(self.Vehicle.Gear)
+	local iComp = self.Vehicle.Center.LookVector.Y
+		* cGrav
+		* math.sign(self.Vehicle.Gear)
 	outTorque = outTorque * math.max(1, (1 + iComp))
 
 	-- Update Wheels
 	for _, wheel in self.Vehicle.Wheels do
-		(wheel :: VehicleTypes.ClientWheel):UpdateForces(outTorque, flywheelEnergy)
+		(wheel :: VehicleTypes.ClientWheel):UpdateForces(
+			outTorque,
+			flywheelEnergy
+		)
 	end
 
 	deltaTime /= 60
@@ -451,12 +572,24 @@ function Engine.Update(self: Engine, deltaTime: number)
 end
 
 function UpdateHealth(self: Engine, deltaTime: number)
-	if not self.Vehicle.Tune.Engine or self.Tune.Electric or not self.Vehicle.IsOn then return end
+	if
+		not self.Vehicle.Tune.Engine
+		or self.Tune.Electric
+		or not self.Vehicle.IsOn
+	then
+		return
+	end
 
-	local damage = self.Tune.RPMDamage * (self.Vehicle.RPM / self.Tune.Redline) ^ 2 / 3600
+	local damage = self.Tune.RPMDamage
+		* (self.Vehicle.RPM / self.Tune.Redline) ^ 2
+		/ 3600
 	damage += (math.max(self.Vehicle.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
 	damage += self.Tune.HotDamage * math.clamp(
-		MathUtil.MapToRange(self.Temperature, self.Tune.OperatingEngineTemp, self.Tune.EngineBurnTemp),
+		MathUtil.MapToRange(
+			self.Temperature,
+			self.Tune.OperatingEngineTemp,
+			self.Tune.EngineBurnTemp
+		),
 		0,
 		1
 	) ^ 1.5 / 3600
@@ -473,8 +606,11 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 	if not self.Vehicle.Tune.Engine or self.Health == 0 then return end
 
 	local kW = self.Horsepower / 1.35962
-	local heat = kW * MathUtil.Lerp(1, 2, self.Vehicle.RPM / self.Tune.Redline) / 120
-	local tDelta = self.Temperature - (game.Workspace:GetAttribute("GlobalTemperature") :: number)
+	local heat = kW
+		* MathUtil.Lerp(1, 2, self.Vehicle.RPM / self.Tune.Redline)
+		/ 120
+	local tDelta = self.Temperature
+		- game.Workspace:GetAttribute("GlobalTemperature") :: number
 	local cooling = tDelta * 0.015
 	cooling += (self.Vehicle.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
 	self.Temperature += (heat - cooling) * deltaTime
@@ -483,15 +619,27 @@ function UpdateTemperature(self: Engine, deltaTime: number)
 end
 
 function UpdateFuel(self: Engine, deltaTime: number)
-	if not self.Vehicle.Tune.Engine or self.Tune.Electric or not self.Vehicle.IsOn then return end
+	if
+		not self.Vehicle.Tune.Engine
+		or self.Tune.Electric
+		or not self.Vehicle.IsOn
+	then
+		return
+	end
 
 	local kW = self.Horsepower * 1.35962
-	local consumption = self.Vehicle.Tune.BSFC * kW / 3600 / 1000 / self.Vehicle.Tune.FuelDensity * deltaTime
+	local consumption = self.Vehicle.Tune.BSFC
+		* kW
+		/ 3600
+		/ 1000
+		/ self.Vehicle.Tune.FuelDensity
+		* deltaTime
 	self.Vehicle.Fuel = math.max(self.Vehicle.Fuel - consumption, 0)
 
 	local fuelSupply = self._FuelSupply + deltaTime * 3
 	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.05 then
-		local delta = 1 - self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity / 0.05
+		local delta = 1
+			- self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity / 0.05
 		fuelSupply -= math.abs(math.noise(tick() / 3 % 1000)) ^ 0.6 * delta * 10 * deltaTime
 	end
 	self._FuelSupply = math.clamp(fuelSupply, 0, 1)

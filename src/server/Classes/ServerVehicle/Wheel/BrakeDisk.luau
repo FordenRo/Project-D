@@ -9,7 +9,10 @@ ServerBrakeDisk.__index = ServerBrakeDisk
 
 type ServerBrakeDisk = VehicleTypes.ServerBrakeDisk
 
-function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): ServerBrakeDisk
+function ServerBrakeDisk.new(
+	wheel: VehicleTypes.ServerWheel,
+	instance: BasePart
+): ServerBrakeDisk
 	local self: ServerBrakeDisk = setmetatable({}, ServerBrakeDisk) :: any
 
 	self.Instance = instance
@@ -20,7 +23,10 @@ function ServerBrakeDisk.new(wheel: VehicleTypes.ServerWheel, instance: BasePart
 	self._RE.Parent = instance
 
 	local trove = Trove.new()
-	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:Connect(
+		self._RE.OnServerEvent,
+		function(...) Replicate(self, ...) end
+	)
 	trove:AttachToInstance(instance)
 
 	return self
@@ -29,7 +35,13 @@ end
 function Replicate(self: ServerBrakeDisk, sender: Player, buf: buffer)
 	for _, player in Players:GetPlayers() do
 		if player == sender then continue end
-		if not player.Character or (player.Character:GetPivot().Position - self.Instance.Position).Magnitude > 100 then
+		if
+			not player.Character
+			or (
+					player.Character:GetPivot().Position - self.Instance.Position
+				).Magnitude
+				> 100
+		then
 			self._RE:FireClient(player)
 			continue
 		end

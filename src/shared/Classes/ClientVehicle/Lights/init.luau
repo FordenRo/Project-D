@@ -76,15 +76,25 @@ end
 
 function ClientLights.ToggleLights(self: ClientLights)
 	if not processInput(self) then return end
-	self.State = self.State == "Off" and "Low" or self.State == "Low" and "High" or "Off" :: any
+	self.State = self.State == "Off" and "Low"
+		or self.State == "Low" and "High"
+		or "Off" :: any
 end
 
-function ClientLights.ToggleTurnState(self: ClientLights, turnState: "Left" | "Right" | "Both")
+function ClientLights.ToggleTurnState(
+	self: ClientLights,
+	turnState: "Left" | "Right" | "Both"
+)
 	if not processInput(self) then return end
 	self.TurnState = self.TurnState ~= turnState and turnState or "Off"
 end
 
-function setTypeBrightness(self: ClientLights, type: string, brightness: boolean | number, side: Side?)
+function setTypeBrightness(
+	self: ClientLights,
+	type: string,
+	brightness: boolean | number,
+	side: Side?
+)
 	if brightness == true then
 		brightness = 1
 	elseif brightness == false then
@@ -118,20 +128,26 @@ function Replicate(self: ClientLights, buf: buffer?)
 end
 
 function Update(self: ClientLights)
-	setTypeBrightness(self, "Rear", self.Vehicle.Brake > 0.5 and 1 or self.State ~= "Off" and 0.5 or 0)
+	setTypeBrightness(
+		self,
+		"Rear",
+		self.Vehicle.Brake > 0.5 and 1 or self.State ~= "Off" and 0.5 or 0
+	)
 	setTypeBrightness(self, "Brake", self.Vehicle.Brake > 0.5)
 	setTypeBrightness(self, "Reverse", self.Vehicle.Gear == -1)
 	setTypeBrightness(self, "Front", LIGHT_POWER[self.State])
 	setTypeBrightness(
 		self,
 		"TurnSignal",
-		(self.TurnState == "Left" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0,
+		(self.TurnState == "Left" or self.TurnState == "Both")
+			and math.round(tick() * 2) % 2 == 0,
 		"Left"
 	)
 	setTypeBrightness(
 		self,
 		"TurnSignal",
-		(self.TurnState == "Right" or self.TurnState == "Both") and math.round(tick() * 2) % 2 == 0,
+		(self.TurnState == "Right" or self.TurnState == "Both")
+			and math.round(tick() * 2) % 2 == 0,
 		"Right"
 	)
 end

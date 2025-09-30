@@ -227,9 +227,15 @@ end
 	print(t2) --> {B = 40, C = 60}
 	```
 ]]
-function TableUtil.Filter<T>(t: { T }, predicate: (T, any, { T }) -> boolean): { T }
+function TableUtil.Filter<T>(
+	t: { T },
+	predicate: (T, any, { T }) -> boolean
+): { T }
 	assert(typeof(t) == "table", "First argument must be a table")
-	assert(typeof(predicate) == "function", "Second argument must be a function")
+	assert(
+		typeof(predicate) == "function",
+		"Second argument must be a function"
+	)
 
 	local newT = table.create(#t)
 	if #t > 0 then
@@ -264,9 +270,16 @@ end
 	print(result) --> 100
 	```
 ]]
-function TableUtil.Reduce<T, R>(t: { T }, predicate: (R, T, any, { T }) -> R, init: R): R
+function TableUtil.Reduce<T, R>(
+	t: { T },
+	predicate: (R, T, any, { T }) -> R,
+	init: R
+): R
 	assert(typeof(t) == "table", "First argument must be a table")
-	assert(typeof(predicate) == "function", "Second argument must be a function")
+	assert(
+		typeof(predicate) == "function",
+		"Second argument must be a function"
+	)
 
 	local result = init :: R
 	if #t > 0 then
@@ -457,7 +470,10 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.FlatMap<T, M>(tbl: { T }, callback: (T, number, { T }) -> M): { M }
+function TableUtil.FlatMap<T, M>(
+	tbl: { T },
+	callback: (T, number, { T }) -> M
+): { M }
 	return TableUtil.Flat(TableUtil.Map(tbl, callback))
 end
 
@@ -533,7 +549,10 @@ end
 	guaranteed, and thus the result could be different if there are more
 	than one possible matches given the data and callback function.
 ]]
-function TableUtil.Find<K, V>(tbl: { [K]: V }, callback: (V, K, { [K]: V }) -> boolean): (V?, K?)
+function TableUtil.Find<K, V>(
+	tbl: { [K]: V },
+	callback: (V, K, { [K]: V }) -> boolean
+): (V?, K?)
 	for k, v in tbl do
 		if callback(v, k, tbl) then return v, k end
 	end
@@ -554,7 +573,10 @@ end
 	print("All above zero:", allAboveZero) --> All above zero: true
 	```
 ]]
-function TableUtil.Every<K, V>(tbl: { [K]: V }, callback: (V, K, { [K]: V }) -> boolean): boolean
+function TableUtil.Every<K, V>(
+	tbl: { [K]: V },
+	callback: (V, K, { [K]: V }) -> boolean
+): boolean
 	for k, v in tbl do
 		if not callback(v, k, tbl) then return false end
 	end
@@ -575,7 +597,10 @@ end
 	print("Some below twenty:", someBelowTwenty) --> Some below twenty: true
 	```
 ]]
-function TableUtil.Some<K, V>(tbl: { [K]: V }, callback: (V, K, { [K]: V }) -> boolean): boolean
+function TableUtil.Some<K, V>(
+	tbl: { [K]: V },
+	callback: (V, K, { [K]: V }) -> boolean
+): boolean
 	for k, v in tbl do
 		if callback(v, k, tbl) then return true end
 	end
@@ -596,7 +621,9 @@ end
 function TableUtil.Truncate<T>(tbl: { T }, len: number): { T }
 	local n = #tbl
 	len = math.clamp(len, 1, n)
-	return if len == n then table.clone(tbl) else table.move(tbl, 1, len, 1, table.create(len))
+	return if len == n
+		then table.clone(tbl)
+		else table.move(tbl, 1, len, 1, table.create(len))
 end
 
 --[=[
@@ -621,10 +648,15 @@ end
 	--]]
 	```
 ]=]
-function TableUtil.Zip(...: { [any]: any }): ((t: { any }, k: any) -> (any, any), { any }, any)
+function TableUtil.Zip(
+	...: { [any]: any }
+): ((t: { any }, k: any) -> (any, any), { any }, any)
 	assert(select("#", ...) > 0, "Must supply at least 1 table")
 
-	local function ZipIteratorArray(all: { any }, k: number): (number?, { any }?)
+	local function ZipIteratorArray(
+		all: { any },
+		k: number
+	): (number?, { any }?)
 		k += 1
 		local values = {}
 		for i, t in all do
@@ -638,7 +670,10 @@ function TableUtil.Zip(...: { [any]: any }): ((t: { any }, k: any) -> (any, any)
 		return k, values
 	end
 
-	local function ZipIteratorMap(all: { [any]: any }, k: any): (number?, { any }?)
+	local function ZipIteratorMap(
+		all: { [any]: any },
+		k: any
+	): (number?, { any }?)
 		local values = {}
 		for i, t in all do
 			local v = next(t, k)
@@ -697,9 +732,13 @@ end
 function TableUtil.IsEmpty(tbl: { any }): boolean return next(tbl) == nil end
 
 --- Proxy for [`HttpService:JSONEncode`](https://developer.roblox.com/en-us/api-reference/function/HttpService/JSONEncode).
-function TableUtil.EncodeJSON(value: any): string return HttpService:JSONEncode(value) end
+function TableUtil.EncodeJSON(value: any): string
+	return HttpService:JSONEncode(value)
+end
 
 --- Proxy for [`HttpService:JSONDecode`](https://developer.roblox.com/en-us/api-reference/function/HttpService/JSONDecode).
-function TableUtil.DecodeJSON(str: string): any return HttpService:JSONDecode(str) end
+function TableUtil.DecodeJSON(str: string): any
+	return HttpService:JSONDecode(str)
+end
 
 return TableUtil

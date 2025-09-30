@@ -1,7 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
-local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
+local CreateEditableMesh =
+	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+local HittableService =
+	require(ReplicatedStorage.Shared.Services.HittableService)
 
 local RoadBump = {}
 RoadBump.__index = RoadBump
@@ -39,7 +41,10 @@ function RoadBump.new(instance: Instance): RoadBump
 	-- 	table.insert(self.meshes.legs, CreateEditableMesh(leg, true))
 	-- end
 
-	HittableService:Register({ self.bump }, function(hit: HittableService.HitResult) OnHit(self, hit) end)
+	HittableService:Register(
+		{ self.bump },
+		function(hit: HittableService.HitResult) OnHit(self, hit) end
+	)
 	-- HittableService:Register(
 	-- 	table.pack(table.unpack(self.legs), self.bump),
 	-- 	function(hit: HittableService.HitResult) self:Hit(hit) end
@@ -50,17 +55,21 @@ end
 
 function OnHit(self: RoadBump, hit: HittableService.HitResult)
 	local origin = self.meshes.bump:GetPosition(
-		self.meshes.bump:FindClosestVertex(self.bump.CFrame:PointToObjectSpace(hit.Position))
+		self.meshes.bump:FindClosestVertex(
+			self.bump.CFrame:PointToObjectSpace(hit.Position)
+		)
 	)
 	local velocity = self.bump.CFrame:VectorToObjectSpace(hit.Velocity)
 	local force = velocity.Magnitude
 
-	local vertices = self.meshes.bump:FindVerticesWithinSphere(origin, force / 1000)
+	local vertices =
+		self.meshes.bump:FindVerticesWithinSphere(origin, force / 1000)
 	for _, vertex in vertices do
 		local position = self.meshes.bump:GetPosition(vertex)
 		local distance = (position - origin).Magnitude
 
-		local newPosition = position + velocity / 2000 * math.pow(1 - distance / (force / 1000), 2)
+		local newPosition = position
+			+ velocity / 2000 * math.pow(1 - distance / (force / 1000), 2)
 		self.meshes.bump:SetPosition(vertex, newPosition)
 	end
 
@@ -78,7 +87,8 @@ function OnHit(self: RoadBump, hit: HittableService.HitResult)
 			end
 		end
 		if not remove then
-			local color = self.meshes.bump:AddColor(Color3.fromRGB(206, 206, 206), 1)
+			local color =
+				self.meshes.bump:AddColor(Color3.fromRGB(206, 206, 206), 1)
 			local recolor = false
 			local colors = self.meshes.bump:GetFaceColors(face)
 			for k, vertex in faceVertices do

@@ -19,13 +19,18 @@ export type SprintController = typeof(setmetatable(
 function SprintController.new(): SprintController
 	local self: SprintController = setmetatable({}, SprintController) :: any
 
-	player.CharacterAdded:Connect(function() self.Humanoid = player.Character:WaitForChild("Humanoid") end)
-	if player.Character then self.Humanoid = player.Character:WaitForChild("Humanoid") end
+	player.CharacterAdded:Connect(
+		function() self.Humanoid = player.Character:WaitForChild("Humanoid") end
+	)
+	if player.Character then
+		self.Humanoid = player.Character:WaitForChild("Humanoid")
+	end
 
 	ReplicatedStorage.Input.Player.Sprint.StateChanged:Connect(function(value)
 		if not self.Humanoid then return end
 
-		self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed * (value and SPRINT_MULTIPLIER or 1)
+		self.Humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+			* (value and SPRINT_MULTIPLIER or 1)
 	end)
 
 	return self

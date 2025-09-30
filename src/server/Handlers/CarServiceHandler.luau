@@ -1,7 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local CarServiceServer = require(ServerScriptService.Server.Classes.CarServiceServer)
+local CarServiceServer =
+	require(ServerScriptService.Server.Classes.CarServiceServer)
 
 local CarServiceHandler = {}
 CarServiceHandler.__index = CarServiceHandler
@@ -14,7 +15,8 @@ function CarServiceHandler.new(): CarServiceHandler
 	for _, v in CollectionService:GetTagged("CarService") do
 		CarServiceServer.new(v)
 	end
-	CollectionService:GetInstanceAddedSignal("CarService"):Connect(CarServiceServer.new)
+	CollectionService:GetInstanceAddedSignal("CarService")
+		:Connect(CarServiceServer.new)
 
 	return self
 end

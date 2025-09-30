@@ -30,7 +30,9 @@ export type ExhaustController = typeof(setmetatable(
 	ExhaustController
 ))
 
-function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustController
+function ExhaustController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): ExhaustController
 	local self: ExhaustController = setmetatable({}, ExhaustController) :: any
 
 	self.Vehicle = vehicle
@@ -43,7 +45,9 @@ function ExhaustController.new(vehicle: VehicleTypes.ClientVehicle): ExhaustCont
 
 	local attachment = self.Instance:FindFirstChild("Attachment")
 	if not attachment then
-		warn(`Exhaust emitter's attachment not found in {self.Vehicle.Instance.Name}`)
+		warn(
+			`Exhaust emitter's attachment not found in {self.Vehicle.Instance.Name}`
+		)
 		return self
 	end
 
@@ -74,12 +78,24 @@ end
 
 function Update(self: ExhaustController)
 	local canUpdate = (self.Vehicle.IsOn or self.Vehicle.Starting)
-		and (player.Character:GetPivot().Position - self.Vehicle.WeightPart.Position).Magnitude < 70
+		and (
+				player.Character:GetPivot().Position
+				- self.Vehicle.WeightPart.Position
+			).Magnitude
+			< 70
 
 	self.Emitter.Enabled = canUpdate
 	if not canUpdate then return end
 
-	local rpmDelta = math.clamp(MathUtil.MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM), 0.2, 0.8)
+	local rpmDelta = math.clamp(
+		MathUtil.MapToRange(
+			self.Vehicle.RPM,
+			0,
+			self.Vehicle.Engine.Tune.ShiftRPM
+		),
+		0.2,
+		0.8
+	)
 	rpmDelta -= (1 - self.Vehicle.Throttle) * MathUtil.MapToRange(
 		self.Vehicle.RPM,
 		0,
@@ -96,7 +112,11 @@ function Update(self: ExhaustController)
 	self.Motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
-	rpmDelta = MathUtil.MapToRange(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM) ^ 0.5
+	rpmDelta = MathUtil.MapToRange(
+		self.Vehicle.RPM,
+		0,
+		self.Vehicle.Engine.Tune.ShiftRPM
+	) ^ 0.5
 	local speed = rpmDelta * 7
 	local rate = rpmDelta * 30
 
@@ -108,20 +128,43 @@ function Update(self: ExhaustController)
 		self.Emitter.Transparency = self._startEmitter.Transparency
 		self.Emitter.Color = ColorSequence.new(Color3.new())
 
-		local damage = math.clamp((self.Vehicle.RPM - self.Vehicle.Engine.Tune.Redline) / 1000, 0, 1)
+		local damage = math.clamp(
+			(self.Vehicle.RPM - self.Vehicle.Engine.Tune.Redline) / 1000,
+			0,
+			1
+		)
 		local keypoints = {}
 		for k, v in self._startEmitter.Size.Keypoints do
-			table.insert(keypoints, NumberSequenceKeypoint.new(v.Time, v.Value * (1 + damage), v.Envelope))
+			table.insert(
+				keypoints,
+				NumberSequenceKeypoint.new(
+					v.Time,
+					v.Value * (1 + damage),
+					v.Envelope
+				)
+			)
 		end
 		self.Emitter.Size = NumberSequence.new(keypoints)
 	else
 		self.Emitter.Color = self._startEmitter.Color
 		self.Emitter.Size = self._startEmitter.Size
 
-		local transparency = 1 - math.clamp(self.Vehicle.WeightPart.AssemblyLinearVelocity.Magnitude / 100, 0, 0.8)
+		local transparency = 1
+			- math.clamp(
+				self.Vehicle.WeightPart.AssemblyLinearVelocity.Magnitude / 100,
+				0,
+				0.8
+			)
 		local keypoints = {}
 		for k, v in self._startEmitter.Transparency.Keypoints do
-			table.insert(keypoints, NumberSequenceKeypoint.new(v.Time, 1 - (1 - v.Value) * transparency, v.Envelope))
+			table.insert(
+				keypoints,
+				NumberSequenceKeypoint.new(
+					v.Time,
+					1 - (1 - v.Value) * transparency,
+					v.Envelope
+				)
+			)
 		end
 		self.Emitter.Transparency = NumberSequence.new(keypoints)
 	end

@@ -34,7 +34,9 @@ CameraController.__index = CameraController
 
 type CameraController = VehicleTypes.CameraController
 
-function CameraController.new(vehicle: VehicleTypes.ClientVehicle): CameraController
+function CameraController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): CameraController
 	local self: CameraController = setmetatable({}, CameraController) :: any
 
 	self.Vehicle = vehicle
@@ -89,9 +91,12 @@ end
 function UpdateRotation(self: CameraController, input: InputObject)
 	if
 		not (
-			UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2)
+			UserInputService:IsMouseButtonPressed(
+					Enum.UserInputType.MouseButton2
+				)
 				and not self.Vehicle.InputController.MouseSteerOn
-			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and self.Vehicle.InputController.MouseSteerOn
+			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
+				and self.Vehicle.InputController.MouseSteerOn
 		)
 	then
 		return
@@ -109,7 +114,11 @@ function Update(self: CameraController, deltaTime: number)
 	if self._CharacterVisible == self.FirstPerson then
 		self._CharacterVisible = not self.FirstPerson
 		for _, v in player.Character:GetDescendants() do
-			if not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name) then continue end
+			if
+				not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name)
+			then
+				continue
+			end
 
 			v.LocalTransparencyModifier = self._CharacterVisible and 0 or 1
 		end
@@ -128,7 +137,10 @@ function UpdateFirstPerson(self: CameraController, deltaTime: number)
 	-- Update camera
 	Camera.FieldOfView = FOV * 1.2 + self.Vehicle.Velocity.Magnitude / 100
 	Camera.CFrame = CFrame.lookAlong(
-		head.Position + Vector3.new(0, 0.2, 0) - self.Vehicle.WeightPart.CFrame.LookVector * 0.4 + self.Bumping,
+		head.Position
+			+ Vector3.new(0, 0.2, 0)
+			- self.Vehicle.WeightPart.CFrame.LookVector * 0.4
+			+ self.Bumping,
 		head.CFrame.LookVector,
 		head.CFrame.UpVector
 	)
@@ -144,7 +156,9 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 
 	local distance = self.Distance
 	if sideVelocity.Magnitude > 10 then
-		distance -= self.Distance * 0.2 * math.abs(self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)) ^ 1.5
+		distance -= self.Distance * 0.2 * math.abs(
+			self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)
+		) ^ 1.5
 		offset -= (sideVelocity.Unit + Vector3.yAxis * self.Vehicle.WeightPart.CFrame.LookVector.Y) * distance
 	elseif self.Vehicle.Gear == -1 then
 		offset += self.Vehicle.WeightPart.CFrame.LookVector * distance
@@ -152,7 +166,9 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 		offset -= self.Vehicle.WeightPart.CFrame.LookVector * distance
 	end
 
-	local bumping = Vector3.yAxis * math.clamp(self.Vehicle.Acceleration.Y, -40, 40) * 0.07
+	local bumping = Vector3.yAxis
+		* math.clamp(self.Vehicle.Acceleration.Y, -40, 40)
+		* 0.07
 	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 4)
 
 	local accelForce = math.min(self.Vehicle.Acceleration.Magnitude, 60) * 0.03
@@ -173,14 +189,21 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
 	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
 
-	if self.Vehicle.Velocity.Magnitude > 10 and tick() - self._LastCameraRotation > 2 then
+	if
+		self.Vehicle.Velocity.Magnitude > 10
+		and tick() - self._LastCameraRotation > 2
+	then
 		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
 	end
 
 	local cameraDirection
 	if self.Offset.Magnitude > 0 then
 		cameraDirection = self.Vehicle.WeightPart.CFrame:VectorToWorldSpace(
-			self.CameraCFrame:VectorToWorldSpace(self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(self.Offset.Unit))
+			self.CameraCFrame:VectorToWorldSpace(
+				self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(
+					self.Offset.Unit
+				)
+			)
 		)
 	else
 		cameraDirection = Vector3.zero
@@ -194,12 +217,24 @@ function UpdateThirdPerson(self: CameraController, deltaTime: number)
 		* self.Vehicle.WeightPart.CFrame.RightVector
 		* distance
 		* 0.5
-		* math.clamp(MathUtil.MapToRange(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1), 0, 1)
+		* math.clamp(
+			MathUtil.MapToRange(
+				1 - (self.Offset.Magnitude / distance) ^ 2,
+				0.2,
+				1
+			),
+			0,
+			1
+		)
 
 	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
 
 	Camera.CFrame = CFrame.lookAt(
-		self.Vehicle.WeightPart.Position + rotatedOffset + self.Bumping + heightOffset + sideOffset,
+		self.Vehicle.WeightPart.Position
+			+ rotatedOffset
+			+ self.Bumping
+			+ heightOffset
+			+ sideOffset,
 		self.Vehicle.WeightPart.Position + self.LookOffset + self.Bumping,
 		self.Vehicle.Center.UpVector
 	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)

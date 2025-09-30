@@ -81,9 +81,21 @@ Connection.Destroy = Connection.Disconnect
 
 -- Make Connection strict
 setmetatable(Connection, {
-	__index = function(_tb, key) error(("Attempt to get Connection::%s (not a valid member)"):format(tostring(key)), 2) end,
+	__index = function(_tb, key)
+		error(
+			("Attempt to get Connection::%s (not a valid member)"):format(
+				tostring(key)
+			),
+			2
+		)
+	end,
 	__newindex = function(_tb, key, _value)
-		error(("Attempt to set Connection::%s (not a valid member)"):format(tostring(key)), 2)
+		error(
+			("Attempt to set Connection::%s (not a valid member)"):format(
+				tostring(key)
+			),
+			2
+		)
 	end,
 })
 
@@ -134,17 +146,22 @@ end
 function Signal.Wrap<T...>(rbxScriptSignal: RBXScriptSignal): Signal<T...>
 	assert(
 		typeof(rbxScriptSignal) == "RBXScriptSignal",
-		"Argument #1 to Signal.Wrap must be a RBXScriptSignal; got " .. typeof(rbxScriptSignal)
+		"Argument #1 to Signal.Wrap must be a RBXScriptSignal; got "
+			.. typeof(rbxScriptSignal)
 	)
 
 	local signal = Signal.new()
-	signal._proxyHandler = rbxScriptSignal:Connect(function(...) signal:Fire(...) end)
+	signal._proxyHandler = rbxScriptSignal:Connect(
+		function(...) signal:Fire(...) end
+	)
 
 	return signal
 end
 
 --- Checks if the given object is a Signal.
-function Signal.Is(obj: any): boolean return type(obj) == "table" and getmetatable(obj) == Signal end
+function Signal.Is(obj: any): boolean
+	return type(obj) == "table" and getmetatable(obj) == Signal
+end
 
 --[[
 	Connects a function to the signal, which will be called anytime the signal is fired.
@@ -233,7 +250,13 @@ function Signal:DisconnectAll()
 	if yieldedThreads then
 		for thread in yieldedThreads do
 			if coroutine.status(thread) == "suspended" then
-				warn(debug.traceback(thread, "signal disconnected; yielded thread cancelled", 2))
+				warn(
+					debug.traceback(
+						thread,
+						"signal disconnected; yielded thread cancelled",
+						2
+					)
+				)
 				task.cancel(thread)
 			end
 		end
@@ -260,7 +283,9 @@ function Signal:Fire(...)
 	local item = self._handlerListHead
 	while item do
 		if item.Connected then
-			if not freeRunnerThread then freeRunnerThread = coroutine.create(runEventHandlerInFreeThread) end
+			if not freeRunnerThread then
+				freeRunnerThread = coroutine.create(runEventHandlerInFreeThread)
+			end
 			task.spawn(freeRunnerThread, item._fn, ...)
 		end
 		item = item._next
@@ -309,7 +334,9 @@ function Signal:Wait()
 	self:Once(function(...)
 		yieldedThreads[thread] = nil
 
-		if coroutine.status(thread) == "suspended" then task.spawn(thread, ...) end
+		if coroutine.status(thread) == "suspended" then
+			task.spawn(thread, ...)
+		end
 	end)
 
 	return coroutine.yield()
@@ -336,9 +363,21 @@ end
 
 -- Make signal strict
 setmetatable(Signal, {
-	__index = function(_tb, key) error(("Attempt to get Signal::%s (not a valid member)"):format(tostring(key)), 2) end,
+	__index = function(_tb, key)
+		error(
+			("Attempt to get Signal::%s (not a valid member)"):format(
+				tostring(key)
+			),
+			2
+		)
+	end,
 	__newindex = function(_tb, key, _value)
-		error(("Attempt to set Signal::%s (not a valid member)"):format(tostring(key)), 2)
+		error(
+			("Attempt to set Signal::%s (not a valid member)"):format(
+				tostring(key)
+			),
+			2
+		)
 	end,
 })
 

@@ -5,7 +5,8 @@ local BrakeDisk = require(script.BrakeDisk)
 local Tire = require(script.Tire)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehicleConstants =
+	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ClientWheel = setmetatable({}, BaseWheel)
@@ -13,22 +14,45 @@ ClientWheel.__index = ClientWheel
 
 type ClientWheel = VehicleTypes.ClientWheel
 
-function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart): ClientWheel
-	local self: ClientWheel = setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
+function ClientWheel.new(
+	vehicle: VehicleTypes.ClientVehicle,
+	instance: BasePart
+): ClientWheel
+	local self: ClientWheel =
+		setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
 	self.OppositeWheel = (
-		(self.Instance.Name == "FL" and self.Vehicle.Instance.Wheels:FindFirstChild("FR"))
-		or (self.Instance.Name == "FR" and self.Vehicle.Instance.Wheels:FindFirstChild("FL"))
-		or (self.Instance.Name == "RL" and self.Vehicle.Instance.Wheels:FindFirstChild("RR"))
-		or (self.Instance.Name == "RR" and self.Vehicle.Instance.Wheels:FindFirstChild("RL"))
+		(
+			self.Instance.Name == "FL"
+			and self.Vehicle.Instance.Wheels:FindFirstChild("FR")
+		)
+		or (self.Instance.Name == "FR" and self.Vehicle.Instance.Wheels:FindFirstChild(
+			"FL"
+		))
+		or (self.Instance.Name == "RL" and self.Vehicle.Instance.Wheels:FindFirstChild(
+			"RR"
+		))
+		or (
+			self.Instance.Name == "RR"
+			and self.Vehicle.Instance.Wheels:FindFirstChild("RL")
+		)
 	) :: BasePart
 
 	self.CanSteer = 0
 
 	-- Check if can steer
-	if self.Instance:FindFirstChild("Arm") and (self.Instance.Arm :: any):FindFirstChild("Steer") then
+	if
+		self.Instance:FindFirstChild("Arm")
+		and (self.Instance.Arm :: any):FindFirstChild("Steer")
+	then
 		self.CanSteer = 1
-		if not ((self.Instance.Arm :: any).Steer :: Instance):GetAttribute("SteerDisabled") then self.CanSteer = 2 end
+		if
+			not ((self.Instance.Arm :: any).Steer :: Instance):GetAttribute(
+				"SteerDisabled"
+			)
+		then
+			self.CanSteer = 2
+		end
 	end
 
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
@@ -48,9 +72,13 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 				self.Vehicle.PBrake = true
 			end
 			if self.IsFront then
-				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Front or 0
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake
+						and self.Vehicle.PBrakeForce.Front
+					or 0
 			else
-				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake and self.Vehicle.PBrakeForce.Rear or 0
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake
+						and self.Vehicle.PBrakeForce.Rear
+					or 0
 			end
 		end
 	end)
@@ -59,7 +87,9 @@ function ClientWheel.new(vehicle: VehicleTypes.ClientVehicle, instance: BasePart
 	return self
 end
 
-function ClientWheel.Update(self: ClientWheel, deltaTime: number) ApplySteering(self, deltaTime) end
+function ClientWheel.Update(self: ClientWheel, deltaTime: number)
+	ApplySteering(self, deltaTime)
+end
 
 function ApplySteering(self: ClientWheel, deltaTime: number)
 	if self.CanSteer == 0 then return end
@@ -70,71 +100,123 @@ function ApplySteering(self: ClientWheel, deltaTime: number)
 
 	if self.CanSteer == 2 then
 		if self.Instance.Name == "FL" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerInner or self.Vehicle.Tune.SteerOuter
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerInner
+				or self.Vehicle.Tune.SteerOuter
 		elseif self.Instance.Name == "FR" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerOuter or self.Vehicle.Tune.SteerInner
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerOuter
+				or self.Vehicle.Tune.SteerInner
 		elseif self.Instance.Name == "F" then
 			angle = self.Vehicle.Tune.SteerInner
 		elseif self.Instance.Name == "RL" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerInner or self.Vehicle.Tune.RSteerOuter
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerInner
+				or self.Vehicle.Tune.RSteerOuter
 		elseif self.Instance.Name == "RR" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerOuter or self.Vehicle.Tune.RSteerInner
+			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerOuter
+				or self.Vehicle.Tune.RSteerInner
 		elseif self.Instance.Name == "R" then
 			angle = self.Vehicle.Tune.RSteerInner
 		end
 		if not self.IsFront then
 			if self.Vehicle.Tune.FWSteer == "Static" then
-				rsteerVariableAngle =
-					-math.max(0, 1 - (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+				rsteerVariableAngle = -math.max(
+					0,
+					1
+						- (
+							self.Vehicle.Velocity.Magnitude
+							/ self.Vehicle.Tune.RSteerSpeed
+						)
+				)
 			elseif self.Vehicle.Tune.FWSteer == "Speed" then
-				rsteerVariableAngle = math.min(1, (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+				rsteerVariableAngle = math.min(
+					1,
+					(
+						self.Vehicle.Velocity.Magnitude
+						/ self.Vehicle.Tune.RSteerSpeed
+					)
+				)
 			elseif self.Vehicle.Tune.FWSteer == "Both" then
-				rsteerVariableAngle =
-					-math.max(-1, 1 - (self.Vehicle.Velocity.Magnitude / self.Vehicle.Tune.RSteerSpeed))
+				rsteerVariableAngle = -math.max(
+					-1,
+					1
+						- (
+							self.Vehicle.Velocity.Magnitude
+							/ self.Vehicle.Tune.RSteerSpeed
+						)
+				)
 			end
 		end
 	end
 
 	if self.Vehicle.Tune.PowerSteeringType == "New" then
-		self.Instance.Arm.SteerAttach0.Orientation =
-			Vector3.new(0, self.CanSteer == 1 and 0 or self.Vehicle.Steering * angle * rsteerVariableAngle, 0)
+		self.Instance.Arm.SteerAttach0.Orientation = Vector3.new(
+			0,
+			self.CanSteer == 1 and 0
+				or self.Vehicle.Steering * angle * rsteerVariableAngle,
+			0
+		)
 	else
 		(self.Instance.Arm.Steer :: BodyGyro).CFrame = self.Instance.Base.CFrame
 			* (
 				self.CanSteer == 1 and CFrame.new(0, 0, 0)
-				or (CFrame.Angles(0, -math.rad(self.Vehicle.Steering * angle * rsteerVariableAngle), 0))
+				or (
+					CFrame.Angles(
+						0,
+						-math.rad(
+							self.Vehicle.Steering * angle * rsteerVariableAngle
+						),
+						0
+					)
+				)
 			)
 	end
 end
 
-function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEnergy: number)
+function ClientWheel.UpdateForces(
+	self: ClientWheel,
+	torque: number,
+	flywheelEnergy: number
+)
 	-- Apply Power
 	local throttle = self.Vehicle.Engine.Throttle
 	local brake = self.Vehicle.Engine.Brake
 	local clutch = 1 - self.Vehicle.Engine.Clutch
 	local wheelTorque = torque
 
-	local spLimit = self.Vehicle.Engine.Tune.Redline / (self.Vehicle.FinalDriveRatio * self.Vehicle.CurrentRatio)
-	if self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio == 0 then spLimit = 0 end -- Prevents [nan] from dividing by 0
+	local spLimit = self.Vehicle.Engine.Tune.Redline
+		/ (self.Vehicle.FinalDriveRatio * self.Vehicle.CurrentRatio)
+	if self.Vehicle.CurrentRatio * self.Vehicle.FinalDriveRatio == 0 then
+		spLimit = 0
+	end -- Prevents [nan] from dividing by 0
 
 	-- Apply ESC
 	local torqueESC = 0
 	if
 		not (self.Instance.Name == "F" or self.Instance.Name == "R")
 		and self.Vehicle.ESC
-		and (self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6)) > self.Vehicle.Tune.ESCSpeed
+		and (self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6))
+			> self.Vehicle.Tune.ESCSpeed
 	then
 		local g = self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(
 			self.Vehicle.Acceleration
 				/ Units.Velocity_mdivs
 				/ (
-					(VehicleConstants.GravComp > 0 and VehicleConstants.GravComp or game.Workspace.Gravity)
-					* (Units.Length_mm / 1000)
+					(
+						VehicleConstants.GravComp > 0
+							and VehicleConstants.GravComp
+						or game.Workspace.Gravity
+					) * (Units.Length_mm / 1000)
 				)
 		)
 		if math.sign(self.Vehicle.Steering) ~= math.sign(g.X) then
 			local diff = self.Vehicle.Steering
-				- (g.X * -math.sign(self.Vehicle.Center:VectorToObjectSpace(self.Vehicle.Velocity).Z))
+				- (
+					g.X
+					* -math.sign(
+						self.Vehicle.Center:VectorToObjectSpace(
+							self.Vehicle.Velocity
+						).Z
+					)
+				)
 			if math.abs(diff) > self.Vehicle.Tune.ESCThreshold then
 				local escVector, escBias = 1, (self.Vehicle.Tune.ESCVector + 1)
 				if self.IsFront then
@@ -143,9 +225,15 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 					escVector = escVector * escBias
 				end
 
-				torqueESC = (self.IsRight and -1 or 1) * math.sign(diff) * escVector
-				throttle = throttle + (math.max(torqueESC, 0) - throttle) * (self.Vehicle.Tune.ESCThrottle / 100)
-				brake = brake + (-math.min(torqueESC, 0) - brake) * (self.Vehicle.Tune.ESCBrake / 100)
+				torqueESC = (self.IsRight and -1 or 1)
+					* math.sign(diff)
+					* escVector
+				throttle = throttle
+					+ (math.max(torqueESC, 0) - throttle)
+						* (self.Vehicle.Tune.ESCThrottle / 100)
+				brake = brake
+					+ (-math.min(torqueESC, 0) - brake)
+						* (self.Vehicle.Tune.ESCBrake / 100)
 			end
 		end
 	end
@@ -163,7 +251,8 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 							self.Instance.AssemblyAngularVelocity.Magnitude
 									* (self.Instance.Size.Y / 2)
 									/ (Units.Velocity_mdivs / 3.6)
-								- self.Instance.AssemblyLinearVelocity.Magnitude / (Units.Velocity_mdivs / 3.6)
+								- self.Instance.AssemblyLinearVelocity.Magnitude
+									/ (Units.Velocity_mdivs / 3.6)
 						) - self.Vehicle.Tune.ABSThreshold
 					) / self.Vehicle.Tune.ABSGradient,
 					1
@@ -189,8 +278,10 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 
 		if self.Instance.Name == "FR" then
 			local avg = (
-				(self.Instance.AssemblyAngularVelocity.Magnitude / self.OppositeWheel.AssemblyAngularVelocity.Magnitude)
-				- 1
+				(
+					self.Instance.AssemblyAngularVelocity.Magnitude
+					/ self.OppositeWheel.AssemblyAngularVelocity.Magnitude
+				) - 1
 			) * (self.Vehicle.Tune.FDiffPreload / 10)
 			FRdiffMult = math.ceil(
 				math.max(
@@ -199,8 +290,16 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 						2,
 						1
 							- (
-								((self.Vehicle.Tune.FDiffPower / 100) * avg * self.Vehicle.Engine.Throttle)
-								+ ((self.Vehicle.Tune.FDiffCoast / 100) * avg * (1 - self.Vehicle.Engine.Throttle))
+								(
+									(self.Vehicle.Tune.FDiffPower / 100)
+									* avg
+									* self.Vehicle.Engine.Throttle
+								)
+								+ (
+									(self.Vehicle.Tune.FDiffCoast / 100)
+									* avg
+									* (1 - self.Vehicle.Engine.Throttle)
+								)
 							)
 					)
 				) * 100
@@ -208,8 +307,10 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 			FLdiffMult = 2 - FRdiffMult
 		elseif self.Instance.Name == "FL" then
 			local avg = (
-				(self.Instance.AssemblyAngularVelocity.Magnitude / self.OppositeWheel.AssemblyAngularVelocity.Magnitude)
-				- 1
+				(
+					self.Instance.AssemblyAngularVelocity.Magnitude
+					/ self.OppositeWheel.AssemblyAngularVelocity.Magnitude
+				) - 1
 			) * (self.Vehicle.Tune.FDiffPreload / 10)
 			FLdiffMult = math.ceil(
 				math.max(
@@ -218,8 +319,16 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 						2,
 						1
 							- (
-								((self.Vehicle.Tune.FDiffPower / 100) * avg * self.Vehicle.Engine.Throttle)
-								+ ((self.Vehicle.Tune.FDiffCoast / 100) * avg * (1 - self.Vehicle.Engine.Throttle))
+								(
+									(self.Vehicle.Tune.FDiffPower / 100)
+									* avg
+									* self.Vehicle.Engine.Throttle
+								)
+								+ (
+									(self.Vehicle.Tune.FDiffCoast / 100)
+									* avg
+									* (1 - self.Vehicle.Engine.Throttle)
+								)
 							)
 					)
 				) * 100
@@ -227,8 +336,10 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 			FRdiffMult = 2 - FLdiffMult
 		elseif self.Instance.Name == "RR" then
 			local avg = (
-				(self.Instance.AssemblyAngularVelocity.Magnitude / self.OppositeWheel.AssemblyAngularVelocity.Magnitude)
-				- 1
+				(
+					self.Instance.AssemblyAngularVelocity.Magnitude
+					/ self.OppositeWheel.AssemblyAngularVelocity.Magnitude
+				) - 1
 			) * (self.Vehicle.Tune.RDiffPreload / 10)
 			RRdiffMult = math.ceil(
 				math.max(
@@ -237,8 +348,16 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 						2,
 						1
 							- (
-								((self.Vehicle.Tune.RDiffPower / 100) * avg * self.Vehicle.Engine.Throttle)
-								+ ((self.Vehicle.Tune.RDiffCoast / 100) * avg * (1 - self.Vehicle.Engine.Throttle))
+								(
+									(self.Vehicle.Tune.RDiffPower / 100)
+									* avg
+									* self.Vehicle.Engine.Throttle
+								)
+								+ (
+									(self.Vehicle.Tune.RDiffCoast / 100)
+									* avg
+									* (1 - self.Vehicle.Engine.Throttle)
+								)
 							)
 					)
 				) * 100
@@ -246,8 +365,10 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 			RLdiffMult = 2 - RRdiffMult
 		elseif self.Instance.Name == "RL" then
 			local avg = (
-				(self.Instance.AssemblyAngularVelocity.Magnitude / self.OppositeWheel.AssemblyAngularVelocity.Magnitude)
-				- 1
+				(
+					self.Instance.AssemblyAngularVelocity.Magnitude
+					/ self.OppositeWheel.AssemblyAngularVelocity.Magnitude
+				) - 1
 			) * (self.Vehicle.Tune.RDiffPreload / 10)
 			RLdiffMult = math.ceil(
 				math.max(
@@ -256,8 +377,16 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 						2,
 						1
 							- (
-								((self.Vehicle.Tune.RDiffPower / 100) * avg * self.Vehicle.Engine.Throttle)
-								+ ((self.Vehicle.Tune.RDiffCoast / 100) * avg * (1 - self.Vehicle.Engine.Throttle))
+								(
+									(self.Vehicle.Tune.RDiffPower / 100)
+									* avg
+									* self.Vehicle.Engine.Throttle
+								)
+								+ (
+									(self.Vehicle.Tune.RDiffCoast / 100)
+									* avg
+									* (1 - self.Vehicle.Engine.Throttle)
+								)
 							)
 					)
 				) * 100
@@ -281,14 +410,21 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 
 		-- Apply torque split
 		-- This takes the total amount of torque alotted to the front or rear wheels, then divides it by how many wheels there are
-		local bias = (self.Vehicle.Tune.Drivetrain == "AWD" and (self.Vehicle.Tune.TorqueVector + 1) / 2)
+		local bias = (
+			self.Vehicle.Tune.Drivetrain == "AWD"
+			and (self.Vehicle.Tune.TorqueVector + 1) / 2
+		)
 			or (self.Vehicle.Tune.Drivetrain == "FWD" and 0)
 			or 1
-		wheelTorque = self.IsFront and (wheelTorque * (1 - bias)) / fWCount or (wheelTorque * bias) / rWCount
+		wheelTorque = self.IsFront and (wheelTorque * (1 - bias)) / fWCount
+			or (wheelTorque * bias) / rWCount
 
 		-- Apply TCS
 		local torqueTCS = 1
-		if self.Vehicle.TCS and throttle > self.Vehicle.Engine.Tune.IdleThrottle / 100 then
+		if
+			self.Vehicle.TCS
+			and throttle > self.Vehicle.Engine.Tune.IdleThrottle / 100
+		then
 			torqueTCS = 1
 				- (
 					math.min(
@@ -298,7 +434,8 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 								self.Instance.AssemblyAngularVelocity.Magnitude
 										* (self.Instance.Size.Y / 2)
 										/ (Units.Velocity_mdivs / 3.6)
-									- self.Instance.AssemblyLinearVelocity.Magnitude / (Units.Velocity_mdivs / 3.6)
+									- self.Instance.AssemblyLinearVelocity.Magnitude
+										/ (Units.Velocity_mdivs / 3.6)
 							) - self.Vehicle.Tune.TCSThreshold
 						) / self.Vehicle.Tune.TCSGradient,
 						1
@@ -308,8 +445,14 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 		self.Vehicle.TCSActive = torqueTCS < 1 or self.Vehicle.TCSActive
 
 		-- Update Forces
-		local outWheelTorque = (wheelTorque * 1.356 * Units.Torque_nm * throttle * torqueTCS * clutch)
-			+ (math.max(flywheelEnergy, 0) / drWCount)
+		local outWheelTorque = (
+			wheelTorque
+			* 1.356
+			* Units.Torque_nm
+			* throttle
+			* torqueTCS
+			* clutch
+		) + (math.max(flywheelEnergy, 0) / drWCount)
 
 		if self.Instance.Name == "RR" then
 			self.Instance.AV.MotorMaxTorque = outWheelTorque * RRdiffMult
@@ -322,10 +465,14 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 		else
 			self.Instance.AV.MotorMaxTorque = outWheelTorque
 		end
-		self.Instance.AV.AngularVelocity = spLimit * math.sign(self.Vehicle.Gear)
+		self.Instance.AV.AngularVelocity = spLimit
+			* math.sign(self.Vehicle.Gear)
 
 		local brakeTorque = self.Vehicle.Tune.EBrakeForce
-				* math.min(self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline, 0.5)
+				* math.min(
+					self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline,
+					0.5
+				)
 				* (1 - throttle)
 				* clutch
 			- math.min(flywheelEnergy, 0) / drWCount
@@ -339,11 +486,17 @@ function ClientWheel.UpdateForces(self: ClientWheel, torque: number, flywheelEne
 		self.Instance.AV.MotorMaxTorque = 0
 		self.Instance.AV.AngularVelocity = 0
 		if self.IsFront then
-			self.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Front * brake * torqueABS)
-				+ (self.Vehicle.PBrakeForce.Front * PBrake)
+			self.Instance.BV.MotorMaxTorque = (
+				self.Vehicle.BrakeForce.Front
+				* brake
+				* torqueABS
+			) + (self.Vehicle.PBrakeForce.Front * PBrake)
 		else
-			self.Instance.BV.MotorMaxTorque = (self.Vehicle.BrakeForce.Rear * brake * torqueABS)
-				+ (self.Vehicle.PBrakeForce.Rear * PBrake)
+			self.Instance.BV.MotorMaxTorque = (
+				self.Vehicle.BrakeForce.Rear
+				* brake
+				* torqueABS
+			) + (self.Vehicle.PBrakeForce.Rear * PBrake)
 		end
 	end
 end

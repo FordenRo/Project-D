@@ -3,7 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
-local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local SettingsController =
+	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
@@ -35,13 +36,20 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local folderInstance = self.Instance.SettingFolder
 	for k, v in SettingsController:GetSettingInfos() do
 		local setting = Setting.new(settingInstance:Clone(), v)
-		trove:Connect(setting.Changed, function(value) SettingsController:SetSetting(k, value) end)
+		trove:Connect(
+			setting.Changed,
+			function(value) SettingsController:SetSetting(k, value) end
+		)
 
-		local category = assert(self.Instance:FindFirstChild(v.Category), `Setting category {v.Category} not found`)
+		local category = assert(
+			self.Instance:FindFirstChild(v.Category),
+			`Setting category {v.Category} not found`
+		)
 		if v.Folder then
 			local folder = category:FindFirstChild(v.Folder)
 			if not folder then
-				folder = SettingFolder.new(folderInstance:Clone(), v.Folder).Instance
+				folder =
+					SettingFolder.new(folderInstance:Clone(), v.Folder).Instance
 				folder.Parent = category
 			end
 			setting.Instance.Parent = folder.Content
@@ -51,7 +59,9 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	end
 
 	local contextInstance = self.Instance.ControlContext
-	for _, inputContext in ReplicatedStorage.Input:GetChildren() :: { InputContext } do
+	for _, inputContext in
+		ReplicatedStorage.Input:GetChildren() :: { InputContext }
+	do
 		local context = contextInstance:Clone()
 		context.Title.Text = StringUtil.SplitPascalCase(inputContext.Name)
 		context.Visible = true
@@ -70,25 +80,34 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 			}
 
 			local inputActions = inputAction:GetChildren() :: { InputBinding }
-			local mouseAction = inputContext:FindFirstChild("Mouse" .. inputAction.Name)
-			if mouseAction then table.insert(inputActions, mouseAction.Mouse) end
+			local mouseAction =
+				inputContext:FindFirstChild("Mouse" .. inputAction.Name)
+			if mouseAction then
+				table.insert(inputActions, mouseAction.Mouse)
+			end
 
 			for _, inputBinding in inputActions do
 				if inputBinding.Name == "Mobile" then continue end
 
 				properties.Value[inputBinding.Name] = inputBinding.KeyCode
-				properties.Default[inputBinding.Name] = inputBinding:GetAttribute("Default")
+				properties.Default[inputBinding.Name] =
+					inputBinding:GetAttribute("Default")
 				table.insert(properties.ActionTypes, inputBinding.Name)
 			end
 
-			local setting = Setting.new(settingInstance:Clone(), properties :: any)
+			local setting =
+				Setting.new(settingInstance:Clone(), properties :: any)
 			local actionOrder = table.find(actionsOrder, inputAction.Name)
 			setting.Instance.LayoutOrder = actionOrder
 
-			trove:Connect(setting.Changed, function(actionType: string, keyCode: Enum.KeyCode)
-				local binding = inputAction:FindFirstChild(actionType) :: InputBinding
-				binding.KeyCode = keyCode
-			end)
+			trove:Connect(
+				setting.Changed,
+				function(actionType: string, keyCode: Enum.KeyCode)
+					local binding =
+						inputAction:FindFirstChild(actionType) :: InputBinding
+					binding.KeyCode = keyCode
+				end
+			)
 			setting.Instance.Parent = context
 		end
 

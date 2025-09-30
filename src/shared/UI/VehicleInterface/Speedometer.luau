@@ -31,7 +31,11 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 		},
 	}
 
-	if self.Vehicle.Engine.Tune.Superchargers + self.Vehicle.Engine.Tune.Turbochargers == 0 then
+	if
+		self.Vehicle.Engine.Tune.Superchargers
+			+ self.Vehicle.Engine.Tune.Turbochargers
+		== 0
+	then
 		self.Instance.Boost.Visible = false
 		self.Instance.BoostBG.Visible = false
 		self.Instance.Labels.Boost.Visible = false
@@ -39,7 +43,9 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 
 	local wDia = 0
 	for _, wheel in self.Vehicle.Wheels do
-		if wheel.IsDriven and wheel.Instance.Size.Y > wDia then wDia = wheel.Instance.Size.Y end
+		if wheel.IsDriven and wheel.Instance.Size.Y > wDia then
+			wDia = wheel.Instance.Size.Y
+		end
 	end
 
 	for _, v in pairs(self.Units) do
@@ -97,7 +103,9 @@ function GearUpdate(self: Speedometer)
 		[0] = "N",
 	}
 	local gearText = labels[self.Vehicle.Gear] or tostring(self.Vehicle.Gear)
-	if self.Vehicle.Gear == 1 and self.Vehicle.Tune.ClutchType == "CVT" then gearText = "D" end
+	if self.Vehicle.Gear == 1 and self.Vehicle.Tune.ClutchType == "CVT" then
+		gearText = "D"
+	end
 	self.Instance.Gear.Text = gearText
 	self.Instance.Gear.TextTransparency = self.Vehicle.Clutch * 0.4
 	if self.Vehicle.Gear == -1 then
@@ -114,13 +122,17 @@ function SpeedUpdate(self: Speedometer)
 		if not wheel.IsFront then continue end
 
 		speed += math.abs(
-			wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X
-				* (wheel.Instance.Size.Y / 2)
+			wheel.Instance.CFrame:VectorToObjectSpace(
+				wheel.Instance.AssemblyAngularVelocity
+			).X * (wheel.Instance.Size.Y / 2)
 		)
 		count += 1
 	end
 	speed = speed / count * self.Units[self.CurrentUnit].Scaling
-	self.Instance.Speed.Speed.Text = string.format("%03d", speed):gsub("^0+", '<font transparency="0.5">%0</font>')
+	self.Instance.Speed.Speed.Text = string.format("%03d", speed):gsub(
+		"^0+",
+		'<font transparency="0.5">%0</font>'
+	)
 end
 
 function TachInit(self: Speedometer)
@@ -131,14 +143,21 @@ function TachInit(self: Speedometer)
 		bin.Rotation = i / max * 225 - 135
 		bin.Num.Text = tostring(i)
 		bin.Num.Rotation = -bin.Rotation
-		if i * 1000 > self.Vehicle.Engine.Tune.ShiftRPM then bin.Num.TextColor3 = Color3.new(1, 0.2, 0.2) end
+		if i * 1000 > self.Vehicle.Engine.Tune.ShiftRPM then
+			bin.Num.TextColor3 = Color3.new(1, 0.2, 0.2)
+		end
 		bin.Parent = self.Instance.Tach
 	end
 end
 
 function TachUpdate(self: Speedometer)
 	local function setColor(color: Color3)
-		for _, v: ImageLabel in { self.Instance.Tach.Left.CanvasGroup.FG, self.Instance.Tach.Right.CanvasGroup.FG } do
+		for _, v: ImageLabel in
+			{
+				self.Instance.Tach.Left.CanvasGroup.FG,
+				self.Instance.Tach.Right.CanvasGroup.FG,
+			}
+		do
 			v.ImageColor3 = color
 		end
 	end
@@ -146,12 +165,18 @@ function TachUpdate(self: Speedometer)
 	local max = math.ceil(self.Vehicle.Engine.Tune.Redline / 1000) * 1000
 	local rot = self.Vehicle.RPM / max * 225
 	self.Instance.Tach.Left.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 180)
-	self.Instance.Tach.Right.CanvasGroup.FG.Rotation = math.clamp(rot - 180, 0, 45)
+	self.Instance.Tach.Right.CanvasGroup.FG.Rotation =
+		math.clamp(rot - 180, 0, 45)
 	if self.Vehicle.RPM / self.Vehicle.Engine.Tune.ShiftRPM > 0.8 then
 		setColor(
 			Color3.new(1, 1, 1):Lerp(
 				Color3.new(1, 0, 0),
-				math.clamp((self.Vehicle.RPM / self.Vehicle.Engine.Tune.ShiftRPM - 0.8) / 0.2, 0, 1)
+				math.clamp(
+					(self.Vehicle.RPM / self.Vehicle.Engine.Tune.ShiftRPM - 0.8)
+						/ 0.2,
+					0,
+					1
+				)
 			)
 		)
 	else
@@ -160,17 +185,29 @@ function TachUpdate(self: Speedometer)
 end
 
 function MileageUpdate(self: Speedometer)
-	local mileage = self.Vehicle.Mileage / self.Units[self.CurrentUnit].MileageScaling
-	self.Instance.Mileage.Mileage.Text =
-		string.format("%06.1f", mileage):gsub("^0+", '<font transparency="0.5">%0</font>')
+	local mileage = self.Vehicle.Mileage
+		/ self.Units[self.CurrentUnit].MileageScaling
+	self.Instance.Mileage.Mileage.Text = string.format("%06.1f", mileage):gsub(
+		"^0+",
+		'<font transparency="0.5">%0</font>'
+	)
 end
 
 function BoostUpdate(self: Speedometer)
-	if not (self.Vehicle.Engine.Tune.Superchargers + self.Vehicle.Engine.Tune.Turbochargers) then return end
+	if
+		not (
+			self.Vehicle.Engine.Tune.Superchargers
+			+ self.Vehicle.Engine.Tune.Turbochargers
+		)
+	then
+		return
+	end
 
-	local max = self.Vehicle.Engine.Tune.S_Boost + self.Vehicle.Engine.Tune.T_Boost
+	local max = self.Vehicle.Engine.Tune.S_Boost
+		+ self.Vehicle.Engine.Tune.T_Boost
 	local rot = self.Vehicle.Engine.Boost / max * 45
-	self.Instance.Boost.Rotation = math.clamp(180 - rot / 2, 180 - 45 / 2, 180 + 45 / 2)
+	self.Instance.Boost.Rotation =
+		math.clamp(180 - rot / 2, 180 - 45 / 2, 180 + 45 / 2)
 	self.Instance.Boost.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 45)
 end
 
@@ -184,11 +221,19 @@ function FuelUpdate(self: Speedometer)
 	self.Instance.Fuel.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 60)
 	if self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity < 0.3 then
 		setColor(
-			Color3.new(1, 1, 1)
-				:Lerp(
-					Color3.new(1, 0, 0),
-					math.clamp(1 - (self.Vehicle.Fuel / self.Vehicle.Tune.FuelCapacity) / 0.3, 0, 1)
+			Color3.new(1, 1, 1):Lerp(
+				Color3.new(1, 0, 0),
+				math.clamp(
+					1
+						- (
+								self.Vehicle.Fuel
+								/ self.Vehicle.Tune.FuelCapacity
+							)
+							/ 0.3,
+					0,
+					1
 				)
+			)
 		)
 	else
 		setColor(Color3.new(1, 1, 1))
@@ -201,15 +246,26 @@ function TempUpdate(self: Speedometer)
 		self.Instance.TempIcon.Icon.ImageColor3 = color
 	end
 
-	local rot = (self.Vehicle.Engine.Temperature - 60) / (self.Vehicle.Engine.Tune.EngineBurnTemp - 65) * 60
+	local rot = (self.Vehicle.Engine.Temperature - 60)
+		/ (self.Vehicle.Engine.Tune.EngineBurnTemp - 65)
+		* 60
 	self.Instance.Temp.CanvasGroup.FG.Rotation = 180 - math.clamp(rot, 0, 60)
 
-	if self.Vehicle.Engine.Temperature / (self.Vehicle.Engine.Tune.EngineBurnTemp - 5) < 0.3 then
+	if
+		self.Vehicle.Engine.Temperature
+			/ (self.Vehicle.Engine.Tune.EngineBurnTemp - 5)
+		< 0.3
+	then
 		setColor(
 			Color3.new(1, 1, 1):Lerp(
 				Color3.new(1, 0, 0),
 				math.clamp(
-					1 - (self.Vehicle.Engine.Temperature / (self.Vehicle.Engine.Tune.EngineBurnTemp - 5)) / 0.3,
+					1
+						- (
+								self.Vehicle.Engine.Temperature
+								/ (self.Vehicle.Engine.Tune.EngineBurnTemp - 5)
+							)
+							/ 0.3,
 					0,
 					1
 				)
@@ -222,29 +278,53 @@ end
 
 function UpdateIcons(self: Speedometer)
 	-- PBrake
-	self.Instance.PBrake.ImageColor3 = (self.Vehicle.PBrake or self.Vehicle.Starting) and Color3.new(1, 1, 1)
+	self.Instance.PBrake.ImageColor3 = (
+		self.Vehicle.PBrake or self.Vehicle.Starting
+	)
+			and Color3.new(1, 1, 1)
 		or Color3.new()
-	self.Instance.PBrake.ImageTransparency = (self.Vehicle.PBrake or self.Vehicle.Starting) and 0.2 or 0.8
+	self.Instance.PBrake.ImageTransparency = (
+		self.Vehicle.PBrake or self.Vehicle.Starting
+	)
+			and 0.2
+		or 0.8
 
 	-- Battery
-	self.Instance.Battery.ImageColor3 = (not self.Vehicle.IsOn or self.Vehicle.Starting) and Color3.new(1, 0, 0)
+	self.Instance.Battery.ImageColor3 = (
+		not self.Vehicle.IsOn or self.Vehicle.Starting
+	)
+			and Color3.new(1, 0, 0)
 		or Color3.new()
-	self.Instance.Battery.ImageTransparency = (not self.Vehicle.IsOn or self.Vehicle.Starting) and 0.2 or 0.8
+	self.Instance.Battery.ImageTransparency = (
+		not self.Vehicle.IsOn or self.Vehicle.Starting
+	)
+			and 0.2
+		or 0.8
 
 	-- Check
-	self.Instance.Check.ImageColor3 = (self.Vehicle.Starting or self.Vehicle.Engine.Health == 0) and Color3.new(1, 0, 0)
+	self.Instance.Check.ImageColor3 = (
+		self.Vehicle.Starting or self.Vehicle.Engine.Health == 0
+	)
+			and Color3.new(1, 0, 0)
 		or self.Vehicle.Engine.Health < 0.3 and Color3.new(1, 0.5, 0)
 		or Color3.new()
-	self.Instance.Check.ImageTransparency = (self.Vehicle.Starting or (self.Vehicle.Engine.Health :: number) < 0.3)
+	self.Instance.Check.ImageTransparency = (
+		self.Vehicle.Starting
+		or (self.Vehicle.Engine.Health :: number) < 0.3
+	)
 			and 0.2
 		or 0.8
 
 	-- Lights
 	-- Low beam
-	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting and Color3.new(1, 0, 0)
+	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting
+			and Color3.new(1, 0, 0)
 		or self.Vehicle.Lights.State == "Low" and Color3.new(0, 1, 0)
 		or Color3.new()
-	self.Instance.LowBeam.ImageTransparency = (self.Vehicle.Starting or self.Vehicle.Lights.State == "Low") and 0.2
+	self.Instance.LowBeam.ImageTransparency = (
+		self.Vehicle.Starting or self.Vehicle.Lights.State == "Low"
+	)
+			and 0.2
 		or 0.8
 	self.Instance.LowBeam.Visible = self.Vehicle.Lights.State ~= "High"
 	-- High beam
@@ -253,16 +333,24 @@ function UpdateIcons(self: Speedometer)
 	-- Turn signals
 	-- Right
 	local rTurn = self.Vehicle.Starting
-		or (self.Vehicle.Lights.TurnState == "Right" or self.Vehicle.Lights.TurnState == "Both")
+		or (
+				self.Vehicle.Lights.TurnState == "Right"
+				or self.Vehicle.Lights.TurnState == "Both"
+			)
 			and math.round(tick() * 2) % 2 == 0
-	self.Instance.RTurn.ImageColor3 = rTurn and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.RTurn.ImageColor3 = rTurn and Color3.new(0.2, 1, 0.2)
+		or Color3.new()
 	self.Instance.RTurn.ImageTransparency = rTurn and 0.2 or 0.8
 
 	-- Left
 	local lTurn = self.Vehicle.Starting
-		or (self.Vehicle.Lights.TurnState == "Left" or self.Vehicle.Lights.TurnState == "Both")
+		or (
+				self.Vehicle.Lights.TurnState == "Left"
+				or self.Vehicle.Lights.TurnState == "Both"
+			)
 			and math.round(tick() * 2) % 2 == 0
-	self.Instance.LTurn.ImageColor3 = lTurn and Color3.new(0.2, 1, 0.2) or Color3.new()
+	self.Instance.LTurn.ImageColor3 = lTurn and Color3.new(0.2, 1, 0.2)
+		or Color3.new()
 	self.Instance.LTurn.ImageTransparency = lTurn and 0.2 or 0.8
 end
 

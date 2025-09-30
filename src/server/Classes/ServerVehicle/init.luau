@@ -3,13 +3,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local DeformationHandler = require(script.DeformationHandler)
-local EngineTable = require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
+local EngineTable =
+	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local InteriorHandler = require(script.InteriorHandler)
 local Lights = require(script.Lights)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehicleConstants =
+	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -19,7 +21,8 @@ ServerVehicle.__index = ServerVehicle
 type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance): ServerVehicle
-	local self: ServerVehicle = setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
+	local self: ServerVehicle =
+		setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
 	Initialize(self)
 
@@ -31,15 +34,18 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 	Lights.new(self)
 	InteriorHandler.new(self)
 
-	trove:Connect(self._Remote.OnServerEvent, function(sender: Player, buf: buffer)
-		self:_Replicate(buf)
+	trove:Connect(
+		self._Remote.OnServerEvent,
+		function(sender: Player, buf: buffer)
+			self:_Replicate(buf)
 
-		for _, player in Players:GetPlayers() do
-			if player == sender then continue end
+			for _, player in Players:GetPlayers() do
+				if player == sender then continue end
 
-			self._Remote:FireClient(player, buf)
+				self._Remote:FireClient(player, buf)
+			end
 		end
-	end)
+	)
 
 	return self
 end
@@ -69,17 +75,21 @@ function MakeGravity(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
 		if not v:IsA("BasePart") or v.Massless then continue end
 
-		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH") or Instance.new("Attachment")
+		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH")
+			or Instance.new("Attachment")
 		attachment.Name = "#GRAVCOMP_ATTACH"
 		attachment.Parent = v
 
-		local force = v:FindFirstChild("#GRAVCOMP") or Instance.new("VectorForce")
+		local force = v:FindFirstChild("#GRAVCOMP")
+			or Instance.new("VectorForce")
 		force.Name = "#GRAVCOMP"
 		force.RelativeTo = Enum.ActuatorRelativeTo.World
 		force.Attachment0 = attachment
 		force.Force = Vector3.new(
 			0,
-			VehicleConstants.GravComp > 0 and v.Mass * (workspace.Gravity - VehicleConstants.GravComp) or 0,
+			VehicleConstants.GravComp > 0
+					and v.Mass * (workspace.Gravity - VehicleConstants.GravComp)
+				or 0,
 			0
 		)
 		force.Parent = v
@@ -107,7 +117,9 @@ function MakeCollider(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.InitializeWheels(self: ServerVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
+function ServerVehicle.InitializeWheels(self: ServerVehicle)
+	BaseVehicle.InitializeWheels(self, Wheel)
+end
 
 function ApplyWeight(self: ServerVehicle)
 	local mass = 0
@@ -155,10 +167,14 @@ function ApplyWeight(self: ServerVehicle)
 		weightPart.Size = self.Tune.WeightPartSize / Units.Length_mm
 		local tdensity = (self.Tune.Weight * Units.Mass_kg - mass)
 			/ (weightPart.Size.X * weightPart.Size.Y * weightPart.Size.Z) --fixed by denkodin
-		weightPart.CustomPhysicalProperties = PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)
+		weightPart.CustomPhysicalProperties =
+			PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)
 		--Real life mass in pounds, converted to kg minus existing roblox mass converted to kg, divided by volume of the weight brick in cubic meters, divided by the density of water
-		weightPart.CFrame = (self.Instance.DriveSeat.CFrame - self.Instance.DriveSeat.Position + center)
-			* CFrame.new(0, self.Tune.CGHeight, 0)
+		weightPart.CFrame = (
+			self.Instance.DriveSeat.CFrame
+			- self.Instance.DriveSeat.Position
+			+ center
+		) * CFrame.new(0, self.Tune.CGHeight, 0)
 		weightPart.Parent = self.Instance.Body
 
 		--Density Cap
@@ -249,11 +265,17 @@ function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
 			-- Apply handbrake
 			if self.Tune.ExitBrake then
 				if wheel.IsFront then
-					wheel.Instance.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
-						* self.Tune.PBrakeBias
+					wheel.Instance.BV.MotorMaxTorque = (
+						self.Tune.PBrakeForce
+						* 9.80665
+						* Units.Force_N
+					) * self.Tune.PBrakeBias
 				else
-					wheel.Instance.BV.MotorMaxTorque = (self.Tune.PBrakeForce * 9.80665 * Units.Force_N)
-						* (1 - self.Tune.PBrakeBias)
+					wheel.Instance.BV.MotorMaxTorque = (
+						self.Tune.PBrakeForce
+						* 9.80665
+						* Units.Force_N
+					) * (1 - self.Tune.PBrakeBias)
 				end
 			end
 
@@ -265,10 +287,18 @@ function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
 			if wheel.Instance.Arm:FindFirstChild("Steer") then
 				if self.Tune.PowerSteeringType == "New" then
 					wheel.Instance.Arm.Steer.Attachment0.Orientation =
-						Vector3.new(0, -wheel.Instance.Base.Rotate.CurrentAngle, 0)
+						Vector3.new(
+							0,
+							-wheel.Instance.Base.Rotate.CurrentAngle,
+							0
+						)
 				else
 					wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
-						* CFrame.Angles(0, math.rad(wheel.Instance.Base.Rotate.CurrentAngle), 0)
+						* CFrame.Angles(
+							0,
+							math.rad(wheel.Instance.Base.Rotate.CurrentAngle),
+							0
+						)
 				end
 			end
 		end
@@ -282,7 +312,9 @@ function InitializeSeats(self: ServerVehicle)
 	table.insert(seats, self.Instance.DriveSeat)
 
 	for _, seat in seats do
-		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then
+			continue
+		end
 
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.ObjectText = "Vehicle"
@@ -310,12 +342,18 @@ function InitializeSeats(self: ServerVehicle)
 
 		RE.OnServerEvent:Connect(function(player: Player)
 			if not player.Character then return end
-			local humanoid = player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
+			local humanoid =
+				player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
 
-			local seatWeld = humanoid.SeatPart:FindFirstChild("SeatWeld") :: Weld
+			local seatWeld =
+				humanoid.SeatPart:FindFirstChild("SeatWeld") :: Weld
 			seatWeld:Destroy()
 
-			player.Character:PivotTo(CFrame.new(((seat :: any).LeavePosition :: Attachment).WorldPosition))
+			player.Character:PivotTo(
+				CFrame.new(
+					((seat :: any).LeavePosition :: Attachment).WorldPosition
+				)
+			)
 			RE:FireClient(player)
 		end)
 

@@ -14,7 +14,11 @@ function CarService.new(instance: Model): CarServiceServer
 	self.Occupants = {}
 
 	self._RE = Instance.new("RemoteEvent")
-	self._RE.OnServerEvent:Connect(function(player: Player, event: string, ...) self[event](self, player, ...) end)
+	self._RE.OnServerEvent:Connect(
+		function(player: Player, event: string, ...)
+			self[event](self, player, ...)
+		end
+	)
 	self._RE.Parent = self.Instance
 
 	self._RF = Instance.new("RemoteFunction")

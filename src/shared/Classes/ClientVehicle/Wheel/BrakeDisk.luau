@@ -1,7 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local BrakeDiskPacket = require(ReplicatedStorage.Shared.Packets.BrakeDiskPacket)
+local BrakeDiskPacket =
+	require(ReplicatedStorage.Shared.Packets.BrakeDiskPacket)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -12,14 +13,18 @@ ClientBrakeDisk.__index = ClientBrakeDisk
 
 type ClientBrakeDisk = VehicleTypes.ClientBrakeDisk
 
-function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart): ClientBrakeDisk
+function ClientBrakeDisk.new(
+	wheel: VehicleTypes.ClientWheel,
+	instance: BasePart
+): ClientBrakeDisk
 	local self: ClientBrakeDisk = setmetatable({}, ClientBrakeDisk) :: any
 
 	self.Instance = instance
 	self.Wheel = wheel
 	self.Vehicle = self.Wheel.Vehicle
 	self.Volume = 0
-	self.Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self.Temperature =
+		game.Workspace:GetAttribute("GlobalTemperature") :: number
 	self._startColor = self.Instance.Color
 
 	self.Sound = Instance.new("Sound") :: any
@@ -38,8 +43,14 @@ function ClientBrakeDisk.new(wheel: VehicleTypes.ClientWheel, instance: BasePart
 	self._RE = instance:WaitForChild("_DiskRE") :: UnreliableRemoteEvent
 
 	local trove = Trove.new()
-	trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
-	trove:Connect(self._RE.OnClientEvent, function(buf) Replicate(self, buf) end)
+	trove:Connect(
+		RunService.Heartbeat,
+		function(deltaTime) Update(self, deltaTime) end
+	)
+	trove:Connect(
+		self._RE.OnClientEvent,
+		function(buf) Replicate(self, buf) end
+	)
 	trove:Add(task.spawn(function()
 		while true do
 			task.wait(1 / 20)
@@ -62,28 +73,37 @@ end
 function Update(self: ClientBrakeDisk, deltaTime: number)
 	if not self.Vehicle.IsDriven then return end
 
-	local GlobalTemperature = game.Workspace:GetAttribute("GlobalTemperature") :: number
+	local GlobalTemperature =
+		game.Workspace:GetAttribute("GlobalTemperature") :: number
 
-	local inBrake = self.Wheel.Vehicle.Brake :: number > 0 or self.Wheel.Vehicle.PBrake
+	local inBrake = self.Wheel.Vehicle.Brake :: number > 0
+		or self.Wheel.Vehicle.PBrake
 	local rotSpeed = self.Wheel.Instance.AssemblyAngularVelocity.Magnitude / 360
 	self.Sound.Playing = true
 	if inBrake then
 		self.Temperature += self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed * deltaTime
-		self.Volume =
-			MathUtil.Lerp(self.Volume, self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 5000, deltaTime * 5)
-		self.Sound.PitchEffect.Octave = 0.9 + self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 1000
+		self.Volume = MathUtil.Lerp(
+			self.Volume,
+			self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 5000,
+			deltaTime * 5
+		)
+		self.Sound.PitchEffect.Octave = 0.9
+			+ self.Wheel.Instance.BV.MotorMaxTorque * rotSpeed ^ 0.8 / 1000
 	else
 		self.Volume = MathUtil.Lerp(self.Volume, 0, deltaTime * 5)
 	end
-	self.Temperature = MathUtil.Lerp(self.Temperature, GlobalTemperature, deltaTime * 0.3)
+	self.Temperature =
+		MathUtil.Lerp(self.Temperature, GlobalTemperature, deltaTime * 0.3)
 	self.Sound.Volume = self.Volume
 
 	updateColor(self)
 end
 
 function updateColor(self: ClientBrakeDisk)
-	local colorDelta = math.clamp(MathUtil.MapToRange(self.Temperature, 80, 200), 0, 1)
-	self.Instance.Color = self._startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
+	local colorDelta =
+		math.clamp(MathUtil.MapToRange(self.Temperature, 80, 200), 0, 1)
+	self.Instance.Color =
+		self._startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
 end
 
 function Replicate(self: ClientBrakeDisk, buf: buffer?)

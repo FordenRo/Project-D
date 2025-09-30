@@ -19,7 +19,8 @@ function Headlight.new(instance: BasePart): Headlight
 	self._currentBrightness = 0
 	self.Brightness = 0
 	self.DisabledColor = self.Instance.Color
-	self.EnabledColor = self.Light and self.Light.Color or self.Instance:GetAttribute("Color") :: Color3
+	self.EnabledColor = self.Light and self.Light.Color
+		or self.Instance:GetAttribute("Color") :: Color3
 
 	if self.Light then
 		self.Light.Brightness = 0
@@ -39,16 +40,23 @@ end
 
 function Update(self: Headlight, deltaTime: number)
 	if self._currentBrightness < self.Brightness then
-		self._currentBrightness = math.min(self._currentBrightness + deltaTime / 0.2, self.Brightness)
+		self._currentBrightness =
+			math.min(self._currentBrightness + deltaTime / 0.2, self.Brightness)
 	elseif self._currentBrightness > self.Brightness then
-		self._currentBrightness = math.max(self._currentBrightness - deltaTime / 0.2, self.Brightness)
+		self._currentBrightness =
+			math.max(self._currentBrightness - deltaTime / 0.2, self.Brightness)
 	end
 
 	local brightness = self._currentBrightness ^ 2
-	if self.Light then self.Light.Brightness = self._lightBrightness * brightness end
-	self.Instance.Color = self.DisabledColor:Lerp(self.EnabledColor, self._currentBrightness)
+	if self.Light then
+		self.Light.Brightness = self._lightBrightness * brightness
+	end
+	self.Instance.Color =
+		self.DisabledColor:Lerp(self.EnabledColor, self._currentBrightness)
 end
 
-function Headlight.SetBrightness(self: Headlight, brightness: number) self.Brightness = brightness end
+function Headlight.SetBrightness(self: Headlight, brightness: number)
+	self.Brightness = brightness
+end
 
 return Headlight

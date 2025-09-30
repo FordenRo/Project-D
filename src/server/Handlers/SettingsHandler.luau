@@ -29,19 +29,29 @@ function SettingsHandler.new(): SettingsHandler
 
 	RF.OnServerInvoke = function(player: Player, action: number)
 		local RFActions = {
-			[Actions.GetKeybinds] = function() return KeybindsDataStore:GetAsync(player.UserId) or {} end,
-			[Actions.GetSettings] = function() return SettingsDataStore:GetAsync(player.UserId) or {} end,
+			[Actions.GetKeybinds] = function()
+				return KeybindsDataStore:GetAsync(player.UserId) or {}
+			end,
+			[Actions.GetSettings] = function()
+				return SettingsDataStore:GetAsync(player.UserId) or {}
+			end,
 		}
 		return RFActions[action]()
 	end
 
-	RE.OnServerEvent:Connect(function(player: Player, action: number, value: any)
-		local actions = {
-			[Actions.SaveKeybinds] = function() KeybindsDataStore:SetAsync(player.UserId, value) end,
-			[Actions.SaveSettings] = function() SettingsDataStore:SetAsync(player.UserId, value) end,
-		}
-		actions[action]()
-	end)
+	RE.OnServerEvent:Connect(
+		function(player: Player, action: number, value: any)
+			local actions = {
+				[Actions.SaveKeybinds] = function()
+					KeybindsDataStore:SetAsync(player.UserId, value)
+				end,
+				[Actions.SaveSettings] = function()
+					SettingsDataStore:SetAsync(player.UserId, value)
+				end,
+			}
+			actions[action]()
+		end
+	)
 
 	return self
 end

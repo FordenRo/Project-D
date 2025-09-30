@@ -25,7 +25,9 @@ function Slider.new(instance: Frame): Slider
 	self.Progress = 0
 	self._currentProgress = 0
 
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime: number) Update(self, deltaTime) end)
+	self._conn = RunService.Heartbeat:Connect(
+		function(deltaTime: number) Update(self, deltaTime) end
+	)
 
 	return self
 end
@@ -36,7 +38,9 @@ function Update(self: Slider, deltaTime: number)
 	self._currentProgress += (self.Progress - self._currentProgress) * deltaTime * 5
 
 	self.Instance.Content.Fill.Size = UDim2.fromScale(self._currentProgress, 1)
-	self.Instance.Progress.Text = tostring(math.round(self._currentProgress * 100)) .. "%"
+	self.Instance.Progress.Text = tostring(
+		math.round(self._currentProgress * 100)
+	) .. "%"
 end
 
 function Slider.Destroy(self: Slider) self._conn:Disconnect() end

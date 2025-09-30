@@ -28,7 +28,8 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 		self._Remote.Name = "_VehicleRemote"
 		self._Remote.Parent = self.Instance
 	else
-		self._Remote = self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
+		self._Remote =
+			self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 	end
 
 	return self
@@ -52,7 +53,8 @@ function InitializeVariables(self: BaseVehicle)
 	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult
 	self.FinalDriveRatio = self.FinalDrive * 30 / math.pi
 	self.TransmissionMode = "Manual"
-	self.CurrentRatio = self.Tune.Ratios[self.Gear + 2 + (ParkingGearEnabled and 1 or 0)]
+	self.CurrentRatio =
+		self.Tune.Ratios[self.Gear + 2 + (ParkingGearEnabled and 1 or 0)]
 	self.RPM = 0
 	self.Shifting = false
 	self.AutoClutch = false
@@ -78,10 +80,15 @@ function InitializeVariables(self: BaseVehicle)
 	self.CSActive = false
 end
 
-function BaseVehicle.InitializeWheels(self: BaseVehicle, wheelClass: VehicleTypes.BaseWheel)
+function BaseVehicle.InitializeWheels(
+	self: BaseVehicle,
+	wheelClass: VehicleTypes.BaseWheel
+)
 	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
 	for _, v in self.Instance.Wheels:GetChildren() do
-		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then continue end
+		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
+			continue
+		end
 
 		table.insert(self.Wheels, wheelClass.new(self, v))
 	end
@@ -101,14 +108,20 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 		self[k] = v
 	end
 
-	local engineTune = require(ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(self.Tune.Engine))
+	local engineTune = require(
+		ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(
+			self.Tune.Engine
+		)
+	)
 	local x = self.RPM / 1000
 	self.Engine.Boost = self.Engine.BoostTurbo + self.Engine.BoostSuper
 
 	self.Engine.TqTurbo = self.Engine.BoostTurbo * engineTune.T_Efficiency
 	self.Engine.TqSuper = self.Engine.BoostSuper * engineTune.S_Efficiency
 	self.Engine.TqBoosted = self.Engine.TqTurbo + self.Engine.TqSuper
-	self.Engine.Torque = self.Engine.TqNatural + self.Engine.TqElectric + self.Engine.TqBoosted
+	self.Engine.Torque = self.Engine.TqNatural
+		+ self.Engine.TqElectric
+		+ self.Engine.TqBoosted
 
 	self.Engine.HpNatural = self.Engine.TqNatural * x / 5.252
 	self.Engine.HpTurbo = self.Engine.TqTurbo * x / 5.252

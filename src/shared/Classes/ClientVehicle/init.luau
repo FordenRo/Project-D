@@ -7,7 +7,8 @@ local Aerodynamics = require(script.Aerodynamics)
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local BodyController = require(script.BodyController)
 local CameraController = require(script.CameraController)
-local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+local CreateEditableMesh =
+	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local ExhaustController = require(script.ExhaustController)
@@ -20,7 +21,8 @@ local SoundController = require(script.SoundController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateTransmission = require(script.UpdateTransmission)
-local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehicleConstants =
+	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -34,7 +36,8 @@ ClientVehicle.__index = ClientVehicle
 type ClientVehicle = VehicleTypes.ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: VehicleTypes.ClientVehicle = setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
+	local self: VehicleTypes.ClientVehicle =
+		setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
 	self.MeshParts = {}
 	self.Meshes = {}
@@ -58,8 +61,14 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	InteriorController.new(self)
 	self.Lights = Lights.new(self)
 
-	trove:Connect(RunService.Heartbeat, function(deltaTime) Update(self, deltaTime) end)
-	trove:Connect(self._Remote.OnClientEvent, function(buf) Replicate(self, buf) end)
+	trove:Connect(
+		RunService.Heartbeat,
+		function(deltaTime) Update(self, deltaTime) end
+	)
+	trove:Connect(
+		self._Remote.OnClientEvent,
+		function(buf) Replicate(self, buf) end
+	)
 	trove:Add(task.spawn(function()
 		while task.wait(1 / 30) do
 			Replicate(self)
@@ -79,7 +88,11 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	return self
 end
 
-function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | Seat)
+function Seated(
+	self: ClientVehicle,
+	seatedPlayer: Player,
+	seat: VehicleSeat | Seat
+)
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = seatedPlayer
 	else
@@ -100,7 +113,11 @@ function Seated(self: ClientVehicle, seatedPlayer: Player, seat: VehicleSeat | S
 	self.Interface = VehicleInterface.new(self)
 end
 
-function Leaved(self: ClientVehicle, leavedPlayer: Player, seat: VehicleSeat | Seat)
+function Leaved(
+	self: ClientVehicle,
+	leavedPlayer: Player,
+	seat: VehicleSeat | Seat
+)
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = nil
 	else
@@ -120,7 +137,8 @@ function Leaved(self: ClientVehicle, leavedPlayer: Player, seat: VehicleSeat | S
 end
 
 function ClientVehicle.Leave(self: ClientVehicle)
-	local humanoid = player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
+	local humanoid =
+		player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
 	local seat = humanoid.SeatPart
 	if not seat then return end
 
@@ -128,7 +146,9 @@ function ClientVehicle.Leave(self: ClientVehicle)
 	RE:FireServer()
 
 	RE.OnClientEvent:Wait()
-	player.Character:PivotTo(CFrame.new(((seat :: any).LeavePosition :: Attachment).WorldPosition))
+	player.Character:PivotTo(
+		CFrame.new(((seat :: any).LeavePosition :: Attachment).WorldPosition)
+	)
 end
 
 function togglePrompts(self: ClientVehicle, enabled: boolean)
@@ -136,7 +156,9 @@ function togglePrompts(self: ClientVehicle, enabled: boolean)
 	table.insert(seats, self.Instance.DriveSeat)
 
 	for _, seat in seats do
-		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then
+			continue
+		end
 
 		local prompt = seat.PromptAttachment.ProximityPrompt :: ProximityPrompt
 		if seat.Occupant then
@@ -155,7 +177,8 @@ function InitializeBody(self: ClientVehicle)
 		task.spawn(function()
 			local texture
 			if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
-				texture = AssetService:CreateEditableImageAsync(v.TextureContent)
+				texture =
+					AssetService:CreateEditableImageAsync(v.TextureContent)
 			end
 
 			local mesh = CreateEditableMesh(v)
@@ -184,7 +207,9 @@ function InitializeSeats(self: ClientVehicle)
 	table.insert(seats, self.Instance.DriveSeat)
 
 	for _, seat in seats do
-		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then continue end
+		if not seat:IsA("VehicleSeat") and not seat:IsA("Seat") then
+			continue
+		end
 
 		seat:GetPropertyChangedSignal("Occupant"):Connect(function()
 			if seat.Occupant then
@@ -196,7 +221,9 @@ function InitializeSeats(self: ClientVehicle)
 
 				Seated(self, seatedPlayer, seat)
 			else
-				local leavedPlayer = seat == self.Instance.DriveSeat and self.Driver or self.Passengers[seat]
+				local leavedPlayer = seat == self.Instance.DriveSeat
+						and self.Driver
+					or self.Passengers[seat]
 				Leaved(self, leavedPlayer, seat)
 			end
 		end)
@@ -205,12 +232,24 @@ end
 
 function InitializeVariables(self: ClientVehicle)
 	self.BrakeForce = {
-		Front = self.Tune.BrakeForce * 9.80665 * Units.Force_N * self.Tune.BrakeBias,
-		Rear = self.Tune.BrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.BrakeBias),
+		Front = self.Tune.BrakeForce
+			* 9.80665
+			* Units.Force_N
+			* self.Tune.BrakeBias,
+		Rear = self.Tune.BrakeForce
+			* 9.80665
+			* Units.Force_N
+			* (1 - self.Tune.BrakeBias),
 	}
 	self.PBrakeForce = {
-		Front = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * self.Tune.PBrakeBias,
-		Rear = self.Tune.PBrakeForce * 9.80665 * Units.Force_N * (1 - self.Tune.PBrakeBias),
+		Front = self.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+			* self.Tune.PBrakeBias,
+		Rear = self.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+			* (1 - self.Tune.PBrakeBias),
 	}
 	self._ShiftUp = false
 	self._ShiftDown = false
@@ -218,7 +257,9 @@ function InitializeVariables(self: ClientVehicle)
 	self.WeightPart = self.Instance.Body.WeightPart
 end
 
-function ClientVehicle.InitializeWheels(self: ClientVehicle) BaseVehicle.InitializeWheels(self, Wheel) end
+function ClientVehicle.InitializeWheels(self: ClientVehicle)
+	BaseVehicle.InitializeWheels(self, Wheel)
+end
 
 -- TODO: Drivetrain Initialize
 
@@ -245,8 +286,9 @@ function UpdateMileage(self: ClientVehicle, deltaTime: number)
 		if not wheel.IsFront then continue end
 
 		speed += math.abs(
-			wheel.Instance.CFrame:VectorToObjectSpace(wheel.Instance.AssemblyAngularVelocity).X
-				* (wheel.Instance.Size.Y / 2)
+			wheel.Instance.CFrame:VectorToObjectSpace(
+				wheel.Instance.AssemblyAngularVelocity
+			).X * (wheel.Instance.Size.Y / 2)
 		)
 		count += 1
 	end

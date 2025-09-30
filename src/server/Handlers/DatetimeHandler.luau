@@ -32,8 +32,12 @@ function DatetimeHandler.new(): DatetimeHandler
 			end
 
 			local t = (1 - math.abs(Lighting.ClockTime - 12) / 12) ^ 2
-			Lighting.Brightness = MathUtil.Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
-			game.Workspace:SetAttribute("GlobalTemperature", MathUtil.Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t))
+			Lighting.Brightness =
+				MathUtil.Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
+			game.Workspace:SetAttribute(
+				"GlobalTemperature",
+				MathUtil.Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t)
+			)
 		end
 	end)
 

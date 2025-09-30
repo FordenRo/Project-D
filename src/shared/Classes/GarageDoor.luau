@@ -37,7 +37,10 @@ function GarageDoor.new(instance: Model): GarageDoor
 
 		table.insert(self.Parts, v)
 	end
-	table.sort(self.Parts, function(a, b) return a.Position.Y < b.Position.Y end)
+	table.sort(
+		self.Parts,
+		function(a, b) return a.Position.Y < b.Position.Y end
+	)
 
 	self.Length = self.Parts[#self.Parts].Position.Y - self.Parts[1].Position.Y
 	self.Position = 0
@@ -49,10 +52,15 @@ function GarageDoor.new(instance: Model): GarageDoor
 	self._startPositions = {}
 	for k, v in self.Parts do
 		self._startPositions[k] = v.Position
-		self._relativePositions[k] = (v.Position.Y - self._startPositions[1].Y) / self.Length
+		self._relativePositions[k] = (v.Position.Y - self._startPositions[1].Y)
+			/ self.Length
 	end
-	self._sep = (self._startPositions[2].Y - self._startPositions[1].Y) / self.Length / 2
-	self._conn = RunService.Heartbeat:Connect(function(deltaTime) Update(self, deltaTime) end)
+	self._sep = (self._startPositions[2].Y - self._startPositions[1].Y)
+		/ self.Length
+		/ 2
+	self._conn = RunService.Heartbeat:Connect(
+		function(deltaTime) Update(self, deltaTime) end
+	)
 
 	return self
 end
@@ -64,13 +72,18 @@ function calcCFrame(self: GarageDoor, position: number, index: number)
 	if relativePosition <= 1 - self._sep then
 		partPosition = Vector3.new(0, relativePosition)
 		angle = 0
-	elseif relativePosition > 1 - self._sep and relativePosition < 1 + self._sep * 2 then
+	elseif
+		relativePosition > 1 - self._sep
+		and relativePosition < 1 + self._sep * 2
+	then
 		local top = Vector3.new(
-			math.max((relativePosition - 1 + self._sep) * 1.2, 0 + self._sep) - self._sep,
+			math.max((relativePosition - 1 + self._sep) * 1.2, 0 + self._sep)
+				- self._sep,
 			math.min(relativePosition + self._sep, 1 + self._sep)
 		)
 		local bottom = Vector3.new(
-			math.max(relativePosition - 1 - self._sep, 0 + self._sep) - self._sep,
+			math.max(relativePosition - 1 - self._sep, 0 + self._sep)
+				- self._sep,
 			math.min(relativePosition - self._sep, 1 + self._sep)
 		)
 
@@ -78,18 +91,28 @@ function calcCFrame(self: GarageDoor, position: number, index: number)
 		angle = math.pi / 2 - math.atan2(direction.Y, direction.X)
 		partPosition = (bottom + direction * self._sep) * Vector3.new(-1, 1, 1)
 	else
-		partPosition = Vector3.new(-relativePosition + 1 + self._sep, 1 + self._sep)
+		partPosition =
+			Vector3.new(-relativePosition + 1 + self._sep, 1 + self._sep)
 		angle = math.pi / 2
 	end
 
-	return CFrame.new(self._startPositions[1] + partPosition * self.Length) * CFrame.fromAxisAngle(Vector3.zAxis, angle)
+	return CFrame.new(self._startPositions[1] + partPosition * self.Length)
+		* CFrame.fromAxisAngle(Vector3.zAxis, angle)
 end
 
 function Update(self: GarageDoor, deltaTime: number)
 	if not self.Closing and not self.Opening then return end
 
-	self.Speed = MathUtil.Lerp(self.Speed, self.Opening and 1 or self.Closing and -1 or 0, deltaTime)
-	self.Position = math.clamp(self.Position + deltaTime / 5 * self.Speed, 0, 1 + self._sep * 2)
+	self.Speed = MathUtil.Lerp(
+		self.Speed,
+		self.Opening and 1 or self.Closing and -1 or 0,
+		deltaTime
+	)
+	self.Position = math.clamp(
+		self.Position + deltaTime / 5 * self.Speed,
+		0,
+		1 + self._sep * 2
+	)
 
 	for k, part in self.Parts do
 		part.CFrame = calcCFrame(self, self.Position, k)

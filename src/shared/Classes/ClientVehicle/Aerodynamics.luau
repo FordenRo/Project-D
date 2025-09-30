@@ -86,11 +86,28 @@ function Initialize(self: Aerodynamics)
 end
 
 function Update(self: Aerodynamics)
-	if (self.Vehicle.WeightPart.AssemblyLinearVelocity - game.Workspace.GlobalWind).Magnitude < 1 then return end
+	if
+		(
+			self.Vehicle.WeightPart.AssemblyLinearVelocity
+			- game.Workspace.GlobalWind
+		).Magnitude < 1
+	then
+		return
+	end
 
 	local AirPressurePercent = math.exp(
-		(-9.80665 * 0.0289644 * (self.Vehicle.Center.Position.Y * Units.Length_mm / 1000))
-			/ (8.3142 * ((game.Workspace:GetAttribute("GlobalTemperature") :: number) + 273.15))
+		(
+			-9.80665
+			* 0.0289644
+			* (self.Vehicle.Center.Position.Y * Units.Length_mm / 1000)
+		)
+			/ (
+				8.3142
+				* (
+					(game.Workspace:GetAttribute("GlobalTemperature") :: number)
+					+ 273.15
+				)
+			)
 	) * (game.Workspace.AirDensity / 0.001)
 
 	-- Slipstream
@@ -98,7 +115,8 @@ function Update(self: Aerodynamics)
 
 	local toRayParams = RaycastParams.new()
 	toRayParams.FilterType = Enum.RaycastFilterType.Exclude
-	toRayParams.FilterDescendantsInstances = { self.Vehicle.Instance, player.Character }
+	toRayParams.FilterDescendantsInstances =
+		{ self.Vehicle.Instance, player.Character }
 
 	local toRay = game.Workspace:Raycast(
 		self.Vehicle.WeightPart.Position,
@@ -115,21 +133,29 @@ function Update(self: Aerodynamics)
 			-toRay.Instance.Velocity * self.Vehicle.Tune.AeroSlipstreamTime,
 			fromRayParams
 		)
-		if fromRay and fromRay.Instance:IsDescendantOf(self.Vehicle.Instance) then
+		if
+			fromRay and fromRay.Instance:IsDescendantOf(self.Vehicle.Instance)
+		then
 			dragFactor = (1 - self.Vehicle.Tune.AeroSlipstreamFactor)
 				+ (
 					fromRay.Distance
-					/ (toRay.Instance.Velocity * self.Vehicle.Tune.AeroSlipstreamTime).Magnitude
+					/ (
+						toRay.Instance.Velocity
+						* self.Vehicle.Tune.AeroSlipstreamTime
+					).Magnitude
 					* self.Vehicle.Tune.AeroSlipstreamFactor
 				)
 		end
 	end
 
 	-- Apply forces
-	local carVel = self.Vehicle.WeightPart.AssemblyLinearVelocity * (Units.Length_mm / 1000) * 3.6
+	local carVel = self.Vehicle.WeightPart.AssemblyLinearVelocity
+		* (Units.Length_mm / 1000)
+		* 3.6
 	local windVel = game.Workspace.GlobalWind * (Units.Length_mm / 1000) * 3.6
 	local diff = carVel - windVel
-	local objectVel = self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(carVel - windVel)
+	local objectVel =
+		self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(carVel - windVel)
 
 	local fDownforce = math.sign(objectVel.Z)
 		* (objectVel.Z ^ 2 / 200 ^ 2)
@@ -144,19 +170,31 @@ function Update(self: Aerodynamics)
 		* ((self.Vehicle.Tune.AeroDragCoeff * 1.5) / 100)
 		* AirPressurePercent
 
-	self._Forces.FDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector * fDownforce * 9.81 * Units.Force_N
-	self._Forces.RDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector * rDownforce * 9.81 * Units.Force_N
+	self._Forces.FDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+		* fDownforce
+		* 9.81
+		* Units.Force_N
+	self._Forces.RDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+		* rDownforce
+		* 9.81
+		* Units.Force_N
 	self._Forces.Drag.Force = combinedForce * 9.81 * Units.Force_N
 
 	-- Apply sounds
-	local wind = self.Vehicle.SoundController.Sounds.Wind.AudioPlayer :: AudioPlayer
-	local body = self.Vehicle.SoundController.Sounds.Body.AudioPlayer :: AudioPlayer
+	local wind =
+		self.Vehicle.SoundController.Sounds.Wind.AudioPlayer :: AudioPlayer
+	local body =
+		self.Vehicle.SoundController.Sounds.Body.AudioPlayer :: AudioPlayer
 	if not wind.IsPlaying or not body.IsPlaying then
 		wind:Play()
 		body:Play()
 	end
-	wind.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroWindVolume / 200 ^ 2
-	body.Volume = diff.Magnitude ^ 2 * self.Vehicle.Tune.AeroBodyVolume / 200 ^ 2
+	wind.Volume = diff.Magnitude ^ 2
+		* self.Vehicle.Tune.AeroWindVolume
+		/ 200 ^ 2
+	body.Volume = diff.Magnitude ^ 2
+		* self.Vehicle.Tune.AeroBodyVolume
+		/ 200 ^ 2
 end
 
 return Aerodynamics

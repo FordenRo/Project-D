@@ -10,7 +10,8 @@ InterfaceController.__index = InterfaceController
 type InterfaceController = UITypes.InterfaceController
 
 function InterfaceController.new(): InterfaceController
-	local self: InterfaceController = setmetatable({}, InterfaceController) :: any
+	local self: InterfaceController =
+		setmetatable({}, InterfaceController) :: any
 
 	self.Interface = Interface.new(self)
 	self.MainWindow = MainWindow.new()
@@ -28,8 +29,12 @@ function InterfaceController.Hide(self: InterfaceController)
 	self.MainWindow:Hide()
 end
 
-function InterfaceController.OpenWelcome(self: InterfaceController) self.MainWindow:Show() end
+function InterfaceController.OpenWelcome(self: InterfaceController)
+	self.MainWindow:Show()
+end
 
-function InterfaceController.OpenSettings(self: InterfaceController) self.MainWindow:Show("Settings") end
+function InterfaceController.OpenSettings(self: InterfaceController)
+	self.MainWindow:Show("Settings")
+end
 
 return InterfaceController.new()

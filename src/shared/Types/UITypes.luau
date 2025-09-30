@@ -30,7 +30,10 @@ export type Interface = {
 	Destroy: (self: Interface) -> (),
 }
 
-type TabModule = any & { new: (instance: ScrollingFrame) -> TabModule, Destroy: (self: TabModule) -> () }
+type TabModule = any & {
+	new: (instance: ScrollingFrame) -> TabModule,
+	Destroy: (self: TabModule) -> (),
+}
 
 export type MainWindow = {
 	__index: MainWindow,

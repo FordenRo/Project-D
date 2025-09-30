@@ -3,7 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehicleConstants = require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehicleConstants =
+	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local ServerTire = {}
@@ -11,7 +12,10 @@ ServerTire.__index = ServerTire
 
 type ServerTire = VehicleTypes.ServerWheelTire
 
-function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): ServerTire
+function ServerTire.new(
+	wheel: VehicleTypes.ServerWheel,
+	instance: BasePart
+): ServerTire
 	local self: ServerTire = setmetatable({}, ServerTire) :: any
 
 	self.Wheel = wheel
@@ -27,7 +31,10 @@ function ServerTire.new(wheel: VehicleTypes.ServerWheel, instance: BasePart): Se
 	Initialize(self)
 
 	local trove = Trove.new()
-	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:Connect(
+		self._RE.OnServerEvent,
+		function(...) Replicate(self, ...) end
+	)
 	trove:AttachToInstance(instance)
 
 	return self
@@ -35,7 +42,8 @@ end
 
 function Initialize(self: ServerTire)
 	if not self.Wheel.Instance:FindFirstChild("SmokePart") then
-		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster or self.Vehicle.Tune.RCaster
+		local caster = self.Wheel.IsFront and self.Vehicle.Tune.FCaster
+			or self.Vehicle.Tune.RCaster
 		caster = self.Wheel.IsRight and -caster or caster
 
 		local smokePart = self.Wheel.Instance.Arm:Clone()
@@ -43,7 +51,11 @@ function Initialize(self: ServerTire)
 		smokePart.Massless = true
 		smokePart:ClearAllChildren()
 		smokePart.CFrame = CFrame.new(
-			(self.Wheel.Instance.CFrame * CFrame.new(0, -self.Wheel.Instance.Size.Y / 2, 0)).Position
+			(self.Wheel.Instance.CFrame * CFrame.new(
+				0,
+				-self.Wheel.Instance.Size.Y / 2,
+				0
+			)).Position
 		) * self.Wheel.Instance.Arm.CFrame.Rotation
 		smokePart.Parent = self.Wheel.Instance
 
@@ -53,7 +65,11 @@ function Initialize(self: ServerTire)
 
 		local sa1 = Instance.new("Attachment")
 		sa1.Name = "SmokePartAttachment1"
-		sa1.Position = Vector3.new(0, self.Wheel.Instance.Size.Y / 2 + self.Vehicle.Tune.AxleSize, 0)
+		sa1.Position = Vector3.new(
+			0,
+			self.Wheel.Instance.Size.Y / 2 + self.Vehicle.Tune.AxleSize,
+			0
+		)
 		sa1.Parent = smokePart
 
 		local smokePartRigidConstraint = Instance.new("RigidConstraint")
@@ -111,7 +127,9 @@ function Initialize(self: ServerTire)
 		attachment.Parent = collision
 
 		for _, child in collision:GetChildren() do
-			if child:IsA("VectorForce") and child.Name == "#GRAVCOMP" then child:Destroy() end
+			if child:IsA("VectorForce") and child.Name == "#GRAVCOMP" then
+				child:Destroy()
+			end
 		end
 
 		local force = Instance.new("VectorForce")
@@ -120,7 +138,9 @@ function Initialize(self: ServerTire)
 		force.Attachment0 = attachment
 		force.Force = Vector3.new(
 			0,
-			VehicleConstants.GravComp > 0 and collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp) or 0,
+			VehicleConstants.GravComp > 0
+					and collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp)
+				or 0,
 			0
 		)
 		force.Parent = collision
@@ -158,7 +178,8 @@ function Initialize(self: ServerTire)
 		limiter.LimitsEnabled = true
 		limiter.FreeLength = 0
 		limiter.MaxLength = (
-			self.Wheel.IsFront and self.Vehicle.Tune.TireFThickness or self.Vehicle.Tune.TireRThickness
+			self.Wheel.IsFront and self.Vehicle.Tune.TireFThickness
+			or self.Vehicle.Tune.TireRThickness
 		) / Units.Length_mm
 		limiter.Parent = collision
 
@@ -176,7 +197,13 @@ end
 function Replicate(self: ServerTire, sender: Player, buf: buffer)
 	for _, player in Players:GetPlayers() do
 		if player == sender then continue end
-		if not player.Character or (player.Character:GetPivot().Position - self.Instance.Position).Magnitude > 1000 then
+		if
+			not player.Character
+			or (
+					player.Character:GetPivot().Position - self.Instance.Position
+				).Magnitude
+				> 1000
+		then
 			self._RE:FireClient(player)
 			continue
 		end

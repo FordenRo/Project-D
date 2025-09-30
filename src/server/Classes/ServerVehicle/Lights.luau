@@ -31,7 +31,10 @@ function ServerLights.new(vehicle: VehicleTypes.ServerVehicle): ServerLights
 	self._RE.Parent = self.Vehicle.Instance
 
 	local trove = Trove.new()
-	trove:Connect(self._RE.OnServerEvent, function(...) Replicate(self, ...) end)
+	trove:Connect(
+		self._RE.OnServerEvent,
+		function(...) Replicate(self, ...) end
+	)
 	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self

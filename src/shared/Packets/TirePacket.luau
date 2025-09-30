@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local MaterialGroups = require(ReplicatedStorage.Shared.Classes.ClientVehicle.Wheel.Tire.MaterialGroups)
+local MaterialGroups = require(
+	ReplicatedStorage.Shared.Classes.ClientVehicle.Wheel.Tire.MaterialGroups
+)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 local groups = {}

@@ -4,8 +4,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
-local CreateEditableMesh = require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
-local HittableService = require(ReplicatedStorage.Shared.Services.HittableService)
+local CreateEditableMesh =
+	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+local HittableService =
+	require(ReplicatedStorage.Shared.Services.HittableService)
 local ImageUtil = require(ReplicatedStorage.Shared.Utils.ImageUtil)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
@@ -23,7 +25,8 @@ type DeformationController = VehicleTypes.DeformationController
 local compiledScratchTextures = {}
 do
 	local taskCount = 0
-	local initialImage = AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
+	local initialImage =
+		AssetService:CreateEditableImageAsync("rbxassetid://107123302684595")
 	compiledScratchTextures[10] = initialImage
 
 	for i = 2, 9 do
@@ -46,15 +49,21 @@ local RemoteAction = {
 	Scratch = 2,
 }
 
-function DeformationController.new(vehicle: VehicleTypes.ClientVehicle): DeformationController
-	local self: DeformationController = setmetatable({}, DeformationController) :: any
+function DeformationController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): DeformationController
+	local self: DeformationController =
+		setmetatable({}, DeformationController) :: any
 
 	self.Vehicle = vehicle
 	self._RE = self.Vehicle.Instance:WaitForChild("_DeformRE") :: RemoteEvent
 
 	self._trove = Trove.new()
 
-	self._trove:Connect(self._RE.OnClientEvent, function(...) Replicate(self, ...) end)
+	self._trove:Connect(
+		self._RE.OnClientEvent,
+		function(...) Replicate(self, ...) end
+	)
 
 	InitializeDeformation(self)
 	InitializeDirt(self)
@@ -77,28 +86,39 @@ function InitializeDeformation(self: DeformationController)
 		local touchingPoints = {}
 		trove:Connect(collider.Touched, function(touchingPart: BasePart)
 			if tick() - lastTouch < 1 / 5 then return end
-			if touchingPart:IsDescendantOf(self.Vehicle.Instance) then return end
+			if touchingPart:IsDescendantOf(self.Vehicle.Instance) then
+				return
+			end
 			if touchingPart:IsDescendantOf(player.Character) then return end
 			lastTouch = tick()
 
 			debug.profilebegin("CheckColliding")
 			local meshScale = colliderMesh:GetSize() / collider.ExtentsSize
 
-			local positions = TableUtil.Map(colliderMesh:GetVertices(), function(vertexId: number)
-				local position = colliderMesh:GetPosition(vertexId)
-				local worldPosition = collider.CFrame:PointToWorldSpace(position / meshScale)
-				return worldPosition
-			end)
+			local positions = TableUtil.Map(
+				colliderMesh:GetVertices(),
+				function(vertexId: number)
+					local position = colliderMesh:GetPosition(vertexId)
+					local worldPosition =
+						collider.CFrame:PointToWorldSpace(position / meshScale)
+					return worldPosition
+				end
+			)
 
 			local touchingPartPosition = touchingPart.Position
 			table.sort(
 				positions,
-				function(a, b) return (a - touchingPartPosition).Magnitude < (b - touchingPartPosition).Magnitude end
+				function(a, b)
+					return (a - touchingPartPosition).Magnitude
+						< (b - touchingPartPosition).Magnitude
+				end
 			)
 
 			local found
 			for _, position in positions do
-				for _, part in game.Workspace:GetPartBoundsInRadius(position, 0.2) do
+				for _, part in
+					game.Workspace:GetPartBoundsInRadius(position, 0.2)
+				do
 					if part == touchingPart then
 						table.insert(touchingPoints, position)
 						found = true
@@ -116,7 +136,9 @@ function InitializeDeformation(self: DeformationController)
 		local lastVelocity = Vector3.zero
 		trove:Connect(
 			RunService.PreSimulation,
-			function() lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity end
+			function()
+				lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity
+			end
 		)
 
 		trove:Connect(RunService.PostSimulation, function()
@@ -127,7 +149,8 @@ function InitializeDeformation(self: DeformationController)
 			table.clear(touchingPoints)
 			table.clear(touchingParts)
 
-			local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity - lastVelocity
+			local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity
+				- lastVelocity
 			if worldHitVelocity.Magnitude < 1 then return end
 
 			debug.profilebegin("Deformation")
@@ -159,11 +182,13 @@ function InitializeDeformation(self: DeformationController)
 
 			local hitCenters = {}
 			for _, meshPart in self.Vehicle.MeshParts do
-				hitCenters[meshPart] = meshPart.CFrame:PointToObjectSpace(worldHitCenter)
+				hitCenters[meshPart] =
+					meshPart.CFrame:PointToObjectSpace(worldHitCenter)
 			end
 			local hitVelocities = {}
 			for _, meshPart in self.Vehicle.MeshParts do
-				hitVelocities[meshPart] = meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
+				hitVelocities[meshPart] =
+					meshPart.CFrame:VectorToObjectSpace(worldHitVelocity)
 			end
 
 			local affectedMeshParts = {}
@@ -171,15 +196,19 @@ function InitializeDeformation(self: DeformationController)
 				local meshScale = mesh:GetSize() / meshPart.Size
 				local hitCenter = hitCenters[meshPart] * meshScale
 				local hitVelocity = hitVelocities[meshPart] * meshScale
-				local closestVertexDistance = (
-					(mesh:GetPosition(mesh:FindClosestVertex(hitCenter)) - hitCenter) / meshScale
-				).Magnitude
+				local closestVertexDistance = ((mesh:GetPosition(
+					mesh:FindClosestVertex(hitCenter)
+				) - hitCenter) / meshScale).Magnitude
 
 				-- Apply scratch texture
 				debug.profilebegin("DrawScratch")
 				local texture = self.Vehicle.Textures[meshPart]
 				if texture and closestVertexDistance < 1 then
-					local alpha = math.clamp((worldHitVelocity.Magnitude / 50) ^ 0.7, 0.2, 1)
+					local alpha = math.clamp(
+						(worldHitVelocity.Magnitude / 50) ^ 0.7,
+						0.2,
+						1
+					)
 					local scratchIdx = math.round(alpha * 10)
 					local scratch = compiledScratchTextures[scratchIdx]
 
@@ -204,8 +233,14 @@ function InitializeDeformation(self: DeformationController)
 
 				-- Deform
 				debug.profilebegin("Deform")
-				if worldHitVelocity.Magnitude > 10 and closestVertexDistance < 3 then
-					local vertices = mesh:FindVerticesWithinSphere(hitCenter, 3 * meshScale.Magnitude)
+				if
+					worldHitVelocity.Magnitude > 10
+					and closestVertexDistance < 3
+				then
+					local vertices = mesh:FindVerticesWithinSphere(
+						hitCenter,
+						3 * meshScale.Magnitude
+					)
 					local affectedVertices = {}
 					for k, vertexId in vertices do
 						local position = mesh:GetPosition(vertexId)
@@ -213,13 +248,20 @@ function InitializeDeformation(self: DeformationController)
 						if distance > 3 then continue end
 
 						local distanceMul = (3 - distance) / 3 ^ 2
-						local offset = hitVelocity.Unit * hitVelocity.Magnitude ^ 0.7 * 0.1 * distanceMul
+						local offset = hitVelocity.Unit
+							* hitVelocity.Magnitude ^ 0.7
+							* 0.1
+							* distanceMul
 						offset += offset * math.random() * 0.1
 
 						mesh:SetPosition(vertexId, position + offset)
 						affectedVertices[vertexId] = position + offset
 					end
-					affectedMeshParts[table.find(self.Vehicle.MeshParts, meshPart)] = affectedVertices
+					affectedMeshParts[table.find(
+						self.Vehicle.MeshParts,
+						meshPart
+					)] =
+						affectedVertices
 				end
 				debug.profileend()
 			end
@@ -250,7 +292,8 @@ function InitializeDirt(self: DeformationController)
 			if typeof(dirtTextureId) ~= "string" then continue end
 
 			task.spawn(function()
-				local image = AssetService:CreateEditableImageAsync(dirtTextureId)
+				local image =
+					AssetService:CreateEditableImageAsync(dirtTextureId)
 				ImageUtil.SetImageAlpha(image, 0.05)
 				compiledDirtTextures[texture] = image
 				taskCount -= 1
@@ -272,7 +315,11 @@ function InitializeDirt(self: DeformationController)
 			if dirt - lastDirt > 0.01 then
 				debug.profilebegin("DrawDirt")
 				for texture, dirtTexture in compiledDirtTextures do
-					texture:DrawImage(Vector2.zero, dirtTexture, Enum.ImageCombineType.AlphaBlend)
+					texture:DrawImage(
+						Vector2.zero,
+						dirtTexture,
+						Enum.ImageCombineType.AlphaBlend
+					)
 				end
 				debug.profileend()
 				lastDirt = dirt
@@ -281,7 +328,12 @@ function InitializeDirt(self: DeformationController)
 	end))
 end
 
-function DrawScratch(mesh: EditableMesh, texture: EditableImage, decal: EditableImage, projection: { [string]: any })
+function DrawScratch(
+	mesh: EditableMesh,
+	texture: EditableImage,
+	decal: EditableImage,
+	projection: { [string]: any }
+)
 	local config = {
 		AlphaBlendType = Enum.ImageAlphaType.Default,
 		ColorBlendType = Enum.ImageCombineType.AlphaBlend,
@@ -295,7 +347,9 @@ end
 function Replicate(self: DeformationController, action: number, ...)
 	local actions = {}
 
-	actions[RemoteAction.Deform] = function(affectedMeshParts: { [number]: { Vector3 } })
+	actions[RemoteAction.Deform] = function(
+		affectedMeshParts: { [number]: { Vector3 } }
+	)
 		for meshPartIdx, vertices in affectedMeshParts do
 			local meshPart = self.Vehicle.MeshParts[meshPartIdx]
 			local mesh = self.Vehicle.Meshes[meshPart]
@@ -307,13 +361,22 @@ function Replicate(self: DeformationController, action: number, ...)
 		end
 	end
 
-	actions[RemoteAction.Scratch] = function(meshPartIdx, scratchIdx: number, projection: { [string]: any })
+	actions[RemoteAction.Scratch] = function(
+		meshPartIdx,
+		scratchIdx: number,
+		projection: { [string]: any }
+	)
 		local meshPart = self.Vehicle.MeshParts[meshPartIdx]
 		local mesh = self.Vehicle.Meshes[meshPart]
 		local texture = self.Vehicle.Textures[meshPart]
 		if not mesh or not texture then return end
 
-		DrawScratch(mesh, texture, compiledScratchTextures[scratchIdx], projection)
+		DrawScratch(
+			mesh,
+			texture,
+			compiledScratchTextures[scratchIdx],
+			projection
+		)
 	end
 
 	actions[action](...)
@@ -327,9 +390,15 @@ function DeformationController.BlowEngine(self: DeformationController)
 			if typeof(blowTextureId) ~= "string" then continue end
 
 			task.spawn(function()
-				local blowTexture = AssetService:CreateEditableImageAsync(Content.fromUri(blowTextureId))
+				local blowTexture = AssetService:CreateEditableImageAsync(
+					Content.fromUri(blowTextureId)
+				)
 				ImageUtil.SetImageAlpha(blowTexture, 0.3)
-				texture:DrawImage(Vector2.zero, blowTexture, Enum.ImageCombineType.AlphaBlend)
+				texture:DrawImage(
+					Vector2.zero,
+					blowTexture,
+					Enum.ImageCombineType.AlphaBlend
+				)
 				blowTexture:Destroy()
 			end)
 		end
@@ -349,7 +418,11 @@ function DeformationController.BlowEngine(self: DeformationController)
 				local distance = (position - vertexPosition).Magnitude
 				local distanceMul = (radius - distance) / radius ^ 0.5
 				local offset = direction
-					* math.noise(vertexPosition.X, vertexPosition.Y, vertexPosition.Z)
+					* math.noise(
+						vertexPosition.X,
+						vertexPosition.Y,
+						vertexPosition.Z
+					)
 					* distanceMul
 					* 0.05
 				mesh:SetPosition(vertexId, vertexPosition + offset)
@@ -363,7 +436,8 @@ function DeformationController.BlowEngine(self: DeformationController)
 
 			emitter.Enabled = true
 
-			local tween = TweenService:Create(emitter, TweenInfo.new(30), { Rate = 0 })
+			local tween =
+				TweenService:Create(emitter, TweenInfo.new(30), { Rate = 0 })
 			tween.Completed:Once(function() emitter.Enabled = false end)
 			task.delay(90, function() tween:Play() end)
 		end

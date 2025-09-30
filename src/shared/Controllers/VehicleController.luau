@@ -17,18 +17,20 @@ export type VehicleController = typeof(setmetatable(
 	VehicleController
 ))
 
-local remoteFunction = ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
+local remoteFunction =
+	ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
 
 function VehicleController.new(): VehicleController
 	local self: VehicleController = setmetatable({}, VehicleController) :: any
 
 	self.DrivenVehicle = nil
 
-	CollectionService:GetInstanceAddedSignal("Vehicle"):Connect(function(vehicle)
-		if not vehicle:IsDescendantOf(game.Workspace) then return end
+	CollectionService:GetInstanceAddedSignal("Vehicle")
+		:Connect(function(vehicle)
+			if not vehicle:IsDescendantOf(game.Workspace) then return end
 
-		registerVehicle(self, ClientVehicle.new(vehicle))
-	end)
+			registerVehicle(self, ClientVehicle.new(vehicle))
+		end)
 
 	for _, vehicle in CollectionService:GetTagged("Vehicle") do
 		if not vehicle:IsDescendantOf(game.Workspace) then continue end
@@ -39,35 +41,48 @@ function VehicleController.new(): VehicleController
 	return self
 end
 
-function registerVehicle(self: VehicleController, vehicle: VehicleTypes.ClientVehicle)
-	vehicle.Instance.DriveSeat:GetPropertyChangedSignal("Occupant"):Connect(function()
-		local humanoid = vehicle.Instance.DriveSeat.Occupant
-		if not humanoid then return end
+function registerVehicle(
+	self: VehicleController,
+	vehicle: VehicleTypes.ClientVehicle
+)
+	vehicle.Instance.DriveSeat
+		:GetPropertyChangedSignal("Occupant")
+		:Connect(function()
+			local humanoid = vehicle.Instance.DriveSeat.Occupant
+			if not humanoid then return end
 
-		local character = humanoid.Parent
-		if not character then return end
+			local character = humanoid.Parent
+			if not character then return end
 
-		local seatedPlayer = Players:GetPlayerFromCharacter(character)
-		if not seatedPlayer then return end
+			local seatedPlayer = Players:GetPlayerFromCharacter(character)
+			if not seatedPlayer then return end
 
-		if player == seatedPlayer then
-			self.DrivenVehicle = vehicle
-			vehicle.Instance.DriveSeat
-				:GetPropertyChangedSignal("Occupant")
-				:Once(function() self.DrivenVehicle = nil end)
-		end
-	end)
+			if player == seatedPlayer then
+				self.DrivenVehicle = vehicle
+				vehicle.Instance.DriveSeat
+					:GetPropertyChangedSignal("Occupant")
+					:Once(function() self.DrivenVehicle = nil end)
+			end
+		end)
 end
 
-function VehicleController.GetVehicles(self: VehicleController): { VehicleTypes.PlayerVehicle }
+function VehicleController.GetVehicles(
+	self: VehicleController
+): { VehicleTypes.PlayerVehicle }
 	return remoteFunction:InvokeServer("GetPlayerVehicles")
 end
 
-function VehicleController.GetVehicleInfo(self: VehicleController, id: number): VehicleTypes.PlayerVehicleInfo
+function VehicleController.GetVehicleInfo(
+	self: VehicleController,
+	id: number
+): VehicleTypes.PlayerVehicleInfo
 	return remoteFunction:InvokeServer("GetPlayerVehicleInfo", id)
 end
 
-function VehicleController.GetVehiclesByName(self: VehicleController, name: string): { VehicleTypes.PlayerVehicle }
+function VehicleController.GetVehiclesByName(
+	self: VehicleController,
+	name: string
+): { VehicleTypes.PlayerVehicle }
 	local vehicles = self:GetVehicles()
 	local list = {}
 	for _, v in vehicles do

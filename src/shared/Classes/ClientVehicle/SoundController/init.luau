@@ -10,7 +10,9 @@ SoundController.__index = SoundController
 
 type SoundController = VehicleTypes.SoundController
 
-function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundController
+function SoundController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): SoundController
 	local self: SoundController = setmetatable({}, SoundController) :: any
 
 	self.Vehicle = vehicle
@@ -33,7 +35,8 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 	folder.Parent = self.Vehicle.Instance
 
 	for name, soundData in self.Vehicle.Tune.Sounds do
-		local cachedSound = table.clone(soundData) :: VehicleTypes.CachedSoundData
+		local cachedSound =
+			table.clone(soundData) :: VehicleTypes.CachedSoundData
 
 		local audioPlayer = Instance.new("AudioPlayer")
 		audioPlayer.Volume = soundData.Volume or 1
@@ -85,7 +88,10 @@ function SoundController.new(vehicle: VehicleTypes.ClientVehicle): SoundControll
 	end
 
 	local trove = Trove.new()
-	trove:Connect(RunService.Heartbeat, function() handler:HandleSounds(self.Sounds) end)
+	trove:Connect(
+		RunService.Heartbeat,
+		function() handler:HandleSounds(self.Sounds) end
+	)
 	trove:AttachToInstance(self.Vehicle.Instance)
 
 	return self

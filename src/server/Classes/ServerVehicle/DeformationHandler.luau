@@ -9,7 +9,9 @@ DeformationHandler.__index = DeformationHandler
 
 type DeformationHandler = VehicleTypes.DeformationHandler
 
-function DeformationHandler.new(vehicle: VehicleTypes.ServerVehicle): DeformationHandler
+function DeformationHandler.new(
+	vehicle: VehicleTypes.ServerVehicle
+): DeformationHandler
 	local self: DeformationHandler = setmetatable({}, DeformationHandler) :: any
 
 	self.Vehicle = vehicle

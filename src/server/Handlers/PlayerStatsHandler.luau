@@ -14,21 +14,36 @@ remoteFunction.Parent = ReplicatedStorage
 local playerJoinedTime: { [Player]: number } = {}
 local playerPlaytime: { [Player]: number } = {}
 
-export type PlayerStatsHandler = typeof(setmetatable({} :: {}, PlayerStatsHandler))
+export type PlayerStatsHandler = typeof(setmetatable(
+	{} :: {},
+	PlayerStatsHandler
+))
 
 function PlayerStatsHandler.new(): PlayerStatsHandler
 	local self: PlayerStatsHandler = setmetatable({}, PlayerStatsHandler) :: any
 
-	Players.PlayerAdded:Connect(function(player) OnPlayerAdded(self, player) end)
-	Players.PlayerRemoving:Connect(function(player) OnPlayerRemoving(self, player) end)
-	remoteFunction.OnServerInvoke = function(player: Player, event: string, ...) return self[event](self, player, ...) end
+	Players.PlayerAdded:Connect(
+		function(player) OnPlayerAdded(self, player) end
+	)
+	Players.PlayerRemoving:Connect(
+		function(player) OnPlayerRemoving(self, player) end
+	)
+	remoteFunction.OnServerInvoke = function(
+		player: Player,
+		event: string,
+		...
+	)
+		return self[event](self, player, ...)
+	end
 
 	return self
 end
 
 function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 	playerJoinedTime[player] = tick()
-	playerPlaytime[player] = DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime"):GetAsync(player.UserId)
+	playerPlaytime[player] = DataStoreService
+		:GetOrderedDataStore("PlayerStats", "Playtime")
+		:GetAsync(player.UserId)
 
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -72,23 +87,41 @@ function OnPlayerRemoving(self: PlayerStatsHandler, player: Player)
 	playerPlaytime[player] = nil
 end
 
-function PlayerStatsHandler.GetPlayerCash(self: PlayerStatsHandler, player: Player)
-	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):GetAsync(player.UserId) or 5000000
+function PlayerStatsHandler.GetPlayerCash(
+	self: PlayerStatsHandler,
+	player: Player
+)
+	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash")
+		:GetAsync(player.UserId) or 5000000
 end
 
-function PlayerStatsHandler.SetPlayerCash(self: PlayerStatsHandler, player: Player, cash: number)
-	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash"):SetAsync(player.UserId, cash)
+function PlayerStatsHandler.SetPlayerCash(
+	self: PlayerStatsHandler,
+	player: Player,
+	cash: number
+)
+	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash")
+		:SetAsync(player.UserId, cash)
 
 	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
 	leaderstats.Cash.Value = StringUtil.AbbreviateNumber(cash)
 end
 
-function PlayerStatsHandler.GetPlayerLaps(self: PlayerStatsHandler, player: Player)
-	return DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`):GetAsync(player.UserId) or 0
+function PlayerStatsHandler.GetPlayerLaps(
+	self: PlayerStatsHandler,
+	player: Player
+)
+	return DataStoreService
+		:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
+		:GetAsync(player.UserId) or 0
 end
 
-function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Player)
-	local laps = DataStoreService:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
+function PlayerStatsHandler.AddPlayerLap(
+	self: PlayerStatsHandler,
+	player: Player
+)
+	local laps = DataStoreService
+		:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
 		:IncrementAsync(player.UserId)
 
 	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
@@ -97,7 +130,10 @@ function PlayerStatsHandler.AddPlayerLap(self: PlayerStatsHandler, player: Playe
 	return laps
 end
 
-function PlayerStatsHandler.GetPlayerPlaytime(self: PlayerStatsHandler, player: Player)
+function PlayerStatsHandler.GetPlayerPlaytime(
+	self: PlayerStatsHandler,
+	player: Player
+)
 	return tick() - playerJoinedTime[player] + playerPlaytime[player]
 end
 

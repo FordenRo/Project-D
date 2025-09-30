@@ -3,7 +3,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
-local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local SettingsController =
+	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
@@ -57,7 +58,8 @@ function InitializeButtons(self: Interface)
 	}
 
 	for k, v in callbacks do
-		local button = self.Instance.Buttons:FindFirstChild(k, true) :: TextButton
+		local button =
+			self.Instance.Buttons:FindFirstChild(k, true) :: TextButton
 		self._trove:Connect(button.Activated, v)
 	end
 end

@@ -2,7 +2,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
-local SettingsController = require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local SettingsController =
+	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -34,7 +35,8 @@ function BodyController.new(
 	self.Attachments = {}
 
 	self._trove = Trove.new()
-	seat:GetPropertyChangedSignal("Occupant"):Once(function() self._trove:Destroy() end)
+	seat:GetPropertyChangedSignal("Occupant")
+		:Once(function() self._trove:Destroy() end)
 
 	InitializeIKControls(self)
 	InitializeTorso(self)
@@ -49,13 +51,22 @@ function BodyController.new(
 end
 
 function InitializeIKControls(self: BodyController)
-	local function make(name: string, chainRoot: string, endEffector: string, target: Attachment, priority: number?)
-		if not target or not self.Player or not self.Player.Character then return end
+	local function make(
+		name: string,
+		chainRoot: string,
+		endEffector: string,
+		target: Attachment,
+		priority: number?
+	)
+		if not target or not self.Player or not self.Player.Character then
+			return
+		end
 
 		local IKControl = Instance.new("IKControl")
 		IKControl.Name = name .. "IK"
 		IKControl.ChainRoot = self.Player.Character:FindFirstChild(chainRoot)
-		IKControl.EndEffector = self.Player.Character:FindFirstChild(endEffector)
+		IKControl.EndEffector =
+			self.Player.Character:FindFirstChild(endEffector)
 		IKControl.Type = Enum.IKControlType.Position
 		IKControl.Priority = priority or 1
 		IKControl.Weight = 0
@@ -73,8 +84,9 @@ function InitializeIKControls(self: BodyController)
 		target: Attachment,
 		priority: number?
 	)
-		local side = self.Vehicle.Instance.DriveSeat.CFrame:PointToObjectSpace(target.WorldPosition).X > 0 and "Right"
-			or "Left"
+		local side = self.Vehicle.Instance.DriveSeat.CFrame:PointToObjectSpace(
+			target.WorldPosition
+		).X > 0 and "Right" or "Left"
 
 		make(name, side .. chainRoot, side .. endEffector, target, priority)
 	end
@@ -86,33 +98,44 @@ function InitializeIKControls(self: BodyController)
 		"RightHandWheel",
 		"RightUpperArm",
 		"RightHand",
-		vehicle.Misc:FindFirstChild("SteeringWheel"):FindFirstChild("RightHandAttachment")
+		vehicle.Misc
+			:FindFirstChild("SteeringWheel")
+			:FindFirstChild("RightHandAttachment")
 	)
 	make(
 		"LeftHandWheel",
 		"LeftUpperArm",
 		"LeftHand",
-		vehicle.Misc:FindFirstChild("SteeringWheel"):FindFirstChild("LeftHandAttachment")
+		vehicle.Misc
+			:FindFirstChild("SteeringWheel")
+			:FindFirstChild("LeftHandAttachment")
 	)
 	makeSided(
 		"Handbrake",
 		"UpperArm",
 		"Hand",
-		vehicle.Misc:FindFirstChild("Handbrake"):FindFirstChild("HandAttachment"),
+		vehicle.Misc
+			:FindFirstChild("Handbrake")
+			:FindFirstChild("HandAttachment"),
 		2
 	)
 	makeSided(
 		"GearLever",
 		"UpperArm",
 		"Hand",
-		vehicle.Misc:FindFirstChild("GearLever"):FindFirstChild("HandAttachment"),
+		vehicle.Misc
+			:FindFirstChild("GearLever")
+			:FindFirstChild("HandAttachment"),
 		3
 	)
 	makeSided(
 		"Ignition",
 		"UpperArm",
 		"Hand",
-		vehicle.Body:FindFirstChild("Buttons"):FindFirstChild("Ignition"):FindFirstChild("HandAttachment"),
+		vehicle.Body
+			:FindFirstChild("Buttons")
+			:FindFirstChild("Ignition")
+			:FindFirstChild("HandAttachment"),
 		2
 	)
 
@@ -124,18 +147,30 @@ function InitializeIKControls(self: BodyController)
 			"RightFoot",
 			pedals:FindFirstChild("Throttle"):FindFirstChild("FootAttachment")
 		)
-		make("Brake", "RightUpperLeg", "RightFoot", pedals:FindFirstChild("Brake"):FindFirstChild("FootAttachment"))
-		make("Clutch", "LeftUpperLeg", "LeftFoot", pedals:FindFirstChild("Clutch"):FindFirstChild("FootAttachment"))
+		make(
+			"Brake",
+			"RightUpperLeg",
+			"RightFoot",
+			pedals:FindFirstChild("Brake"):FindFirstChild("FootAttachment")
+		)
+		make(
+			"Clutch",
+			"LeftUpperLeg",
+			"LeftFoot",
+			pedals:FindFirstChild("Clutch"):FindFirstChild("FootAttachment")
+		)
 	end
 end
 
 function InitializeTorso(self: BodyController)
 	if not self.Player or not self.Player.Character then return end
 
-	local humanoid = self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
+	local humanoid =
+		self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
 	local rootPart = humanoid.RootPart
 
-	local upperTorso = self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
+	local upperTorso =
+		self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
 	local waist = upperTorso:FindFirstChild("Waist") :: AnimationConstraint
 
 	local rotationOffset = Vector3.new(math.rad(15), 0, 0)
@@ -144,8 +179,11 @@ function InitializeTorso(self: BodyController)
 	local angularVelocity = Vector3.zero
 
 	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
-		acceleration =
-			MathUtil.Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		acceleration = MathUtil.Lerp(
+			acceleration,
+			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
+			deltaTime * 20
+		)
 		angularVelocity = MathUtil.Lerp(
 			angularVelocity,
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
@@ -153,7 +191,11 @@ function InitializeTorso(self: BodyController)
 		)
 
 		-- Apply acceleration
-		rotation -= Vector3.new(acceleration.Z + acceleration.Y, 0, acceleration.X) * 0.025 * deltaTime
+		rotation -= Vector3.new(
+			acceleration.Z + acceleration.Y,
+			0,
+			acceleration.X
+		) * 0.025 * deltaTime
 		-- Apply angular velocity
 		rotation -= angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
 
@@ -169,10 +211,12 @@ end
 function InitializeNeck(self: BodyController)
 	if not self.Player or not self.Player.Character then return end
 
-	local humanoid = self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
+	local humanoid =
+		self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
 	local rootPart = humanoid.RootPart
 
-	local upperTorso = self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
+	local upperTorso =
+		self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
 	local head = self.Player.Character:FindFirstChild("Head") :: BasePart
 	local neck = head:FindFirstChild("Neck") :: AnimationConstraint
 
@@ -182,8 +226,11 @@ function InitializeNeck(self: BodyController)
 	local angularVelocity = Vector3.zero
 
 	self._trove:Connect(RunService.PreSimulation, function(deltaTime: number)
-		acceleration =
-			MathUtil.Lerp(acceleration, rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration), deltaTime * 20)
+		acceleration = MathUtil.Lerp(
+			acceleration,
+			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
+			deltaTime * 20
+		)
 		angularVelocity = MathUtil.Lerp(
 			angularVelocity,
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
@@ -196,20 +243,33 @@ function InitializeNeck(self: BodyController)
 			direction = direction:Lerp(
 				self.Vehicle.Velocity.Unit,
 				math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
-					* self.Vehicle.WeightPart.CFrame.LookVector:Dot(self.Vehicle.Velocity.Unit)
+					* self.Vehicle.WeightPart.CFrame.LookVector:Dot(
+						self.Vehicle.Velocity.Unit
+					)
 					* 0.2
 			)
 		end
 
 		-- Apply acceleration
-		rotation -= Vector3.new(acceleration.Z + acceleration.Y, 0, acceleration.X / 2) * 0.015 * deltaTime
+		rotation -= Vector3.new(
+			acceleration.Z + acceleration.Y,
+			0,
+			acceleration.X / 2
+		) * 0.015 * deltaTime
 		-- Apply angular velocity
 		rotation -= angularVelocity * Vector3.new(1, 0, 1) * 2 * deltaTime
 
-		local steeringRotation = Vector3.yAxis * self.Vehicle.Steering * math.rad(30)
-		rotation = rotation:Lerp(rotationOffset + steeringRotation, deltaTime * 7)
+		local steeringRotation = Vector3.yAxis
+			* self.Vehicle.Steering
+			* math.rad(30)
+		rotation =
+			rotation:Lerp(rotationOffset + steeringRotation, deltaTime * 7)
 		neck.Transform = upperTorso.CFrame:ToObjectSpace(
-			CFrame.lookAlong(Vector3.zero, direction, self.Vehicle.WeightPart.CFrame.UpVector)
+			CFrame.lookAlong(
+				Vector3.zero,
+				direction,
+				self.Vehicle.WeightPart.CFrame.UpVector
+			)
 				* CFrame.fromOrientation(rotation.X, -rotation.Y, rotation.Z)
 		).Rotation
 	end)
@@ -222,12 +282,12 @@ function InitializeSteeringWheel(self: BodyController)
 	local leftIK = self.IKControls.LeftHandWheel
 	if not rightIK or not leftIK then return end
 
-	local leftShoulderAttachment = (self.Player.Character:FindFirstChild("LeftUpperArm") :: BasePart):FindFirstChild(
-		"LeftShoulderAttachment"
-	) :: Attachment
-	local rightShoulderAttachment = (self.Player.Character:FindFirstChild("RightUpperArm") :: BasePart):FindFirstChild(
-		"RightShoulderAttachment"
-	) :: Attachment
+	local leftShoulderAttachment = (
+			self.Player.Character:FindFirstChild("LeftUpperArm") :: BasePart
+		):FindFirstChild("LeftShoulderAttachment") :: Attachment
+	local rightShoulderAttachment = (
+			self.Player.Character:FindFirstChild("RightUpperArm") :: BasePart
+		):FindFirstChild("RightShoulderAttachment") :: Attachment
 
 	local startLeftShoulderCFrame = leftShoulderAttachment.CFrame
 	local startRightShoulderCFrame = rightShoulderAttachment.CFrame
@@ -273,7 +333,9 @@ function InitializeGearLever(self: BodyController)
 	local curTask
 	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local oneHanded = SettingsController:GetSetting("OneHandedSteering")
-		if oneHanded then IKControl.Weight = (not self.Vehicle.PBrake or curTask) and 1 or 0 end
+		if oneHanded then
+			IKControl.Weight = (not self.Vehicle.PBrake or curTask) and 1 or 0
+		end
 		if self.Vehicle.Gear == lastGear then return end
 
 		lastGear = self.Vehicle.Gear
@@ -287,7 +349,9 @@ function InitializeGearLever(self: BodyController)
 			local t = tick()
 			repeat
 				task.wait()
-			until tick() - t > 2 or self.Vehicle.Clutch < 0.5 or self.Vehicle.PBrake
+			until tick() - t > 2
+				or self.Vehicle.Clutch < 0.5
+				or self.Vehicle.PBrake
 			if not oneHanded then IKControl.Weight = 0 end
 			curTask = nil
 		end)
@@ -306,12 +370,12 @@ function InitializePedals(self: BodyController)
 	brakeIK.SmoothTime = 0
 	clutchIK.SmoothTime = 0
 
-	local leftHipAttachment = (self.Player.Character:FindFirstChild("LeftUpperLeg") :: BasePart):FindFirstChild(
-		"LeftHipRigAttachment"
-	) :: Attachment
-	local rightHipAttachment = (self.Player.Character:FindFirstChild("RightUpperLeg") :: BasePart):FindFirstChild(
-		"RightHipRigAttachment"
-	) :: Attachment
+	local leftHipAttachment = (
+			self.Player.Character:FindFirstChild("LeftUpperLeg") :: BasePart
+		):FindFirstChild("LeftHipRigAttachment") :: Attachment
+	local rightHipAttachment = (
+			self.Player.Character:FindFirstChild("RightUpperLeg") :: BasePart
+		):FindFirstChild("RightHipRigAttachment") :: Attachment
 
 	local startLeftHipCFrame = leftHipAttachment.CFrame
 	local startRightHipCFrame = rightHipAttachment.CFrame
@@ -325,8 +389,10 @@ function InitializePedals(self: BodyController)
 	end)
 
 	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
-		throttleIK.Weight = 0.05 + self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
-		brakeIK.Weight = 0.05 + self.Vehicle.Brake * (1 - self.Vehicle.Throttle * 0.5)
+		throttleIK.Weight = 0.05
+			+ self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
+		brakeIK.Weight = 0.05
+			+ self.Vehicle.Brake * (1 - self.Vehicle.Throttle * 0.5)
 		clutchIK.Weight = 0.05 + self.Vehicle.Clutch
 	end)
 end
@@ -336,7 +402,9 @@ function InitializeIgnition(self: BodyController)
 
 	self._trove:Connect(
 		RunService.Heartbeat,
-		function(deltaTime: number) IKControl.Weight = self.Vehicle.Starting and 1 or 0 end
+		function(deltaTime: number)
+			IKControl.Weight = self.Vehicle.Starting and 1 or 0
+		end
 	)
 end
 

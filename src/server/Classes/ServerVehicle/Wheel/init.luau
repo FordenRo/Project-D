@@ -12,8 +12,12 @@ ServerWheel.__index = ServerWheel
 
 type ServerWheel = VehicleTypes.ServerWheel
 
-function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart): ServerWheel
-	local self: ServerWheel = setmetatable(BaseWheel.new(vehicle, instance), ServerWheel) :: any
+function ServerWheel.new(
+	vehicle: VehicleTypes.ServerVehicle,
+	instance: BasePart
+): ServerWheel
+	local self: ServerWheel =
+		setmetatable(BaseWheel.new(vehicle, instance), ServerWheel) :: any
 
 	Initialize(self)
 
@@ -24,15 +28,23 @@ function ServerWheel.new(vehicle: VehicleTypes.ServerVehicle, instance: BasePart
 end
 
 function Initialize(self: ServerWheel)
-	local fDistX = self.Vehicle.Tune.FWsBoneLen * math.cos(math.rad(self.Vehicle.Tune.FWsBoneAngle))
-	local fDistY = self.Vehicle.Tune.FWsBoneLen * math.sin(math.rad(self.Vehicle.Tune.FWsBoneAngle))
-	local rDistX = self.Vehicle.Tune.RWsBoneLen * math.cos(math.rad(self.Vehicle.Tune.RWsBoneAngle))
-	local rDistY = self.Vehicle.Tune.RWsBoneLen * math.sin(math.rad(self.Vehicle.Tune.RWsBoneAngle))
+	local fDistX = self.Vehicle.Tune.FWsBoneLen
+		* math.cos(math.rad(self.Vehicle.Tune.FWsBoneAngle))
+	local fDistY = self.Vehicle.Tune.FWsBoneLen
+		* math.sin(math.rad(self.Vehicle.Tune.FWsBoneAngle))
+	local rDistX = self.Vehicle.Tune.RWsBoneLen
+		* math.cos(math.rad(self.Vehicle.Tune.RWsBoneAngle))
+	local rDistY = self.Vehicle.Tune.RWsBoneLen
+		* math.sin(math.rad(self.Vehicle.Tune.RWsBoneAngle))
 
-	local fSLX = self.Vehicle.Tune.FSusLength * math.cos(math.rad(self.Vehicle.Tune.FSusAngle))
-	local fSLY = self.Vehicle.Tune.FSusLength * math.sin(math.rad(self.Vehicle.Tune.FSusAngle))
-	local rSLX = self.Vehicle.Tune.RSusLength * math.cos(math.rad(self.Vehicle.Tune.RSusAngle))
-	local rSLY = self.Vehicle.Tune.RSusLength * math.sin(math.rad(self.Vehicle.Tune.RSusAngle))
+	local fSLX = self.Vehicle.Tune.FSusLength
+		* math.cos(math.rad(self.Vehicle.Tune.FSusAngle))
+	local fSLY = self.Vehicle.Tune.FSusLength
+		* math.sin(math.rad(self.Vehicle.Tune.FSusAngle))
+	local rSLX = self.Vehicle.Tune.RSusLength
+		* math.cos(math.rad(self.Vehicle.Tune.RSusAngle))
+	local rSLY = self.Vehicle.Tune.RSusLength
+		* math.sin(math.rad(self.Vehicle.Tune.RSusAngle))
 
 	--Apply Wheel Density
 	local physProps = self.Instance.CurrentPhysicalProperties
@@ -57,11 +69,17 @@ function Initialize(self: ServerWheel)
 	local WParts = {}
 	for _, a in self.Instance.Parts:GetDescendants() do
 		if not a:IsA("BasePart") then continue end
-		table.insert(WParts, { a, self.Instance.CFrame:ToObjectSpace(a.CFrame) })
+		table.insert(
+			WParts,
+			{ a, self.Instance.CFrame:ToObjectSpace(a.CFrame) }
+		)
 	end
 	for _, a in self.Instance.WheelFixed:GetDescendants() do
 		if not a:IsA("BasePart") then continue end
-		table.insert(WParts, { a, self.Instance.CFrame:ToObjectSpace(a.CFrame) })
+		table.insert(
+			WParts,
+			{ a, self.Instance.CFrame:ToObjectSpace(a.CFrame) }
+		)
 	end
 
 	--Align Wheels
@@ -69,7 +87,9 @@ function Initialize(self: ServerWheel)
 	local posChar = string.sub(self.Instance.Name, 1, 1)
 	self.Instance.CFrame = self.Instance.CFrame
 		* CFrame.Angles(
-			math.rad(self.Vehicle.Tune[posChar .. "Caster"] * (isLeft and 1 or -1)),
+			math.rad(
+				self.Vehicle.Tune[posChar .. "Caster"] * (isLeft and 1 or -1)
+			),
 			math.rad(self.Vehicle.Tune[posChar .. "Toe"] * (isLeft and -1 or 1)),
 			math.rad(self.Vehicle.Tune[posChar .. "Camber"] :: number)
 		)
@@ -84,10 +104,19 @@ function Initialize(self: ServerWheel)
 	arm.Name = "Arm"
 	arm.Anchored = true
 	arm.CanCollide = false
-	arm.Size = Vector3.new(self.Vehicle.Tune.AxleSize, self.Vehicle.Tune.AxleSize, self.Vehicle.Tune.AxleSize)
+	arm.Size = Vector3.new(
+		self.Vehicle.Tune.AxleSize,
+		self.Vehicle.Tune.AxleSize,
+		self.Vehicle.Tune.AxleSize
+	)
 	arm.CFrame = self.Instance.CFrame
-	arm.CustomPhysicalProperties =
-		PhysicalProperties.new(math.clamp(self.Vehicle.Tune.AxleDensity, 0.01, 100), 0, 0, 100, 100)
+	arm.CustomPhysicalProperties = PhysicalProperties.new(
+		math.clamp(self.Vehicle.Tune.AxleDensity, 0.01, 100),
+		0,
+		0,
+		100,
+		100
+	)
 	arm.TopSurface = Enum.SurfaceType.Smooth
 	arm.BottomSurface = Enum.SurfaceType.Smooth
 	arm.Transparency = 1
@@ -99,8 +128,12 @@ function Initialize(self: ServerWheel)
 	base.CFrame = arm.CFrame * CFrame.new(0, self.Vehicle.Tune.AxleSize, 0)
 	base.Parent = self.Instance
 
-	local SteerOuter = (self.Vehicle.Tune.LockToLock * 180) / self.Vehicle.Tune.SteerRatio
-	local SteerInner = math.min(SteerOuter - (SteerOuter * (1 - self.Vehicle.Tune.Ackerman)), SteerOuter * 1.2)
+	local SteerOuter = (self.Vehicle.Tune.LockToLock * 180)
+		/ self.Vehicle.Tune.SteerRatio
+	local SteerInner = math.min(
+		SteerOuter - (SteerOuter * (1 - self.Vehicle.Tune.Ackerman)),
+		SteerOuter * 1.2
+	)
 	if not self.IsFront then
 		SteerOuter = self.Vehicle.Tune.RSteerOuter
 		SteerInner = self.Vehicle.Tune.RSteerInner
@@ -112,7 +145,12 @@ function Initialize(self: ServerWheel)
 	--Create Steering Anchor
 	local axle = arm:Clone()
 	axle.Name = "Axle"
-	axle.CFrame = self.Instance.CFrame * CFrame.new(self.Instance.Size.X / 2 + self.Vehicle.Tune.AxleSize / 2, 0, 0)
+	axle.CFrame = self.Instance.CFrame
+		* CFrame.new(
+			self.Instance.Size.X / 2 + self.Vehicle.Tune.AxleSize / 2,
+			0,
+			0
+		)
 	axle.Parent = self.Instance
 
 	--Create Powered Axle (LuaInt)
@@ -124,7 +162,8 @@ function Initialize(self: ServerWheel)
 
 	--Create Suspension
 	if self.Vehicle.Tune.SuspensionEnabled == true then
-		local SuspensionGeometry = self.Instance:FindFirstChild("SuspensionGeometry")
+		local SuspensionGeometry =
+			self.Instance:FindFirstChild("SuspensionGeometry")
 		if SuspensionGeometry then
 			for _, a in SuspensionGeometry:GetDescendants() do
 				if a.Name == "Weld" then
@@ -137,23 +176,34 @@ function Initialize(self: ServerWheel)
 			end
 			MakeUtil.Weld(SuspensionGeometry.Hub, base)
 			if SuspensionGeometry:FindFirstChild("SpringTop") then
-				MakeUtil.Weld(SuspensionGeometry.SpringTop, self.Vehicle.Instance.DriveSeat)
+				MakeUtil.Weld(
+					SuspensionGeometry.SpringTop,
+					self.Vehicle.Instance.DriveSeat
+				)
 			end
 
 			local susparts = SuspensionGeometry:GetDescendants()
 			for _, p in susparts do
 				if p:IsA("Part") then
 					p.CustomPhysicalProperties = PhysicalProperties.new(
-						math.clamp(self.Vehicle.Tune.CustomSuspensionDensity, 0.01, 100),
+						math.clamp(
+							self.Vehicle.Tune.CustomSuspensionDensity,
+							0.01,
+							100
+						),
 						0,
 						0,
 						0,
 						0
 					)
-					p.Massless = (self.Vehicle.Tune.CustomSuspensionDensity :: number) <= 0
+					p.Massless = (
+						self.Vehicle.Tune.CustomSuspensionDensity :: number
+					) <= 0
 					p.Transparency = self.Vehicle.Tune.SusVisible and 0.5 or 1
 				end
-				if p:IsA("Constraint") then p.Visible = self.Vehicle.Tune.SusVisible end
+				if p:IsA("Constraint") then
+					p.Visible = self.Vehicle.Tune.SusVisible
+				end
 			end
 
 			local sp = SuspensionGeometry:FindFirstChild("Spring")
@@ -167,12 +217,16 @@ function Initialize(self: ServerWheel)
 			local swayBar = SuspensionGeometry:FindFirstChild("SwayBar")
 			if swayBar and swayBar.Attachment0 and swayBar.Attachment1 then
 				swayBar.Attachment0.Position = Vector3.new(
-					swayBar.Attachment0.Parent.CFrame:ToObjectSpace(self.Vehicle:GetCenter()).Position.X - 0.05,
+					swayBar.Attachment0.Parent.CFrame:ToObjectSpace(
+						self.Vehicle:GetCenter()
+					).Position.X - 0.05,
 					0,
 					0
 				)
 				swayBar.Attachment1.Position = Vector3.new(
-					swayBar.Attachment1.Parent.CFrame:ToObjectSpace(self.Vehicle:GetCenter()).Position.X - 0.05,
+					swayBar.Attachment1.Parent.CFrame:ToObjectSpace(
+						self.Vehicle:GetCenter()
+					).Position.X - 0.05,
 					0,
 					0
 				)
@@ -180,37 +234,69 @@ function Initialize(self: ServerWheel)
 				swayBar.FreeLength = 0.1
 			end
 			if self.IsFront then
-				sp.Damping = self.Vehicle.Tune.FSusDamping * 1000 * Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.FSusStiffness * 9806.65 * Units.Stiffness_Ndivm -- 9806.65 converts kgf/mm to N/m
-				sp.FreeLength = self.Vehicle.Tune.FSusLength + self.Vehicle.Tune.FPreCompress
-				sp.MaxLength = self.Vehicle.Tune.FSusLength + self.Vehicle.Tune.FExtensionLim
-				sp.MinLength = self.Vehicle.Tune.FSusLength - self.Vehicle.Tune.FCompressLim
-				if swayBar then swayBar.Stiffness = self.Vehicle.Tune.FSwayBar * 9806.65 * Units.Stiffness_Ndivm end
+				sp.Damping = self.Vehicle.Tune.FSusDamping
+					* 1000
+					* Units.Damping_N_sdivm
+				sp.Stiffness = self.Vehicle.Tune.FSusStiffness
+					* 9806.65
+					* Units.Stiffness_Ndivm -- 9806.65 converts kgf/mm to N/m
+				sp.FreeLength = self.Vehicle.Tune.FSusLength
+					+ self.Vehicle.Tune.FPreCompress
+				sp.MaxLength = self.Vehicle.Tune.FSusLength
+					+ self.Vehicle.Tune.FExtensionLim
+				sp.MinLength = self.Vehicle.Tune.FSusLength
+					- self.Vehicle.Tune.FCompressLim
+				if swayBar then
+					swayBar.Stiffness = self.Vehicle.Tune.FSwayBar
+						* 9806.65
+						* Units.Stiffness_Ndivm
+				end
 			else
-				sp.Damping = self.Vehicle.Tune.RSusDamping * 1000 * Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.RSusStiffness * 9806.65 * Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.RSusLength + self.Vehicle.Tune.RPreCompress
-				sp.MaxLength = self.Vehicle.Tune.RSusLength + self.Vehicle.Tune.RExtensionLim
-				sp.MinLength = self.Vehicle.Tune.RSusLength - self.Vehicle.Tune.RCompressLim
-				if swayBar then swayBar.Stiffness = self.Vehicle.Tune.RSwayBar * 9806.65 * Units.Stiffness_Ndivm end
+				sp.Damping = self.Vehicle.Tune.RSusDamping
+					* 1000
+					* Units.Damping_N_sdivm
+				sp.Stiffness = self.Vehicle.Tune.RSusStiffness
+					* 9806.65
+					* Units.Stiffness_Ndivm
+				sp.FreeLength = self.Vehicle.Tune.RSusLength
+					+ self.Vehicle.Tune.RPreCompress
+				sp.MaxLength = self.Vehicle.Tune.RSusLength
+					+ self.Vehicle.Tune.RExtensionLim
+				sp.MinLength = self.Vehicle.Tune.RSusLength
+					- self.Vehicle.Tune.RCompressLim
+				if swayBar then
+					swayBar.Stiffness = self.Vehicle.Tune.RSwayBar
+						* 9806.65
+						* Units.Stiffness_Ndivm
+				end
 			end
 		else
-			local legacyCFrame = self.Instance.CFrame * CFrame.Angles(math.rad(90), 0, math.rad(90)) -- not gonna bother fixing the entire thing so i just put this because it works
+			local legacyCFrame = self.Instance.CFrame
+				* CFrame.Angles(math.rad(90), 0, math.rad(90)) -- not gonna bother fixing the entire thing so i just put this because it works
 
 			local sa = arm:Clone()
 			sa.Parent = self.Instance
 			sa.Name = "#SA"
-			sa.CFrame = legacyCFrame * CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
+			sa.CFrame = legacyCFrame
+				* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
 			if self.IsFront then
 				local aOff = self.Vehicle.Tune.FAnchorOffset
 				sa.CFrame = legacyCFrame
-					* CFrame.new(self.Vehicle.Tune.AxleSize / 2, -fDistX, -fDistY)
+					* CFrame.new(
+						self.Vehicle.Tune.AxleSize / 2,
+						-fDistX,
+						-fDistY
+					)
 					* CFrame.new(aOff[3], aOff[1], -aOff[2])
 					* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
 			else
 				local aOff = self.Vehicle.Tune.RAnchorOffset
 				sa.CFrame = legacyCFrame
-					* CFrame.new(self.Vehicle.Tune.AxleSize / 2, -rDistX, -rDistY)
+					* CFrame.new(
+						self.Vehicle.Tune.AxleSize / 2,
+						-rDistX,
+						-rDistY
+					)
 					* CFrame.new(aOff[3], aOff[1], -aOff[2])
 					* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
 			end
@@ -237,16 +323,22 @@ function Initialize(self: ServerWheel)
 						-fDistY + fSLY + aOff[2],
 						self.Vehicle.Tune.AxleSize / 2 + aOff[3]
 					)
-					sf2.Position =
-						Vector3.new(fDistX + aOff[1], -fDistY + aOff[2], -self.Vehicle.Tune.AxleSize / 2 + aOff[3])
+					sf2.Position = Vector3.new(
+						fDistX + aOff[1],
+						-fDistY + aOff[2],
+						-self.Vehicle.Tune.AxleSize / 2 + aOff[3]
+					)
 				else
 					sf1.Position = Vector3.new(
 						fDistX - fSLX + aOff[1],
 						-fDistY + fSLY + aOff[2],
 						self.Vehicle.Tune.AxleSize / 2 - aOff[3]
 					)
-					sf2.Position =
-						Vector3.new(fDistX + aOff[1], -fDistY + aOff[2], -self.Vehicle.Tune.AxleSize / 2 - aOff[3])
+					sf2.Position = Vector3.new(
+						fDistX + aOff[1],
+						-fDistY + aOff[2],
+						-self.Vehicle.Tune.AxleSize / 2 - aOff[3]
+					)
 				end
 			else
 				local aOff = self.Vehicle.Tune.RSpringOffset
@@ -256,16 +348,22 @@ function Initialize(self: ServerWheel)
 						-rDistY + rSLY + aOff[2],
 						self.Vehicle.Tune.AxleSize / 2 + aOff[3]
 					)
-					sf2.Position =
-						Vector3.new(rDistX + aOff[1], -rDistY + aOff[2], -self.Vehicle.Tune.AxleSize / 2 + aOff[3])
+					sf2.Position = Vector3.new(
+						rDistX + aOff[1],
+						-rDistY + aOff[2],
+						-self.Vehicle.Tune.AxleSize / 2 + aOff[3]
+					)
 				else
 					sf1.Position = Vector3.new(
 						rDistX - rSLX + aOff[1],
 						-rDistY + rSLY + aOff[2],
 						self.Vehicle.Tune.AxleSize / 2 - aOff[3]
 					)
-					sf2.Position =
-						Vector3.new(rDistX + aOff[1], -rDistY + aOff[2], -self.Vehicle.Tune.AxleSize / 2 - aOff[3])
+					sf2.Position = Vector3.new(
+						rDistX + aOff[1],
+						-rDistY + aOff[2],
+						-self.Vehicle.Tune.AxleSize / 2 - aOff[3]
+					)
 				end
 			end
 
@@ -287,17 +385,31 @@ function Initialize(self: ServerWheel)
 			sp.Parent = self.Instance
 
 			if self.IsFront then
-				sp.Damping = self.Vehicle.Tune.FSusDamping * 1000 * Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.FSusStiffness * 9806.65 * Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.FSusLength + self.Vehicle.Tune.FPreCompress
-				sp.MaxLength = self.Vehicle.Tune.FSusLength + self.Vehicle.Tune.FExtensionLim
-				sp.MinLength = self.Vehicle.Tune.FSusLength - self.Vehicle.Tune.FCompressLim
+				sp.Damping = self.Vehicle.Tune.FSusDamping
+					* 1000
+					* Units.Damping_N_sdivm
+				sp.Stiffness = self.Vehicle.Tune.FSusStiffness
+					* 9806.65
+					* Units.Stiffness_Ndivm
+				sp.FreeLength = self.Vehicle.Tune.FSusLength
+					+ self.Vehicle.Tune.FPreCompress
+				sp.MaxLength = self.Vehicle.Tune.FSusLength
+					+ self.Vehicle.Tune.FExtensionLim
+				sp.MinLength = self.Vehicle.Tune.FSusLength
+					- self.Vehicle.Tune.FCompressLim
 			else
-				sp.Damping = self.Vehicle.Tune.RSusDamping * 1000 * Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.RSusStiffness * 9806.65 * Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.RSusLength + self.Vehicle.Tune.RPreCompress
-				sp.MaxLength = self.Vehicle.Tune.RSusLength + self.Vehicle.Tune.RExtensionLim
-				sp.MinLength = self.Vehicle.Tune.RSusLength - self.Vehicle.Tune.RCompressLim
+				sp.Damping = self.Vehicle.Tune.RSusDamping
+					* 1000
+					* Units.Damping_N_sdivm
+				sp.Stiffness = self.Vehicle.Tune.RSusStiffness
+					* 9806.65
+					* Units.Stiffness_Ndivm
+				sp.FreeLength = self.Vehicle.Tune.RSusLength
+					+ self.Vehicle.Tune.RPreCompress
+				sp.MaxLength = self.Vehicle.Tune.RSusLength
+					+ self.Vehicle.Tune.RExtensionLim
+				sp.MinLength = self.Vehicle.Tune.RSusLength
+					- self.Vehicle.Tune.RCompressLim
 			end
 
 			MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, sa)
@@ -322,16 +434,27 @@ function Initialize(self: ServerWheel)
 
 	--Weld Miscelaneous Parts
 	if self.Instance:FindFirstChild("SuspensionFixed") ~= nil then
-		MakeUtil.ModelWeld(self.Instance.SuspensionFixed, self.Vehicle.Instance.DriveSeat)
+		MakeUtil.ModelWeld(
+			self.Instance.SuspensionFixed,
+			self.Vehicle.Instance.DriveSeat
+		)
 	end
-	if self.Instance:FindFirstChild("WheelFixed") ~= nil then MakeUtil.ModelWeld(self.Instance.WheelFixed, axle) end
-	if self.Instance:FindFirstChild("Fixed") ~= nil then MakeUtil.ModelWeld(self.Instance.Fixed, arm) end
+	if self.Instance:FindFirstChild("WheelFixed") ~= nil then
+		MakeUtil.ModelWeld(self.Instance.WheelFixed, axle)
+	end
+	if self.Instance:FindFirstChild("Fixed") ~= nil then
+		MakeUtil.ModelWeld(self.Instance.Fixed, arm)
+	end
 
 	--Weld Wheel Parts
-	if self.Instance:FindFirstChild("Parts") ~= nil then MakeUtil.ModelWeld(self.Instance.Parts, self.Instance) end
+	if self.Instance:FindFirstChild("Parts") ~= nil then
+		MakeUtil.ModelWeld(self.Instance.Parts, self.Instance)
+	end
 
 	--Add Steering Gyro
-	if self.Instance:FindFirstChild("Steer") then (self.Instance:FindFirstChild("Steer") :: Instance):Destroy() end
+	if self.Instance:FindFirstChild("Steer") then
+		(self.Instance:FindFirstChild("Steer") :: Instance):Destroy()
+	end
 
 	if
 		self.IsFront
@@ -361,11 +484,13 @@ function Initialize(self: ServerWheel)
 			if self.IsFront then
 				steer.P = self.Vehicle.Tune.SteerP
 				steer.D = self.Vehicle.Tune.SteerD
-				steer.MaxTorque = Vector3.new(0, self.Vehicle.Tune.SteerMaxTorque, 0)
+				steer.MaxTorque =
+					Vector3.new(0, self.Vehicle.Tune.SteerMaxTorque, 0)
 			else
 				steer.P = self.Vehicle.Tune.RSteerP
 				steer.D = self.Vehicle.Tune.RSteerD
-				steer.MaxTorque = Vector3.new(0, self.Vehicle.Tune.RSteerMaxTorque, 0)
+				steer.MaxTorque =
+					Vector3.new(0, self.Vehicle.Tune.RSteerMaxTorque, 0)
 			end
 		end
 		steer.Name = "Steer"
@@ -376,13 +501,15 @@ function Initialize(self: ServerWheel)
 	--Add rotation constraint (Detomiks)
 	local rotationAttachment0 = Instance.new("Attachment")
 	rotationAttachment0.Name = "RotationAttachment0"
-	rotationAttachment0.Position = Vector3.new(0, -self.Vehicle.Tune.AxleSize / 2, 0)
+	rotationAttachment0.Position =
+		Vector3.new(0, -self.Vehicle.Tune.AxleSize / 2, 0)
 	rotationAttachment0.Orientation = Vector3.new(0, 0, 90)
 	rotationAttachment0.Parent = base
 
 	local rotationAttachment1 = Instance.new("Attachment")
 	rotationAttachment1.Name = "RotationAttachment1"
-	rotationAttachment1.Position = Vector3.new(0, self.Vehicle.Tune.AxleSize / 2, 0)
+	rotationAttachment1.Position =
+		Vector3.new(0, self.Vehicle.Tune.AxleSize / 2, 0)
 	rotationAttachment1.Orientation = Vector3.new(0, 0, 90)
 	rotationAttachment1.Parent = arm
 
@@ -421,14 +548,25 @@ function Initialize(self: ServerWheel)
 	BV.Name = "BV"
 	BV.AngularVelocity = 0
 	if self.IsFront then
-		BV.MotorMaxTorque = (self.Vehicle.Tune.PBrakeForce * 9.80665 * Units.Force_N) * self.Vehicle.Tune.PBrakeBias
+		BV.MotorMaxTorque = (
+			self.Vehicle.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+		) * self.Vehicle.Tune.PBrakeBias
 	else
-		BV.MotorMaxTorque = (self.Vehicle.Tune.PBrakeForce * 9.80665 * Units.Force_N)
-			* (1 - self.Vehicle.Tune.PBrakeBias)
+		BV.MotorMaxTorque = (
+			self.Vehicle.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+		) * (1 - self.Vehicle.Tune.PBrakeBias)
 	end
 
 	-- Attempt to fix wheel alignment issues
-	if string.find(self.Instance.Name, "L") or self.Instance.Name == "R" or self.Instance.Name == "F" then
+	if
+		string.find(self.Instance.Name, "L")
+		or self.Instance.Name == "R"
+		or self.Instance.Name == "F"
+	then
 		AV.Attachment0.Orientation = Vector3.new(0, 180, 0)
 		BV.Attachment0.Orientation = Vector3.new(0, 180, 0)
 		AV.Attachment1.Orientation = Vector3.new(0, 180, 0)
@@ -437,7 +575,12 @@ function Initialize(self: ServerWheel)
 
 	--Realign Caster
 	self.Instance.CFrame = self.Instance.CFrame
-		* CFrame.Angles(math.rad(self.Vehicle.Tune[posChar .. "Caster"] :: number) * (isLeft and -1 or 1), 0, 0)
+		* CFrame.Angles(
+			math.rad(self.Vehicle.Tune[posChar .. "Caster"] :: number)
+				* (isLeft and -1 or 1),
+			0,
+			0
+		)
 end
 
 return ServerWheel

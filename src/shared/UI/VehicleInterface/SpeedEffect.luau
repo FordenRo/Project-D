@@ -24,7 +24,11 @@ export type SpeedEffect = {
 	Parent: GuiObject,
 	Effects: { EffectFrame },
 
-	new: (self: SpeedEffect, vehicle: VehicleTypes.ClientVehicle, parent: GuiObject) -> SpeedEffect,
+	new: (
+		self: SpeedEffect,
+		vehicle: VehicleTypes.ClientVehicle,
+		parent: GuiObject
+	) -> SpeedEffect,
 }
 
 function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
@@ -84,7 +88,11 @@ end
 
 function Update(self: SpeedEffect, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 60 then
-		local force = math.clamp(MathUtil.MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200), 0, 1)
+		local force = math.clamp(
+			MathUtil.MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200),
+			0,
+			1
+		)
 		local debounce = MathUtil.Lerp(1 / 3, 1 / 200, force ^ 0.8)
 		if tick() - self._LastSpawn > debounce then
 			local effect = createEffect(math.random() * 360, force)

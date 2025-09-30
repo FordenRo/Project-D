@@ -2,7 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
-local SettingsInfo = require(ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo)
+local SettingsInfo = require(
+	ReplicatedStorage.Shared.Controllers.SettingsController.SettingsInfo
+)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
@@ -50,7 +52,10 @@ export type Setting = typeof(setmetatable(
 	Setting
 ))
 
-function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Setting
+function Setting.new(
+	instance: Frame,
+	properties: SettingsInfo.SettingInfo
+): Setting
 	local self: Setting = setmetatable({}, Setting) :: any
 
 	self.Instance = instance :: any
@@ -75,8 +80,14 @@ function Setting.new(instance: Frame, properties: SettingsInfo.SettingInfo): Set
 		InitCheckbox(self)
 	end
 
-	self._trove:Connect(self.Instance.MouseEnter, function() self.Instance.BackgroundTransparency = 0.5 end)
-	self._trove:Connect(self.Instance.MouseLeave, function() self.Instance.BackgroundTransparency = 1 end)
+	self._trove:Connect(
+		self.Instance.MouseEnter,
+		function() self.Instance.BackgroundTransparency = 0.5 end
+	)
+	self._trove:Connect(
+		self.Instance.MouseLeave,
+		function() self.Instance.BackgroundTransparency = 1 end
+	)
 	self._trove:AttachToInstance(self.Instance)
 
 	self.Instance.Visible = true
@@ -91,14 +102,26 @@ function InitSlider(self: Setting)
 	local slider = self.Instance.Slider.Slider
 	local valueFrame = self.Instance.Slider.Value
 
-	local function updateValue(value: number, updateHandle: boolean?, fireEvent: boolean?)
+	local function updateValue(
+		value: number,
+		updateHandle: boolean?,
+		fireEvent: boolean?
+	)
 		self.Value = math.clamp(step * math.round(value / step), min, max)
 		local normalizedValue = MathUtil.MapToRange(self.Value, min, max)
-		slider.Fill.Size = UDim2.fromScale(updateHandle and normalizedValue or MathUtil.MapToRange(value, min, max), 1)
+		slider.Fill.Size = UDim2.fromScale(
+			updateHandle and normalizedValue
+				or MathUtil.MapToRange(value, min, max),
+			1
+		)
 		local l = step >= 1 and 0 or step >= 0.1 and 1 or 2
 		valueFrame.Input.Text = string.format(`%.{l}f`, self.Value :: number)
-		valueFrame.Revert.Visible = math.abs(self.Properties.Default - self.Value) > step / 2
-		if updateHandle then slider.Handle.Position = UDim2.fromScale(normalizedValue, 0.5) end
+		valueFrame.Revert.Visible = math.abs(
+			self.Properties.Default - self.Value
+		) > step / 2
+		if updateHandle then
+			slider.Handle.Position = UDim2.fromScale(normalizedValue, 0.5)
+		end
 		if fireEvent then self.Changed:Fire(self.Value) end
 	end
 
@@ -109,26 +132,50 @@ function InitSlider(self: Setting)
 	)
 	self._trove:Connect(
 		slider.Handle.Dragger.DragContinue,
-		function() updateValue(MathUtil.Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale)) end
+		function()
+			updateValue(
+				MathUtil.Lerp(
+					min,
+					max,
+					start + slider.Handle.Dragger.DragUDim2.X.Scale
+				)
+			)
+		end
 	)
 	self._trove:Connect(
 		slider.Handle.Dragger.DragEnd,
-		function() updateValue(MathUtil.Lerp(min, max, start + slider.Handle.Dragger.DragUDim2.X.Scale), true, true) end
-	)
-	self._trove:Connect(valueFrame.Input.FocusLost, function(enterPressed: boolean)
-		if enterPressed then
-			local inp = string.gsub(valueFrame.Input.Text, ",", ".")
-			local value = tonumber(inp)
-			if not value then
-				valueFrame.Input.Text = self.Value
-				return
-			end
-			updateValue(value, true, true)
-		else
-			valueFrame.Input.Text = self.Value
+		function()
+			updateValue(
+				MathUtil.Lerp(
+					min,
+					max,
+					start + slider.Handle.Dragger.DragUDim2.X.Scale
+				),
+				true,
+				true
+			)
 		end
-	end)
-	self._trove:Connect(valueFrame.Revert.Activated, function() updateValue(self.Properties.Default, true, true) end)
+	)
+	self._trove:Connect(
+		valueFrame.Input.FocusLost,
+		function(enterPressed: boolean)
+			if enterPressed then
+				local inp = string.gsub(valueFrame.Input.Text, ",", ".")
+				local value = tonumber(inp)
+				if not value then
+					valueFrame.Input.Text = self.Value
+					return
+				end
+				updateValue(value, true, true)
+			else
+				valueFrame.Input.Text = self.Value
+			end
+		end
+	)
+	self._trove:Connect(
+		valueFrame.Revert.Activated,
+		function() updateValue(self.Properties.Default, true, true) end
+	)
 
 	updateValue(self.Value, true)
 	self.Instance.Slider.Visible = true
@@ -138,7 +185,12 @@ function InitBinding(self: Setting)
 	assert(self.Properties.ActionTypes, "Type check")
 
 	for _, v in self.Instance.Binding:GetChildren() do
-		if not v:IsA("TextButton") or table.find(self.Properties.ActionTypes, v.Name) then continue end
+		if
+			not v:IsA("TextButton")
+			or table.find(self.Properties.ActionTypes, v.Name)
+		then
+			continue
+		end
 
 		v:ClearAllChildren()
 		v.BackgroundTransparency = 1
@@ -187,7 +239,10 @@ function InitBinding(self: Setting)
 
 			updateBinding(input.KeyCode, true)
 		end)
-		self._trove:Connect(binding.Revert.Activated, function() updateBinding(self.Properties.Default[v], true) end)
+		self._trove:Connect(
+			binding.Revert.Activated,
+			function() updateBinding(self.Properties.Default[v], true) end
+		)
 
 		updateBinding(self.Value[v])
 		binding.Visible = true
@@ -200,11 +255,15 @@ function InitCheckbox(self: Setting)
 	local function updateCheckbox(value: boolean)
 		self.Value = value
 		self.Instance.Checkbox.Button.Box.Enabled.Visible = self.Value
-		self.Instance.Checkbox.Button.Text = self.Value and "Enabled" or "Disabled"
+		self.Instance.Checkbox.Button.Text = self.Value and "Enabled"
+			or "Disabled"
 		self.Changed:Fire(self.Value)
 	end
 
-	self._trove:Connect(self.Instance.Checkbox.Button.Activated, function() updateCheckbox(not self.Value) end)
+	self._trove:Connect(
+		self.Instance.Checkbox.Button.Activated,
+		function() updateCheckbox(not self.Value) end
+	)
 
 	updateCheckbox(self.Value)
 	self.Instance.Checkbox.Visible = true

@@ -3,12 +3,17 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local PlayerStatsController = {}
 PlayerStatsController.__index = PlayerStatsController
 
-export type PlayerStatsController = typeof(setmetatable({} :: {}, PlayerStatsController))
+export type PlayerStatsController = typeof(setmetatable(
+	{} :: {},
+	PlayerStatsController
+))
 
-local remoteFunction = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
+local remoteFunction =
+	ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
 
 function PlayerStatsController.new(): PlayerStatsController
-	local self: PlayerStatsController = setmetatable({}, PlayerStatsController) :: any
+	local self: PlayerStatsController =
+		setmetatable({}, PlayerStatsController) :: any
 
 	return self
 end

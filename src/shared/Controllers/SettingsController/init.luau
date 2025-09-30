@@ -42,14 +42,18 @@ function SettingsController.new(): SettingsController
 
 	do -- Initialize keybinds
 		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
-		for _, context in ReplicatedStorage.Input:GetChildren() :: { InputContext } do
+		for _, context in
+			ReplicatedStorage.Input:GetChildren() :: { InputContext }
+		do
 			for _, action in context:GetChildren() :: { InputAction } do
 				for _, binding in action:GetChildren() :: { InputBinding } do
 					if binding.Name == "Mobile" then continue end
 
 					binding:SetAttribute("Default", binding.KeyCode)
 					local path = context.Name .. action.Name .. binding.Name
-					if keybinds[path] then binding.KeyCode = Enum.KeyCode[keybinds[path]] end
+					if keybinds[path] then
+						binding.KeyCode = Enum.KeyCode[keybinds[path]]
+					end
 				end
 			end
 		end
@@ -72,13 +76,17 @@ function SettingsController.new(): SettingsController
 
 		-- Save keybinds
 		local keybinds = {}
-		for _, context in ReplicatedStorage.Input:GetChildren() :: { InputContext } do
+		for _, context in
+			ReplicatedStorage.Input:GetChildren() :: { InputContext }
+		do
 			for _, action in context:GetChildren() :: { InputAction } do
 				for _, binding in action:GetChildren() :: { InputBinding } do
 					if binding.Name == "Mobile" then continue end
 
 					local path = context.Name .. action.Name .. binding.Name
-					if binding:GetAttribute("Default") ~= binding.KeyCode then keybinds[path] = binding.KeyCode.Name end
+					if binding:GetAttribute("Default") ~= binding.KeyCode then
+						keybinds[path] = binding.KeyCode.Name
+					end
 				end
 			end
 		end
@@ -88,17 +96,29 @@ function SettingsController.new(): SettingsController
 	return self
 end
 
-function SettingsController.GetSettings(self: SettingsController) return table.clone(self.Settings) end
+function SettingsController.GetSettings(self: SettingsController)
+	return table.clone(self.Settings)
+end
 
-function SettingsController.GetSetting(self: SettingsController, name: string) return self.Settings[name] end
+function SettingsController.GetSetting(
+	self: SettingsController,
+	name: string
+)
+	return self.Settings[name]
+end
 
-function SettingsController.GetSettingInfo(self: SettingsController, name: string): SettingsInfo.SettingInfo
+function SettingsController.GetSettingInfo(
+	self: SettingsController,
+	name: string
+): SettingsInfo.SettingInfo
 	local info = table.clone(SettingsInfo)[name]
 	info.Value = self:GetSetting(name)
 	return info
 end
 
-function SettingsController.GetSettingInfos(self: SettingsController): { SettingsInfo.SettingInfo }
+function SettingsController.GetSettingInfos(
+	self: SettingsController
+): { SettingsInfo.SettingInfo }
 	local t = table.clone(SettingsInfo)
 	for k, v in t do
 		v.Value = self:GetSetting(k)

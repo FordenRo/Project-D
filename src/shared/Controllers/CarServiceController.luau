@@ -1,7 +1,8 @@
 local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local CarServiceClient = require(ReplicatedStorage.Shared.Classes.CarServiceClient)
+local CarServiceClient =
+	require(ReplicatedStorage.Shared.Classes.CarServiceClient)
 
 local CarServiceController = {}
 CarServiceController.__index = CarServiceController
@@ -9,12 +10,14 @@ CarServiceController.__index = CarServiceController
 export type CarServiceController = typeof(setmetatable({}, CarServiceController))
 
 function CarServiceController.new(): CarServiceController
-	local self: CarServiceController = setmetatable({}, CarServiceController) :: any
+	local self: CarServiceController =
+		setmetatable({}, CarServiceController) :: any
 
 	for _, v in CollectionService:GetTagged("CarService") do
 		CarServiceClient.new(v)
 	end
-	CollectionService:GetInstanceAddedSignal("CarService"):Connect(CarServiceClient.new)
+	CollectionService:GetInstanceAddedSignal("CarService")
+		:Connect(CarServiceClient.new)
 
 	return self
 end
