@@ -1,11 +1,9 @@
 --!strict
 local Players = game:GetService("Players")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Slider = require(script.Parent.Slider)
 local Tips = require(script.Parent.Tips)
-local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local player = Players.LocalPlayer
 
@@ -30,7 +28,7 @@ export type LoadingScreen = {
 }
 
 type LoadingScreenImpl = {
-	trove: Trove.Trove,
+	tasks: { thread },
 } & LoadingScreen
 
 function LoadingScreen.new(): LoadingScreen
@@ -44,32 +42,43 @@ function LoadingScreen.new(): LoadingScreen
 	self.Instance.Content.Version.Text =
 		`<font transparency="0.35" size="10">VERSION:</font> sds`
 
+	self.tasks = {}
+
 	InitializeLoadingLabel(self)
 	InitializeTips(self)
 
-	self.trove = Trove.new()
-	self.trove:AttachToInstance(self.Instance)
+	self.Instance.Destroying:Connect(function()
+		for _, v in self.tasks do
+			task.cancel(v)
+		end
+	end)
 
 	return self
 end
 
 function InitializeLoadingLabel(self: LoadingScreenImpl)
 	local t = 3
-	self.trove:Add(task.spawn(function()
-		task.wait(1)
-		t = t < 3 and t + 1 or 0
-		self.Instance.Content.LoadingLabel.Text = "Loading"
-			.. string.sub("...", 1, t)
-	end))
+	table.insert(
+		self.tasks,
+		task.spawn(function()
+			task.wait(1)
+			t = t < 3 and t + 1 or 0
+			self.Instance.Content.LoadingLabel.Text = "Loading"
+				.. string.sub("...", 1, t)
+		end)
+	)
 end
 
 function InitializeTips(self: LoadingScreenImpl)
-	self.trove:Add(task.spawn(function()
-		local tip = Tips[math.random(1, #Tips)]
-		self.Instance.Content.Tip.Text =
-			`<font transparency="0.4">Tip:</font> {tip}`
-		task.wait(4 + #tip / 20)
-	end))
+	table.insert(
+		self.tasks,
+		task.spawn(function()
+			local tip = Tips[math.random(1, #Tips)]
+			self.Instance.Content.Tip.Text =
+				`<font transparency="0.4">Tip:</font> {tip}`
+			task.wait(4 + #tip / 20)
+		end)
+	)
 end
 
 function LoadingScreen.SetCurrentAsset(

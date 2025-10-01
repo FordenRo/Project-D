@@ -1,9 +1,5 @@
 --!strict
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local RunService = game:GetService("RunService")
-
-local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local Slider = {}
 Slider.__index = Slider
@@ -22,7 +18,6 @@ export type Slider = {
 }
 
 type SliderImpl = {
-	trove: Trove.Trove,
 	currentProgress: number,
 } & Slider
 
@@ -33,12 +28,10 @@ function Slider.new(instance: Frame): Slider
 	self.Progress = 0
 	self.currentProgress = 0
 
-	self.trove = Trove.new()
-	self.trove:Connect(
-		RunService.Heartbeat,
+	local conn = RunService.Heartbeat:Connect(
 		function(deltaTime: number) Update(self, deltaTime) end
 	)
-	self.trove:AttachToInstance(self.Instance)
+	self.Instance.Destroying:Connect(function() conn:Disconnect() end)
 
 	return self
 end
