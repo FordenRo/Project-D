@@ -268,6 +268,7 @@ export type ClientWheelTire = {
 	Stress: number,
 	Dirt: number,
 	SmokePart: Part,
+	Material: string,
 	Collision: Part & {
 		AlignPosition: AlignPosition,
 		["#GRAVCOMP"]: VectorForce,

@@ -24,7 +24,6 @@ type ClientTireImpl = {
 	dirtInstance: BasePart,
 	whDirtInstances: { BasePart },
 	rayParams: RaycastParams,
-	currentMaterial: string,
 	audioPlayers: { [string]: AudioPlayer },
 	emitters: { [string]: ParticleEmitter },
 	trails: { [string]: { Trail } },
@@ -73,7 +72,7 @@ function InitializeVariables(self: ClientTireImpl)
 	self.Dirt = 0
 	self.Health = 1
 	self.trailStress = 0
-	self.currentMaterial = ""
+	self.Material = ""
 	self.lastMaterial = ""
 	self.SmokePart = self.Wheel.Instance.SmokePart :: any
 	self.Collision = self.Wheel.Instance.Collision :: any
@@ -242,10 +241,10 @@ function Update(self: ClientTireImpl, deltaTime: number)
 			for k, v in MaterialGroups do
 				if not table.find(v, ray.Material.Name) then continue end
 
-				self.currentMaterial = k
+				self.Material = k
 				break
 			end
-			if self.lastMaterial ~= self.currentMaterial then
+			if self.lastMaterial ~= self.Material then
 				materialChanged = true
 			end
 		end
@@ -255,8 +254,8 @@ function Update(self: ClientTireImpl, deltaTime: number)
 			math.max(
 				ray and diff / 20 or 0,
 				ray
-						and self.currentMaterial ~= "Road"
-						and self.currentMaterial ~= ""
+						and self.Material ~= "Road"
+						and self.Material ~= ""
 						and rotSpeed / 50
 					or 0
 			)
@@ -264,11 +263,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 				* (rotLinearSpeed / (Units.Velocity_mdivs / 3.6) / 100)
 		)
 
-		if
-			ray
-			and self.currentMaterial ~= "Road"
-			and self.currentMaterial ~= ""
-		then
+		if ray and self.Material ~= "Road" and self.Material ~= "" then
 			local random = Random.new():NextNumber() * speed
 			if random > 20 then
 				self.Wheel.Instance.AssemblyLinearVelocity += Vector3.new(
@@ -293,7 +288,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		end
 
 		-- Update dirt
-		if self.currentMaterial ~= "Road" and self.currentMaterial ~= "" then
+		if self.Material ~= "Road" and self.Material ~= "" then
 			self.Dirt =
 				MathUtil.Lerp(self.Dirt, 1, rotSpeed * 0.003 * deltaTime)
 			self.Vehicle.Dirt =
@@ -304,7 +299,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		end
 
 		-- Apply friction
-		local materialHeatFactor = self.currentMaterial ~= "Road" and 0.01 or 1
+		local materialHeatFactor = self.Material ~= "Road" and 0.01 or 1
 		local currentPhysicalProperties =
 			self.Wheel.Instance.CurrentPhysicalProperties
 		self.Health = math.clamp(
@@ -380,7 +375,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 				)
 		end
 
-		if ray and self.currentMaterial == "Sand" then
+		if ray and self.Material == "Sand" then
 			self.Wheel.Instance:ApplyImpulseAtPosition(
 				-self.Wheel.Instance.AssemblyLinearVelocity
 					* self.Vehicle.Tune.TireSandForce
@@ -433,12 +428,10 @@ function Update(self: ClientTireImpl, deltaTime: number)
 			0
 		)
 	else
-		if self.currentMaterial ~= self.lastMaterial then
-			materialChanged = true
-		end
+		if self.Material ~= self.lastMaterial then materialChanged = true end
 	end
 
-	self.lastMaterial = self.currentMaterial
+	self.lastMaterial = self.Material
 
 	-- Disable sounds, smokes and trails
 	if materialChanged then
@@ -464,15 +457,15 @@ function Update(self: ClientTireImpl, deltaTime: number)
 	local trailStress = math.floor(
 		smokeStress ^ 3 * self.Vehicle.Tune.TireMarkTransparencyLevels
 	)
-	if self.trails[self.currentMaterial] then
+	if self.trails[self.Material] then
 		for i = 1, (trailStress > self.trailStress and trailStress or self.trailStress) do
-			self.trails[self.currentMaterial][i].Enabled = trailStress >= i
+			self.trails[self.Material][i].Enabled = trailStress >= i
 		end
 	end
 	self.trailStress = trailStress
 
 	-- Play sound
-	local audioPlayer = self.audioPlayers[self.currentMaterial]
+	local audioPlayer = self.audioPlayers[self.Material]
 	if audioPlayer then
 		if not audioPlayer.IsPlaying then
 			audioPlayer.TimePosition = math.random() * audioPlayer.TimeLength -- Avoid overlapping sounds
@@ -482,7 +475,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		audioPlayer.PlaybackSpeed = 1.6 - 0.5 * smokeStress
 	end
 
-	local emitter = self.emitters[self.currentMaterial]
+	local emitter = self.emitters[self.Material]
 	if emitter then
 		emitter.Enabled = true
 		emitter.Rate = smokeStress ^ 10 * 100
