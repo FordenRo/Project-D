@@ -298,21 +298,10 @@ export type ServerBrakeDisk = {
 }
 
 export type VehicleSpeedometer = {
-	_trove: Trove.Trove,
 	Vehicle: ClientVehicle,
 	Instance: Frame & any,
-	CurrentUnit: number,
-	Units: {
-		{
-			Unit: string,
-			Scaling: number,
-			MileageScaling: number,
-			MaxSpeed: number,
-		}
-	},
 }
 
-type VISlider = Frame & { Fill: Frame }
 export type VehicleInterface = {
 	Vehicle: ClientVehicle,
 	Instance: ScreenGui,

@@ -1,3 +1,4 @@
+--!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
@@ -10,13 +11,29 @@ Speedometer.__index = Speedometer
 
 type Speedometer = VehicleTypes.VehicleSpeedometer
 
-function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
-	local self: Speedometer = setmetatable({}, Speedometer) :: any
+type SpeedometerImpl = {
+	currentUnit: number,
+	units: {
+		{
+			Unit: string,
+			Scaling: number,
+			MileageScaling: number,
+			MaxSpeed: number,
+		}
+	},
+	trove: Trove.Trove,
+} & Speedometer
+
+function Speedometer.new(
+	vehicle: VehicleTypes.ClientVehicle,
+	instance: Frame
+): Speedometer
+	local self: SpeedometerImpl = setmetatable({}, Speedometer) :: any
 
 	self.Vehicle = vehicle
 	self.Instance = instance
-	self.CurrentUnit = 1
-	self.Units = {
+	self.currentUnit = 1
+	self.units = {
 		{
 			Unit = "KM",
 			Scaling = (Units.Length_mm / 1000) * 3.6,
@@ -48,7 +65,7 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 		end
 	end
 
-	for _, v in pairs(self.Units) do
+	for _, v in self.units do
 		v.MaxSpeed = math.ceil(
 			v.Scaling
 				* (
@@ -67,20 +84,20 @@ function Speedometer.new(vehicle: VehicleTypes.ClientVehicle, instance: Frame)
 
 	TachInit(self)
 
-	self._trove = Trove.new()
-	self._trove:Connect(RunService.Heartbeat, function() Update(self) end)
-	self._trove:Add(task.defer(function()
+	self.trove = Trove.new()
+	self.trove:Connect(RunService.Heartbeat, function() Update(self) end)
+	self.trove:Add(task.defer(function()
 		while true do
 			task.wait(1 / 10)
 			SlowUpdate(self)
 		end
 	end))
-	self._trove:AttachToInstance(instance)
+	self.trove:AttachToInstance(instance)
 
 	return self
 end
 
-function Update(self: Speedometer)
+function Update(self: SpeedometerImpl)
 	SpeedUpdate(self)
 	GearUpdate(self)
 	TachUpdate(self)
@@ -89,14 +106,14 @@ function Update(self: Speedometer)
 	TSCUpdate(self)
 end
 
-function SlowUpdate(self: Speedometer)
+function SlowUpdate(self: SpeedometerImpl)
 	MileageUpdate(self)
 	FuelUpdate(self)
 	TempUpdate(self)
 	UpdateIcons(self)
 end
 
-function GearUpdate(self: Speedometer)
+function GearUpdate(self: SpeedometerImpl)
 	local labels = {
 		[-2] = "P",
 		[-1] = "R",
@@ -115,7 +132,7 @@ function GearUpdate(self: Speedometer)
 	end
 end
 
-function SpeedUpdate(self: Speedometer)
+function SpeedUpdate(self: SpeedometerImpl)
 	local speed = 0
 	local count = 0
 	for _, wheel in self.Vehicle.Wheels do
@@ -128,14 +145,14 @@ function SpeedUpdate(self: Speedometer)
 		)
 		count += 1
 	end
-	speed = speed / count * self.Units[self.CurrentUnit].Scaling
+	speed = speed / count * self.units[self.currentUnit].Scaling
 	self.Instance.Speed.Speed.Text = string.format("%03d", speed):gsub(
 		"^0+",
 		'<font transparency="0.5">%0</font>'
 	)
 end
 
-function TachInit(self: Speedometer)
+function TachInit(self: SpeedometerImpl)
 	local max = math.ceil(self.Vehicle.Engine.Tune.Redline / 1000)
 	for i = 0, max do
 		local bin = self.Instance.Tach.Bin:Clone()
@@ -150,7 +167,7 @@ function TachInit(self: Speedometer)
 	end
 end
 
-function TachUpdate(self: Speedometer)
+function TachUpdate(self: SpeedometerImpl)
 	local function setColor(color: Color3)
 		for _, v: ImageLabel in
 			{
@@ -184,16 +201,16 @@ function TachUpdate(self: Speedometer)
 	end
 end
 
-function MileageUpdate(self: Speedometer)
+function MileageUpdate(self: SpeedometerImpl)
 	local mileage = self.Vehicle.Mileage
-		/ self.Units[self.CurrentUnit].MileageScaling
+		/ self.units[self.currentUnit].MileageScaling
 	self.Instance.Mileage.Mileage.Text = string.format("%06.1f", mileage):gsub(
 		"^0+",
 		'<font transparency="0.5">%0</font>'
 	)
 end
 
-function BoostUpdate(self: Speedometer)
+function BoostUpdate(self: SpeedometerImpl)
 	if
 		not (
 			self.Vehicle.Engine.Tune.Superchargers
@@ -211,7 +228,7 @@ function BoostUpdate(self: Speedometer)
 	self.Instance.Boost.CanvasGroup.FG.Rotation = math.clamp(rot, 0, 45)
 end
 
-function FuelUpdate(self: Speedometer)
+function FuelUpdate(self: SpeedometerImpl)
 	local function setColor(color: Color3)
 		self.Instance.Fuel.CanvasGroup.FG.ImageColor3 = color
 		self.Instance.FuelIcon.Icon.ImageColor3 = color
@@ -240,7 +257,7 @@ function FuelUpdate(self: Speedometer)
 	end
 end
 
-function TempUpdate(self: Speedometer)
+function TempUpdate(self: SpeedometerImpl)
 	local function setColor(color: Color3)
 		self.Instance.Temp.CanvasGroup.FG.ImageColor3 = color
 		self.Instance.TempIcon.Icon.ImageColor3 = color
@@ -276,40 +293,43 @@ function TempUpdate(self: Speedometer)
 	end
 end
 
-function UpdateIcons(self: Speedometer)
+function UpdateIcons(self: SpeedometerImpl)
 	-- PBrake
 	self.Instance.PBrake.ImageColor3 = (
-		self.Vehicle.PBrake or self.Vehicle.Starting
+		self.Vehicle.PBrake or self.Vehicle.IgnitionState == "Starting"
 	)
 			and Color3.new(1, 1, 1)
 		or Color3.new()
 	self.Instance.PBrake.ImageTransparency = (
-		self.Vehicle.PBrake or self.Vehicle.Starting
+		self.Vehicle.PBrake or self.Vehicle.IgnitionState == "Starting"
 	)
 			and 0.2
 		or 0.8
 
 	-- Battery
 	self.Instance.Battery.ImageColor3 = (
-		not self.Vehicle.IsOn or self.Vehicle.Starting
+		not self.Vehicle.Engine.IsOn
+		or self.Vehicle.IgnitionState == "Starting"
 	)
 			and Color3.new(1, 0, 0)
 		or Color3.new()
 	self.Instance.Battery.ImageTransparency = (
-		not self.Vehicle.IsOn or self.Vehicle.Starting
+		not self.Vehicle.Engine.IsOn
+		or self.Vehicle.IgnitionState == "Starting"
 	)
 			and 0.2
 		or 0.8
 
 	-- Check
 	self.Instance.Check.ImageColor3 = (
-		self.Vehicle.Starting or self.Vehicle.Engine.Health == 0
+		self.Vehicle.IgnitionState == "Starting"
+		or self.Vehicle.Engine.Health == 0
 	)
 			and Color3.new(1, 0, 0)
 		or self.Vehicle.Engine.Health < 0.3 and Color3.new(1, 0.5, 0)
 		or Color3.new()
 	self.Instance.Check.ImageTransparency = (
-		self.Vehicle.Starting
+		self.Vehicle.IgnitionState == "Starting"
 		or (self.Vehicle.Engine.Health :: number) < 0.3
 	)
 			and 0.2
@@ -317,12 +337,13 @@ function UpdateIcons(self: Speedometer)
 
 	-- Lights
 	-- Low beam
-	self.Instance.LowBeam.ImageColor3 = self.Vehicle.Starting
+	self.Instance.LowBeam.ImageColor3 = self.Vehicle.IgnitionState == "Starting"
 			and Color3.new(1, 0, 0)
 		or self.Vehicle.Lights.State == "Low" and Color3.new(0, 1, 0)
 		or Color3.new()
 	self.Instance.LowBeam.ImageTransparency = (
-		self.Vehicle.Starting or self.Vehicle.Lights.State == "Low"
+		self.Vehicle.IgnitionState == "Starting"
+		or self.Vehicle.Lights.State == "Low"
 	)
 			and 0.2
 		or 0.8
@@ -332,7 +353,7 @@ function UpdateIcons(self: Speedometer)
 
 	-- Turn signals
 	-- Right
-	local rTurn = self.Vehicle.Starting
+	local rTurn = self.Vehicle.IgnitionState == "Starting"
 		or (
 				self.Vehicle.Lights.TurnState == "Right"
 				or self.Vehicle.Lights.TurnState == "Both"
@@ -343,7 +364,7 @@ function UpdateIcons(self: Speedometer)
 	self.Instance.RTurn.ImageTransparency = rTurn and 0.2 or 0.8
 
 	-- Left
-	local lTurn = self.Vehicle.Starting
+	local lTurn = self.Vehicle.IgnitionState == "Starting"
 		or (
 				self.Vehicle.Lights.TurnState == "Left"
 				or self.Vehicle.Lights.TurnState == "Both"
@@ -354,8 +375,8 @@ function UpdateIcons(self: Speedometer)
 	self.Instance.LTurn.ImageTransparency = lTurn and 0.2 or 0.8
 end
 
-function ABSUpdate(self: Speedometer)
-	if self.Vehicle.Starting or not self.Vehicle.ABS then
+function ABSUpdate(self: SpeedometerImpl)
+	if self.Vehicle.IgnitionState == "Starting" or not self.Vehicle.ABS then
 		self.Instance.ABS.ImageColor3 = Color3.new(1, 0, 0)
 		self.Instance.ABS.ImageTransparency = 0.2
 	else
@@ -369,8 +390,8 @@ function ABSUpdate(self: Speedometer)
 	end
 end
 
-function TSCUpdate(self: Speedometer)
-	if self.Vehicle.Starting or not self.Vehicle.TCS then
+function TSCUpdate(self: SpeedometerImpl)
+	if self.Vehicle.IgnitionState == "Starting" or not self.Vehicle.TCS then
 		self.Instance.TCS.ImageColor3 = Color3.new(1, 0, 0)
 		self.Instance.TCS.ImageTransparency = 0.2
 	else
