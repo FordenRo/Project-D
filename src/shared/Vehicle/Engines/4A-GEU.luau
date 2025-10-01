@@ -72,8 +72,8 @@ Engine.IgnitionAccel = 60
 Engine.IgnitionMinRPM = 800
 
 Engine.RevBounce = 200
-Engine.RevAccel = 180
-Engine.RevDecay = 30
+Engine.RevAccel = 400
+Engine.RevDecay = 50
 Engine.RevDecayRPM = 60
 
 Engine.Flywheel = 600
