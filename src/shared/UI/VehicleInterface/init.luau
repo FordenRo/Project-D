@@ -1,3 +1,4 @@
+--!strict
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -19,19 +20,50 @@ VehicleInterface.__index = VehicleInterface
 
 type VehicleInterface = VehicleTypes.VehicleInterface
 
-function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
-	local self: VehicleInterface = setmetatable({}, VehicleInterface) :: any
+type VISlider = Frame & { Fill: Frame }
+type VehicleInterfaceImpl = {
+	cursorTransparency: number,
+	cursorInstance: Frame,
+	Instance: ScreenGui & {
+		Cursor: Frame,
+		Speedometer: Frame,
+		Debug: Frame & {
+			Info: Frame & {
+				Health: TextLabel,
+				Temperature: TextLabel,
+			},
+			Car: CanvasGroup & {
+				Tires: Frame,
+				Brakes: Frame,
+				Driveshaft: CanvasGroup & { Front: Frame, Rear: Frame },
+			},
+		},
+		Inputs: Frame & {
+			Steering: Frame & { Left: VISlider, Right: VISlider },
+			Pedals: Frame & {
+				Throttle: VISlider,
+				Brake: VISlider,
+				Clutch: VISlider,
+			},
+		},
+	},
+} & VehicleInterface
+
+function VehicleInterface.new(
+	vehicle: VehicleTypes.ClientVehicle
+): VehicleInterface
+	local self: VehicleInterfaceImpl = setmetatable({}, VehicleInterface) :: any
 
 	self.Vehicle = vehicle
 
-	self.Instance = UI:Clone()
+	self.Instance = UI:Clone() :: any
 	self.Instance.Parent = player.PlayerGui
 
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
 	SpeedEffect.new(vehicle, self.Instance)
 
-	self.CursorInstance = self.Instance.Cursor
-	self._cursorTransparency = self.Instance.Cursor.BackgroundTransparency
+	self.cursorInstance = self.Instance.Cursor
+	self.cursorTransparency = self.Instance.Cursor.BackgroundTransparency
 
 	local trove = Trove.new()
 
@@ -57,31 +89,33 @@ function VehicleInterface.new(vehicle: VehicleTypes.ClientVehicle)
 	return self
 end
 
-function UpdateCursor(self: VehicleInterface)
+function UpdateCursor(self: VehicleInterfaceImpl)
 	UserInputService.MouseIconEnabled =
-		not self.Vehicle.InputController.MouseSteerOn
-	self.CursorInstance.Visible = self.Vehicle.InputController.MouseSteerOn
-	if self.Vehicle.InputController.MouseSteerOn then
-		self.CursorInstance.Position = UDim2.fromScale(
+		not self.Vehicle.InputController.IsMouseSteerOn
+	self.cursorInstance.Visible = self.Vehicle.InputController.IsMouseSteerOn
+	if self.Vehicle.InputController.IsMouseSteerOn then
+		self.cursorInstance.Position = UDim2.fromScale(
 			self.Vehicle.InputController.MousePosition.X,
 			self.Vehicle.InputController.MousePosition.Y
 		)
-		self.CursorInstance.BackgroundTransparency = 1
-			- (1 - self._cursorTransparency)
+		self.cursorInstance.BackgroundTransparency = 1
+			- (1 - self.cursorTransparency)
 				* (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) and 0.5 or 1)
 	end
 end
 
-function UpdateDebug(self: VehicleInterface)
+function UpdateDebug(self: VehicleInterfaceImpl)
 	local car = self.Instance.Debug.Car
 	for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
-		local tireFill =
-			car.Tires:FindFirstChild(wheel.Instance.Name).Fill :: Frame
+		local tireFill = (
+			car.Tires:FindFirstChild(wheel.Instance.Name) :: Frame
+		):FindFirstChild("Fill") :: Frame
 		tireFill.Size = UDim2.fromScale(1, wheel.Tire.Health)
 		tireFill.BackgroundColor3 = Color3.fromHSV(0, wheel.Tire.Stress, 1)
 
-		local brakeFill =
-			car.Brakes:FindFirstChild(wheel.Instance.Name).Fill :: Frame
+		local brakeFill = (
+			car.Brakes:FindFirstChild(wheel.Instance.Name) :: Frame
+		):FindFirstChild("Fill") :: Frame
 		brakeFill.BackgroundColor3 = Color3.fromHSV(
 			0,
 			math.clamp(
@@ -105,7 +139,7 @@ function UpdateDebug(self: VehicleInterface)
 		string.format("Temperature: %.1f °C", self.Vehicle.Engine.Temperature)
 end
 
-function UpdateInputs(self: VehicleInterface)
+function UpdateInputs(self: VehicleInterfaceImpl)
 	self.Instance.Inputs.Visible = SettingsController:GetSetting("ShowInputs")
 	if self.Instance.Inputs.Visible then
 		self.Instance.Inputs.Steering.Left.Fill.Size =
@@ -122,7 +156,7 @@ function UpdateInputs(self: VehicleInterface)
 	end
 end
 
-function VehicleInterface.Destroy(self: VehicleInterface)
+function VehicleInterface.Destroy(self: VehicleInterfaceImpl)
 	self.Instance:Destroy()
 end
 

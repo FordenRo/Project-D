@@ -314,33 +314,9 @@ export type VehicleSpeedometer = {
 
 type VISlider = Frame & { Fill: Frame }
 export type VehicleInterface = {
-	_cursorTransparency: number,
 	Vehicle: ClientVehicle,
-	Instance: ScreenGui & {
-		Cursor: Frame,
-		Speedometer: Frame,
-		Debug: Frame & {
-			Info: Frame & {
-				Health: TextLabel,
-				Temperature: TextLabel,
-			},
-			Car: CanvasGroup & {
-				Tires: Frame,
-				Brakes: Frame,
-				Driveshaft: CanvasGroup & { Front: Frame, Rear: Frame },
-			},
-		},
-		Inputs: Frame & {
-			Steering: Frame & { Left: VISlider, Right: VISlider },
-			Pedals: Frame & {
-				Throttle: VISlider,
-				Brake: VISlider,
-				Clutch: VISlider,
-			},
-		},
-	},
+	Instance: ScreenGui,
 	Speedometer: VehicleSpeedometer,
-	CursorInstance: Frame,
 
 	Destroy: (self: VehicleInterface) -> (),
 }
