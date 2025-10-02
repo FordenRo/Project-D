@@ -3,6 +3,7 @@
 local RunService = game:GetService("RunService")
 
 local Signal = require(script.Parent.Signal)
+local TableUtil = require(script.Parent.TableUtil)
 
 export type Trove = {
 	--[[
@@ -153,6 +154,12 @@ export type Trove = {
 		```
 	]]
 	Clean: (self: Trove) -> (),
+	--[[
+		Returns true if there is no objects in the trove.
+		Calling this after `Trove:Clean()` will also
+		return true
+	]]
+	IsEmpty: (self: Trove) -> (),
 	--[[
 		Attaches the trove to a Roblox instance. Once this
 		instance is removed from the game (parent or ancestor's
@@ -420,6 +427,8 @@ function Trove._cleanupObject(
 		object[cleanupMethod](object)
 	end
 end
+
+function Trove.IsEmpty(self: TroveImpl) return TableUtil.IsEmpty(self._objects) end
 
 function Trove.AttachToInstance(self: TroveImpl, instance: Instance)
 	if self._cleaning then
