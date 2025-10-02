@@ -117,6 +117,16 @@ export type SoundController = {
 	Emitters: { [string]: AudioEmitter },
 }
 
+export type VehicleControllerType = {
+	DataReceived: (self: VehicleControllerType, ...any) -> ()?,
+	-- PacketPrompted: (self: VehicleControllerType, message: string) -> any,
+}
+
+export type VehicleControllerImplType = {
+	new: (vehicle: ClientVehicle) -> VehicleControllerType,
+	Is: (obj: any) -> boolean,
+}
+
 export type ClientVehicle = {
 	--- Is the vehicle driven by a local player
 	IsDriven: boolean,
@@ -156,6 +166,19 @@ export type ClientVehicle = {
 	_OldVelocity: Vector3,
 
 	InitializeWheels: (self: ClientVehicle) -> (),
+	--- Send packet from to given controller of other clients
+	SendData: (
+		self: ClientVehicle,
+		controller: VehicleControllerType,
+		...any
+	) -> (),
+	GetController: (self: ClientVehicle, name: string) -> VehicleControllerType,
+	-- Prompt packet from
+	-- PromptPacket: (
+	-- 	self: ClientVehicle,
+	-- 	controller: VehicleControllerType,
+	-- 	message: string
+	-- ) -> any,
 	Leave: (self: ClientVehicle) -> (),
 } & BaseVehicle
 

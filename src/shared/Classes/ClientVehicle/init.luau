@@ -3,21 +3,18 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local Aerodynamics = require(script.Aerodynamics)
 local BaseVehicle = require(script.Parent.BaseVehicle)
-local BodyController = require(script.BodyController)
 local CameraController = require(script.CameraController)
 local CreateEditableMesh =
 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
-local ExhaustController = require(script.ExhaustController)
 local InputController = require(script.InputController)
-local InteriorController = require(script.InteriorController)
 local Lights = require(script.Lights)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundController = require(script.SoundController)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local UpdateTransmission = require(script.UpdateTransmission)
@@ -35,8 +32,20 @@ ClientVehicle.__index = ClientVehicle
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
+type ClientVehicleImpl = {
+	controllers: {
+		{
+			Name: string,
+			Module: VehicleTypes.VehicleControllerImplType,
+			Object: VehicleTypes.VehicleControllerType,
+		}
+	},
+	controllersRE: RemoteEvent,
+	controllersURE: UnreliableRemoteEvent,
+} & ClientVehicle
+
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: VehicleTypes.ClientVehicle =
+	local self: ClientVehicleImpl =
 		setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
 
 	self.MeshParts = {}
@@ -61,9 +70,9 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	self.SoundController = SoundController.new(self)
 	self.DeformationController = DeformationController.new(self)
-	ExhaustController.new(self)
-	InteriorController.new(self)
 	self.Lights = Lights.new(self)
+
+	InitializeControllers(self)
 
 	trove:Connect(
 		RunService.Heartbeat,
@@ -93,7 +102,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 end
 
 function Seated(
-	self: ClientVehicle,
+	self: ClientVehicleImpl,
 	seatedPlayer: Player,
 	seat: VehicleSeat | Seat
 )
@@ -103,7 +112,6 @@ function Seated(
 	else
 		self.Passengers[seat] = seatedPlayer
 	end
-	BodyController.new(self, seatedPlayer, seat)
 	self.PlayerSeated:FireDeferred(seatedPlayer, seat)
 
 	if seatedPlayer ~= player then return end
@@ -116,12 +124,11 @@ function Seated(
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
-	Aerodynamics.new(self)
 	self.Interface = VehicleInterface.new(self)
 end
 
 function Leaved(
-	self: ClientVehicle,
+	self: ClientVehicleImpl,
 	leavedPlayer: Player,
 	seat: VehicleSeat | Seat
 )
@@ -146,7 +153,7 @@ function Leaved(
 	self.Interface:Destroy()
 end
 
-function ClientVehicle.Leave(self: ClientVehicle)
+function ClientVehicle.Leave(self: ClientVehicleImpl)
 	local humanoid =
 		player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
 	local seat = humanoid.SeatPart
@@ -161,7 +168,7 @@ function ClientVehicle.Leave(self: ClientVehicle)
 	)
 end
 
-function togglePrompts(self: ClientVehicle, enabled: boolean)
+function togglePrompts(self: ClientVehicleImpl, enabled: boolean)
 	local seats = self.Instance.Seats:GetChildren()
 	table.insert(seats, self.Instance.DriveSeat)
 
@@ -179,7 +186,7 @@ function togglePrompts(self: ClientVehicle, enabled: boolean)
 	end
 end
 
-function InitializeBody(self: ClientVehicle)
+function InitializeBody(self: ClientVehicleImpl)
 	local taskCount = 0
 	for _, v in self.Instance.Body:GetDescendants() do
 		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
@@ -212,7 +219,7 @@ function InitializeBody(self: ClientVehicle)
 	until taskCount == 0
 end
 
-function InitializeSeats(self: ClientVehicle)
+function InitializeSeats(self: ClientVehicleImpl)
 	local seats = self.Instance.Seats:GetChildren()
 	table.insert(seats, self.Instance.DriveSeat)
 
@@ -240,7 +247,7 @@ function InitializeSeats(self: ClientVehicle)
 	end
 end
 
-function InitializeVariables(self: ClientVehicle)
+function InitializeVariables(self: ClientVehicleImpl)
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
 			* 9.80665
@@ -267,8 +274,54 @@ function InitializeVariables(self: ClientVehicle)
 	self.WeightPart = self.Instance.Body.WeightPart
 end
 
-function ClientVehicle.InitializeWheels(self: ClientVehicle)
+function ClientVehicle.InitializeWheels(self: ClientVehicleImpl)
 	BaseVehicle.InitializeWheels(self, Wheel)
+end
+
+function InitializeControllers(self: ClientVehicleImpl)
+	self.controllers = {}
+	self.controllersRE =
+		self.Instance:FindFirstChild("_ControllersRE") :: RemoteEvent
+	self.controllersURE =
+		self.Instance:FindFirstChild("_ControllersURE") :: UnreliableRemoteEvent
+
+	local function onDataReceived(name: string, ...)
+		local controller = self:GetController(name)
+		if controller.DataReceived then controller:DataReceived(...) end
+	end
+
+	self.controllersRE.OnClientEvent:Connect(onDataReceived)
+	self.controllersURE.OnClientEvent:Connect(onDataReceived)
+
+	for _, v in script.Controllers:GetChildren() do
+		if not v:IsA("ModuleScript") then continue end
+
+		local module = require(v) :: VehicleTypes.VehicleControllerImplType
+		table.insert(
+			self.controllers,
+			{ Name = v.Name, Module = module, Object = module.new(self) }
+		)
+	end
+end
+
+function ClientVehicle.GetController(self: ClientVehicleImpl, name: string)
+	local value = TableUtil.Find(
+		self.controllers,
+		function(v) return v.Name == name end
+	)
+	return value.Object
+end
+
+function ClientVehicle.SendData(
+	self: ClientVehicleImpl,
+	controller: VehicleTypes.VehicleControllerType,
+	...
+)
+	local value = TableUtil.Find(
+		self.controllers,
+		function(v) return v.Module.Is(controller) end
+	)
+	self.controllersRE:FireServer(value.Name, ...)
 end
 
 -- TODO: Drivetrain Initialize
@@ -279,7 +332,7 @@ end
 -- 	self.SteerInner = math.min(self.SteerOuter - (self.SteerOuter * (1 - self.Tune.Ackerman)), self.SteerOuter * 1.2)
 -- end
 
-function UpdateWheels(self: ClientVehicle, deltaTime: number)
+function UpdateWheels(self: ClientVehicleImpl, deltaTime: number)
 	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		wheel:Update(deltaTime)
 	end
@@ -289,7 +342,7 @@ function UpdateWheels(self: ClientVehicle, deltaTime: number)
 	self.ESCActive = false
 end
 
-function UpdateMileage(self: ClientVehicle, deltaTime: number)
+function UpdateMileage(self: ClientVehicleImpl, deltaTime: number)
 	local speed = 0
 	local count = 0
 	for _, wheel in self.Wheels do
@@ -307,7 +360,7 @@ end
 
 -- TODO: Flip function
 
-function Replicate(self: ClientVehicle, buf: buffer?)
+function Replicate(self: ClientVehicleImpl, buf: buffer?)
 	if self.IsDriven then
 		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, self))
 	elseif buf then
@@ -315,7 +368,7 @@ function Replicate(self: ClientVehicle, buf: buffer?)
 	end
 end
 
-function Update(self: ClientVehicle, deltaTime: number)
+function Update(self: ClientVehicleImpl, deltaTime: number)
 	self.Center = self:GetCenter()
 	self.Velocity = self.WeightPart.AssemblyLinearVelocity
 	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity

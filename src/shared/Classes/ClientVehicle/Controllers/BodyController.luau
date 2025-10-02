@@ -21,20 +21,25 @@ type BodyControllerImpl = {
 	IKControls: { [string]: IKControl },
 } & BodyController
 
-function BodyController.new(
-	vehicle: VehicleTypes.ClientVehicle,
-	player: Player,
-	seat: VehicleSeat | Seat
-): BodyController
+function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
 	local self: BodyControllerImpl = setmetatable({}, BodyController) :: any
 
 	self.Vehicle = vehicle
-	self.Player = player
 	self.IKControls = {}
 
 	self.trove = Trove.new()
-	seat:GetPropertyChangedSignal("Occupant")
-		:Once(function() self.trove:Destroy() end)
+
+	self.Vehicle.PlayerSeated:Connect(
+		function(player) Initialize(self, player) end
+	)
+
+	self.Vehicle.PlayerLeaved:Connect(function(player) self.trove:Destroy() end)
+
+	return self
+end
+
+function Initialize(self: BodyControllerImpl, player: Player)
+	self.Player = player
 
 	InitializeIKControls(self)
 	InitializeTorso(self)
@@ -44,8 +49,6 @@ function BodyController.new(
 	InitializeHandbrake(self)
 	InitializePedals(self)
 	InitializeIgnition(self)
-
-	return self
 end
 
 function InitializeIKControls(self: BodyControllerImpl)

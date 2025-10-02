@@ -60,6 +60,7 @@ function Initialize(self: ServerVehicle)
 	CreateFlip(self)
 	Finalize(self)
 	InitializeSeats(self)
+	InitializeControllersReplication(self)
 end
 
 function RemoveMassAndForces(self: ServerVehicle)
@@ -119,6 +120,27 @@ end
 
 function ServerVehicle.InitializeWheels(self: ServerVehicle)
 	BaseVehicle.InitializeWheels(self, Wheel)
+end
+
+function InitializeControllersReplication(self: ServerVehicle)
+	local RE = Instance.new("RemoteEvent")
+	RE.Name = "_ControllersRE"
+	RE.Parent = self.Instance
+
+	local URE = Instance.new("UnreliableRemoteEvent")
+	URE.Name = "_ControllersURE"
+	URE.Parent = self.Instance
+
+	local function Replicate(sender: Player, ...)
+		for _, player in Players:GetPlayers() do
+			if player == sender then continue end
+
+			RE:FireClient(player, ...)
+		end
+	end
+
+	RE.OnServerEvent:Connect(Replicate)
+	URE.OnServerEvent:Connect(Replicate)
 end
 
 function ApplyWeight(self: ServerVehicle)

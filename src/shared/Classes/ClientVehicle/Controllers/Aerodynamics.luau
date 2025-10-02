@@ -16,6 +16,7 @@ export type Aerodynamics = {
 }
 
 type AerodynamicsImpl = {
+	trove: Trove.Trove,
 	dragFactor: number,
 	forces: {
 		drag: VectorForce,
@@ -28,23 +29,15 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 	local self: AerodynamicsImpl = setmetatable({}, Aerodynamics) :: any
 
 	self.Vehicle = vehicle
+	self.trove = Trove.new()
 
-	Initialize(self)
-
-	local trove = Trove.new()
-	trove:Add(task.spawn(function()
-		while true do
-			task.wait(1 / 30)
-			Update(self)
-		end
-	end))
-	trove:Add(function()
-		for _, v in self.forces :: { VectorForce } do
-			if v.Attachment0 then v.Attachment0:Destroy() end
-			v:Destroy()
+	self.Vehicle.DriverChanged:Connect(function()
+		if self.Vehicle.IsDriven then
+			Initialize(self)
+		elseif not self.trove:IsEmpty() then
+			self.trove:Destroy()
 		end
 	end)
-	self.Vehicle.DriverChanged:Once(function() trove:Destroy() end)
 
 	return self
 end
@@ -53,12 +46,15 @@ function Initialize(self: AerodynamicsImpl)
 	-- Attachments
 	local dragAttach = Instance.new("Attachment")
 	dragAttach.Parent = self.Vehicle.Instance.Body.Aerodynamics.Drag
+	self.trove:Add(dragAttach)
 
 	local fDownforceAttach = Instance.new("Attachment")
 	fDownforceAttach.Parent = self.Vehicle.Instance.Body.Aerodynamics.FDownforce
+	self.trove:Add(fDownforceAttach)
 
 	local rDownforceAttach = Instance.new("Attachment")
 	rDownforceAttach.Parent = self.Vehicle.Instance.Body.Aerodynamics.RDownforce
+	self.trove:Add(rDownforceAttach)
 
 	-- Forces
 	local dragForce = Instance.new("VectorForce")
@@ -66,24 +62,34 @@ function Initialize(self: AerodynamicsImpl)
 	dragForce.Force = Vector3.zero
 	dragForce.RelativeTo = Enum.ActuatorRelativeTo.World
 	dragForce.Parent = self.Vehicle.Instance.Body.Aerodynamics.Drag
+	self.trove:Add(dragForce)
 
 	local fDownforce = Instance.new("VectorForce")
 	fDownforce.Attachment0 = fDownforceAttach
 	fDownforce.Force = Vector3.zero
 	fDownforce.RelativeTo = Enum.ActuatorRelativeTo.World
 	fDownforce.Parent = self.Vehicle.Instance.Body.Aerodynamics.FDownforce
+	self.trove:Add(fDownforce)
 
 	local rDownforce = Instance.new("VectorForce")
 	rDownforce.Attachment0 = rDownforceAttach
 	rDownforce.Force = Vector3.zero
 	rDownforce.RelativeTo = Enum.ActuatorRelativeTo.World
 	rDownforce.Parent = self.Vehicle.Instance.Body.Aerodynamics.RDownforce
+	self.trove:Add(rDownforce)
 
 	self.forces = {
 		drag = dragForce,
 		fDownforce = fDownforce,
 		rDownforce = rDownforce,
 	}
+
+	self.trove:Add(task.spawn(function()
+		while true do
+			task.wait(1 / 30)
+			Update(self)
+		end
+	end))
 end
 
 function Update(self: AerodynamicsImpl)
