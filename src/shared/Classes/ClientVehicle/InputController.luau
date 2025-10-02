@@ -434,8 +434,9 @@ function InitializeConnections(self: InputControllerImpl)
 			self.rawSteering = 0
 		end,
 		ToggleFirstPersonView = function()
-			self.Vehicle.CameraController.FirstPerson =
-				not self.Vehicle.CameraController.FirstPerson
+			self.CameraMode = if self.CameraMode == "FirstPerson"
+				then "ThirdPerson"
+				else "FirstPerson"
 		end,
 		TCS = function()
 			if self.Vehicle.Tune.ESCEnabled then

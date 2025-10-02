@@ -52,7 +52,6 @@ function CameraController.new(
 	self.LookOffset = Vector3.new()
 	self.Angles = Vector3.new()
 	self.Bumping = Vector3.new()
-	self.FirstPerson = false
 	self.lastCameraRotation = 0
 	self.isCharacterVisible = true
 	self.CameraCFrame = CFrame.new()
@@ -120,8 +119,12 @@ end
 function Update(self: CameraControllerImpl, deltaTime: number)
 	if not player.Character then return end
 
-	if self.isCharacterVisible == self.FirstPerson then
-		self.isCharacterVisible = not self.FirstPerson
+	if
+		self.isCharacterVisible
+		== (self.Vehicle.InputController.CameraMode == "FirstPerson")
+	then
+		self.isCharacterVisible = self.Vehicle.InputController.CameraMode
+			== "ThirdPerson"
 		for _, v in player.Character:GetDescendants() do
 			if
 				not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name)
@@ -133,7 +136,7 @@ function Update(self: CameraControllerImpl, deltaTime: number)
 		end
 	end
 
-	if self.FirstPerson then
+	if self.Vehicle.InputController.CameraMode == "FirstPerson" then
 		UpdateFirstPerson(self, deltaTime)
 	else
 		UpdateThirdPerson(self, deltaTime)
