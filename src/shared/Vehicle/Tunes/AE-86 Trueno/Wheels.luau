@@ -1,8 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
-local Tune = {} :: VehicleTypes.Tune
+local Tune = {} :: TuneType.Tune
 
 Tune.FCamber = -2.4
 Tune.RCamber = -1.4

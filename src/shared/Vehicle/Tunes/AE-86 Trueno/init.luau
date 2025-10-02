@@ -1,9 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Default = require(script.Parent.Default)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
-local Tune = Default :: VehicleTypes.Tune
+local Tune = Default :: TuneType.Tune
 
 Tune.Title = "Zoyota Sprint AE-86 Trueno"
 Tune.Engine = "4A-GEU"

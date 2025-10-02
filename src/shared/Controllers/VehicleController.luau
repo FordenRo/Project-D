@@ -4,6 +4,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ClientVehicle = require(ReplicatedStorage.Shared.Classes.ClientVehicle)
+local PlayerVehicleType =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.PlayerVehicleType)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
@@ -14,15 +16,17 @@ VehicleController.__index = VehicleController
 export type VehicleController = {
 	DrivenVehicle: VehicleTypes.ClientVehicle?,
 
-	GetVehicles: (self: VehicleController) -> { VehicleTypes.PlayerVehicle },
+	GetVehicles: (
+		self: VehicleController
+	) -> { PlayerVehicleType.PlayerVehicle },
 	GetVehicleInfo: (
 		self: VehicleController,
 		id: string
-	) -> VehicleTypes.PlayerVehicleInfo,
+	) -> PlayerVehicleType.PlayerVehicleInfo,
 	GetVehiclesByName: (
 		self: VehicleController,
 		name: string
-	) -> { VehicleTypes.PlayerVehicle },
+	) -> { PlayerVehicleType.PlayerVehicle },
 }
 
 local remoteFunction =
@@ -76,21 +80,21 @@ end
 
 function VehicleController.GetVehicles(
 	self: VehicleController
-): { VehicleTypes.PlayerVehicle }
+): { PlayerVehicleType.PlayerVehicle }
 	return remoteFunction:InvokeServer("GetPlayerVehicles")
 end
 
 function VehicleController.GetVehicleInfo(
 	self: VehicleController,
 	id: string
-): VehicleTypes.PlayerVehicleInfo
+): PlayerVehicleType.PlayerVehicleInfo
 	return remoteFunction:InvokeServer("GetPlayerVehicleInfo", id)
 end
 
 function VehicleController.GetVehiclesByName(
 	self: VehicleController,
 	name: string
-): { VehicleTypes.PlayerVehicle }
+): { PlayerVehicleType.PlayerVehicle }
 	local vehicles = self:GetVehicles()
 	local list = {}
 	for _, v in vehicles do

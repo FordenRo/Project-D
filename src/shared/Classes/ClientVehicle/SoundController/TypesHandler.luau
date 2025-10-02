@@ -1,6 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local SoundData = require(ReplicatedStorage.Shared.Types.VehicleTypes.SoundData)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -33,7 +34,7 @@ local Handlers = {}
 
 function Handlers.Engine(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
@@ -57,7 +58,7 @@ end
 
 function Handlers.Transmission(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
@@ -81,7 +82,7 @@ end
 
 function Handlers.Turbo(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
@@ -93,7 +94,7 @@ end
 
 function Handlers.Super(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
 
@@ -105,7 +106,7 @@ end
 
 function Handlers.Blowoff(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if
 		(
@@ -129,7 +130,7 @@ end
 
 function Handlers.Ignition(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if self.Vehicle.Starting then
 		if not sound.Played then
@@ -148,7 +149,7 @@ end
 
 function Handlers.EngineBlow(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if self.Vehicle.Engine.Health == 0 then
 		if sound.Played then return end
@@ -160,7 +161,7 @@ end
 
 function Handlers.Fan(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if self.Vehicle.FanSpeed > 0 then
 		if not sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Play() end
@@ -178,7 +179,7 @@ end
 
 function Handlers.Horn(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if self.Vehicle.Horning then
 		sound.AudioPlayer:Play()
@@ -189,7 +190,7 @@ end
 
 function Handlers.HandbrakeOn(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if self.Vehicle.PBrake then
 		if not sound.Played then
@@ -205,7 +206,7 @@ end
 
 function Handlers.HandbrakeOff(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if not self.Vehicle.PBrake then
 		if not sound.Played then
@@ -221,7 +222,7 @@ end
 
 function Handlers.GearLever(
 	self: SoundTypesHandlerImpl,
-	sound: VehicleTypes.CachedSoundData
+	sound: SoundData.CachedSoundData
 )
 	if sound.LastGear ~= self.Vehicle.Gear then
 		sound.LastGear = self.Vehicle.Gear
@@ -232,7 +233,7 @@ end
 
 function SoundTypesHandler.HandleSounds(
 	self: SoundTypesHandlerImpl,
-	sounds: { VehicleTypes.CachedSoundData }
+	sounds: { SoundData.CachedSoundData }
 )
 	for k, sound in sounds do
 		if typeof(Handlers[k]) ~= "function" then continue end

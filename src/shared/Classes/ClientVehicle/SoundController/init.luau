@@ -2,6 +2,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local SoundData = require(ReplicatedStorage.Shared.Types.VehicleTypes.SoundData)
 local SoundTypesHandler = require(script.TypesHandler)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -36,8 +37,7 @@ function SoundController.new(
 	folder.Parent = self.Vehicle.Instance
 
 	for name, soundData in self.Vehicle.Tune.Sounds do
-		local cachedSound =
-			table.clone(soundData) :: VehicleTypes.CachedSoundData
+		local cachedSound = table.clone(soundData) :: SoundData.CachedSoundData
 
 		local audioPlayer = Instance.new("AudioPlayer")
 		audioPlayer.Volume = soundData.Volume or 1
@@ -61,7 +61,7 @@ function SoundController.new(
 
 	for material, asset in self.Vehicle.Tune.TireSounds do
 		for _, wheel in self.Vehicle.Wheels :: { VehicleTypes.ClientWheel } do
-			local cachedSound = {} :: VehicleTypes.CachedSoundData
+			local cachedSound = {} :: SoundData.CachedSoundData
 
 			local audioPlayer = Instance.new("AudioPlayer")
 			audioPlayer.Asset = asset

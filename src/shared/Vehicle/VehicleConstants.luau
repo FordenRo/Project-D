@@ -1,12 +1,13 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+local VehicleConstantsType =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.VehicleConstantsType)
 
-local VehicleConstants = {} :: VehicleTypes.VehicleConstants
+local VehicleConstants = {} :: VehicleConstantsType.VehicleConstants
 
 VehicleConstants.FlipType = "New" -- implement this
 VehicleConstants.Haptics = "Controller" -- implement this
 VehicleConstants.GravComp = 35
 VehicleConstants.WBVisible = false
 
-return table.freeze(VehicleConstants) :: VehicleTypes.VehicleConstants
+return table.freeze(VehicleConstants) :: VehicleConstantsType.VehicleConstants

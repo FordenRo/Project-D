@@ -4,8 +4,10 @@ local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
+local PlayerVehicleType =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.PlayerVehicleType)
 local ServerVehicle = require(ServerScriptService.Server.Classes.ServerVehicle)
-local Tune = require(ReplicatedStorage.Shared.Types.VehicleTypes.Tune)
+local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local RF = Instance.new("RemoteFunction")
@@ -21,7 +23,7 @@ export type VehicleHandler = {
 		self: VehicleHandler,
 		player: Player,
 		id: string
-	) -> VehicleTypes.PlayerVehicleInfo,
+	) -> PlayerVehicleType.PlayerVehicleInfo,
 	--- Registering new vehicle and returns ID
 	RegisterNewPlayerVehicle: (
 		self: VehicleHandler,
@@ -61,7 +63,7 @@ end
 function VehicleHandler.GetPlayerVehicles(
 	self: VehicleHandler,
 	player: Player
-): { VehicleTypes.PlayerVehicle }
+): { PlayerVehicleType.PlayerVehicle }
 	return HttpService:JSONDecode(
 		DataStoreService:GetDataStore("PlayerVehicles"):GetAsync(player.UserId)
 			or "{}"
@@ -72,7 +74,7 @@ function VehicleHandler.GetPlayerVehicleInfo(
 	self: VehicleHandler,
 	player: Player,
 	id: number
-): VehicleTypes.PlayerVehicleInfo
+): PlayerVehicleType.PlayerVehicleInfo
 	return HttpService:JSONDecode(
 		DataStoreService:GetDataStore("PlayerVehicles", `info/{id}`)
 			:GetAsync(player.UserId)
@@ -86,7 +88,7 @@ function VehicleHandler.RegisterNewPlayerVehicle(
 )
 	local id = HttpService:GenerateGUID()
 	local tune =
-		require(ReplicatedStorage.Shared.Vehicle.Tunes[name]) :: Tune.Tune
+		require(ReplicatedStorage.Shared.Vehicle.Tunes[name]) :: TuneType.Tune
 
 	local playerVehInfo = {
 		Name = name,
@@ -97,12 +99,12 @@ function VehicleHandler.RegisterNewPlayerVehicle(
 		EngineHealth = 1,
 		Deformation = {},
 		Wheels = {},
-	} :: VehicleTypes.PlayerVehicleInfo
+	} :: PlayerVehicleType.PlayerVehicleInfo
 
 	local playerVeh = {
 		Name = name,
 		ID = id,
-	} :: VehicleTypes.PlayerVehicle
+	} :: PlayerVehicleType.PlayerVehicle
 
 	DataStoreService:GetDataStore("PlayerVehicles", `info/{id}`)
 		:SetAsync(player.UserId, HttpService:JSONEncode(playerVehInfo))
@@ -128,7 +130,7 @@ function VehicleHandler.UpdatePlayerVehicleInfo(
 
 	local baseTune = require(
 		ReplicatedStorage.Shared.Vehicle.Tunes[vehicle.Instance.Name]
-	) :: VehicleTypes.Tune
+	) :: TuneType.Tune
 	local tune = {}
 	for k, v in vehicle.Tune :: any do
 		if v ~= baseTune[k] then tune[k] = v end

@@ -1,45 +1,350 @@
-local PlayerVehicle = require(script.PlayerVehicle)
+--!strict
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local EngineTune = require(script.EngineTune)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.SoundData)
-local Tune = require(script.Tune)
-local Vehicle = require(script.Vehicle)
-local VehicleConstants = require(script.VehicleConstantsType)
+local TuneType = require(script.TuneType)
 
-export type VehicleInterface = Vehicle.VehicleInterface
-export type VehicleSpeedometer = Vehicle.VehicleSpeedometer
+export type IgnitionState = "Off" | "Acc" | "On" | "Starting"
 
-export type BaseWheel = Vehicle.BaseWheel
-export type ClientWheel = Vehicle.ClientWheel
-export type ServerWheel = Vehicle.ServerWheel
+export type BaseVehicle = {
+	_Remote: UnreliableRemoteEvent,
+	Instance: Instance & {
+		Wheels: Model & any,
+		DriveSeat: VehicleSeat & {
+			Flip: AlignOrientation,
+			ProximityPrompt: ProximityPrompt,
+		},
+		Seats: Model,
+		Body: Model & {
+			WeightPart: Part,
+			Collider: MeshPart,
+			Aerodynamics: Model & {
+				Drag: Part,
+				FDownforce: Part,
+				RDownforce: Part,
+			},
+			Deformation: Model & {
+				EngineBlow: Part,
+				BlowSmokeParts: Model,
+			},
+			Sounds: Model,
+			Lights: Model & {
+				Front: Model,
+				Rear: Model,
+				TurnRight: Model,
+				TurnLeft: Model,
+				Reverse: Model,
+				Brake: Model?,
+			},
+		},
+		Misc: Model,
+	},
+	Engine: EngineTable,
+	Wheels: { BaseWheel },
+	Tune: TuneType.Tune,
+	Driver: Player?,
+	Passengers: { [VehicleSeat | Seat]: Player },
+	Dirt: number,
+	Fuel: number,
+	ID: string,
+	FanSpeed: number,
+	Horning: boolean,
+	-- Transmission
+	Clutch: number,
+	Gear: number,
+	FinalDrive: number,
+	FinalDriveRatio: number,
+	TransmissionMode: TuneType.TransmissionMode,
+	CurrentRatio: number,
+	RPM: number,
+	Shifting: boolean,
+	AutoClutch: boolean,
+	-- Inputs
+	Throttle: number,
+	Brake: number,
+	Steering: number,
+	PBrake: boolean,
+	-- Velocity
+	Velocity: Vector3,
+	AngularVelocity: Vector3,
+	Acceleration: Vector3,
+	--- Mileage in meters
+	Mileage: number,
+	-- Misc
+	Center: CFrame,
+	WeightPart: Part,
+	TCS: boolean,
+	TCSActive: boolean,
+	ABS: boolean,
+	ABSActive: boolean,
+	ESC: boolean,
+	ESCActive: boolean,
+	CS: boolean,
+	CSActive: boolean,
+	--- Current ignition state
+	IgnitionState: IgnitionState,
 
-export type ClientWheelTire = Vehicle.ClientWheelTire
-export type ServerWheelTire = Vehicle.ServerWheelTire
+	GetCenter: (self: BaseVehicle) -> CFrame,
+	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
+	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
+}
 
-export type ClientBrakeDisk = Vehicle.ClientBrakeDisk
-export type ServerBrakeDisk = Vehicle.ServerBrakeDisk
+export type DeformationController = {
+	Vehicle: ClientVehicle,
+	ScratchTexture: EditableImage,
 
-export type BaseVehicle = Vehicle.BaseVehicle
-export type ClientVehicle = Vehicle.ClientVehicle
-export type DeformationController = Vehicle.DeformationController
-export type DeformationHandler = Vehicle.DeformationHandler
-export type ServerVehicle = Vehicle.ServerVehicle
-export type InputController = Vehicle.InputController
-export type Engine = Vehicle.Engine
-export type EngineTable = Vehicle.EngineTable
-export type CameraController = Vehicle.CameraController
-export type SoundData = SoundData.SoundData
-export type CachedSoundData = SoundData.CachedSoundData
-export type SoundController = Vehicle.SoundController
-export type SoundTypesHandler = Vehicle.SoundTypesHandler
+	BlowEngine: (self: DeformationController) -> (),
+}
 
---- Vehicle configuration
----
---- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
-export type Tune = Tune.Tune
-export type VehicleConstants = VehicleConstants.VehicleConstants
-export type PlayerVehicle = PlayerVehicle.PlayerVehicle
-export type PlayerVehicleInfo = PlayerVehicle.PlayerVehicleInfo
+export type DeformationHandler = {
+	Vehicle: ServerVehicle,
+}
 
-export type Headlight = Vehicle.Headlight
-export type ClientLights = Vehicle.ClientLights
+export type SoundTypesHandler = {
+	Vehicle: ClientVehicle,
+
+	HandleSounds: (
+		self: SoundTypesHandler,
+		sounds: { [string]: SoundData.CachedSoundData }
+	) -> (),
+}
+
+export type SoundController = {
+	Vehicle: ClientVehicle,
+	Sounds: { [string]: SoundData.CachedSoundData },
+	Emitters: { [string]: AudioEmitter },
+}
+
+export type ClientVehicle = {
+	--- Is the vehicle driven by a local player
+	IsDriven: boolean,
+	--- Is local player sitting in the vehicle
+	IsSitting: boolean,
+	--- Is the vehicle owned by a local player
+	IsOwned: boolean,
+	MeshParts: { MeshPart },
+	Meshes: { [MeshPart]: EditableMesh },
+	Textures: { [MeshPart]: EditableImage },
+
+	-- Events
+	--- Fires on Vehicle.Driver change
+	DriverChanged: Signal.Signal<Player?>,
+	--- Fires on Vehicle.IsSitting change
+	SittingChanged: Signal.Signal<>,
+	--- Fires on Vehicle.IgnitionState change
+	IgnitionStateChanged: Signal.Signal<IgnitionState>,
+
+	Lights: ClientLights,
+	InputController: InputController,
+	SoundController: SoundController,
+	DeformationController: DeformationController,
+	CameraController: CameraController,
+	BrakeForce: { Front: number, Rear: number },
+	PBrakeForce: { Front: number, Rear: number },
+	Engine: Engine,
+	Interface: VehicleInterface,
+	-- Transmission
+	_ShiftUp: boolean,
+	_ShiftDown: boolean,
+	-- Velocity
+	_OldVelocity: Vector3,
+
+	InitializeWheels: (self: ClientVehicle) -> (),
+	Leave: (self: ClientVehicle) -> (),
+} & BaseVehicle
+
+export type CameraController = {
+	Vehicle: ClientVehicle,
+	Distance: number,
+	Offset: Vector3,
+	LookOffset: Vector3,
+	Angles: Vector3,
+	Bumping: Vector3,
+	CameraCFrame: CFrame,
+
+	Destroy: (self: CameraController) -> (),
+}
+
+export type Engine = {
+	Throttle: number,
+	Brake: number,
+	Clutch: number,
+	Tune: EngineTune.Engine,
+	Vehicle: ClientVehicle,
+	IsOn: boolean,
+
+	Update: (self: Engine, deltaTime: number) -> (),
+	AsTable: (self: Engine) -> EngineTable,
+	Destroy: (self: Engine) -> (),
+} & EngineTable
+
+export type InputController = {
+	Vehicle: ClientVehicle,
+	--- Current mouse position in mouse steering mode
+	MousePosition: Vector2,
+	--- Is mouse steering mode enabled
+	IsMouseSteerOn: boolean,
+	--- Current camera mode
+	CameraMode: "FirstPerson" | "ThirdPerson",
+
+	Destroy: (self: InputController) -> (),
+}
+
+export type EngineTable = {
+	Health: number,
+	Temperature: number,
+	DriveshaftStress: number,
+
+	Boost: number,
+	BoostTurbo: number,
+	BoostSuper: number,
+
+	Horsepower: number,
+	HpNatural: number,
+	HpElectric: number,
+	HpTurbo: number,
+	HpSuper: number,
+	HpBoosted: number,
+
+	Torque: number,
+	TqNatural: number,
+	TqElectric: number,
+	TqTurbo: number,
+	TqSuper: number,
+	TqBoosted: number,
+}
+
+export type ServerVehicle = {
+	InitializeWheels: (self: ServerVehicle) -> (),
+} & BaseVehicle
+
+export type BaseWheel = {
+	Instance: BasePart & {
+		Base: BasePart,
+		Arm: BasePart & {
+			Steer: BodyGyro | AlignOrientation,
+			SteerAttach0: Attachment,
+		},
+		Parts: Model & {
+			Tire: BasePart,
+			BrakeDisk: BasePart,
+		},
+		Fixed: Model,
+		WheelFixed: Model,
+		AV: HingeConstraint,
+		BV: HingeConstraint,
+		AB: any,
+		Collision: Part,
+		SuspensionFixed: Model,
+		SmokePart: Part,
+		TrailAttachmentPart: Part,
+		AxleP: Part & {
+			AA: Attachment,
+		},
+	},
+	Vehicle: BaseVehicle,
+	BrakeDisk: ClientBrakeDisk | ServerBrakeDisk,
+	IsRight: boolean,
+	IsFront: boolean,
+	IsDriven: boolean,
+}
+
+export type ClientWheel = {
+	Vehicle: ClientVehicle,
+	Tire: ClientWheelTire,
+	BrakeDisk: ClientBrakeDisk,
+	CanSteer: number,
+	OppositeWheel: BasePart,
+
+	Update: (self: ClientWheel, deltaTime: number) -> (),
+	UpdateForces: (
+		self: ClientWheel,
+		torque: number,
+		flywheelEnergy: number
+	) -> (),
+	Destroy: (self: ClientWheel) -> (),
+} & BaseWheel
+
+export type ServerWheel = {
+	Vehicle: ServerVehicle,
+	Tire: ServerWheelTire,
+	BrakeDisk: ServerBrakeDisk,
+} & BaseWheel
+
+export type ClientWheelTire = {
+	Instance: BasePart,
+	Wheel: ClientWheel,
+	Vehicle: ClientVehicle,
+	Health: number,
+	Stress: number,
+	Dirt: number,
+	SmokePart: Part,
+	Material: string,
+	Collision: Part & {
+		AlignPosition: AlignPosition,
+		["#GRAVCOMP"]: VectorForce,
+	},
+}
+
+export type ServerWheelTire = {
+	Instance: BasePart,
+	Wheel: ServerWheel,
+	Vehicle: ServerVehicle,
+}
+
+export type ClientBrakeDisk = {
+	Instance: BasePart,
+	Vehicle: ClientVehicle,
+	Wheel: ClientWheel,
+	Temperature: number,
+	Sound: Sound & {
+		PitchEffect: PitchShiftSoundEffect,
+	},
+	Volume: number,
+}
+
+export type ServerBrakeDisk = {
+	Wheel: ServerWheel,
+	Instance: BasePart,
+}
+
+export type VehicleSpeedometer = {
+	Vehicle: ClientVehicle,
+	Instance: Frame & any,
+}
+
+export type VehicleInterface = {
+	Vehicle: ClientVehicle,
+	Instance: ScreenGui,
+	Speedometer: VehicleSpeedometer,
+
+	Destroy: (self: VehicleInterface) -> (),
+}
+
+export type Headlight = {
+	Instance: BasePart,
+	Light: Light?,
+	Enabled: boolean,
+	Brightness: number,
+	DisabledColor: Color3,
+	EnabledColor: Color3,
+
+	Destroy: (self: Headlight) -> (),
+}
+
+export type ClientLights = {
+	Vehicle: ClientVehicle,
+	Headlights: { [string]: { Headlight } },
+	State: "Low" | "High" | "Off",
+	TurnState: "Left" | "Right" | "Both" | "Off",
+
+	ToggleLights: (self: ClientLights) -> (),
+	ToggleTurnState: (
+		self: ClientLights,
+		state: "Left" | "Right" | "Both"
+	) -> (),
+}
 
 return {}

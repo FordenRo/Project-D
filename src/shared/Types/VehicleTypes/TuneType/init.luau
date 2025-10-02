@@ -10,6 +10,9 @@ local Wheels = require(script.Wheels)
 type Drivetrain = "FWD" | "RWD" | "AWD"
 export type TransmissionMode = Transmission.TransmissionMode
 
+--- Vehicle configuration
+---
+--- [*Calculator to tune the engine*](https://www.desmos.com/calculator/cqhgbm0vlt)
 export type Tune =
 	{
 		--- Display name of the vehicle

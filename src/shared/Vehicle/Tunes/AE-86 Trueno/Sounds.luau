@@ -1,9 +1,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Default = require(ReplicatedStorage.Shared.Vehicle.Tunes.Default)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
-local Tune = {} :: VehicleTypes.Tune
+local Tune = {} :: TuneType.Tune
 
 Tune.Sounds = {
 	Ignition = {

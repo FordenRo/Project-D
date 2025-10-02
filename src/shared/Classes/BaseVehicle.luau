@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
@@ -19,7 +20,7 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 			ReplicatedStorage.Shared.Vehicle.Tunes:FindFirstChild(instance.Name),
 			"Tune not found for vehicle: " .. instance.Name
 		) :: any
-	) :: VehicleTypes.Tune
+	) :: TuneType.Tune
 
 	InitializeVariables(self)
 
@@ -82,7 +83,9 @@ end
 
 function BaseVehicle.InitializeWheels(
 	self: BaseVehicle,
-	wheelClass: VehicleTypes.BaseWheel
+	wheelClass: {
+		new: (BaseVehicle, BasePart) -> VehicleTypes.BaseWheel,
+	}
 )
 	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
 	for _, v in self.Instance.Wheels:GetChildren() do
@@ -151,4 +154,4 @@ function BaseVehicle.GetCenter(self: BaseVehicle)
 	return center
 end
 
-return table.freeze({ new = BaseVehicle.new })
+return BaseVehicle

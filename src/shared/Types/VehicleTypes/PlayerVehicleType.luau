@@ -1,4 +1,4 @@
-local Tune = require(script.Parent.Tune)
+local TuneType = require(script.Parent.TuneType)
 
 export type PlayerVehicle = {
 	ID: string,
@@ -8,7 +8,7 @@ export type PlayerVehicle = {
 export type PlayerVehicleInfo = {
 	Name: string,
 	ID: string,
-	Tune: Tune.Tune,
+	Tune: TuneType.Tune,
 	Fuel: number,
 	Mileage: number,
 	EngineHealth: number,
