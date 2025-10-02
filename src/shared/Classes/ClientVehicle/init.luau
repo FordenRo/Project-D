@@ -49,6 +49,8 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.DriverChanged = trove:Construct(Signal)
 	self.IgnitionStateChanged = trove:Construct(Signal)
 	self.SittingChanged = trove:Construct(Signal)
+	self.PlayerSeated = trove:Construct(Signal)
+	self.PlayerLeaved = trove:Construct(Signal)
 
 	InitializeVariables(self)
 	InitializeSeats(self)
@@ -97,15 +99,17 @@ function Seated(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = seatedPlayer
-		self.DriverChanged:Fire(seatedPlayer)
+		self.DriverChanged:FireDeferred(seatedPlayer)
 	else
 		self.Passengers[seat] = seatedPlayer
 	end
 	BodyController.new(self, seatedPlayer, seat)
+	self.PlayerSeated:FireDeferred(seatedPlayer, seat)
 
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
 	self.IsSitting = true
+	self.SittingChanged:FireDeferred()
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = true
@@ -123,14 +127,16 @@ function Leaved(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = nil
-		self.DriverChanged:Fire(nil)
+		self.DriverChanged:FireDeferred(nil)
 	else
 		self.Passengers[seat] = nil
 	end
+	self.PlayerLeaved:FireDeferred(leavedPlayer, seat)
 
 	if leavedPlayer ~= player then return end
 	togglePrompts(self, true)
 	self.IsSitting = false
+	self.SittingChanged:FireDeferred()
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = false

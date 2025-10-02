@@ -135,6 +135,10 @@ export type ClientVehicle = {
 	SittingChanged: Signal.Signal<>,
 	--- Fires on Vehicle.IgnitionState change
 	IgnitionStateChanged: Signal.Signal<IgnitionState>,
+	--- Fires when a player sits in the vehicle
+	PlayerSeated: Signal.Signal<Player, Seat | VehicleSeat>,
+	--- Fires when a player leaved the vehicle
+	PlayerLeaved: Signal.Signal<Player, Seat | VehicleSeat>,
 
 	Lights: ClientLights,
 	InputController: InputController,
