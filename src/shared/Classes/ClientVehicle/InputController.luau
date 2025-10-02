@@ -46,7 +46,7 @@ function InputController.new(
 
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
-	self.MouseSteerOn = false
+	self.IsMouseSteerOn = false
 
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
@@ -86,7 +86,7 @@ end
 function Update(self: InputControllerImpl, deltaTime: number)
 	Context.Enabled = not UserInputService:GetFocusedTextBox()
 
-	UserInputService.MouseBehavior = self.MouseSteerOn
+	UserInputService.MouseBehavior = self.IsMouseSteerOn
 			and Enum.MouseBehavior.LockCenter
 		or UserInputService:IsMouseButtonPressed(
 			Enum.UserInputType.MouseButton2
@@ -97,13 +97,13 @@ function Update(self: InputControllerImpl, deltaTime: number)
 	Context.Ignition.Enabled = self.Vehicle.Engine.Health :: number > 0
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
-	Context.ControllerSteering.Enabled = not self.MouseSteerOn
-	Context.TurnLeft.Enabled = not self.MouseSteerOn
-	Context.TurnRight.Enabled = not self.MouseSteerOn
-	Context.Throttle.Enabled = not self.MouseSteerOn
-	Context.Brake.Enabled = not self.MouseSteerOn
-	Context.MouseThrottle.Enabled = self.MouseSteerOn
-	Context.MouseBrake.Enabled = self.MouseSteerOn
+	Context.ControllerSteering.Enabled = not self.IsMouseSteerOn
+	Context.TurnLeft.Enabled = not self.IsMouseSteerOn
+	Context.TurnRight.Enabled = not self.IsMouseSteerOn
+	Context.Throttle.Enabled = not self.IsMouseSteerOn
+	Context.Brake.Enabled = not self.IsMouseSteerOn
+	Context.MouseThrottle.Enabled = self.IsMouseSteerOn
+	Context.MouseBrake.Enabled = self.IsMouseSteerOn
 
 	local canShift = self.Vehicle.TransmissionMode == "Manual"
 		or (
@@ -215,7 +215,7 @@ function ApplySteering(self: InputControllerImpl, deltaTime: number)
 
 	local isController = UserInputService.PreferredInput
 			== Enum.PreferredInput.Gamepad
-		or (self.Vehicle.Tune.MSteerUsesContlr and self.MouseSteerOn or false)
+		or (self.Vehicle.Tune.MSteerUsesContlr and self.IsMouseSteerOn or false)
 
 	local steerSpeed
 	local returnSpeed
@@ -326,7 +326,7 @@ end
 
 function UpdateMouseInput(self: InputControllerImpl)
 	if
-		not self.MouseSteerOn
+		not self.IsMouseSteerOn
 		or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
 	then
 		return
@@ -430,7 +430,7 @@ function InitializeConnections(self: InputControllerImpl)
 			self.Vehicle.TransmissionMode = self.Vehicle.Tune.TransModes[n]
 		end,
 		ToggleMouseSteering = function()
-			self.MouseSteerOn = not self.MouseSteerOn
+			self.IsMouseSteerOn = not self.IsMouseSteerOn
 			self.rawSteering = 0
 		end,
 		ToggleFirstPersonView = function()

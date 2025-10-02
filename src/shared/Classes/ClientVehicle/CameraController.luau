@@ -101,9 +101,9 @@ function UpdateRotation(self: CameraControllerImpl, input: InputObject)
 			UserInputService:IsMouseButtonPressed(
 					Enum.UserInputType.MouseButton2
 				)
-				and not self.Vehicle.InputController.MouseSteerOn
+				and not self.Vehicle.InputController.IsMouseSteerOn
 			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
-				and self.Vehicle.InputController.MouseSteerOn
+				and self.Vehicle.InputController.IsMouseSteerOn
 		)
 	then
 		return
