@@ -80,7 +80,7 @@ end
 
 function Update(self: ExhaustControllerImpl)
 	local canUpdate = player.Character ~= nil
-		and (self.Vehicle.IsOn or self.Vehicle.Starting)
+		and (self.Vehicle.Engine.IsOn or self.Vehicle.IgnitionState == "Starting")
 		and (
 				player.Character:GetPivot().Position
 				- self.Vehicle.WeightPart.Position

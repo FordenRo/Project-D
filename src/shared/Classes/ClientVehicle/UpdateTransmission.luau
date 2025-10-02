@@ -33,7 +33,7 @@ return function(self: VehicleTypes.ClientVehicle)
 				and (self.Throttle > 0)
 			)
 			or self.Gear == #self.Tune.Ratios - 2 - (ParkingGearEnabled and 1 or 0)
-			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
+			or (self.TransmissionMode ~= "Manual" and not self.Engine.IsOn)
 		then
 			self._ShiftUp = false
 			return
@@ -64,7 +64,7 @@ return function(self: VehicleTypes.ClientVehicle)
 								),
 								self.Engine.Tune.IdleRPM
 							)
-						or not self.IsOn
+						or not self.Engine.IsOn
 						or self._ShiftDown
 				end
 			end
@@ -72,7 +72,9 @@ return function(self: VehicleTypes.ClientVehicle)
 		self._ShiftUp = false
 		self.Shifting = false
 		if self.Clutch < 0.9 then DamageEngine(self) end
-		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
+		if self.TransmissionMode ~= "Manual" and not self.Engine.IsOn then
+			return
+		end
 		if
 			NextGear > 3 + (ParkingGearEnabled and 1 or 0)
 			and self.Tune.ClutchType == "CVT"
@@ -87,7 +89,7 @@ return function(self: VehicleTypes.ClientVehicle)
 	if self._ShiftDown and not self.Shifting then
 		if
 			self.Gear == -1 - (ParkingGearEnabled and 1 or 0)
-			or (self.TransmissionMode ~= "Manual" and not self.IsOn)
+			or (self.TransmissionMode ~= "Manual" and not self.Engine.IsOn)
 		then
 			self._ShiftDown = false
 			return
@@ -115,7 +117,7 @@ return function(self: VehicleTypes.ClientVehicle)
 								),
 								self.Engine.Tune.IdleRPM
 							)
-						or not self.IsOn
+						or not self.Engine.IsOn
 						or self._ShiftUp
 				end
 			end
@@ -123,7 +125,9 @@ return function(self: VehicleTypes.ClientVehicle)
 		self._ShiftDown = false
 		self.Shifting = false
 		if self.Clutch < 0.9 then DamageEngine(self) end
-		if self.TransmissionMode ~= "Manual" and not self.IsOn then return end
+		if self.TransmissionMode ~= "Manual" and not self.Engine.IsOn then
+			return
+		end
 		self.Gear =
 			math.max(self.Gear - 1, self.Velocity.Magnitude > 5 and -1 or -2)
 	end

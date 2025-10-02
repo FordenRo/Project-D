@@ -47,6 +47,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	trove:AttachToInstance(instance)
 
 	self.DriverChanged = trove:Construct(Signal)
+	self.IgnitionStateChanged = trove:Construct(Signal)
 	self.SittingChanged = trove:Construct(Signal)
 
 	InitializeVariables(self)

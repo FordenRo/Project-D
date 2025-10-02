@@ -400,7 +400,8 @@ function InitializeIgnition(self: BodyControllerImpl)
 	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
-			IKControl.Weight = self.Vehicle.Starting and 1 or 0
+			IKControl.Weight = self.Vehicle.IgnitionState == "Starting" and 1
+				or 0
 		end
 	)
 end

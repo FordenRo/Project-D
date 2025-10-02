@@ -39,8 +39,6 @@ end
 function InitializeVariables(self: BaseVehicle)
 	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 
-	self.IsOn = false
-	self.Starting = false
 	self.Driver = nil
 	self.Passengers = {}
 	self.Fuel = self.Tune.FuelCapacity
@@ -79,6 +77,7 @@ function InitializeVariables(self: BaseVehicle)
 	self.ESCActive = false
 	self.CS = self.Tune.CSEnabled
 	self.CSActive = false
+	self.IgnitionState = "Off"
 end
 
 function BaseVehicle.InitializeWheels(

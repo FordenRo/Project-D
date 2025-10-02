@@ -44,6 +44,7 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	self.lastOnTime = 0
 	self.lastOffTime = 0
 	self.revLimiting = false
+	self.IsOn = false
 
 	return self
 end
@@ -123,7 +124,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 			math.max(self.Vehicle.Throttle, self.Tune.IdleThrottle / 100)
 	end
 
-	if self.Vehicle.IsOn then
+	if self.IsOn then
 		self.lastOnTime = tick()
 	else
 		self.lastOffTime = tick()
@@ -200,7 +201,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 	-- Idle
 	if
 		self.Vehicle.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0)
-		and self.Vehicle.IsOn
+		and self.IsOn
 	then
 		self.Throttle = math.max(
 			self.Throttle,
@@ -221,7 +222,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 
 	if
 		(self.Vehicle.Tune.Engine or self.Tune.Electric)
-		and not self.Vehicle.Starting
+		and self.Vehicle.IgnitionState ~= "Starting"
 	then
 		self.goalRPM = math.clamp(
 			self.Vehicle.RPM
@@ -241,11 +242,11 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 			goalMax
 		)
 
-		if not self.Vehicle.IsOn then self.goalRPM = 0 end
+		if not self.IsOn then self.goalRPM = 0 end
 	end
 
 	-- Starting
-	if self.Vehicle.Starting then
+	if self.Vehicle.IgnitionState == "Starting" then
 		self.goalRPM = math.clamp(
 			self.goalRPM + self.Tune.IgnitionAccel * deltaTime,
 			0,
@@ -275,7 +276,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 		and (tick() - self.lastOffTime >= 0.2)
 		and self.Vehicle.Tune.Stall
 	then
-		self.Vehicle.IsOn = false
+		self.IsOn = false
 	end
 
 	if
@@ -283,7 +284,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 		and (tick() - self.lastOnTime > 0.2)
 		and self.Health > 0
 	then
-		self.Vehicle.IsOn = true
+		self.IsOn = true
 	end
 
 	-- Clutch
@@ -379,7 +380,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 	if
 		self.Vehicle.AutoClutch
 		and (
-			self.Vehicle.Starting
+			self.Vehicle.IgnitionState == "Starting"
 			or (self.Tune.RemoveCreep and self.Vehicle.RPM < self.Tune.IdleRPM + (self.Tune.IdlePadding or 0) and self.Vehicle.Throttle < 0.1)
 			or (self.revLimiting and self.Tune.OverRev == false)
 		)
@@ -581,11 +582,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 end
 
 function UpdateHealth(self: EngineImpl, deltaTime: number)
-	if
-		not self.Vehicle.Tune.Engine
-		or self.Tune.Electric
-		or not self.Vehicle.IsOn
-	then
+	if not self.Vehicle.Tune.Engine or self.Tune.Electric or not self.IsOn then
 		return
 	end
 
@@ -606,7 +603,7 @@ function UpdateHealth(self: EngineImpl, deltaTime: number)
 	self.Health = math.max(self.Health - damage * deltaTime, 0)
 
 	if self.Health == 0 then
-		self.Vehicle.IsOn = false
+		self.IsOn = false
 		self.Vehicle.DeformationController:BlowEngine()
 	end
 end
@@ -628,11 +625,7 @@ function UpdateTemperature(self: EngineImpl, deltaTime: number)
 end
 
 function UpdateFuel(self: EngineImpl, deltaTime: number)
-	if
-		not self.Vehicle.Tune.Engine
-		or self.Tune.Electric
-		or not self.Vehicle.IsOn
-	then
+	if not self.Vehicle.Tune.Engine or self.Tune.Electric or not self.IsOn then
 		return
 	end
 
@@ -653,7 +646,7 @@ function UpdateFuel(self: EngineImpl, deltaTime: number)
 	end
 	self.fuelSupply = math.clamp(fuelSupply, 0, 1)
 
-	if self.Vehicle.Fuel == 0 then self.Vehicle.IsOn = false end
+	if self.Vehicle.Fuel == 0 then self.IsOn = false end
 end
 
 --- TODO: Destroy method

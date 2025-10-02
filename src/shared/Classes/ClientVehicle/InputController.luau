@@ -28,6 +28,7 @@ type InputControllerImpl = {
 	rawBrake: number,
 	rawClutch: number,
 	rawSteering: number,
+	ignitionNext: boolean,
 } & InputController
 
 function InputController.new(
@@ -41,6 +42,7 @@ function InputController.new(
 	self.rawBrake = 0
 	self.rawClutch = 0
 	self.rawSteering = 0
+	self.ignitionNext = false
 
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
@@ -91,7 +93,7 @@ function Update(self: InputControllerImpl, deltaTime: number)
 		) and Enum.MouseBehavior.LockCurrentPosition
 		or Enum.MouseBehavior.Default
 
-	Context.Horn.Enabled = self.Vehicle.IsOn
+	Context.Horn.Enabled = self.Vehicle.IgnitionState == "On"
 	Context.Ignition.Enabled = self.Vehicle.Engine.Health :: number > 0
 	Context.Clutch.Enabled = self.Vehicle.TransmissionMode == "Manual"
 
@@ -105,7 +107,7 @@ function Update(self: InputControllerImpl, deltaTime: number)
 
 	local canShift = self.Vehicle.TransmissionMode == "Manual"
 		or (
-			self.Vehicle.IsOn
+			self.Vehicle.Engine.IsOn
 			and (
 				self.Vehicle.TransmissionMode == "Semi"
 				or (
@@ -390,10 +392,26 @@ function InitializeConnections(self: InputControllerImpl)
 		end,
 		Horn = function(value) self.Vehicle.Horning = value end,
 		Ignition = function(value)
-			if self.Vehicle.IsOn and not self.Vehicle.Starting then
-				if value then self.Vehicle.IsOn = false end
-			else
-				self.Vehicle.Starting = value
+			local state = self.Vehicle.IgnitionState
+			if value then
+				if state == "On" then
+					self.Vehicle.IgnitionState = if self.ignitionNext
+						then "Off"
+						else "Starting"
+					self.ignitionNext = not self.ignitionNext
+				else
+					self.Vehicle.IgnitionState = if state == "Off"
+						then "Acc"
+						else "On"
+				end
+			elseif state == "Starting" then
+				self.Vehicle.IgnitionState = "On"
+			end
+
+			if state ~= self.Vehicle.IgnitionState then
+				self.Vehicle.IgnitionStateChanged:Fire(
+					self.Vehicle.IgnitionState
+				)
 			end
 		end,
 	} :: { [string]: (any) -> () }

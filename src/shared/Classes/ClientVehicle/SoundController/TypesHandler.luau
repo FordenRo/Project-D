@@ -42,7 +42,7 @@ function Handlers.Engine(
 		+ (sound.RedlinePlaybackSpeed - sound.PlaybackSpeed)
 			* (self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline)
 
-	sound.AudioPlayer.Volume = (self.Vehicle.IsOn and 1 or 0)
+	sound.AudioPlayer.Volume = (self.Vehicle.Engine.IsOn and 1 or 0)
 		* (sound.Volume + (sound.ThrottleVolume * self.Vehicle.Throttle) + (sound.RedlineVolume * (self.Vehicle.RPM / self.Vehicle.Engine.Tune.Redline)))
 		* math.clamp(
 			1 / sound.TransitionStart * (self.Vehicle.RPM - sound.RangeStart),
@@ -132,7 +132,7 @@ function Handlers.Ignition(
 	self: SoundTypesHandlerImpl,
 	sound: SoundData.CachedSoundData
 )
-	if self.Vehicle.Starting then
+	if self.Vehicle.IgnitionState == "Starting" then
 		if not sound.Played then
 			sound.AudioPlayer.TimePosition = 0
 			sound.AudioPlayer:Play()
