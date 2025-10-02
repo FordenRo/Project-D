@@ -126,6 +126,12 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 
 	if self.IsOn then
 		self.lastOnTime = tick()
+		if
+			self.Vehicle.IgnitionState ~= "On"
+			and self.Vehicle.IgnitionState ~= "Starting"
+		then
+			self.IsOn = false
+		end
 	else
 		self.lastOffTime = tick()
 		if self.Vehicle.AutoClutch then self.Clutch = 1 end
