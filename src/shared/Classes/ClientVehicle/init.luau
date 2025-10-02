@@ -46,7 +46,8 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
 
-	self.DrivenChanged = trove:Construct(Signal)
+	self.DriverChanged = trove:Construct(Signal)
+	self.SittingChanged = trove:Construct(Signal)
 
 	InitializeVariables(self)
 	InitializeSeats(self)
@@ -95,6 +96,7 @@ function Seated(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = seatedPlayer
+		self.DriverChanged:Fire(seatedPlayer)
 	else
 		self.Passengers[seat] = seatedPlayer
 	end
@@ -106,7 +108,6 @@ function Seated(
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = true
-	self.DrivenChanged:Fire(true)
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
@@ -121,6 +122,7 @@ function Leaved(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = nil
+		self.DriverChanged:Fire(nil)
 	else
 		self.Passengers[seat] = nil
 	end
@@ -131,7 +133,6 @@ function Leaved(
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = false
-	self.DrivenChanged:Fire(false)
 
 	self.InputController:Destroy()
 	self.CameraController:Destroy()

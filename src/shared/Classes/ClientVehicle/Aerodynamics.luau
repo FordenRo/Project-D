@@ -44,7 +44,7 @@ function Aerodynamics.new(vehicle: VehicleTypes.ClientVehicle): Aerodynamics
 			v:Destroy()
 		end
 	end)
-	self.Vehicle.DrivenChanged:Once(function() trove:Destroy() end)
+	self.Vehicle.DriverChanged:Once(function() trove:Destroy() end)
 
 	return self
 end

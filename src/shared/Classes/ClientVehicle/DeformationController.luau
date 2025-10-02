@@ -284,10 +284,10 @@ function InitializeDeformation(self: DeformationControllerImpl)
 		end)
 	end
 
-	self.trove:Connect(self.Vehicle.DrivenChanged, function(state: boolean)
-		if state and not trove then
+	self.trove:Connect(self.Vehicle.DriverChanged, function()
+		if self.Vehicle.IsDriven and not trove then
 			makeConnections()
-		elseif not state and trove then
+		elseif not self.Vehicle.IsDriven and trove then
 			trove:Destroy()
 			trove = nil
 		end
