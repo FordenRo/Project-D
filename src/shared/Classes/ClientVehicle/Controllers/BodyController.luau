@@ -5,6 +5,7 @@ local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
+local Vector3Spring = require(ReplicatedStorage.Shared.Utils.Vector3Spring)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local BodyController = {}
@@ -16,7 +17,6 @@ export type BodyController = {
 }
 
 type BodyControllerImpl = {
-	isRightHanded: boolean,
 	trove: Trove.Trove,
 	IKControls: { [string]: IKControl },
 } & BodyController
@@ -174,9 +174,9 @@ function InitializeTorso(self: BodyControllerImpl)
 	local waist = upperTorso:FindFirstChild("Waist") :: AnimationConstraint
 
 	local rotationOffset = Vector3.new(math.rad(15), 0, 0)
-	local rotation = rotationOffset
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
+	local spring = Vector3Spring.new(30, 200, 1000)
 
 	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration = MathUtil.Lerp(
@@ -191,15 +191,18 @@ function InitializeTorso(self: BodyControllerImpl)
 		)
 
 		-- Apply acceleration
-		rotation -= Vector3.new(
+		spring.Offset += Vector3.new(
 			acceleration.Z + acceleration.Y,
 			0,
 			acceleration.X
 		) * 0.025 * deltaTime
-		-- Apply angular velocity
-		rotation -= angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
 
-		rotation = rotation:Lerp(rotationOffset, deltaTime * 5)
+		-- Apply angular velocity
+		spring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
+
+		spring:Update(deltaTime)
+
+		local rotation = rotationOffset - spring.Offset
 		waist.Transform = CFrame.fromOrientation(
 			math.clamp(rotation.X, -math.pi / 4, math.pi / 4),
 			math.clamp(rotation.Y, -math.pi / 4, math.pi / 4),
@@ -221,9 +224,9 @@ function InitializeNeck(self: BodyControllerImpl)
 	local neck = head:FindFirstChild("Neck") :: AnimationConstraint
 
 	local rotationOffset = Vector3.new(-math.rad(10), 0, 0)
-	local rotation = Vector3.zero
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
+	local spring = Vector3Spring.new(5, 50, 500)
 
 	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration = MathUtil.Lerp(
@@ -251,19 +254,22 @@ function InitializeNeck(self: BodyControllerImpl)
 		end
 
 		-- Apply acceleration
-		rotation -= Vector3.new(
+		spring.Offset += Vector3.new(
 			acceleration.Z + acceleration.Y,
 			0,
 			acceleration.X / 2
-		) * 0.015 * deltaTime
+		) * 0.025 * deltaTime
+
 		-- Apply angular velocity
-		rotation -= angularVelocity * Vector3.new(1, 0, 1) * 2 * deltaTime
+		spring.Offset += angularVelocity * Vector3.new(1, 0, 1) * 2 * deltaTime
+
+		spring:Update(deltaTime)
 
 		local steeringRotation = Vector3.yAxis
 			* self.Vehicle.Steering
 			* math.rad(30)
-		rotation =
-			rotation:Lerp(rotationOffset + steeringRotation, deltaTime * 7)
+
+		local rotation = rotationOffset - spring.Offset + steeringRotation
 		neck.Transform = upperTorso.CFrame:ToObjectSpace(
 			CFrame.lookAlong(
 				Vector3.zero,
