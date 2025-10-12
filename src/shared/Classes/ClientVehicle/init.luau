@@ -27,8 +27,8 @@ local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
 
-local ClientVehicle = setmetatable({}, BaseVehicle)
-ClientVehicle.__index = ClientVehicle
+local ClientVehicle = { set = {} }
+BaseVehicle.Extend(ClientVehicle)
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
@@ -45,8 +45,7 @@ type ClientVehicleImpl = {
 } & ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: ClientVehicleImpl =
-		setmetatable(BaseVehicle.new(instance), ClientVehicle) :: any
+	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
 
 	self.MeshParts = {}
 	self.Meshes = {}
@@ -64,6 +63,8 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	InitializeVariables(self)
 	InitializeSeats(self)
 	InitializeBody(self)
+
+	setmetatable(self, ClientVehicle)
 
 	self.Engine = Engine.new(self)
 	self:InitializeWheels()

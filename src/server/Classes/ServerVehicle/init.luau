@@ -15,8 +15,8 @@ local VehicleConstants =
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
-local ServerVehicle = setmetatable({}, BaseVehicle)
-ServerVehicle.__index = ServerVehicle
+local ServerVehicle = {}
+BaseVehicle.Extend(ServerVehicle)
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 

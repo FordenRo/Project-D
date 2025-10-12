@@ -1,18 +1,19 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local BaseClass = require(script.Parent.BaseClass)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local BaseVehicle = {}
-BaseVehicle.__index = BaseVehicle
+local BaseVehicle = { get = {} }
+BaseClass.Extend(BaseVehicle)
 
 type BaseVehicle = VehicleTypes.BaseVehicle
 
 function BaseVehicle.new(instance: Instance): BaseVehicle
-	local self: BaseVehicle = setmetatable({}, BaseVehicle) :: any
+	local self: BaseVehicle = BaseClass.new() :: any
 
 	self.Instance = instance :: any
 	self.Tune = require(
@@ -33,7 +34,7 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 			self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
 	end
 
-	return self
+	return setmetatable(self, BaseVehicle)
 end
 
 function InitializeVariables(self: BaseVehicle)
@@ -152,5 +153,7 @@ function BaseVehicle.GetCenter(self: BaseVehicle)
 	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
 	return center
 end
+
+function BaseVehicle.Extend(to: any) BaseClass.Extend(to, BaseVehicle) end
 
 return BaseVehicle
