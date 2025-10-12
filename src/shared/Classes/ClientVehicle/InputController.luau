@@ -360,6 +360,9 @@ function UpdateMouseInput(self: InputControllerImpl)
 end
 
 function InitializeConnections(self: InputControllerImpl)
+	local lightController =
+		self.Vehicle:GetController("LightController") :: VehicleTypes.ClientLights
+
 	local onChangeActions = {
 		Throttle = function(value) self.rawThrottle = value end,
 		Brake = function(value) self.rawBrake = value end,
@@ -455,12 +458,10 @@ function InitializeConnections(self: InputControllerImpl)
 		ShiftUp = function() self.Vehicle.Transmission.ShiftingUp = true end,
 		Leave = function() self.Vehicle:Leave() end,
 
-		Lights = function() self.Vehicle.Lights:ToggleLights() end,
-		LeftTurnSignal = function() self.Vehicle.Lights:ToggleTurnState("Left") end,
-		RightTurnSignal = function()
-			self.Vehicle.Lights:ToggleTurnState("Right")
-		end,
-		Hazards = function() self.Vehicle.Lights:ToggleTurnState("Both") end,
+		Lights = function() lightController:ToggleLights() end,
+		LeftTurnSignal = function() lightController:ToggleTurnState("Left") end,
+		RightTurnSignal = function() lightController:ToggleTurnState("Right") end,
+		Hazards = function() lightController:ToggleTurnState("Both") end,
 	} :: { [string]: () -> () }
 
 	for k, v in onChangeActions do
