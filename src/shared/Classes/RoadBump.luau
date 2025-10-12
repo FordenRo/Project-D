@@ -46,7 +46,7 @@ function RoadBump.new(instance: Instance): RoadBumpImpl
 	-- end
 
 	HittableService:Register(
-		{ self.bump },
+		{ self.bump } :: { BasePart },
 		function(hit: HittableService.HitResult) OnHit(self, hit) end
 	)
 	-- HittableService:Register(

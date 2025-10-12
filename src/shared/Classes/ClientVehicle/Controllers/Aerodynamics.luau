@@ -207,4 +207,11 @@ function Update(self: AerodynamicsImpl)
 		/ 200 ^ 2
 end
 
-return table.freeze({ new = Aerodynamics.new })
+function Aerodynamics.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == Aerodynamics
+end
+
+return table.freeze({
+	new = Aerodynamics.new,
+	Is = Aerodynamics.Is,
+})

@@ -169,4 +169,11 @@ function Update(self: ExhaustControllerImpl)
 	end
 end
 
-return table.freeze({ new = ExhaustController.new })
+function ExhaustController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == ExhaustController
+end
+
+return table.freeze({
+	new = ExhaustController.new,
+	Is = ExhaustController.Is,
+})

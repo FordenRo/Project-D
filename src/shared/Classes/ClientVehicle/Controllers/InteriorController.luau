@@ -178,4 +178,11 @@ function InitializeGearLever(self: InteriorControllerImpl)
 	end)
 end
 
-return table.freeze({ new = InteriorController.new })
+function InteriorController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == InteriorController
+end
+
+return table.freeze({
+	new = InteriorController.new,
+	Is = InteriorController.Is,
+})
