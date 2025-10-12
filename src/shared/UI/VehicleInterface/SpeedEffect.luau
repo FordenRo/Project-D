@@ -88,7 +88,7 @@ end
 function Update(self: SpeedEffect, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 60 then
 		local force = math.clamp(
-			MathUtil.MapToRange(self.Vehicle.Velocity.Magnitude, 60, 200),
+			MathUtil.Map(self.Vehicle.Velocity.Magnitude, 60, 200),
 			0,
 			1
 		)

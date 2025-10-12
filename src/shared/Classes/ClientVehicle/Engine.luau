@@ -597,7 +597,7 @@ function UpdateHealth(self: EngineImpl, deltaTime: number)
 		/ 3600
 	damage += (math.max(self.Vehicle.RPM - self.Tune.Redline, 0) / 1000) ^ self.Tune.RedlineDamageCurve * self.Tune.RedlineDamage
 	damage += self.Tune.HotDamage * math.clamp(
-		MathUtil.MapToRange(
+		MathUtil.Map(
 			self.Temperature,
 			self.Tune.OperatingEngineTemp,
 			self.Tune.EngineBurnTemp

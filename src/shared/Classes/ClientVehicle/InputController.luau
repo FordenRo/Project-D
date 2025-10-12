@@ -371,11 +371,8 @@ function InitializeConnections(self: InputControllerImpl)
 			local cDZone =
 				math.min(0.99, SettingsController:GetSetting("ControllerDZone"))
 			if math.abs(value.X) > cDZone then
-				self.rawSteering = MathUtil.MapToRange(
-					math.abs(value.X),
-					cDZone,
-					1
-				) * math.sign(value.X)
+				self.rawSteering = MathUtil.Map(math.abs(value.X), cDZone, 1)
+					* math.sign(value.X)
 			else
 				self.rawSteering = 0
 			end

@@ -118,11 +118,7 @@ function UpdateDebug(self: VehicleInterfaceImpl)
 		):FindFirstChild("Fill") :: Frame
 		brakeFill.BackgroundColor3 = Color3.fromHSV(
 			0,
-			math.clamp(
-				MathUtil.MapToRange(wheel.BrakeDisk.Temperature, 80, 200),
-				0,
-				1
-			),
+			math.clamp(MathUtil.Map(wheel.BrakeDisk.Temperature, 80, 200), 0, 1),
 			1
 		)
 	end

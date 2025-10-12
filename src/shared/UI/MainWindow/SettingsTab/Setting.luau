@@ -108,10 +108,9 @@ function InitSlider(self: SettingImpl)
 		fireEvent: boolean?
 	)
 		self.Value = math.clamp(step * math.round(value / step), min, max)
-		local normalizedValue = MathUtil.MapToRange(self.Value, min, max)
+		local normalizedValue = MathUtil.Map(self.Value, min, max)
 		slider.Fill.Size = UDim2.fromScale(
-			updateHandle and normalizedValue
-				or MathUtil.MapToRange(value, min, max),
+			updateHandle and normalizedValue or MathUtil.Map(value, min, max),
 			1
 		)
 		local l = step >= 1 and 0 or step >= 0.1 and 1 or 2
@@ -125,10 +124,10 @@ function InitSlider(self: SettingImpl)
 		if fireEvent then self.Changed:Fire(self.Value) end
 	end
 
-	local start = MathUtil.MapToRange(self.Value, min, max)
+	local start = MathUtil.Map(self.Value, min, max)
 	self.trove:Connect(
 		slider.Handle.Dragger.DragStart,
-		function() start = MathUtil.MapToRange(self.Value, min, max) end
+		function() start = MathUtil.Map(self.Value, min, max) end
 	)
 	self.trove:Connect(
 		slider.Handle.Dragger.DragContinue,

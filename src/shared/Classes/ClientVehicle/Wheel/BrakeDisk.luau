@@ -102,8 +102,7 @@ function Update(self: ClientBrakeDiskImpl, deltaTime: number)
 end
 
 function updateColor(self: ClientBrakeDiskImpl)
-	local colorDelta =
-		math.clamp(MathUtil.MapToRange(self.Temperature, 80, 200), 0, 1)
+	local colorDelta = math.clamp(MathUtil.Map(self.Temperature, 80, 200), 0, 1)
 	self.Instance.Color =
 		self.startColor:Lerp(Color3.new(1, 0.3, 0), colorDelta)
 end

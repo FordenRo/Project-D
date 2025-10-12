@@ -232,11 +232,7 @@ function UpdateThirdPerson(self: CameraControllerImpl, deltaTime: number)
 		* distance
 		* 0.5
 		* math.clamp(
-			MathUtil.MapToRange(
-				1 - (self.Offset.Magnitude / distance) ^ 2,
-				0.2,
-				1
-			),
+			MathUtil.Map(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1),
 			0,
 			1
 		)

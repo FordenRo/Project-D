@@ -91,15 +91,11 @@ function Update(self: ExhaustControllerImpl)
 	if not canUpdate then return end
 
 	local rpmDelta = math.clamp(
-		MathUtil.MapToRange(
-			self.Vehicle.RPM,
-			0,
-			self.Vehicle.Engine.Tune.ShiftRPM
-		),
+		MathUtil.Map(self.Vehicle.RPM, 0, self.Vehicle.Engine.Tune.ShiftRPM),
 		0.2,
 		0.8
 	)
-	rpmDelta -= (1 - self.Vehicle.Throttle) * MathUtil.MapToRange(
+	rpmDelta -= (1 - self.Vehicle.Throttle) * MathUtil.Map(
 		self.Vehicle.RPM,
 		0,
 		self.Vehicle.Engine.Tune.ShiftRPM
@@ -115,7 +111,7 @@ function Update(self: ExhaustControllerImpl)
 	self.motor.Transform = CFrame.new(offset)
 
 	-- Update emitter
-	rpmDelta = MathUtil.MapToRange(
+	rpmDelta = MathUtil.Map(
 		self.Vehicle.RPM,
 		0,
 		self.Vehicle.Engine.Tune.ShiftRPM
