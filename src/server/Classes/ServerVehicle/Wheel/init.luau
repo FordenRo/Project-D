@@ -218,14 +218,14 @@ function Initialize(self: ServerWheel)
 			if swayBar and swayBar.Attachment0 and swayBar.Attachment1 then
 				swayBar.Attachment0.Position = Vector3.new(
 					swayBar.Attachment0.Parent.CFrame:ToObjectSpace(
-						self.Vehicle:GetCenter()
+						self.Vehicle.Center
 					).Position.X - 0.05,
 					0,
 					0
 				)
 				swayBar.Attachment1.Position = Vector3.new(
 					swayBar.Attachment1.Parent.CFrame:ToObjectSpace(
-						self.Vehicle:GetCenter()
+						self.Vehicle.Center
 					).Position.X - 0.05,
 					0,
 					0

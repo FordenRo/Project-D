@@ -370,7 +370,6 @@ function Replicate(self: ClientVehicleImpl, buf: buffer?)
 end
 
 function Update(self: ClientVehicleImpl, deltaTime: number)
-	self.Center = self:GetCenter()
 	self.Velocity = self.WeightPart.AssemblyLinearVelocity
 	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)

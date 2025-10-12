@@ -69,7 +69,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.Acceleration = Vector3.new()
 	self.Mileage = 0
 	-- Misc
-	self.Center = CFrame.new()
 	self.TCS = self.Tune.TCSEnabled
 	self.TCSActive = false
 	self.ABS = self.Tune.ABSEnabled
@@ -133,7 +132,7 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 	self.Engine.Horsepower = self.Engine.Torque * x / 5.252
 end
 
-function BaseVehicle.GetCenter(self: BaseVehicle)
+function BaseVehicle.get.Center(self: BaseVehicle)
 	local centerF = Vector3.new()
 	local centerR = Vector3.new()
 	local countF = 0
