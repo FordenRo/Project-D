@@ -2,6 +2,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local BaseClass = require(ReplicatedStorage.Shared.Classes.BaseClass)
 local Headlight = require(script.Headlight)
 local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -23,27 +24,26 @@ local LIGHT_TYPES = {
 	"Brake",
 }
 
-local ClientLights = {}
-ClientLights.__index = ClientLights
+local LightController = { set = {} }
+BaseClass.Extend(LightController)
 
-type ClientLights = VehicleTypes.ClientLights
+type LightController = VehicleTypes.ClientLights & BaseClass.BaseClass
 
-type ClientLightsImpl = {
+type LightControllerImpl = {
 	lastToggleTime: number,
-	RE: RemoteEvent,
 	typesBrightness: { [string]: number },
-} & ClientLights
+} & LightController
 
 type Side = "Right" | "Left" | "Both"
 
-function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
-	local self: ClientLightsImpl = setmetatable({}, ClientLights) :: any
+function LightController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): LightController
+	local self: LightControllerImpl = BaseClass.new() :: any
 
 	self.Vehicle = vehicle
 	self.State = "Off"
 	self.TurnState = "Off"
-
-	self.RE = self.Vehicle.Instance:FindFirstChild("_LightsRE") :: RemoteEvent
 
 	self.lastToggleTime = tick()
 	self.typesBrightness = {}
@@ -69,34 +69,42 @@ function ClientLights.new(vehicle: VehicleTypes.ClientVehicle): ClientLights
 
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
-	trove:Connect(self.RE.OnClientEvent, function(buf: buffer)
-		if self.Vehicle.IsDriven then return end
-
-		local data = Serialization.Deserialize(LightPacket, buf)
-		self.State = data.State
-		self.TurnState = data.TurnState
-	end)
 	trove:AttachToInstance(self.Vehicle.Instance)
 
-	return self
+	return setmetatable(self, LightController)
 end
 
-function processInput(self: ClientLightsImpl)
+function LightController.DataReceived(self: LightControllerImpl, buf: buffer)
+	for k, v in Serialization.Deserialize(LightPacket, buf) do
+		self:RawSet(k, v)
+	end
+end
+
+function LightController.set.State(self: LightControllerImpl, state: string)
+	self:RawSet("State", state)
+	self.Vehicle:SendData(self, Serialization.Serialize(LightPacket, self))
+end
+
+function LightController.set.TurnState(self: LightControllerImpl, state: string)
+	self:RawSet("TurnState", state)
+	self.Vehicle:SendData(self, Serialization.Serialize(LightPacket, self))
+end
+
+function processInput(self: LightControllerImpl)
 	if tick() - self.lastToggleTime < 0.2 then return end
 	self.lastToggleTime = tick()
-	task.defer(Replicate, self)
 	return true
 end
 
-function ClientLights.ToggleLights(self: ClientLightsImpl)
+function LightController.ToggleLights(self: LightControllerImpl)
 	if not processInput(self) then return end
 	self.State = self.State == "Off" and "Low"
 		or self.State == "Low" and "High"
 		or "Off" :: any
 end
 
-function ClientLights.ToggleTurnState(
-	self: ClientLightsImpl,
+function LightController.ToggleTurnState(
+	self: LightControllerImpl,
 	turnState: "Left" | "Right" | "Both"
 )
 	if not processInput(self) then return end
@@ -104,7 +112,7 @@ function ClientLights.ToggleTurnState(
 end
 
 function setTypeBrightness(
-	self: ClientLightsImpl,
+	self: LightControllerImpl,
 	type: string,
 	brightness: boolean | number,
 	side: Side?
@@ -127,21 +135,7 @@ function setTypeBrightness(
 	end
 end
 
-function Replicate(self: ClientLightsImpl, buf: buffer?)
-	if self.Vehicle.IsDriven then
-		self.RE:FireServer(Serialization.Serialize(LightPacket, self))
-	elseif buf then
-		for k, v in Serialization.Deserialize(LightPacket, buf) do
-			self[k] = v
-		end
-	else
-		for _, v in LIGHT_TYPES do
-			setTypeBrightness(self, v, false)
-		end
-	end
-end
-
-function Update(self: ClientLightsImpl)
+function Update(self: LightControllerImpl)
 	setTypeBrightness(
 		self,
 		"Rear",
@@ -166,4 +160,11 @@ function Update(self: ClientLightsImpl)
 	)
 end
 
-return table.freeze({ new = ClientLights.new })
+function LightController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == LightController
+end
+
+return table.freeze({
+	new = LightController.new,
+	Is = LightController.Is,
+})
