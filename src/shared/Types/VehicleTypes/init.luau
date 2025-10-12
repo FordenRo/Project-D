@@ -1,6 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local BaseClass = require(ReplicatedStorage.Shared.Classes.BaseClass)
 local EngineTune = require(script.EngineTune)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.SoundData)
@@ -127,6 +128,14 @@ export type VehicleControllerImplType = {
 	Is: (obj: any) -> boolean,
 }
 
+export type Transmission = {
+	ShiftingUp: boolean,
+	ShiftingDown: boolean,
+	Vehicle: ClientVehicle,
+
+	Update: (self: Transmission) -> (),
+} & BaseClass.BaseClass
+
 export type ClientVehicle = {
 	--- Is the vehicle driven by a local player
 	IsDriven: boolean,
@@ -155,13 +164,11 @@ export type ClientVehicle = {
 	SoundController: SoundController,
 	DeformationController: DeformationController,
 	CameraController: CameraController,
+	Transmission: Transmission,
 	BrakeForce: { Front: number, Rear: number },
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: Engine,
 	Interface: VehicleInterface,
-	-- Transmission
-	_ShiftUp: boolean,
-	_ShiftDown: boolean,
 	-- Velocity
 	_OldVelocity: Vector3,
 

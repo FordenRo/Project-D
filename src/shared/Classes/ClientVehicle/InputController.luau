@@ -451,8 +451,8 @@ function InitializeConnections(self: InputControllerImpl)
 		end,
 		ABS = function() self.Vehicle.ABS = not self.Vehicle.ABS end,
 		CS = function() self.Vehicle.CS = not self.Vehicle.CS end,
-		ShiftDown = function() self.Vehicle._ShiftDown = true end,
-		ShiftUp = function() self.Vehicle._ShiftUp = true end,
+		ShiftDown = function() self.Vehicle.Transmission.ShiftingDown = true end,
+		ShiftUp = function() self.Vehicle.Transmission.ShiftingUp = true end,
 		Leave = function() self.Vehicle:Leave() end,
 
 		Lights = function() self.Vehicle.Lights:ToggleLights() end,

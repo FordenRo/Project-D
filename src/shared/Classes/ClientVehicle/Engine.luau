@@ -115,9 +115,9 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 	local goalMin = 0
 	local goalMax = self.Tune.Redline
 
-	if self.Vehicle.Shifting and self.Vehicle._ShiftUp then
+	if self.Vehicle.Shifting and self.Vehicle.Transmission.ShiftingUp then
 		self.Throttle = self.Tune.IdleThrottle / 100
-	elseif self.Vehicle.Shifting and self.Vehicle._ShiftDown then
+	elseif self.Vehicle.Shifting and self.Vehicle.Transmission.ShiftingDown then
 		self.Throttle = self.Vehicle.Tune.ShiftThrot / 100
 	else
 		self.Throttle =

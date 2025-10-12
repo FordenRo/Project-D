@@ -14,9 +14,9 @@ local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundController = require(script.SoundController)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
+local Transmission = require(script.Transmission)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local UpdateTransmission = require(script.UpdateTransmission)
 local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
@@ -66,6 +66,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	setmetatable(self, ClientVehicle)
 
 	self.Engine = Engine.new(self)
+	self.Transmission = Transmission.new(self)
 	self:InitializeWheels()
 
 	self.SoundController = SoundController.new(self)
@@ -267,8 +268,6 @@ function InitializeVariables(self: ClientVehicleImpl)
 			* Units.Force_N
 			* (1 - self.Tune.PBrakeBias),
 	}
-	self._ShiftUp = false
-	self._ShiftDown = false
 	self._OldVelocity = Vector3.new()
 	self.WeightPart = self.Instance.Body.WeightPart
 end
@@ -376,7 +375,7 @@ function Update(self: ClientVehicleImpl, deltaTime: number)
 	if not self.IsDriven then return end
 
 	UpdateWheels(self, deltaTime)
-	UpdateTransmission(self)
+	self.Transmission:Update()
 	self.Engine:Update(deltaTime)
 	UpdateMileage(self, deltaTime)
 end
