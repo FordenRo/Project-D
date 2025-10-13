@@ -56,6 +56,8 @@ function getMeta(base: any)
 			if set then
 				set(t, v)
 			else
+				if self[k] == v then return end
+
 				self[k] = v
 			end
 
