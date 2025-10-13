@@ -2,6 +2,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local TweenService = game:GetService("TweenService")
 
+local SettingsConfig = require(
+	ReplicatedStorage.Shared.Controllers.SettingsController.SettingsConfig
+)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local SettingFolder = {}
 SettingFolder.__index = SettingFolder
@@ -22,12 +25,18 @@ export type SettingFolder = {
 	Expanded: boolean,
 }
 
-function SettingFolder.new(instance: Frame, name: string): SettingFolder
+function SettingFolder.new(
+	instance: Frame,
+	properties: SettingsConfig.FolderInfo
+): SettingFolder
 	local self: SettingFolder = setmetatable({}, SettingFolder) :: any
 
 	self.Instance = instance :: any
-	self.Instance.Name = name
-	self.Instance.Button.Info.Title.Text = name
+
+	self.Instance.Button.Info.Title.Text = properties.Title
+	self.Instance.Button.Info.Description.Text = properties.Description or ""
+	self.Instance.Button.Info.Description.Visible = properties.Description
+		~= nil
 	self.Instance.Visible = true
 
 	local trove = Trove.new()

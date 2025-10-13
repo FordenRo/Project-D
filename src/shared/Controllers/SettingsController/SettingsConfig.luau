@@ -1,17 +1,13 @@
 --!strict
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
-
 export type SettingType = "Slider" | "Binding" | "Checkbox"
 type SettingCategory = "Controls" | "Gameplay" | "Graphics"
 type ActionType = "Mouse" | "Controller" | "Keyboard"
 
 export type SettingInfo = {
+	Name: string,
 	Title: string,
 	Description: string?,
-	Category: SettingCategory,
-	Index: number,
+	Category: SettingCategory?,
 	Folder: string?,
 	Type: SettingType,
 	Value: any,
@@ -22,89 +18,112 @@ export type SettingInfo = {
 	ActionTypes: { ActionType }?,
 }
 
-local Info = {
-	ShowFPS = {
+export type FolderInfo = {
+	Name: string,
+	Title: string,
+	Description: string?,
+	Category: SettingCategory?,
+	Folder: string?,
+}
+
+local Folders = {
+	{
+		Name = "MSteer",
+		Title = "Mouse Steering Settings",
+		Category = "Controls",
+	},
+	{
+		Name = "KPedals",
+		Title = "Keyboard Pedals Settings",
+		Category = "Controls",
+	},
+} :: { FolderInfo }
+
+local Settings = {
+	{
+		Name = "ShowFPS",
 		Title = "Show Framerate",
 		Category = "Gameplay",
 		Description = "Show game framerate in bottom left corner of screen",
 		Type = "Checkbox",
 		Default = false,
 	},
-	OneHandedSteering = {
+	{
+		Name = "OneHandedSteering",
 		Title = "One Handed Steering",
 		Category = "Gameplay",
 		Description = "Only one hand will be on the steering wheel.",
 		Type = "Checkbox",
 		Default = false,
 	},
-	ShowInputs = {
+	{
+		Name = "ShowInputs",
 		Title = "Show Inputs",
 		Category = "Gameplay",
 		Description = "Show vehicle inputs in bottom right corner of screen",
 		Type = "Checkbox",
 		Default = false,
 	},
-	ControllerDZone = {
+	{
+		Name = "ControllerDZone",
 		Title = "Controller Deadzone",
 		Category = "Controls",
 		Type = "Slider",
 		Default = 0,
 		Max = 0.9,
 	},
-	MSteerSensivity = {
-		Folder = "Mouse Steering Settings",
+	{
+		Name = "MSteerSensivity",
+		Folder = "MSteer",
 		Title = "Sensivity",
-		Category = "Controls",
 		Description = "The speed of cursor in mouse steering mode",
 		Type = "Slider",
 		Default = 1,
 		Min = 0.05,
 		Max = 4,
 	},
-	MSteerDZone = {
-		Folder = "Mouse Steering Settings",
+	{
+		Name = "MSteerDZone",
+		Folder = "MSteer",
 		Title = "Steering Deadzone",
-		Category = "Controls",
 		Description = "Deadzone in mouse steering mode",
 		Type = "Slider",
 		Default = 0,
 		Max = 0.9,
 	},
-	MSteerWidth = {
-		Folder = "Mouse Steering Settings",
+	{
+		Name = "MSteerWidth",
+		Folder = "MSteer",
 		Title = "Steering Width",
-		Category = "Controls",
 		Description = "Steering width in mouse steering mode",
 		Type = "Slider",
 		Default = 0.7,
 		Min = 0.1,
 		Max = 1,
 	},
-	MSteerExp = {
-		Folder = "Mouse Steering Settings",
+	{
+		Name = "MSteerExp",
+		Folder = "MSteer",
 		Title = "Steering Exponential",
-		Category = "Controls",
 		Description = "Steering exponential degree, recommended values: 1.00-1.20",
 		Type = "Slider",
-		Index = 1,
 		Default = 1.0,
 		Min = 0.8,
 		Max = 1.5,
 	},
-	MSteerCursorY = {
-		Folder = "Mouse Steering Settings",
+	{
+		Name = "MSteerCursorY",
+		Folder = "MSteer",
 		Title = "Cursor Y",
-		Category = "Controls",
 		Description = "The Y of cursor in mouse steering mode",
 		Type = "Slider",
-		Index = 2,
 		Default = 0.2,
 		Max = 1,
 	},
-	ThrottlePressTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "ThrottlePressTime",
+		Folder = "KPedals",
 		Title = "Throttle Press Time",
-		Category = "Controls",
 		Description = "Time to fully press the throttle in ms",
 		Type = "Slider",
 		Default = 200,
@@ -112,66 +131,64 @@ local Info = {
 		Max = 1000,
 		Step = 25,
 	},
-	ThrottleReleaseTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "ThrottleReleaseTime",
+		Folder = "KPedals",
 		Title = "Throttle Release Time",
-		Category = "Controls",
 		Description = "Time to fully release the throttle in ms",
 		Type = "Slider",
-		Index = 1,
 		Default = 100,
 		Min = 50,
 		Max = 1000,
 		Step = 25,
 	},
-	BrakePressTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "BrakePressTime",
+		Folder = "KPedals",
 		Title = "Brake Press Time",
-		Category = "Controls",
 		Description = "Time to fully press the brake in ms",
 		Type = "Slider",
-		Index = 2,
 		Default = 300,
 		Min = 50,
 		Max = 1000,
 		Step = 25,
 	},
-	BrakeReleaseTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "BrakeReleaseTime",
+		Folder = "KPedals",
 		Title = "Brake Release Time",
-		Category = "Controls",
 		Description = "Time to fully release the brake in ms",
 		Type = "Slider",
-		Index = 3,
 		Default = 200,
 		Min = 50,
 		Max = 1000,
 		Step = 25,
 	},
-	ClutchPressTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "ClutchPressTime",
+		Folder = "KPedals",
 		Title = "Clutch Press Time",
-		Category = "Controls",
 		Description = "Time to fully press the clutch in ms",
 		Type = "Slider",
-		Index = 4,
 		Default = 100,
 		Min = 50,
 		Max = 1000,
 		Step = 25,
 	},
-	ClutchReleaseTime = {
-		Folder = "Keyboard Pedals Settings",
+	{
+		Name = "ClutchReleaseTime",
+		Folder = "KPedals",
 		Title = "Clutch Release Time",
-		Category = "Controls",
 		Description = "Time to fully release the clutch in ms",
 		Type = "Slider",
-		Index = 5,
 		Default = 300,
 		Min = 50,
 		Max = 1000,
 		Step = 25,
 	},
-} :: { [string]: SettingInfo }
+} :: { SettingInfo }
 
-return TableUtil.DeepFreeze(Info)
+return {
+	Settings = Settings,
+	Folders = Folders,
+}

@@ -1,7 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local SettingsInfo = require(script.SettingsInfo)
+local SettingsConfig = require(script.SettingsConfig)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 local player = Players.LocalPlayer
 
@@ -31,8 +32,8 @@ function SettingsController.new(): SettingsController
 	self.Settings = {}
 
 	-- Load default settings
-	for k, v in SettingsInfo do
-		self.Settings[k] = v.Default
+	for _, v in SettingsConfig.Settings do
+		self.Settings[v.Name] = v.Default
 	end
 
 	-- Load saved settings
@@ -68,7 +69,7 @@ function SettingsController.new(): SettingsController
 		-- Save settings
 		local settings = {}
 		for k, v in self.Settings do
-			if SettingsInfo[k].Default == v then continue end
+			if self:GetSettingInfo(k).Default == v then continue end
 
 			settings[k] = v
 		end
@@ -110,20 +111,41 @@ end
 function SettingsController.GetSettingInfo(
 	self: SettingsController,
 	name: string
-): SettingsInfo.SettingInfo
-	local info = table.clone(SettingsInfo)[name]
+): SettingsConfig.SettingInfo
+	local found = TableUtil.Find(
+		SettingsConfig.Settings,
+		function(a) return a.Name == name end
+	)
+	local info = TableUtil.DeepCopy(found)
 	info.Value = self:GetSetting(name)
 	return info
 end
 
+function SettingsController.GetFolderInfo(
+	self: SettingsController,
+	name: string
+): SettingsConfig.FolderInfo
+	local found = TableUtil.Find(
+		SettingsConfig.Folders,
+		function(a) return a.Name == name end
+	)
+	return TableUtil.DeepCopy(found)
+end
+
 function SettingsController.GetSettingInfos(
 	self: SettingsController
-): { SettingsInfo.SettingInfo }
-	local t = table.clone(SettingsInfo)
-	for k, v in t do
-		v.Value = self:GetSetting(k)
+): { SettingsConfig.SettingInfo }
+	local t = TableUtil.DeepCopy(SettingsConfig.Settings)
+	for _, v in t do
+		v.Value = self:GetSetting(v.Name)
 	end
 	return t
+end
+
+function SettingsController.GetFolderInfos(
+	self: SettingsController
+): { SettingsConfig.FolderInfo }
+	return TableUtil.DeepCopy(SettingsConfig.Folders)
 end
 
 function SettingsController.SetSetting(

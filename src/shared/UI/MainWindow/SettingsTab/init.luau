@@ -3,6 +3,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
+local SettingsConfig = require(
+	ReplicatedStorage.Shared.Controllers.SettingsController.SettingsConfig
+)
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
@@ -25,34 +28,36 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
 
 	self.Instance = instance :: any
+	self.folders = {}
 
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
 
 	local settingInstance = self.Instance.Setting
 	local folderInstance = self.Instance.SettingFolder
+	for k, v in SettingsController:GetFolderInfos() do
+		local folder = SettingFolder.new(folderInstance:Clone(), v)
+		folder.Instance.LayoutOrder = k
+		folder.Instance.Parent = v.Folder
+				and self.folders[v.Folder].Instance:FindFirstChild("Content")
+			or self.Instance:FindFirstChild(v.Category)
+
+		v.Instance = folder.Instance
+		self.folders[v.Name] = v
+	end
+
+	local settingInstance = self.Instance.Setting
 	for k, v in SettingsController:GetSettingInfos() do
 		local setting = Setting.new(settingInstance:Clone(), v)
 		trove:Connect(
 			setting.Changed,
-			function(value) SettingsController:SetSetting(k, value) end
+			function(value) SettingsController:SetSetting(v.Name, value) end
 		)
 
-		local category = assert(
-			self.Instance:FindFirstChild(v.Category),
-			`Setting category {v.Category} not found`
-		)
-		if v.Folder then
-			local folder = category:FindFirstChild(v.Folder)
-			if not folder then
-				folder =
-					SettingFolder.new(folderInstance:Clone(), v.Folder).Instance
-				folder.Parent = category
-			end
-			setting.Instance.Parent = folder.Content
-		else
-			setting.Instance.Parent = category
-		end
+		setting.Instance.LayoutOrder = k
+		setting.Instance.Parent = v.Folder
+				and self.folders[v.Folder].Instance:FindFirstChild("Content")
+			or self.Instance:FindFirstChild(v.Category)
 	end
 
 	local contextInstance = self.Instance.ControlContext
@@ -63,7 +68,7 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 		context.Title.Text = StringUtil.SplitPascalCase(inputContext.Name)
 		context.Visible = true
 		local contextOrder, actionsOrder = getOrder(inputContext.Name)
-		context.LayoutOrder = contextOrder
+		context.LayoutOrder = contextOrder + 100
 
 		for _, inputAction in inputContext:GetChildren() :: { InputAction } do
 			if string.match(inputAction.Name, "Mouse") then continue end
