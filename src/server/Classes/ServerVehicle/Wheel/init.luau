@@ -128,18 +128,15 @@ function Initialize(self: ServerWheel)
 	base.CFrame = arm.CFrame * CFrame.new(0, self.Vehicle.Tune.AxleSize, 0)
 	base.Parent = self.Instance
 
-	local SteerOuter = (self.Vehicle.Tune.LockToLock * 180)
+	local steerOuter = (self.Vehicle.Tune.LockToLock * 180)
 		/ self.Vehicle.Tune.SteerRatio
-	local SteerInner = math.min(
-		SteerOuter - (SteerOuter * (1 - self.Vehicle.Tune.Ackerman)),
-		SteerOuter * 1.2
+	local steerInner = math.min(
+		steerOuter - (steerOuter * (1 - self.Vehicle.Tune.Ackerman)),
+		steerOuter * 1.2
 	)
 	if not self.IsFront then
-		SteerOuter = self.Vehicle.Tune.RSteerOuter
-		SteerInner = self.Vehicle.Tune.RSteerInner
-	elseif self.Vehicle.Tune.SteeringType == "Manual" then
-		SteerOuter = self.Vehicle.Tune.SteerOuter
-		SteerInner = self.Vehicle.Tune.SteerInner
+		steerOuter = self.Vehicle.Tune.RSteerOuter
+		steerInner = self.Vehicle.Tune.RSteerInner
 	end
 
 	--Create Steering Anchor
@@ -516,7 +513,7 @@ function Initialize(self: ServerWheel)
 	local rotationHinge = Instance.new("HingeConstraint")
 	rotationHinge.Name = "Rotate"
 	rotationHinge.LimitsEnabled = true
-	rotationHinge.UpperAngle = math.max(SteerOuter, SteerInner)
+	rotationHinge.UpperAngle = math.max(steerOuter, steerInner)
 	rotationHinge.LowerAngle = -rotationHinge.UpperAngle
 	rotationHinge.Attachment0 = rotationAttachment0
 	rotationHinge.Attachment1 = rotationAttachment1

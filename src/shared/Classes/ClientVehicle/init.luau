@@ -324,12 +324,6 @@ end
 
 -- TODO: Drivetrain Initialize
 
--- TODO: Steering Initialize
--- function ClientVehicle.InitSteeringAuto(self: ClientVehicle)
--- 	self.SteerOuter = (self.Tune.LockToLock * 180) / self.Tune.SteerRatio
--- 	self.SteerInner = math.min(self.SteerOuter - (self.SteerOuter * (1 - self.Tune.Ackerman)), self.SteerOuter * 1.2)
--- end
-
 function UpdateWheels(self: ClientVehicleImpl, deltaTime: number)
 	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
 		wheel:Update(deltaTime)

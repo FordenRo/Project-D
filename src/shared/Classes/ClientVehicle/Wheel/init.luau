@@ -98,15 +98,20 @@ function ApplySteering(self: ClientWheel, deltaTime: number)
 	local rsteerVariableAngle = 1
 	if typeof(self.Vehicle.Steering) ~= "number" then return end
 
+	local steerOuter = (self.Vehicle.Tune.LockToLock * 180)
+		/ self.Vehicle.Tune.SteerRatio
+	local steerInner = math.min(
+		steerOuter - (steerOuter * (1 - self.Vehicle.Tune.Ackerman)),
+		steerOuter * 1.2
+	)
+
 	if self.CanSteer == 2 then
 		if self.Instance.Name == "FL" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerInner
-				or self.Vehicle.Tune.SteerOuter
+			angle = self.Vehicle.Steering < 0 and steerInner or steerOuter
 		elseif self.Instance.Name == "FR" then
-			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.SteerOuter
-				or self.Vehicle.Tune.SteerInner
+			angle = self.Vehicle.Steering < 0 and steerOuter or steerInner
 		elseif self.Instance.Name == "F" then
-			angle = self.Vehicle.Tune.SteerInner
+			angle = steerInner
 		elseif self.Instance.Name == "RL" then
 			angle = self.Vehicle.Steering < 0 and self.Vehicle.Tune.RSteerInner
 				or self.Vehicle.Tune.RSteerOuter

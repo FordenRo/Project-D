@@ -1,30 +1,13 @@
-type SteeringType = "Auto" | "Manual"
 type FWSteerType = "Static" | "Speed" | "Both" | "None"
 type PowerSteeringType = "Old" | "New"
 
 export type Type = {
-	--- Steering type
-	---
-	--- `Auto` - realistically calculates steering angle for you
-	---
-	--- `Manual` - allows you to manually set the angle of the wheels
-	SteeringType: SteeringType,
-
 	--- Steering ratio of your steering rack, google it for your car
 	SteerRatio: number,
 	--- Number of turns of the steering wheel lock to lock, google it for your car
 	LockToLock: number,
 	--- If you don't know what it is don't touch it, ranges from .7 to 1.2
 	Ackerman: number,
-
-	--- Inner wheel steering (in degrees)
-	---
-	--- Only when `SteeringType` is `Manual`
-	SteerInner: number,
-	--- Outer wheel steering (in degrees)
-	---
-	--- Only when `SteeringType` is `Manual`
-	SteerOuter: number,
 
 	--- Steering increment per tick (in degrees)
 	SteerSpeed: number,

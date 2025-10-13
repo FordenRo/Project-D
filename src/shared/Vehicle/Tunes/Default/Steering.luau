@@ -4,8 +4,6 @@ local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
 local Tune = {} :: TuneType.Tune
 
-Tune.SteeringType = "Manual"
-
 Tune.SteerSpeed = 0.04
 Tune.ReturnSpeed = 0.05
 Tune.ContlrSteerSpeed = 0.08
