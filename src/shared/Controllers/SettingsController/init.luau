@@ -1,7 +1,9 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local SettingsConfig = require(script.SettingsConfig)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 local player = Players.LocalPlayer
@@ -11,7 +13,8 @@ SettingsController.__index = SettingsController
 
 export type SettingsController = typeof(setmetatable(
 	{} :: {
-		Settings: { [string]: number | boolean | Enum.KeyCode },
+		Settings: Component.Component,
+		SettingChanged: Signal.Signal<string>,
 	},
 	SettingsController
 ))
@@ -29,17 +32,20 @@ local Actions = {
 function SettingsController.new(): SettingsController
 	local self: SettingsController = setmetatable({}, SettingsController) :: any
 
-	self.Settings = {}
+	local config = {}
 
 	-- Load default settings
 	for _, v in SettingsConfig.Settings do
-		self.Settings[v.Name] = v.Default
+		config[v.Name] = v.Default
 	end
 
 	-- Load saved settings
 	for k, v in RF:InvokeServer(Actions.GetSettings) do
-		self.Settings[k] = v
+		config[k] = v
 	end
+
+	self.Settings = Component.new(config) :: any
+	self.SettingChanged = self.Settings.Changed
 
 	do -- Initialize keybinds
 		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
@@ -68,7 +74,7 @@ function SettingsController.new(): SettingsController
 
 		-- Save settings
 		local settings = {}
-		for k, v in self.Settings do
+		for k, v in self:GetSettings() do
 			if self:GetSettingInfo(k).Default == v then continue end
 
 			settings[k] = v
@@ -97,8 +103,15 @@ function SettingsController.new(): SettingsController
 	return self
 end
 
+function SettingsController.GetSettingChangedSignal(
+	self: SettingsController,
+	name: string
+)
+	return self.Settings:GetPropertyChangedSignal(name)
+end
+
 function SettingsController.GetSettings(self: SettingsController)
-	return table.clone(self.Settings)
+	return TableUtil.DeepCopy(self.Settings)
 end
 
 function SettingsController.GetSetting(
