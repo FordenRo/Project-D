@@ -3,31 +3,31 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 
-local BaseClass = {}
+local Component = {}
 
-export type BaseClass = {
+export type Component = {
 	Changed: Signal.Signal<string>,
 
 	GetPropertyChangedSignal: (
-		self: BaseClass,
+		self: Component,
 		property: string
 	) -> Signal.Signal<>,
 	--- Gets the value, bypassing any getters.
-	RawGet: (self: BaseClass, key: string) -> any?,
+	RawGet: (self: Component, key: string) -> any?,
 	--- Sets the value, bypassing any setters.
-	RawSet: (self: BaseClass, key: string, value: any) -> (),
+	RawSet: (self: Component, key: string, value: any) -> (),
 }
 
-type BaseClassImpl = {
+type ComponentImpl = {
 	propChangedSignals: { [string]: Signal.Signal<> },
 	get: { [string]: (self: any) -> any }?,
 	set: { [string]: (self: any, value: any) -> any }?,
-} & BaseClass
+} & Component
 
 function getMeta(base: any)
 	return {
 		__index = function(t, k)
-			local self = assert(rawget(t, "_t")) :: BaseClassImpl
+			local self = assert(rawget(t, "_t")) :: ComponentImpl
 
 			local function getExtendedGetter(obj)
 				if obj.get and obj.get[k] then return obj.get[k] end
@@ -44,7 +44,7 @@ function getMeta(base: any)
 			return self[k] or getExtendedValue(base)
 		end,
 		__newindex = function(t, k, v)
-			local self = assert(rawget(t, "_t")) :: BaseClassImpl
+			local self = assert(rawget(t, "_t")) :: ComponentImpl
 
 			local function getExtendedSetter(obj)
 				if obj.set and obj.set[k] then return obj.set[k] end
@@ -66,17 +66,17 @@ function getMeta(base: any)
 	}
 end
 
-function BaseClass.new(): BaseClass
-	local self: BaseClassImpl = {} :: any
+function Component.new(): Component
+	local self: ComponentImpl = {} :: any
 
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
 
-	return setmetatable({ _t = self }, getMeta(BaseClass)) :: any
+	return setmetatable({ _t = self }, getMeta(Component)) :: any
 end
 
-function BaseClass.GetPropertyChangedSignal(
-	self: BaseClassImpl,
+function Component.GetPropertyChangedSignal(
+	self: ComponentImpl,
 	property: string
 )
 	local signal = self.propChangedSignals[property]
@@ -88,29 +88,29 @@ function BaseClass.GetPropertyChangedSignal(
 	return signal
 end
 
-function BaseClass.Is(obj: any): boolean
-	return typeof(obj) == "table" and getmetatable(obj) == BaseClass
+function Component.Is(obj: any): boolean
+	return typeof(obj) == "table" and getmetatable(obj) == Component
 end
 
-function BaseClass.RawGet(self: any, key: string): any?
+function Component.RawGet(self: any, key: string): any?
 	local t = assert(rawget(self, "_t"))
 	return t[key]
 end
 
-function BaseClass.RawSet(self: any, key: string, value: any)
+function Component.RawSet(self: any, key: string, value: any)
 	local t = assert(rawget(self, "_t"))
 	t[key] = value
 end
 
-function BaseClass.Extend(to: any, from: any?)
+function Component.Extend(to: any, from: any?)
 	for k, v in getMeta(to) do
 		to[k] = v
 	end
-	to.__extend = from or BaseClass
+	to.__extend = from or Component
 end
 
 return table.freeze({
-	new = BaseClass.new,
-	Is = BaseClass.Is,
-	Extend = BaseClass.Extend,
+	new = Component.new,
+	Is = Component.Is,
+	Extend = Component.Extend,
 })

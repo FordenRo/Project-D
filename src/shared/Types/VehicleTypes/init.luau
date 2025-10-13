@@ -1,7 +1,7 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BaseClass = require(ReplicatedStorage.Shared.Classes.BaseClass)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTune = require(script.EngineTune)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.SoundData)
@@ -89,7 +89,7 @@ export type BaseVehicle = {
 
 	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
-} & BaseClass.BaseClass
+} & Component.Component
 
 export type DeformationController = {
 	Vehicle: ClientVehicle,
@@ -133,7 +133,7 @@ export type Transmission = {
 	Vehicle: ClientVehicle,
 
 	Update: (self: Transmission) -> (),
-} & BaseClass.BaseClass
+} & Component.Component
 
 export type ClientVehicle = {
 	--- Is the vehicle driven by a local player

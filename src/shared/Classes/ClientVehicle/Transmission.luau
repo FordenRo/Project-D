@@ -1,23 +1,23 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BaseClass = require(ReplicatedStorage.Shared.Classes.BaseClass)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Transmission = {}
-BaseClass.Extend(Transmission)
+Component.Extend(Transmission)
 
 type Transmission = VehicleTypes.Transmission
 
 type TransmissionImpl = {} & Transmission
 
 function Transmission.new(vehicle: VehicleTypes.ClientVehicle): Transmission
-	local self: TransmissionImpl =
-		setmetatable(BaseClass.new(), Transmission) :: any
+	local self: TransmissionImpl = Component.new() :: any
 
 	self.Vehicle = vehicle
 	self.ShiftingUp = false
 	self.ShiftingDown = false
 
+	setmetatable(self, Transmission)
 	return self
 end
 

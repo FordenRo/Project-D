@@ -2,7 +2,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local BaseClass = require(ReplicatedStorage.Shared.Classes.BaseClass)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local Headlight = require(script.Headlight)
 local LightPacket = require(ReplicatedStorage.Shared.Packets.LightPacket)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -25,7 +25,7 @@ local LIGHT_TYPES = {
 }
 
 local LightController = { set = {} }
-BaseClass.Extend(LightController)
+Component.Extend(LightController)
 
 export type LightController = {
 	Vehicle: VehicleTypes.ClientVehicle,
@@ -39,7 +39,7 @@ export type LightController = {
 		self: LightController,
 		state: "Left" | "Right" | "Both"
 	) -> (),
-} & BaseClass.BaseClass
+} & Component.Component
 
 type LightControllerImpl = {
 	lastToggleTime: number,
@@ -51,7 +51,7 @@ type Side = "Right" | "Left" | "Both"
 function LightController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): LightController
-	local self: LightControllerImpl = BaseClass.new() :: any
+	local self: LightControllerImpl = Component.new() :: any
 
 	self.Vehicle = vehicle
 	self.State = "Off"
@@ -79,11 +79,13 @@ function LightController.new(
 		table.insert(typeHeadlights, Headlight.new(lightPart))
 	end
 
+	setmetatable(self, LightController)
+
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
 	trove:AttachToInstance(self.Vehicle.Instance)
 
-	return setmetatable(self, LightController)
+	return self
 end
 
 function LightController.DataReceived(self: LightControllerImpl, buf: buffer)
