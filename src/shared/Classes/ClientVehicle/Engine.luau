@@ -1,17 +1,19 @@
 --!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTable = require(script.Parent.EngineTable)
 local EngineTune =
 	require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Engine = {}
-Engine.__index = Engine
+Component.Extend(Engine)
 
 type Engine = VehicleTypes.Engine
 
@@ -25,7 +27,7 @@ type EngineImpl = {
 
 function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: EngineImpl =
-		setmetatable(table.clone(EngineTable), Engine) :: any
+		Component.new(TableUtil.DeepCopy(EngineTable)) :: any
 
 	self.Vehicle = vehicle
 	self.Tune = require(
@@ -44,8 +46,8 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	self.lastOnTime = 0
 	self.lastOffTime = 0
 	self.revLimiting = false
-	self.IsOn = false
 
+	setmetatable(self, Engine)
 	return self
 end
 
