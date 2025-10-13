@@ -3,6 +3,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 local Component = {}
 
@@ -70,7 +71,7 @@ function getMeta(base: any)
 end
 
 function Component.new(source: any?): Component
-	local self: ComponentImpl = source or {}
+	local self: ComponentImpl = source and TableUtil.DeepCopy(source) or {}
 
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
