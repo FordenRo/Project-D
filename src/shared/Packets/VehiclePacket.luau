@@ -4,8 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 return Serialization.Packet({
-	IsOn = Serialization.Boolean,
-	Starting = Serialization.Boolean,
+	IgnitionState = Serialization.State({ "Off", "Acc", "On", "Starting" }),
 	Shifting = Serialization.Boolean,
 	Horning = Serialization.Boolean,
 	Dirt = Serialization.Percent(5),
@@ -17,6 +16,7 @@ return Serialization.Packet({
 	Brake = Serialization.Percent(3),
 	Steering = Serialization.Percent(8),
 	Engine = Serialization.Packet({
+		IsOn = Serialization.Boolean,
 		Health = Serialization.Percent(6),
 		Temperature = Serialization.MappedNumber(0, 130, 7),
 		DriveshaftStress = Serialization.MappedNumber(0, 2, 5),
