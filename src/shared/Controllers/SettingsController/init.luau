@@ -37,6 +37,7 @@ export type SettingsController = {
 
 type SettingsControllerImpl = {
 	settings: Component.Component,
+	raw: { [string]: any },
 } & SettingsController
 
 local RE = ReplicatedStorage:WaitForChild("_SettingsRE") :: RemoteEvent
@@ -65,8 +66,11 @@ function SettingsController.new(): SettingsController
 		config[k] = v
 	end
 
+	self.raw = config
 	self.settings = Component.new(config) :: any
 	self.SettingChanged = self.settings.Changed
+
+	self.SettingChanged:Connect(function(k) self.raw[k] = self.settings[k] end)
 
 	do -- Initialize keybinds
 		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
@@ -132,14 +136,14 @@ function SettingsController.GetSettingChangedSignal(
 end
 
 function SettingsController.GetSettings(self: SettingsControllerImpl)
-	return TableUtil.DeepCopy(self.settings)
+	return TableUtil.DeepCopy(self.raw)
 end
 
 function SettingsController.GetSetting(
 	self: SettingsControllerImpl,
 	name: string
 )
-	return self.settings[name]
+	return self.raw[name]
 end
 
 function SettingsController.GetSettingInfo(
