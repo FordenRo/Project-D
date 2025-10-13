@@ -87,10 +87,9 @@ export type BaseVehicle = {
 	--- Current ignition state
 	IgnitionState: IgnitionState,
 
-	GetCenter: (self: BaseVehicle) -> CFrame,
 	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
-}
+} & BaseClass.BaseClass
 
 export type DeformationController = {
 	Vehicle: ClientVehicle,

@@ -24,8 +24,12 @@ export type SettingsTab = {
 	},
 }
 
+type SettingsTabImpl = {
+	folders: { [string]: SettingsConfig.FolderInfo & { Instance: Frame } },
+} & SettingsTab
+
 function SettingsTab.new(instance: ScrollingFrame): SettingsTab
-	local self: SettingsTab = setmetatable({}, SettingsTab) :: any
+	local self: SettingsTabImpl = setmetatable({}, SettingsTab) :: any
 
 	self.Instance = instance :: any
 	self.folders = {}
@@ -33,7 +37,6 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
 
-	local settingInstance = self.Instance.Setting
 	local folderInstance = self.Instance.SettingFolder
 	for k, v in SettingsController:GetFolderInfos() do
 		local folder = SettingFolder.new(folderInstance:Clone(), v)
