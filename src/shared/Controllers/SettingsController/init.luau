@@ -11,13 +11,33 @@ local player = Players.LocalPlayer
 local SettingsController = {}
 SettingsController.__index = SettingsController
 
-export type SettingsController = typeof(setmetatable(
-	{} :: {
-		Settings: Component.Component,
-		SettingChanged: Signal.Signal<string>,
-	},
-	SettingsController
-))
+export type SettingsController = {
+	SettingChanged: Signal.Signal<string>,
+
+	GetSettingChangedSignal: (
+		self: SettingsController,
+		name: string
+	) -> Signal.Signal<string>,
+	GetSettings: (self: SettingsController) -> { [string]: any },
+	GetSetting: (self: SettingsController, name: string) -> any,
+	GetSettingInfo: (
+		self: SettingsController,
+		name: string
+	) -> SettingsConfig.SettingInfo,
+	GetFolderInfo: (
+		self: SettingsController,
+		name: string
+	) -> SettingsConfig.FolderInfo,
+	GetSettingInfos: (
+		self: SettingsController
+	) -> { SettingsConfig.SettingInfo },
+	GetFolderInfos: (self: SettingsController) -> { SettingsConfig.FolderInfo },
+	SetSetting: (self: SettingsController, name: string, value: any) -> (),
+}
+
+type SettingsControllerImpl = {
+	settings: Component.Component,
+} & SettingsController
 
 local RE = ReplicatedStorage:WaitForChild("_SettingsRE") :: RemoteEvent
 local RF = ReplicatedStorage:WaitForChild("_SettingsRF") :: RemoteFunction
@@ -30,7 +50,8 @@ local Actions = {
 }
 
 function SettingsController.new(): SettingsController
-	local self: SettingsController = setmetatable({}, SettingsController) :: any
+	local self: SettingsControllerImpl =
+		setmetatable({}, SettingsController) :: any
 
 	local config = {}
 
@@ -44,8 +65,8 @@ function SettingsController.new(): SettingsController
 		config[k] = v
 	end
 
-	self.Settings = Component.new(config) :: any
-	self.SettingChanged = self.Settings.Changed
+	self.settings = Component.new(config) :: any
+	self.SettingChanged = self.settings.Changed
 
 	do -- Initialize keybinds
 		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
@@ -104,25 +125,25 @@ function SettingsController.new(): SettingsController
 end
 
 function SettingsController.GetSettingChangedSignal(
-	self: SettingsController,
+	self: SettingsControllerImpl,
 	name: string
 )
-	return self.Settings:GetPropertyChangedSignal(name)
+	return self.settings:GetPropertyChangedSignal(name)
 end
 
-function SettingsController.GetSettings(self: SettingsController)
-	return TableUtil.DeepCopy(self.Settings)
+function SettingsController.GetSettings(self: SettingsControllerImpl)
+	return TableUtil.DeepCopy(self.settings)
 end
 
 function SettingsController.GetSetting(
-	self: SettingsController,
+	self: SettingsControllerImpl,
 	name: string
 )
-	return self.Settings[name]
+	return self.settings[name]
 end
 
 function SettingsController.GetSettingInfo(
-	self: SettingsController,
+	self: SettingsControllerImpl,
 	name: string
 ): SettingsConfig.SettingInfo
 	local found = TableUtil.Find(
@@ -135,7 +156,7 @@ function SettingsController.GetSettingInfo(
 end
 
 function SettingsController.GetFolderInfo(
-	self: SettingsController,
+	self: SettingsControllerImpl,
 	name: string
 ): SettingsConfig.FolderInfo
 	local found = TableUtil.Find(
@@ -146,7 +167,7 @@ function SettingsController.GetFolderInfo(
 end
 
 function SettingsController.GetSettingInfos(
-	self: SettingsController
+	self: SettingsControllerImpl
 ): { SettingsConfig.SettingInfo }
 	local t = TableUtil.DeepCopy(SettingsConfig.Settings)
 	for _, v in t do
@@ -156,17 +177,17 @@ function SettingsController.GetSettingInfos(
 end
 
 function SettingsController.GetFolderInfos(
-	self: SettingsController
+	self: SettingsControllerImpl
 ): { SettingsConfig.FolderInfo }
 	return TableUtil.DeepCopy(SettingsConfig.Folders)
 end
 
 function SettingsController.SetSetting(
-	self: SettingsController,
+	self: SettingsControllerImpl,
 	name: string,
-	value: number | boolean | Enum.KeyCode
+	value: any
 )
-	self.Settings[name] = value
+	self.settings[name] = value
 end
 
 return SettingsController.new()
