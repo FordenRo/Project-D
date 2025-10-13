@@ -159,7 +159,6 @@ export type ClientVehicle = {
 	--- Fires when a player leaved the vehicle
 	PlayerLeaved: Signal.Signal<Player, Seat | VehicleSeat>,
 
-	Lights: ClientLights,
 	InputController: InputController,
 	SoundController: SoundController,
 	DeformationController: DeformationController,
@@ -355,30 +354,6 @@ export type VehicleInterface = {
 	Speedometer: VehicleSpeedometer,
 
 	Destroy: (self: VehicleInterface) -> (),
-}
-
-export type Headlight = {
-	Instance: BasePart,
-	Light: Light?,
-	Enabled: boolean,
-	Brightness: number,
-	DisabledColor: Color3,
-	EnabledColor: Color3,
-
-	Destroy: (self: Headlight) -> (),
-}
-
-export type ClientLights = {
-	Vehicle: ClientVehicle,
-	Headlights: { [string]: { Headlight } },
-	State: "Low" | "High" | "Off",
-	TurnState: "Left" | "Right" | "Both" | "Off",
-
-	ToggleLights: (self: ClientLights) -> (),
-	ToggleTurnState: (
-		self: ClientLights,
-		state: "Left" | "Right" | "Both"
-	) -> (),
 }
 
 return {}

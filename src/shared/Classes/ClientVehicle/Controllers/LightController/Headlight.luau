@@ -2,12 +2,20 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
-local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Headlight = {}
 Headlight.__index = Headlight
 
-type Headlight = VehicleTypes.Headlight
+export type Headlight = {
+	Instance: BasePart,
+	Light: Light?,
+	Enabled: boolean,
+	Brightness: number,
+	DisabledColor: Color3,
+	EnabledColor: Color3,
+
+	Destroy: (self: Headlight) -> (),
+}
 
 type HeadlightImpl = {
 	currentBrightness: number,

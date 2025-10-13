@@ -4,6 +4,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local LightController = require(
+	ReplicatedStorage.Shared.Classes.ClientVehicle.Controllers.LightController
+)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local PlayerModule =
 	require((Players.LocalPlayer.PlayerScripts :: any).PlayerModule) :: any
@@ -361,7 +364,7 @@ end
 
 function InitializeConnections(self: InputControllerImpl)
 	local lightController =
-		self.Vehicle:GetController("LightController") :: VehicleTypes.ClientLights
+		self.Vehicle:GetController("LightController") :: LightController.LightController
 
 	local onChangeActions = {
 		Throttle = function(value) self.rawThrottle = value end,

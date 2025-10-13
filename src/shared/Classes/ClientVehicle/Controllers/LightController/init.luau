@@ -27,7 +27,19 @@ local LIGHT_TYPES = {
 local LightController = { set = {} }
 BaseClass.Extend(LightController)
 
-type LightController = VehicleTypes.ClientLights & BaseClass.BaseClass
+export type LightController = {
+	Vehicle: VehicleTypes.ClientVehicle,
+	Headlights: { [string]: { Headlight.Headlight } },
+	State: "Low" | "High" | "Off",
+	TurnState: "Left" | "Right" | "Both" | "Off",
+
+	DataReceived: (self: LightController, buf: buffer) -> (),
+	ToggleLights: (self: LightController) -> (),
+	ToggleTurnState: (
+		self: LightController,
+		state: "Left" | "Right" | "Both"
+	) -> (),
+} & BaseClass.BaseClass
 
 type LightControllerImpl = {
 	lastToggleTime: number,
