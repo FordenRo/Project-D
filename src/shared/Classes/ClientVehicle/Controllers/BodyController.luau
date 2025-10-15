@@ -1,7 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
@@ -92,8 +91,32 @@ function InitializeIKControls(self: BodyControllerImpl)
 	end
 
 	if self.Vehicle.Driver ~= self.Player then return end
+	if not self.Player.Character then return end
 
 	local vehicle = self.Vehicle.Instance
+
+	do -- Head IKControl
+		local attachment = Instance.new("Attachment")
+		attachment.Name = "HeadIKAttacment"
+		attachment.Parent = self.Player.Character:FindFirstChild("UpperTorso")
+		self.trove:Add(attachment)
+
+		make("Head", "UpperTorso", "Head", attachment)
+	end
+
+	do -- Torso IKControl
+		local seat = (
+			self.Player.Character:FindFirstChildWhichIsA("Humanoid") :: Humanoid
+		).SeatPart :: VehicleSeat | Seat
+
+		local attachment = Instance.new("Attachment")
+		attachment.Name = "TorsoIKAttachment"
+		attachment.Parent = seat
+		self.trove:Add(attachment)
+
+		make("Torso", "LowerTorso", "UpperTorso", attachment, 0)
+	end
+
 	make(
 		"RightHandWheel",
 		"RightUpperArm",
@@ -167,47 +190,52 @@ function InitializeTorso(self: BodyControllerImpl)
 
 	local humanoid =
 		self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
-	local rootPart = humanoid.RootPart
-
 	local upperTorso =
 		self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
-	local waist = upperTorso:FindFirstChild("Waist") :: AnimationConstraint
+	local rootPart = humanoid.RootPart
 
-	local rotationOffset = Vector3.new(math.rad(15), 0, 0)
+	local IKControl = self.IKControls.Torso
+	local targetAttach = IKControl.Target :: Attachment
+	IKControl.Weight = 1
+	IKControl.SmoothTime = 0
+
+	-- Offsets
+	local rotationOffset = Vector3.new(math.rad(5), 0, 0)
+	local positionOffset = targetAttach.WorldCFrame:PointToObjectSpace(
+		upperTorso.Position
+	) + Vector3.new(0, upperTorso.Size.Y / 2, 0)
+
+	-- Springs
+	local positionSpring = Vector3Spring.new(30, 200, 1000)
+	local rotationSpring = positionSpring:Clone()
+
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
-	local spring = Vector3Spring.new(30, 200, 1000)
 
 	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
-		acceleration = MathUtil.Lerp(
-			acceleration,
+		acceleration = acceleration:Lerp(
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
 			deltaTime * 20
 		)
-		angularVelocity = MathUtil.Lerp(
-			angularVelocity,
+		angularVelocity = angularVelocity:Lerp(
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
 			deltaTime * 20
 		)
 
 		-- Apply acceleration
-		spring.Offset += Vector3.new(
-			acceleration.Z + acceleration.Y,
-			0,
-			acceleration.X
-		) * 0.025 * deltaTime
+		positionSpring.Offset += acceleration * 0.025 * deltaTime
 
 		-- Apply angular velocity
-		spring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
+		rotationSpring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
 
-		spring:Update(deltaTime)
+		-- Update springs
+		positionSpring:Update(deltaTime)
+		rotationSpring:Update(deltaTime)
 
-		local rotation = rotationOffset - spring.Offset
-		waist.Transform = CFrame.fromOrientation(
-			math.clamp(rotation.X, -math.pi / 4, math.pi / 4),
-			math.clamp(rotation.Y, -math.pi / 4, math.pi / 4),
-			math.clamp(-rotation.Z, -math.pi / 4, math.pi / 4)
-		)
+		-- Apply transforms
+		local rot = rotationOffset - rotationSpring.Offset
+		targetAttach.CFrame = CFrame.fromOrientation(rot.X, rot.Y, rot.Z)
+			:ToWorldSpace(CFrame.new(positionOffset - positionSpring.Offset))
 	end)
 end
 
@@ -216,26 +244,28 @@ function InitializeNeck(self: BodyControllerImpl)
 
 	local humanoid =
 		self.Player.Character:FindFirstChild("Humanoid") :: Humanoid
-	local rootPart = humanoid.RootPart
-
 	local upperTorso =
 		self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
-	local head = self.Player.Character:FindFirstChild("Head") :: BasePart
-	local neck = head:FindFirstChild("Neck") :: AnimationConstraint
+	local rootPart = humanoid.RootPart
+
+	local IKControl = self.IKControls.Head
+	local targetAttach = IKControl.Target :: Attachment
+	IKControl.Type = Enum.IKControlType.Rotation
+	IKControl.Weight = 1
+	IKControl.SmoothTime = 0
 
 	local rotationOffset = Vector3.new(-math.rad(10), 0, 0)
-	local acceleration = Vector3.zero
-	local angularVelocity = Vector3.zero
 	local spring = Vector3Spring.new(5, 50, 500)
 
+	local acceleration = Vector3.zero
+	local angularVelocity = Vector3.zero
+
 	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
-		acceleration = MathUtil.Lerp(
-			acceleration,
+		acceleration = acceleration:Lerp(
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
 			deltaTime * 20
 		)
-		angularVelocity = MathUtil.Lerp(
-			angularVelocity,
+		angularVelocity = angularVelocity:Lerp(
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
 			deltaTime * 20
 		)
@@ -269,8 +299,9 @@ function InitializeNeck(self: BodyControllerImpl)
 			* self.Vehicle.Steering
 			* math.rad(30)
 
+		-- Apply transforms
 		local rotation = rotationOffset - spring.Offset + steeringRotation
-		neck.Transform = upperTorso.CFrame:ToObjectSpace(
+		targetAttach.CFrame = upperTorso.CFrame:ToObjectSpace(
 			CFrame.lookAlong(
 				Vector3.zero,
 				direction,
@@ -317,18 +348,17 @@ function InitializeHandbrake(self: BodyControllerImpl)
 
 	IKControl.Type = Enum.IKControlType.Transform
 
-	local lastPBrake = false
 	local curTask
-	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
-		if self.Vehicle.PBrake == lastPBrake then return end
+	self.trove:Connect(
+		self.Vehicle:GetPropertyChangedSignal("PBrake"),
+		function()
+			IKControl.Weight = 1
+			if curTask then task.cancel(curTask) end
 
-		lastPBrake = self.Vehicle.PBrake
-		IKControl.Weight = 1
-		if curTask then task.cancel(curTask) end
-
-		if lastPBrake then return end
-		curTask = task.delay(0.3, function() IKControl.Weight = 0 end)
-	end)
+			if self.Vehicle.PBrake then return end
+			curTask = task.delay(0.3, function() IKControl.Weight = 0 end)
+		end
+	)
 end
 
 function InitializeGearLever(self: BodyControllerImpl)
@@ -394,7 +424,7 @@ function InitializePedals(self: BodyControllerImpl)
 		rightHipAttachment.CFrame = startRightHipCFrame
 	end)
 
-	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
+	self.trove:Connect(RunService.Heartbeat, function(deltaTime)
 		throttleIK.Weight = 0.05
 			+ self.Vehicle.Throttle * (1 - self.Vehicle.Brake * 0.5)
 		brakeIK.Weight = 0.05
@@ -406,13 +436,26 @@ end
 function InitializeIgnition(self: BodyControllerImpl)
 	local IKControl = self.IKControls.Ignition
 
-	self.trove:Connect(
-		RunService.Heartbeat,
-		function(deltaTime: number)
-			IKControl.Weight = self.Vehicle.IgnitionState == "Starting" and 1
-				or 0
+	local thread
+	self.trove:Add(self.Vehicle.IgnitionStateChanged:Connect(function(state)
+		if thread then task.cancel(thread) end
+
+		if state == "Starting" then
+			IKControl.Weight = 1
+			return
 		end
-	)
+
+		IKControl.Weight = 1
+
+		thread = task.delay(0.4, function() IKControl.Weight = 0 end)
+	end))
 end
 
-return table.freeze({ new = BodyController.new })
+function BodyController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == BodyController
+end
+
+return table.freeze({
+	new = BodyController.new,
+	Is = BodyController.Is,
+})
