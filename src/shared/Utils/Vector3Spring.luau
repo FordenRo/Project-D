@@ -1,5 +1,9 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
+
 local Vector3Spring = {}
-Vector3Spring.__index = Vector3Spring
+Component.Extend(Vector3Spring)
 
 export type Vector3Spring = {
 	Mass: number,
@@ -10,7 +14,7 @@ export type Vector3Spring = {
 	Goal: Vector3,
 
 	Update: (self: Vector3Spring, deltaTime: number) -> (),
-}
+} & Component.Component
 
 function Vector3Spring.new(
 	mass: number,
@@ -19,7 +23,7 @@ function Vector3Spring.new(
 	initialOffset: Vector3?,
 	goal: Vector3?
 ): Vector3Spring
-	local self: Vector3Spring = setmetatable({}, Vector3Spring) :: any
+	local self: Vector3Spring = Component.new() :: any
 
 	self.Mass = mass
 	self.Damping = damping
@@ -28,6 +32,7 @@ function Vector3Spring.new(
 	self.Offset = initialOffset or Vector3.zero
 	self.Velocity = Vector3.zero
 
+	setmetatable(self, Vector3Spring)
 	return self
 end
 

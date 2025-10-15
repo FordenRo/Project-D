@@ -1,5 +1,9 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
+
 local Spring = {}
-Spring.__index = Spring
+Component.Extend(Spring)
 
 export type Spring = {
 	Mass: number,
@@ -10,7 +14,7 @@ export type Spring = {
 	Goal: number,
 
 	Update: (self: Spring, deltaTime: number) -> (),
-}
+} & Component.Component
 
 function Spring.new(
 	mass: number,
@@ -19,7 +23,7 @@ function Spring.new(
 	initialOffset: number?,
 	goal: number?
 ): Spring
-	local self: Spring = setmetatable({}, Spring) :: any
+	local self: Spring = Component.new() :: any
 
 	self.Mass = mass
 	self.Damping = damping
@@ -28,6 +32,7 @@ function Spring.new(
 	self.Offset = initialOffset or 0
 	self.Velocity = 0
 
+	setmetatable(self, Spring)
 	return self
 end
 
