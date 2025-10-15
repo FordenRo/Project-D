@@ -154,6 +154,8 @@ function BaseVehicle.get.Center(self: BaseVehicle)
 	return center
 end
 
+function BaseVehicle.get.CFrame(self: BaseVehicle) return self.WeightPart.CFrame end
+
 function BaseVehicle.Extend(to: any) Component.Extend(to, BaseVehicle) end
 
 return BaseVehicle

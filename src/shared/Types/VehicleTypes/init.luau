@@ -75,6 +75,7 @@ export type BaseVehicle = {
 	Mileage: number,
 	-- Misc
 	Center: CFrame,
+	CFrame: CFrame,
 	WeightPart: Part,
 	TCS: boolean,
 	TCSActive: boolean,
