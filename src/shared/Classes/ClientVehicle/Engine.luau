@@ -27,7 +27,7 @@ type EngineImpl = {
 
 function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: EngineImpl =
-		Component.new(TableUtil.DeepCopy(EngineTable)) :: any
+		Component.Wrap(TableUtil.DeepCopy(EngineTable)) :: any
 
 	self.Vehicle = vehicle
 	self.Tune = require(

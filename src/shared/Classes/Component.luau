@@ -70,8 +70,20 @@ function getMeta(base: any)
 	}
 end
 
-function Component.new(source: any?): Component
-	local self: ComponentImpl = source and TableUtil.DeepCopy(source) or {}
+function Component.new(): Component
+	local self: ComponentImpl = {} :: any
+
+	self.Changed = Signal.new()
+	self.propChangedSignals = {}
+
+	return setmetatable({ _t = self }, getMeta(Component)) :: any
+end
+
+--- Constructs a new component that wraps the source
+function Component.Wrap<T>(source: T): Component & T
+	local self: ComponentImpl = (
+		source and TableUtil.DeepCopy(source) or {}
+	) :: any
 
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
@@ -115,6 +127,7 @@ end
 
 return table.freeze({
 	new = Component.new,
+	Wrap = Component.Wrap,
 	Is = Component.Is,
 	Extend = Component.Extend,
 })

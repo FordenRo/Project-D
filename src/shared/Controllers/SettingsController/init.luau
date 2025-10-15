@@ -67,7 +67,7 @@ function SettingsController.new(): SettingsController
 	end
 
 	self.raw = config
-	self.settings = Component.new(config) :: any
+	self.settings = Component.Wrap(config) :: any
 	self.SettingChanged = self.settings.Changed
 
 	self.SettingChanged:Connect(function(k) self.raw[k] = self.settings[k] end)
