@@ -8,8 +8,10 @@ local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Component = {}
 
 export type Component = {
+	--- Fired immediately after a property of the component changes.
 	Changed: Signal.Signal<string>,
 
+	--- Fires immediately after a given property of the component changes.
 	GetPropertyChangedSignal: (
 		self: Component,
 		property: string
@@ -18,6 +20,8 @@ export type Component = {
 	RawGet: (self: Component, key: string) -> any?,
 	--- Sets the value, bypassing any setters.
 	RawSet: (self: Component, key: string, value: any) -> (),
+	--- Create a deep copy of an component.
+	Clone: <Component>(self: Component) -> Component,
 }
 
 type ComponentImpl = {
@@ -70,6 +74,7 @@ function getMeta(base: any)
 	}
 end
 
+--- Constructs a new component
 function Component.new(): Component
 	local self: ComponentImpl = {} :: any
 
@@ -102,6 +107,13 @@ function Component.GetPropertyChangedSignal(
 	end
 
 	return signal
+end
+
+function Component.Clone(self: ComponentImpl)
+	local t = assert(rawget(self, "_t"))
+	t = TableUtil.DeepCopy(t)
+
+	return setmetatable({ _t = t }, getmetatable(self :: any))
 end
 
 function Component.Is(obj: any): boolean
