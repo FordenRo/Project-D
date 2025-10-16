@@ -11,7 +11,7 @@ export type IgnitionState = "Off" | "Acc" | "On" | "Starting"
 
 export type BaseVehicle = {
 	_Remote: UnreliableRemoteEvent,
-	Instance: Instance & {
+	Instance: Model & {
 		Wheels: Model & any,
 		DriveSeat: VehicleSeat & {
 			Flip: AlignOrientation,
@@ -70,7 +70,6 @@ export type BaseVehicle = {
 	-- Velocity
 	Velocity: Vector3,
 	AngularVelocity: Vector3,
-	Acceleration: Vector3,
 	--- Mileage in meters
 	Mileage: number,
 	-- Misc
@@ -146,6 +145,7 @@ export type ClientVehicle = {
 	MeshParts: { MeshPart },
 	Meshes: { [MeshPart]: EditableMesh },
 	Textures: { [MeshPart]: EditableImage },
+	Acceleration: Vector3,
 
 	-- Events
 	--- Fires on Vehicle.Driver change

@@ -148,9 +148,7 @@ function InitializeDeformation(self: DeformationControllerImpl)
 		local lastVelocity = Vector3.zero
 		trove:Connect(
 			RunService.PreSimulation,
-			function()
-				lastVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity
-			end
+			function() lastVelocity = self.Vehicle.Velocity end
 		)
 
 		trove:Connect(RunService.PostSimulation, function()
@@ -161,8 +159,7 @@ function InitializeDeformation(self: DeformationControllerImpl)
 			table.clear(touchingPoints)
 			table.clear(touchingParts)
 
-			local worldHitVelocity = self.Vehicle.WeightPart.AssemblyLinearVelocity
-				- lastVelocity
+			local worldHitVelocity = self.Vehicle.Velocity - lastVelocity
 			if worldHitVelocity.Magnitude < 1 then return end
 
 			debug.profilebegin("Deformation")

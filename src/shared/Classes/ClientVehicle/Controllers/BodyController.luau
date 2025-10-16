@@ -356,12 +356,12 @@ function NeckHandler(self: BodyControllerImpl)
 		)
 
 		-- Calculate look direction
-		local direction = self.Vehicle.WeightPart.CFrame.LookVector
+		local direction = self.Vehicle.CFrame.LookVector
 		if self.Vehicle.Velocity.Magnitude > 0 then
 			direction = direction:Lerp(
 				self.Vehicle.Velocity.Unit,
 				math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
-					* self.Vehicle.WeightPart.CFrame.LookVector:Dot(
+					* self.Vehicle.CFrame.LookVector:Dot(
 						self.Vehicle.Velocity.Unit
 					)
 					* 0.2
@@ -396,7 +396,7 @@ function NeckHandler(self: BodyControllerImpl)
 			CFrame.lookAlong(
 				Vector3.zero,
 				direction,
-				self.Vehicle.WeightPart.CFrame.UpVector
+				self.Vehicle.CFrame.UpVector
 			)
 				* CFrame.fromOrientation(rotation.X, -rotation.Y, rotation.Z)
 		).Rotation

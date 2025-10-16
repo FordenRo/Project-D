@@ -111,6 +111,11 @@ function ClientVehicle.set.Driver(self: ClientVehicleImpl, driver: Player?)
 	self.DriverChanged:FireDeferred(driver)
 end
 
+function ClientVehicle.set.IgnitionState(self: ClientVehicleImpl, state: string)
+	self:RawSet("IgnitionState", state)
+	self.IgnitionStateChanged:Fire(state :: any)
+end
+
 function Seated(
 	self: ClientVehicleImpl,
 	seatedPlayer: Player,
@@ -275,7 +280,6 @@ function InitializeVariables(self: ClientVehicleImpl)
 			* (1 - self.Tune.PBrakeBias),
 	}
 	self._OldVelocity = Vector3.new()
-	self.WeightPart = self.Instance.Body.WeightPart
 end
 
 function ClientVehicle.InitializeWheels(self: ClientVehicleImpl)
@@ -367,8 +371,7 @@ function Replicate(self: ClientVehicleImpl, buf: buffer?)
 end
 
 function Update(self: ClientVehicleImpl, deltaTime: number)
-	self.Velocity = self.WeightPart.AssemblyLinearVelocity
-	self.AngularVelocity = self.WeightPart.AssemblyAngularVelocity
+	deltaTime = math.max(deltaTime, 0.001)
 	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
 	self._OldVelocity = self.Velocity
 

@@ -108,7 +108,7 @@ function FirstPersonHandler(self: CameraControllerImpl)
 			Camera.CFrame = CFrame.lookAlong(
 				head.Position
 					+ Vector3.new(0, 0.2, 0)
-					- self.Vehicle.WeightPart.CFrame.LookVector * 0.4,
+					- self.Vehicle.CFrame.LookVector * 0.4,
 				head.CFrame.LookVector,
 				head.CFrame.UpVector
 			)
@@ -225,7 +225,7 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 		function(deltaTime)
 			if InputController.CameraMode ~= "ThirdPerson" then return end
 
-			local WPCFrame = self.Vehicle.WeightPart.CFrame
+			local WPCFrame = self.Vehicle.CFrame
 
 			acceleration = acceleration:Lerp(
 				WPCFrame:VectorToObjectSpace(self.Vehicle.Acceleration),

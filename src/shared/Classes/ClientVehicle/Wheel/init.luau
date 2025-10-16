@@ -201,7 +201,7 @@ function ClientWheel.UpdateForces(
 		and (self.Vehicle.Velocity.Magnitude / (Units.Velocity_mdivs / 3.6))
 			> self.Vehicle.Tune.ESCSpeed
 	then
-		local g = self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(
+		local g = self.Vehicle.CFrame:VectorToObjectSpace(
 			self.Vehicle.Acceleration
 				/ Units.Velocity_mdivs
 				/ (

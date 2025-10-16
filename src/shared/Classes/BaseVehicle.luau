@@ -7,7 +7,7 @@ local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local BaseVehicle = { get = {} }
+local BaseVehicle = { get = {}, set = {} }
 Component.Extend(BaseVehicle)
 
 type BaseVehicle = VehicleTypes.BaseVehicle
@@ -48,6 +48,8 @@ function InitializeVariables(self: BaseVehicle)
 	self.Dirt = 0
 	self.Wheels = {}
 	self.Horning = false
+	self.WeightPart = self.Instance.Body.WeightPart
+	self.Mileage = 0
 	-- Transmission
 	self.Clutch = 0
 	self.Gear = ParkingGearEnabled and -2 or 0
@@ -64,11 +66,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.Brake = 0
 	self.Steering = 0
 	self.PBrake = false
-	-- Velocity
-	self.Velocity = Vector3.new()
-	self.AngularVelocity = Vector3.new()
-	self.Acceleration = Vector3.new()
-	self.Mileage = 0
 	-- Misc
 	self.TCS = self.Tune.TCSEnabled
 	self.TCSActive = false
@@ -155,6 +152,18 @@ function BaseVehicle.get.Center(self: BaseVehicle)
 end
 
 function BaseVehicle.get.CFrame(self: BaseVehicle) return self.WeightPart.CFrame end
+
+function BaseVehicle.get.Velocity(self: BaseVehicle)
+	return self.WeightPart.AssemblyLinearVelocity
+end
+
+function BaseVehicle.get.AngularVelocity(self: BaseVehicle)
+	return self.WeightPart.AssemblyAngularVelocity
+end
+
+function BaseVehicle.set.CFrame(self: BaseVehicle, cframe: CFrame)
+	self.Instance:PivotTo(cframe)
+end
 
 function BaseVehicle.Extend(to: any) Component.Extend(to, BaseVehicle) end
 

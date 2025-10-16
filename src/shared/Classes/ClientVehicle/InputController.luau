@@ -408,25 +408,22 @@ function InitializeConnections(self: InputControllerImpl)
 		Horn = function(value) self.Vehicle.Horning = value end,
 		Ignition = function(value)
 			local state = self.Vehicle.IgnitionState
-			if value then
-				if state == "On" then
-					self.Vehicle.IgnitionState = if self.ignitionNext
-						then "Off"
-						else "Starting"
-					self.ignitionNext = not self.ignitionNext
-				else
-					self.Vehicle.IgnitionState = if state == "Off"
-						then "Acc"
-						else "On"
+			if not value then
+				if state == "Starting" then
+					self.Vehicle.IgnitionState = "On"
 				end
-			elseif state == "Starting" then
-				self.Vehicle.IgnitionState = "On"
+				return
 			end
 
-			if state ~= self.Vehicle.IgnitionState then
-				self.Vehicle.IgnitionStateChanged:Fire(
-					self.Vehicle.IgnitionState
-				)
+			if state == "On" then
+				self.Vehicle.IgnitionState = if self.ignitionNext
+					then "Off"
+					else "Starting"
+				self.ignitionNext = not self.ignitionNext
+			else
+				self.Vehicle.IgnitionState = if state == "Off"
+					then "Acc"
+					else "On"
 			end
 		end,
 	} :: { [string]: (any) -> () }

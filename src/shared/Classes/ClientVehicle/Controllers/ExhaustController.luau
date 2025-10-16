@@ -83,7 +83,7 @@ function Update(self: ExhaustControllerImpl)
 		and (self.Vehicle.Engine.IsOn or self.Vehicle.IgnitionState == "Starting")
 		and (
 				player.Character:GetPivot().Position
-				- self.Vehicle.WeightPart.Position
+				- self.Vehicle.CFrame.Position
 			).Magnitude
 			< 70
 
@@ -149,11 +149,7 @@ function Update(self: ExhaustControllerImpl)
 		self.emitter.Size = self.startEmitter.Size
 
 		local transparency = 1
-			- math.clamp(
-				self.Vehicle.WeightPart.AssemblyLinearVelocity.Magnitude / 100,
-				0,
-				0.8
-			)
+			- math.clamp(self.Vehicle.Velocity.Magnitude / 100, 0, 0.8)
 		local keypoints = {}
 		for k, v in self.startEmitter.Transparency.Keypoints do
 			table.insert(

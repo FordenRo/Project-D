@@ -93,12 +93,7 @@ function Initialize(self: AerodynamicsImpl)
 end
 
 function Update(self: AerodynamicsImpl)
-	if
-		(
-			self.Vehicle.WeightPart.AssemblyLinearVelocity
-			- game.Workspace.GlobalWind
-		).Magnitude < 1
-	then
+	if (self.Vehicle.Velocity - game.Workspace.GlobalWind).Magnitude < 1 then
 		return
 	end
 
@@ -126,8 +121,8 @@ function Update(self: AerodynamicsImpl)
 		{ self.Vehicle.Instance, player.Character :: Model }
 
 	local toRay = game.Workspace:Raycast(
-		self.Vehicle.WeightPart.Position,
-		self.Vehicle.WeightPart.CFrame.LookVector * 1000,
+		self.Vehicle.CFrame.Position,
+		self.Vehicle.CFrame.LookVector * 1000,
 		toRayParams
 	)
 	if toRay then
@@ -159,13 +154,10 @@ function Update(self: AerodynamicsImpl)
 	end
 
 	-- Apply forces
-	local carVel = self.Vehicle.WeightPart.AssemblyLinearVelocity
-		* (Units.Length_mm / 1000)
-		* 3.6
+	local carVel = self.Vehicle.Velocity * (Units.Length_mm / 1000) * 3.6
 	local windVel = game.Workspace.GlobalWind * (Units.Length_mm / 1000) * 3.6
 	local diff = carVel - windVel
-	local objectVel =
-		self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(carVel - windVel)
+	local objectVel = self.Vehicle.CFrame:VectorToObjectSpace(carVel - windVel)
 
 	local fDownforce = math.sign(objectVel.Z)
 		* (objectVel.Z ^ 2 / 200 ^ 2)
@@ -180,11 +172,11 @@ function Update(self: AerodynamicsImpl)
 		* ((self.Vehicle.Tune.AeroDragCoeff * 1.5) / 100)
 		* AirPressurePercent
 
-	self.forces.fDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+	self.forces.fDownforce.Force = self.Vehicle.CFrame.UpVector
 		* fDownforce
 		* 9.81
 		* Units.Force_N
-	self.forces.rDownforce.Force = self.Vehicle.WeightPart.CFrame.UpVector
+	self.forces.rDownforce.Force = self.Vehicle.CFrame.UpVector
 		* rDownforce
 		* 9.81
 		* Units.Force_N
