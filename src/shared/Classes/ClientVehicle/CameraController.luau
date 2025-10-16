@@ -1,18 +1,19 @@
 --!strict
 local ContextActionService = game:GetService("ContextActionService")
+local Lighting = game:GetService("Lighting")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
-local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
+local Vector3Spring = require(ReplicatedStorage.Shared.Utils.Vector3Spring)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 local Camera = game.Workspace.CurrentCamera
 
-local MAX_DISTANCE = 32
-local MIN_DISTANCE = 16
 local FOV = Camera.FieldOfView
 
 local VISIBLE_BODY_PARTS = {
@@ -31,52 +32,53 @@ local VISIBLE_BODY_PARTS = {
 }
 
 local CameraController = {}
-CameraController.__index = CameraController
+Component.Extend(CameraController)
 
 type CameraController = VehicleTypes.CameraController
 
 type CameraControllerImpl = {
-	lastCameraRotation: number,
-	isCharacterVisible: boolean,
 	trove: Trove.Trove,
+	blur: BlurEffect,
 } & CameraController
 
 function CameraController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): CameraController
-	local self: CameraControllerImpl = setmetatable({}, CameraController) :: any
+	local self: CameraControllerImpl = Component.new() :: any
 
 	self.Vehicle = vehicle
-	self.Distance = 22
-	self.Offset = Vector3.new()
-	self.LookOffset = Vector3.new()
-	self.Angles = Vector3.new()
-	self.Bumping = Vector3.new()
-	self.lastCameraRotation = 0
-	self.isCharacterVisible = true
-	self.CameraCFrame = CFrame.new()
+
+	setmetatable(self, CameraController)
+
 	Camera.CameraType = Enum.CameraType.Scriptable
 
 	self.trove = Trove.new()
 
-	self.trove:BindToRenderStep(
-		"CameraUpdate",
-		Enum.RenderPriority.Camera.Value - 1,
-		function(deltaTime) Update(self, deltaTime) end
-	)
+	self.blur = Instance.new("BlurEffect")
+	self.blur.Size = 0
+	self.blur.Parent = Lighting
 
-	ContextActionService:BindAction(
-		"CameraZoom",
-		function(_, _, input) return UpdateZoom(self, input) end,
-		false,
-		Enum.UserInputType.MouseWheel
-	)
+	FirstPersonHandler(self)
+	ThirdPersonHandler(self)
 
-	ContextActionService:BindAction(
-		"CameraRotation",
-		function(_, _, input) return UpdateRotation(self, input) end,
-		false,
-		Enum.UserInputType.MouseMovement
+	local isCharacterVisible = false
+	self.trove:Add(
+		self.Vehicle.InputController.CameraModeChanged:Connect(function(mode)
+			Camera.FieldOfView = mode == "FirstPerson" and FOV * 1.2 or FOV
+			if isCharacterVisible == (mode == "FirstPerson") then
+				isCharacterVisible = mode == "ThirdPerson"
+				for _, v in (player.Character :: Model):GetDescendants() do
+					if
+						not v:IsA("BasePart")
+						or table.find(VISIBLE_BODY_PARTS, v.Name)
+					then
+						continue
+					end
+
+					v.LocalTransparencyModifier = isCharacterVisible and 0 or 1
+				end
+			end
+		end)
 	)
 
 	self.trove:Add(function()
@@ -89,169 +91,215 @@ function CameraController.new(
 	return self
 end
 
-function UpdateZoom(self: CameraControllerImpl, input: InputObject)
-	self.Distance -= input.Position.Z * 0.4
-	self.Distance = math.clamp(self.Distance, MIN_DISTANCE, MAX_DISTANCE)
-end
-
-function UpdateRotation(self: CameraControllerImpl, input: InputObject)
-	if
-		not (
-			UserInputService:IsMouseButtonPressed(
-					Enum.UserInputType.MouseButton2
-				)
-				and not self.Vehicle.InputController.IsMouseSteerOn
-			or UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt)
-				and self.Vehicle.InputController.IsMouseSteerOn
-		)
-	then
-		return
-	end
-
-	local x, y, z = self.CameraCFrame:ToOrientation()
-	x -= math.rad(input.Delta.Y)
-	x = math.clamp(x, math.rad(-25), math.rad(15))
-	y -= math.rad(input.Delta.X)
-	self.CameraCFrame = CFrame.fromOrientation(x, y, z)
-	self.lastCameraRotation = tick()
-end
-
-function Update(self: CameraControllerImpl, deltaTime: number)
-	if not player.Character then return end
-
-	if
-		self.isCharacterVisible
-		== (self.Vehicle.InputController.CameraMode == "FirstPerson")
-	then
-		self.isCharacterVisible = self.Vehicle.InputController.CameraMode
-			== "ThirdPerson"
-		for _, v in player.Character:GetDescendants() do
-			if
-				not v:IsA("BasePart") or table.find(VISIBLE_BODY_PARTS, v.Name)
-			then
-				continue
-			end
-
-			v.LocalTransparencyModifier = self.isCharacterVisible and 0 or 1
-		end
-	end
-
-	if self.Vehicle.InputController.CameraMode == "FirstPerson" then
-		UpdateFirstPerson(self, deltaTime)
-	else
-		UpdateThirdPerson(self, deltaTime)
-	end
-end
-
-function UpdateFirstPerson(self: CameraControllerImpl, deltaTime: number)
+function FirstPersonHandler(self: CameraControllerImpl)
 	if not player.Character then return end
 
 	local head = player.Character:FindFirstChild("Head") :: BasePart
 
-	-- Update camera
-	Camera.FieldOfView = FOV * 1.2 + self.Vehicle.Velocity.Magnitude / 100
-	Camera.CFrame = CFrame.lookAlong(
-		head.Position
-			+ Vector3.new(0, 0.2, 0)
-			- self.Vehicle.WeightPart.CFrame.LookVector * 0.4
-			+ self.Bumping,
-		head.CFrame.LookVector,
-		head.CFrame.UpVector
+	self.trove:BindToRenderStep(
+		"FPVUpdate",
+		Enum.RenderPriority.Camera.Value - 1,
+		function(deltaTime)
+			if self.Vehicle.InputController.CameraMode ~= "FirstPerson" then
+				return
+			end
+
+			-- Update camera
+			Camera.CFrame = CFrame.lookAlong(
+				head.Position
+					+ Vector3.new(0, 0.2, 0)
+					- self.Vehicle.WeightPart.CFrame.LookVector * 0.4,
+				head.CFrame.LookVector,
+				head.CFrame.UpVector
+			)
+
+			-- Update blur
+			local multiplier = (self.Vehicle.Acceleration.Magnitude / 700) ^ 2
+			local intensity = 20
+
+			self.blur.Size = math.max(self.blur.Size, multiplier * intensity)
+			self.blur.Size -= 0.5 * intensity * deltaTime
+			self.blur.Size = math.clamp(self.blur.Size, 0, intensity)
+		end
 	)
 end
 
-function UpdateThirdPerson(self: CameraControllerImpl, deltaTime: number)
-	local sideVelocity = Vector3.new(1, 0, 1) * self.Vehicle.Velocity
+function ThirdPersonHandler(self: CameraControllerImpl)
+	if not player.Character then return end
 
-	local heightOffset = self.Vehicle.WeightPart.CFrame.UpVector * 7
-	local offset = Vector3.new()
-	local lookOffset = self.Vehicle.WeightPart.CFrame.UpVector * 4
-	local angles = Vector3.new()
+	local InputController = self.Vehicle.InputController
+	local distance = 16
 
-	local distance = self.Distance
-	if sideVelocity.Magnitude > 10 then
-		distance -= self.Distance * 0.2 * math.abs(
-			self.Vehicle.Velocity.Unit:Dot(self.Vehicle.Center.RightVector)
-		) ^ 1.5
-		offset -= (sideVelocity.Unit + Vector3.yAxis * self.Vehicle.WeightPart.CFrame.LookVector.Y) * distance
-	elseif self.Vehicle.Gear == -1 then
-		offset += self.Vehicle.WeightPart.CFrame.LookVector * distance
-	else
-		offset -= self.Vehicle.WeightPart.CFrame.LookVector * distance
-	end
+	-- Springs
+	local positionSpring = Vector3Spring.new(30, 200, 1000)
+	local rotationSpring = positionSpring:Clone()
 
-	local bumping = Vector3.yAxis
-		* math.clamp(self.Vehicle.Acceleration.Y, -40, 40)
-		* 0.07
-	self.Bumping = self.Bumping:Lerp(bumping, deltaTime * 4)
+	local acceleration = Vector3.zero
+	local angularVelocity = Vector3.zero
+	local freeRotation = Vector3.zero
 
-	local accelForce = math.min(self.Vehicle.Acceleration.Magnitude, 60) * 0.03
-	if accelForce > 0 then
-		offset -= accelForce * self.Vehicle.Acceleration.Unit
-	end
+	-- Free look
+	self.trove:Connect(
+		UserInputService.InputChanged,
+		function(input: InputObject)
+			if
+				InputController.CameraMode ~= "ThirdPerson"
+				or input.UserInputType ~= Enum.UserInputType.MouseMovement
+				or not (
+					(
+						input:IsModifierKeyDown(Enum.ModifierKey.Alt)
+						and InputController.IsMouseSteerOn
+					)
+					or (
+						UserInputService:IsMouseButtonPressed(
+							Enum.UserInputType.MouseButton2
+						) and not InputController.IsMouseSteerOn
+					)
+				)
+			then
+				return
+			end
 
-	angles += Vector3.yAxis * self.Vehicle.AngularVelocity.Y * 0.07
-	if self.Vehicle.AngularVelocity.Magnitude > 0 then
-		angles += Vector3.new(1, 0, 1) * self.Vehicle.AngularVelocity.Unit * math.clamp(
-			self.Vehicle.AngularVelocity.Magnitude,
-			-2,
-			2
-		) * 0.1
-	end
+			freeRotation += Vector3.new(
+				math.rad(input.Delta.Y),
+				math.rad(input.Delta.X)
+			)
+			freeRotation = Vector3.new(
+				math.clamp(freeRotation.X, -math.rad(30), math.rad(30)),
+				freeRotation.Y,
+				freeRotation.Z
+			)
+		end
+	)
 
-	self.Offset = self.Offset:Lerp(offset, deltaTime * 3)
-	self.LookOffset = self.LookOffset:Lerp(lookOffset, deltaTime * 3)
-	self.Angles = self.Angles:Lerp(angles, deltaTime * 4)
-
-	if
-		self.Vehicle.Velocity.Magnitude > 10
-		and tick() - self.lastCameraRotation > 2
-	then
-		self.CameraCFrame = self.CameraCFrame:Lerp(CFrame.new(), deltaTime * 2)
-	end
-
-	local cameraDirection
-	if self.Offset.Magnitude > 0 then
-		cameraDirection = self.Vehicle.WeightPart.CFrame:VectorToWorldSpace(
-			self.CameraCFrame:VectorToWorldSpace(
-				self.Vehicle.WeightPart.CFrame:VectorToObjectSpace(
-					self.Offset.Unit
+	-- Free look resetting handler
+	local lastFreeLook = 0
+	local resetDebounce = false
+	self.trove:Connect(UserInputService.InputEnded, function(input: InputObject)
+		if
+			InputController.CameraMode ~= "ThirdPerson"
+			or resetDebounce
+			or not (
+				(
+					input.UserInputType == Enum.UserInputType.Keyboard
+					and input.KeyCode == Enum.KeyCode.LeftAlt
+					and InputController.IsMouseSteerOn
+				)
+				or (
+					input.UserInputType == Enum.UserInputType.MouseButton2
+					and not InputController.IsMouseSteerOn
 				)
 			)
+		then
+			return
+		end
+
+		if tick() - lastFreeLook < 0.2 then
+			resetDebounce = true
+
+			local alpha = 1
+			task.defer(function()
+				while alpha > 0 do
+					local deltaTime = RunService.Heartbeat:Wait()
+					alpha = math.max(alpha - deltaTime, 0)
+					freeRotation *= alpha
+				end
+				resetDebounce = false
+				lastFreeLook = 0
+			end)
+		else
+			lastFreeLook = tick()
+		end
+	end)
+
+	-- Reset free look on camera mode change
+	self.trove:Add(
+		InputController.CameraModeChanged:Connect(
+			function() freeRotation = Vector3.zero end
 		)
-	else
-		cameraDirection = Vector3.zero
-	end
-	local rotatedOffset = self.Offset.Magnitude * cameraDirection
+	)
 
-	local right = self.Vehicle.WeightPart.CFrame.RightVector:Dot(rotatedOffset)
-	if math.abs(right) < 0.2 then right = 1 end
+	self.trove:BindToRenderStep(
+		"TPVUpdate",
+		Enum.RenderPriority.Camera.Value - 1,
+		function(deltaTime)
+			if InputController.CameraMode ~= "ThirdPerson" then return end
 
-	local sideOffset = math.sign(right)
-		* self.Vehicle.WeightPart.CFrame.RightVector
-		* distance
-		* 0.5
-		* math.clamp(
-			MathUtil.Map(1 - (self.Offset.Magnitude / distance) ^ 2, 0.2, 1),
-			0,
-			1
-		)
+			local WPCFrame = self.Vehicle.WeightPart.CFrame
 
-	Camera.FieldOfView = FOV + sideVelocity.Magnitude / 20
+			acceleration = acceleration:Lerp(
+				WPCFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
+				deltaTime * 20
+			)
+			angularVelocity = angularVelocity:Lerp(
+				WPCFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
+				deltaTime * 20
+			)
 
-	Camera.CFrame = CFrame.lookAt(
-		self.Vehicle.WeightPart.Position
-			+ rotatedOffset
-			+ self.Bumping
-			+ heightOffset
-			+ sideOffset,
-		self.Vehicle.WeightPart.Position + self.LookOffset + self.Bumping,
-		self.Vehicle.Center.UpVector
-	) * CFrame.Angles(self.Angles.X, self.Angles.Y, self.Angles.Z)
+			-- Calculate look direction
+			local direction = WPCFrame.LookVector
+			if self.Vehicle.Velocity.Magnitude > 0 then
+				direction = direction:Lerp(
+					self.Vehicle.Velocity.Unit,
+					math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
+						* self.Vehicle.WeightPart.CFrame.LookVector:Dot(
+							self.Vehicle.Velocity.Unit
+						)
+						* 0.8
+				)
+			end
+			direction = CFrame.fromOrientation(
+				freeRotation.X,
+				-freeRotation.Y,
+				freeRotation.Z
+			)
+				:VectorToWorldSpace(direction)
+
+			-- Apply acceleration
+			positionSpring.Offset += acceleration * 0.025 * deltaTime
+
+			-- Apply angular velocity
+			rotationSpring.Offset += angularVelocity * 0.5 * deltaTime
+
+			-- Update springs
+			positionSpring:Update(deltaTime)
+			rotationSpring:Update(deltaTime)
+
+			-- Update camera
+			local springOffset = WPCFrame:VectorToWorldSpace(
+				positionSpring.Offset * Vector3.new(2, 2, 4)
+			)
+			local rot = -rotationSpring.Offset * Vector3.new(1, 0.3, 1) * 3
+			Camera.CFrame = CFrame.lookAt(
+				WPCFrame.Position
+					- direction.Unit * distance
+					+ WPCFrame.UpVector * 6
+					- springOffset,
+				WPCFrame.Position + WPCFrame.UpVector * 4 - springOffset,
+				WPCFrame.UpVector
+			) * CFrame.fromOrientation(rot.X, rot.Y, rot.Z)
+			Camera.FieldOfView = FOV + acceleration.Z * 0.05
+
+			-- Update blur
+			local multiplier = (self.Vehicle.Acceleration.Magnitude / 700) ^ 2
+			local intensity = 20
+
+			self.blur.Size = math.max(self.blur.Size, multiplier * intensity)
+			self.blur.Size -= 0.5 * intensity * deltaTime
+			self.blur.Size = math.clamp(self.blur.Size, 0, intensity)
+		end
+	)
+end
+
+function CameraController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == CameraController
 end
 
 function CameraController.Destroy(self: CameraControllerImpl)
 	self.trove:Destroy()
 end
 
-return table.freeze({ new = CameraController.new })
+return table.freeze({
+	new = CameraController.new,
+	Is = CameraController.Is,
+})
