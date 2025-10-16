@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
@@ -226,14 +227,15 @@ function InitializeTorso(self: BodyControllerImpl)
 		positionSpring.Offset += acceleration * 0.025 * deltaTime
 
 		-- Apply angular velocity
-		rotationSpring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * 0.7 * deltaTime
+		rotationSpring.Offset += angularVelocity * 0.5 * deltaTime
 
 		-- Update springs
 		positionSpring:Update(deltaTime)
 		rotationSpring:Update(deltaTime)
 
 		-- Apply transforms
-		local rot = rotationOffset - rotationSpring.Offset
+		local rot = rotationOffset
+			- rotationSpring.Offset * Vector3.new(1, 0.5, 1)
 		targetAttach.CFrame = CFrame.fromOrientation(rot.X, rot.Y, rot.Z)
 			:ToWorldSpace(CFrame.new(positionOffset - positionSpring.Offset))
 	end)
@@ -247,6 +249,7 @@ function InitializeNeck(self: BodyControllerImpl)
 	local upperTorso =
 		self.Player.Character:FindFirstChild("UpperTorso") :: BasePart
 	local rootPart = humanoid.RootPart
+	local InputController = self.Vehicle.InputController
 
 	local IKControl = self.IKControls.Head
 	local targetAttach = IKControl.Target :: Attachment
@@ -259,6 +262,88 @@ function InitializeNeck(self: BodyControllerImpl)
 
 	local acceleration = Vector3.zero
 	local angularVelocity = Vector3.zero
+	local freeRotation = Vector3.zero
+
+	-- Free look
+	self.trove:Connect(
+		UserInputService.InputChanged,
+		function(input: InputObject)
+			if
+				InputController.CameraMode ~= "FirstPerson"
+				or input.UserInputType ~= Enum.UserInputType.MouseMovement
+				or not (
+					(
+						input:IsModifierKeyDown(Enum.ModifierKey.Alt)
+						and InputController.IsMouseSteerOn
+					)
+					or (
+						UserInputService:IsMouseButtonPressed(
+							Enum.UserInputType.MouseButton2
+						) and not InputController.IsMouseSteerOn
+					)
+				)
+			then
+				return
+			end
+
+			freeRotation += Vector3.new(
+				math.rad(input.Delta.Y),
+				math.rad(input.Delta.X)
+			)
+			freeRotation = Vector3.new(
+				math.clamp(freeRotation.X, -math.rad(10), math.rad(10)),
+				math.clamp(freeRotation.Y, -math.rad(30), math.rad(30)),
+				freeRotation.Z
+			)
+		end
+	)
+
+	-- Free look resetting handler
+	local lastFreeLook = 0
+	local resetDebounce = false
+	self.trove:Connect(UserInputService.InputEnded, function(input: InputObject)
+		if
+			InputController.CameraMode ~= "FirstPerson"
+			or resetDebounce
+			or not (
+				(
+					input.UserInputType == Enum.UserInputType.Keyboard
+					and input.KeyCode == Enum.KeyCode.LeftAlt
+					and InputController.IsMouseSteerOn
+				)
+				or (
+					input.UserInputType == Enum.UserInputType.MouseButton2
+					and not InputController.IsMouseSteerOn
+				)
+			)
+		then
+			return
+		end
+
+		if tick() - lastFreeLook < 0.2 then
+			resetDebounce = true
+
+			local alpha = 1
+			task.defer(function()
+				while alpha > 0 do
+					local deltaTime = RunService.Heartbeat:Wait()
+					alpha = math.max(alpha - deltaTime, 0)
+					freeRotation *= alpha
+				end
+				resetDebounce = false
+				lastFreeLook = 0
+			end)
+		else
+			lastFreeLook = tick()
+		end
+	end)
+
+	-- Reset free look on camera mode change
+	self.trove:Add(
+		InputController.CameraModeChanged:Connect(
+			function() freeRotation = Vector3.zero end
+		)
+	)
 
 	self.trove:Connect(RunService.PreSimulation, function(deltaTime: number)
 		acceleration = acceleration:Lerp(
@@ -282,6 +367,12 @@ function InitializeNeck(self: BodyControllerImpl)
 					* 0.2
 			)
 		end
+		direction = CFrame.fromOrientation(
+			freeRotation.X,
+			-freeRotation.Y,
+			freeRotation.Z
+		)
+			:VectorToWorldSpace(direction)
 
 		-- Apply acceleration
 		spring.Offset += Vector3.new(
@@ -291,7 +382,7 @@ function InitializeNeck(self: BodyControllerImpl)
 		) * 0.025 * deltaTime
 
 		-- Apply angular velocity
-		spring.Offset += angularVelocity * Vector3.new(1, 0, 1) * 2 * deltaTime
+		spring.Offset += angularVelocity * Vector3.new(1, 0, 1) * 1 * deltaTime
 
 		spring:Update(deltaTime)
 
