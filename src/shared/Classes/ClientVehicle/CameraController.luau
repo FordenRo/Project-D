@@ -61,7 +61,7 @@ function CameraController.new(
 	FirstPersonHandler(self)
 	ThirdPersonHandler(self)
 
-	local isCharacterVisible = false
+	local isCharacterVisible = true
 	self.trove:Add(
 		self.Vehicle.InputController.CameraModeChanged:Connect(function(mode)
 			Camera.FieldOfView = mode == "FirstPerson" and FOV * 1.2 or FOV
