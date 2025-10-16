@@ -22,7 +22,7 @@ local player = Players.LocalPlayer
 local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
 
-local InputController = {}
+local InputController = { set = {} }
 Component.Extend(InputController)
 
 type InputController = VehicleTypes.InputController
@@ -68,12 +68,6 @@ function InputController.new(
 
 	InitializeConnections(self)
 
-	-- CameraModeChanged signal impl
-	self.trove:Connect(
-		self:GetPropertyChangedSignal("CameraMode"),
-		function() self.CameraModeChanged:Fire(self.CameraMode) end
-	)
-
 	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime) Update(self, deltaTime) end
@@ -97,6 +91,11 @@ function InputController.new(
 	end)
 
 	return self
+end
+
+function InputController.set.CameraMode(self: InputControllerImpl, mode: string)
+	self:RawSet("CameraMode", mode)
+	self.CameraModeChanged:Fire(mode :: any)
 end
 
 function Update(self: InputControllerImpl, deltaTime: number)

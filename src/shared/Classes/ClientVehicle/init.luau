@@ -101,6 +101,16 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	return self
 end
 
+function ClientVehicle.set.IsSitting(self: ClientVehicle, sitting: boolean)
+	self:RawSet("IsSitting", sitting)
+	self.SittingChanged:FireDeferred()
+end
+
+function ClientVehicle.set.Driver(self: ClientVehicleImpl, driver: Player?)
+	self:RawSet("Driver", driver)
+	self.DriverChanged:FireDeferred(driver)
+end
+
 function Seated(
 	self: ClientVehicleImpl,
 	seatedPlayer: Player,
@@ -108,7 +118,6 @@ function Seated(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = seatedPlayer
-		self.DriverChanged:FireDeferred(seatedPlayer)
 	else
 		self.Passengers[seat] = seatedPlayer
 	end
@@ -117,7 +126,6 @@ function Seated(
 	if seatedPlayer ~= player then return end
 	togglePrompts(self, false)
 	self.IsSitting = true
-	self.SittingChanged:FireDeferred()
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = true
@@ -134,7 +142,6 @@ function Leaved(
 )
 	if seat :: any == self.Instance.DriveSeat then
 		self.Driver = nil
-		self.DriverChanged:FireDeferred(nil)
 	else
 		self.Passengers[seat] = nil
 	end
@@ -143,7 +150,6 @@ function Leaved(
 	if leavedPlayer ~= player then return end
 	togglePrompts(self, true)
 	self.IsSitting = false
-	self.SittingChanged:FireDeferred()
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
 	self.IsDriven = false
