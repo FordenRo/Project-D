@@ -213,6 +213,7 @@ export type Engine = {
 	Destroy: (self: Engine) -> (),
 } & EngineTable
 
+type CameraMode = "FirstPerson" | "ThirdPerson"
 export type InputController = {
 	Vehicle: ClientVehicle,
 	--- Current mouse position in mouse steering mode
@@ -220,10 +221,13 @@ export type InputController = {
 	--- Is mouse steering mode enabled
 	IsMouseSteerOn: boolean,
 	--- Current camera mode
-	CameraMode: "FirstPerson" | "ThirdPerson",
+	CameraMode: CameraMode,
+
+	--- Fires when camera mode is changed
+	CameraModeChanged: Signal.Signal<CameraMode>,
 
 	Destroy: (self: InputController) -> (),
-}
+} & Component.Component
 
 export type EngineTable = {
 	Health: number,

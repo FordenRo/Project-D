@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local LightController = require(
 	ReplicatedStorage.Shared.Classes.ClientVehicle.Controllers.LightController
 )
@@ -12,6 +13,7 @@ local PlayerModule =
 	require((Players.LocalPlayer.PlayerScripts :: any).PlayerModule) :: any
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -21,7 +23,7 @@ local mouse = player:GetMouse()
 local Context = ReplicatedStorage.Input.Vehicle
 
 local InputController = {}
-InputController.__index = InputController
+Component.Extend(InputController)
 
 type InputController = VehicleTypes.InputController
 
@@ -37,7 +39,7 @@ type InputControllerImpl = {
 function InputController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): InputController
-	local self: InputControllerImpl = setmetatable({}, InputController) :: any
+	local self: InputControllerImpl = Component.new() :: any
 
 	self.Vehicle = vehicle
 
@@ -46,10 +48,16 @@ function InputController.new(
 	self.rawClutch = 0
 	self.rawSteering = 0
 	self.ignitionNext = false
+	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Vehicle.Instance)
 
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.IsMouseSteerOn = false
+	self.CameraMode = "ThirdPerson"
+	self.CameraModeChanged = Signal.new()
+
+	setmetatable(self, InputController)
 
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
@@ -58,20 +66,25 @@ function InputController.new(
 
 	PlayerModule:GetControls():GetActiveController().jumpEnabled = false
 
-	self.trove = Trove.new()
-	self.trove:AttachToInstance(self.Vehicle.Instance)
-
 	InitializeConnections(self)
+
+	-- CameraModeChanged signal impl
+	self.trove:Connect(
+		self:GetPropertyChangedSignal("CameraMode"),
+		function() self.CameraModeChanged:Fire(self.CameraMode) end
+	)
 
 	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime) Update(self, deltaTime) end
 	)
+
 	self.trove:BindToRenderStep(
 		"MouseSteerUpdate",
 		Enum.RenderPriority.Camera.Value - 2,
 		function() UpdateMouseInput(self) end
 	)
+
 	self.trove:Add(function()
 		Context.Enabled = false
 
