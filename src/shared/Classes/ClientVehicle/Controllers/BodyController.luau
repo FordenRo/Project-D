@@ -42,13 +42,13 @@ function Initialize(self: BodyControllerImpl, player: Player)
 	self.Player = player
 
 	InitializeIKControls(self)
-	InitializeTorso(self)
-	InitializeNeck(self)
-	InitializeGearLever(self)
-	InitializeSteeringWheel(self)
-	InitializeHandbrake(self)
-	InitializePedals(self)
-	InitializeIgnition(self)
+	TorsoHandler(self)
+	NeckHandler(self)
+	GearLeverHandler(self)
+	SteeringWheelHandler(self)
+	HandbrakeHandler(self)
+	PedalsHandler(self)
+	IgnitionHandler(self)
 end
 
 function InitializeIKControls(self: BodyControllerImpl)
@@ -186,7 +186,7 @@ function InitializeIKControls(self: BodyControllerImpl)
 	end
 end
 
-function InitializeTorso(self: BodyControllerImpl)
+function TorsoHandler(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -241,7 +241,7 @@ function InitializeTorso(self: BodyControllerImpl)
 	end)
 end
 
-function InitializeNeck(self: BodyControllerImpl)
+function NeckHandler(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -403,7 +403,7 @@ function InitializeNeck(self: BodyControllerImpl)
 	end)
 end
 
-function InitializeSteeringWheel(self: BodyControllerImpl)
+function SteeringWheelHandler(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local rightIK = self.IKControls.RightHandWheel
@@ -433,7 +433,7 @@ function InitializeSteeringWheel(self: BodyControllerImpl)
 	leftIK.Weight = 1
 end
 
-function InitializeHandbrake(self: BodyControllerImpl)
+function HandbrakeHandler(self: BodyControllerImpl)
 	local IKControl = self.IKControls.Handbrake
 	if not IKControl then return end
 
@@ -452,7 +452,7 @@ function InitializeHandbrake(self: BodyControllerImpl)
 	)
 end
 
-function InitializeGearLever(self: BodyControllerImpl)
+function GearLeverHandler(self: BodyControllerImpl)
 	local IKControl = self.IKControls.GearLever
 	if not IKControl then return end
 
@@ -485,7 +485,7 @@ function InitializeGearLever(self: BodyControllerImpl)
 	end)
 end
 
-function InitializePedals(self: BodyControllerImpl)
+function PedalsHandler(self: BodyControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local throttleIK = self.IKControls.Throttle
@@ -524,7 +524,7 @@ function InitializePedals(self: BodyControllerImpl)
 	end)
 end
 
-function InitializeIgnition(self: BodyControllerImpl)
+function IgnitionHandler(self: BodyControllerImpl)
 	local IKControl = self.IKControls.Ignition
 
 	local thread
