@@ -43,7 +43,6 @@ export type BaseVehicle = {
 		Misc: Model,
 	},
 	Engine: EngineTable,
-	Wheels: { BaseWheel },
 	Tune: TuneType.Tune,
 	Driver: Player?,
 	Passengers: { [VehicleSeat | Seat]: Player },
@@ -87,7 +86,6 @@ export type BaseVehicle = {
 	--- Current ignition state
 	IgnitionState: IgnitionState,
 
-	InitializeWheels: (self: BaseVehicle, wheelClass: BaseWheel) -> (),
 	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
 } & Component.Component
 
@@ -146,6 +144,7 @@ export type ClientVehicle = {
 	Meshes: { [MeshPart]: EditableMesh },
 	Textures: { [MeshPart]: EditableImage },
 	Acceleration: Vector3,
+	Wheels: { ClientWheel },
 
 	-- Events
 	--- Fires on Vehicle.Driver change
@@ -168,10 +167,7 @@ export type ClientVehicle = {
 	PBrakeForce: { Front: number, Rear: number },
 	Engine: Engine,
 	Interface: VehicleInterface,
-	-- Velocity
-	_OldVelocity: Vector3,
 
-	InitializeWheels: (self: ClientVehicle) -> (),
 	--- Send packet from to given controller of other clients
 	SendData: (
 		self: ClientVehicle,
@@ -248,7 +244,7 @@ export type EngineTable = {
 }
 
 export type ServerVehicle = {
-	InitializeWheels: (self: ServerVehicle) -> (),
+	Wheels: { ServerWheel },
 } & BaseVehicle
 
 export type BaseWheel = {

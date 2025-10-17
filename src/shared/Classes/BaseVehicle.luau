@@ -46,9 +46,7 @@ function InitializeVariables(self: BaseVehicle)
 	self.Fuel = self.Tune.FuelCapacity
 	self.FanSpeed = 0
 	self.Dirt = 0
-	self.Wheels = {}
 	self.Horning = false
-	self.WeightPart = self.Instance.Body.WeightPart
 	self.Mileage = 0
 	-- Transmission
 	self.Clutch = 0
@@ -76,22 +74,13 @@ function InitializeVariables(self: BaseVehicle)
 	self.CS = self.Tune.CSEnabled
 	self.CSActive = false
 	self.IgnitionState = "Off"
-end
 
-function BaseVehicle.InitializeWheels(
-	self: BaseVehicle,
-	wheelClass: {
-		new: (BaseVehicle, BasePart) -> VehicleTypes.BaseWheel,
-	}
-)
-	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
-	for _, v in self.Instance.Wheels:GetChildren() do
-		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
-			continue
+	task.defer(
+		function()
+			self.WeightPart =
+				self.Instance.Body:WaitForChild("WeightPart") :: Part
 		end
-
-		table.insert(self.Wheels, wheelClass.new(self, v))
-	end
+	)
 end
 
 function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)

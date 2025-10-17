@@ -24,6 +24,8 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 	local self: ServerVehicle =
 		setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
+	self.Wheels = {}
+
 	Initialize(self)
 
 	local trove = Trove.new()
@@ -53,7 +55,7 @@ end
 function Initialize(self: ServerVehicle)
 	RemoveMassAndForces(self)
 	MakeCollider(self)
-	self:InitializeWheels()
+	InitializeWheels(self)
 	InitializeBody(self)
 	ApplyWeight(self)
 	MakeGravity(self)
@@ -118,8 +120,15 @@ function MakeCollider(self: ServerVehicle)
 	end
 end
 
-function ServerVehicle.InitializeWheels(self: ServerVehicle)
-	BaseVehicle.InitializeWheels(self, Wheel)
+function InitializeWheels(self: ServerVehicle)
+	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
+	for _, v in self.Instance.Wheels:GetChildren() do
+		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
+			continue
+		end
+
+		table.insert(self.Wheels, Wheel.new(self, v))
+	end
 end
 
 function InitializeControllersReplication(self: ServerVehicle)

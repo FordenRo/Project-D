@@ -32,6 +32,7 @@ BaseVehicle.Extend(ClientVehicle)
 type ClientVehicle = VehicleTypes.ClientVehicle
 
 type ClientVehicleImpl = {
+	lastVelocity: Vector3,
 	controllers: {
 		{
 			Name: string,
@@ -49,6 +50,29 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.MeshParts = {}
 	self.Meshes = {}
 	self.Textures = {}
+	self.Wheels = {}
+
+	self.BrakeForce = {
+		Front = self.Tune.BrakeForce
+			* 9.80665
+			* Units.Force_N
+			* self.Tune.BrakeBias,
+		Rear = self.Tune.BrakeForce
+			* 9.80665
+			* Units.Force_N
+			* (1 - self.Tune.BrakeBias),
+	}
+	self.PBrakeForce = {
+		Front = self.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+			* self.Tune.PBrakeBias,
+		Rear = self.Tune.PBrakeForce
+			* 9.80665
+			* Units.Force_N
+			* (1 - self.Tune.PBrakeBias),
+	}
+	self.lastVelocity = Vector3.new()
 
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
@@ -59,7 +83,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.PlayerSeated = trove:Construct(Signal)
 	self.PlayerLeaved = trove:Construct(Signal)
 
-	InitializeVariables(self)
 	InitializeSeats(self)
 	InitializeBody(self)
 
@@ -67,7 +90,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	self.Engine = Engine.new(self)
 	self.Transmission = Transmission.new(self)
-	self:InitializeWheels()
+	InitializeWheels(self)
 
 	self.SoundController = SoundController.new(self)
 	self.DeformationController = DeformationController.new(self)
@@ -258,32 +281,15 @@ function InitializeSeats(self: ClientVehicleImpl)
 	end
 end
 
-function InitializeVariables(self: ClientVehicleImpl)
-	self.BrakeForce = {
-		Front = self.Tune.BrakeForce
-			* 9.80665
-			* Units.Force_N
-			* self.Tune.BrakeBias,
-		Rear = self.Tune.BrakeForce
-			* 9.80665
-			* Units.Force_N
-			* (1 - self.Tune.BrakeBias),
-	}
-	self.PBrakeForce = {
-		Front = self.Tune.PBrakeForce
-			* 9.80665
-			* Units.Force_N
-			* self.Tune.PBrakeBias,
-		Rear = self.Tune.PBrakeForce
-			* 9.80665
-			* Units.Force_N
-			* (1 - self.Tune.PBrakeBias),
-	}
-	self._OldVelocity = Vector3.new()
-end
+function InitializeWheels(self: ClientVehicleImpl)
+	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
+	for _, v in self.Instance.Wheels:GetChildren() do
+		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
+			continue
+		end
 
-function ClientVehicle.InitializeWheels(self: ClientVehicleImpl)
-	BaseVehicle.InitializeWheels(self, Wheel)
+		table.insert(self.Wheels, Wheel.new(self, v))
+	end
 end
 
 function InitializeControllers(self: ClientVehicleImpl)
@@ -372,8 +378,8 @@ end
 
 function Update(self: ClientVehicleImpl, deltaTime: number)
 	deltaTime = math.max(deltaTime, 0.001)
-	self.Acceleration = (self.Velocity - self._OldVelocity) * (1 / deltaTime)
-	self._OldVelocity = self.Velocity
+	self.Acceleration = (self.Velocity - self.lastVelocity) * (1 / deltaTime)
+	self.lastVelocity = self.Velocity
 
 	if not self.IsDriven then return end
 
