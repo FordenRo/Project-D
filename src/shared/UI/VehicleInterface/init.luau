@@ -57,6 +57,7 @@ function VehicleInterface.new(
 	self.Vehicle = vehicle
 
 	self.Instance = UI:Clone() :: any
+	self.Instance.Enabled = false
 	self.Instance.Parent = player.PlayerGui
 
 	self.Speedometer = Speedometer.new(vehicle, self.Instance.Speedometer)
@@ -85,6 +86,8 @@ function VehicleInterface.new(
 	)
 	trove:Add(function() UserInputService.MouseIconEnabled = true end)
 	trove:AttachToInstance(self.Instance)
+
+	self.Instance.Enabled = true
 
 	return self
 end
