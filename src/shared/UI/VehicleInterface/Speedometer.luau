@@ -2,6 +2,9 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local LightController = require(
+	ReplicatedStorage.Shared.Classes.ClientVehicle.Controllers.LightController
+)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -22,6 +25,14 @@ type SpeedometerImpl = {
 		}
 	},
 	trove: Trove.Trove,
+	icons: {
+		[ImageLabel]: {
+			Condition: () -> boolean,
+			Color: (Color3 | (boolean) -> Color3)?,
+		},
+	},
+	enabled: boolean,
+	glowing: boolean,
 } & Speedometer
 
 function Speedometer.new(
@@ -33,6 +44,8 @@ function Speedometer.new(
 	self.Vehicle = vehicle
 	self.Instance = instance
 	self.currentUnit = 1
+	self.enabled = false
+	self.glowing = false
 	self.units = {
 		{
 			Unit = "KM",
@@ -83,13 +96,22 @@ function Speedometer.new(
 	end
 
 	TachInit(self)
+	InitializeIcons(self)
 
 	self.trove = Trove.new()
 	self.trove:Connect(RunService.Heartbeat, function() Update(self) end)
 	self.trove:Add(task.defer(function()
 		while true do
-			task.wait(1 / 10)
-			SlowUpdate(self)
+			task.wait(1 / 30)
+			SpeedUpdate(self)
+		end
+	end))
+	self.trove:Add(task.defer(function()
+		while true do
+			task.wait(1)
+			MileageUpdate(self)
+			FuelUpdate(self)
+			TempUpdate(self)
 		end
 	end))
 	self.trove:AttachToInstance(instance)
@@ -98,18 +120,13 @@ function Speedometer.new(
 end
 
 function Update(self: SpeedometerImpl)
-	SpeedUpdate(self)
+	self.enabled = self.Vehicle.IgnitionState == "On"
+		or self.Vehicle.IgnitionState == "Starting"
+	self.glowing = self.enabled and not self.Vehicle.Engine.IsOn
+
 	GearUpdate(self)
 	TachUpdate(self)
-	ABSUpdate(self)
 	BoostUpdate(self)
-	TSCUpdate(self)
-end
-
-function SlowUpdate(self: SpeedometerImpl)
-	MileageUpdate(self)
-	FuelUpdate(self)
-	TempUpdate(self)
 	UpdateIcons(self)
 end
 
@@ -293,114 +310,98 @@ function TempUpdate(self: SpeedometerImpl)
 	end
 end
 
+function InitializeIcons(self: SpeedometerImpl)
+	local lightController =
+		self.Vehicle:GetController("LightController") :: LightController.LightController
+
+	self.icons = {
+		[self.Instance.PBrake] = {
+			Condition = function() return self.Vehicle.PBrake end,
+			Color = Color3.new(1, 0, 0),
+		},
+		[self.Instance.Battery] = {
+			Condition = function() return not self.Vehicle.Engine.IsOn end,
+			Color = Color3.new(1, 0, 0),
+		},
+		[self.Instance.Check] = {
+			Condition = function()
+				return (self.Vehicle.Engine.Health :: number) < 0.3
+			end,
+			Color = function(state)
+				return state
+						and (self.Vehicle.Engine.Health == 0 and Color3.new(
+							1,
+							0,
+							0
+						) or Color3.new(1, 0.5, 0))
+					or Color3.new()
+			end,
+		},
+		[self.Instance.LowBeam] = {
+			Condition = function() return lightController.State == "Low" end,
+			Color = Color3.new(0, 1, 0),
+		},
+		[self.Instance.HighBeam] = {
+			Condition = function() return lightController.State == "High" end,
+		},
+		[self.Instance.RTurn] = {
+			Condition = function()
+				return (
+					lightController.TurnState == "Right"
+					or lightController.TurnState == "Both"
+				) and math.round(tick() * 2) % 2 == 0
+			end,
+			Color = Color3.new(0.2, 1, 0.2),
+		},
+		[self.Instance.LTurn] = {
+			Condition = function()
+				return (
+					lightController.TurnState == "Left"
+					or lightController.TurnState == "Both"
+				) and math.round(tick() * 2) % 2 == 0
+			end,
+			Color = Color3.new(0.2, 1, 0.2),
+		},
+		[self.Instance.ABS] = {
+			Condition = function()
+				return not self.Vehicle.ABS or self.Vehicle.ABSActive
+			end,
+			Color = function(state)
+				return state
+						and ((not self.Vehicle.ABS or self.glowing) and Color3.new(
+							1,
+							0,
+							0
+						) or Color3.new(1, 1, 1))
+					or Color3.new()
+			end,
+		},
+		[self.Instance.TCS] = {
+			Condition = function()
+				return not self.Vehicle.TCS or self.Vehicle.TCSActive
+			end,
+			Color = function(state)
+				return state
+						and ((not self.Vehicle.TCS or self.glowing) and Color3.new(
+							1,
+							0,
+							0
+						) or Color3.new(1, 1, 1))
+					or Color3.new()
+			end,
+		},
+	}
+end
+
 function UpdateIcons(self: SpeedometerImpl)
-	-- PBrake
-	self.Instance.PBrake.ImageColor3 = (
-		self.Vehicle.PBrake or self.Vehicle.IgnitionState == "Starting"
-	)
-			and Color3.new(1, 1, 1)
-		or Color3.new()
-	self.Instance.PBrake.ImageTransparency = (
-		self.Vehicle.PBrake or self.Vehicle.IgnitionState == "Starting"
-	)
-			and 0.2
-		or 0.8
+	for instance, config in self.icons do
+		local condition = (config.Condition() or self.glowing) and self.enabled
+		instance.ImageTransparency = condition and 0.2 or 0.8
 
-	-- Battery
-	self.Instance.Battery.ImageColor3 = (
-		not self.Vehicle.Engine.IsOn
-		or self.Vehicle.IgnitionState == "Starting"
-	)
-			and Color3.new(1, 0, 0)
-		or Color3.new()
-	self.Instance.Battery.ImageTransparency = (
-		not self.Vehicle.Engine.IsOn
-		or self.Vehicle.IgnitionState == "Starting"
-	)
-			and 0.2
-		or 0.8
-
-	-- Check
-	self.Instance.Check.ImageColor3 = (
-		self.Vehicle.IgnitionState == "Starting"
-		or self.Vehicle.Engine.Health == 0
-	)
-			and Color3.new(1, 0, 0)
-		or self.Vehicle.Engine.Health < 0.3 and Color3.new(1, 0.5, 0)
-		or Color3.new()
-	self.Instance.Check.ImageTransparency = (
-		self.Vehicle.IgnitionState == "Starting"
-		or (self.Vehicle.Engine.Health :: number) < 0.3
-	)
-			and 0.2
-		or 0.8
-
-	-- Lights
-	-- Low beam
-	self.Instance.LowBeam.ImageColor3 = self.Vehicle.IgnitionState == "Starting"
-			and Color3.new(1, 0, 0)
-		or self.Vehicle.Lights.State == "Low" and Color3.new(0, 1, 0)
-		or Color3.new()
-	self.Instance.LowBeam.ImageTransparency = (
-		self.Vehicle.IgnitionState == "Starting"
-		or self.Vehicle.Lights.State == "Low"
-	)
-			and 0.2
-		or 0.8
-	self.Instance.LowBeam.Visible = self.Vehicle.Lights.State ~= "High"
-	-- High beam
-	self.Instance.HighBeam.Visible = self.Vehicle.Lights.State == "High"
-
-	-- Turn signals
-	-- Right
-	local rTurn = self.Vehicle.IgnitionState == "Starting"
-		or (
-				self.Vehicle.Lights.TurnState == "Right"
-				or self.Vehicle.Lights.TurnState == "Both"
-			)
-			and math.round(tick() * 2) % 2 == 0
-	self.Instance.RTurn.ImageColor3 = rTurn and Color3.new(0.2, 1, 0.2)
-		or Color3.new()
-	self.Instance.RTurn.ImageTransparency = rTurn and 0.2 or 0.8
-
-	-- Left
-	local lTurn = self.Vehicle.IgnitionState == "Starting"
-		or (
-				self.Vehicle.Lights.TurnState == "Left"
-				or self.Vehicle.Lights.TurnState == "Both"
-			)
-			and math.round(tick() * 2) % 2 == 0
-	self.Instance.LTurn.ImageColor3 = lTurn and Color3.new(0.2, 1, 0.2)
-		or Color3.new()
-	self.Instance.LTurn.ImageTransparency = lTurn and 0.2 or 0.8
-end
-
-function ABSUpdate(self: SpeedometerImpl)
-	if self.Vehicle.IgnitionState == "Starting" or not self.Vehicle.ABS then
-		self.Instance.ABS.ImageColor3 = Color3.new(1, 0, 0)
-		self.Instance.ABS.ImageTransparency = 0.2
-	else
-		if self.Vehicle.ABSActive then
-			self.Instance.ABS.ImageColor3 = Color3.new(1, 1, 1)
-			self.Instance.ABS.ImageTransparency = 0.2
-		else
-			self.Instance.ABS.ImageColor3 = Color3.new()
-			self.Instance.ABS.ImageTransparency = 0.8
-		end
-	end
-end
-
-function TSCUpdate(self: SpeedometerImpl)
-	if self.Vehicle.IgnitionState == "Starting" or not self.Vehicle.TCS then
-		self.Instance.TCS.ImageColor3 = Color3.new(1, 0, 0)
-		self.Instance.TCS.ImageTransparency = 0.2
-	else
-		if self.Vehicle.TCSActive then
-			self.Instance.TCS.ImageColor3 = Color3.new(1, 1, 1)
-			self.Instance.TCS.ImageTransparency = 0.2
-		else
-			self.Instance.TCS.ImageColor3 = Color3.new()
-			self.Instance.TCS.ImageTransparency = 0.8
+		if typeof(config.Color) == "function" then
+			instance.ImageColor3 = config.Color(condition)
+		elseif typeof(config.Color) == "Color3" then
+			instance.ImageColor3 = condition and config.Color or Color3.new()
 		end
 	end
 end
