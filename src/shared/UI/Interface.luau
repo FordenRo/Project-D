@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
@@ -11,35 +12,47 @@ local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 local ScreenGui = ReplicatedStorage.UI.Interface
 local player = Players.LocalPlayer
 
-local Interface = {}
-Interface.__index = Interface
+local Interface = { set = {} }
+Component.Extend(Interface)
 
 type Interface = UITypes.Interface
 
-function Interface.new(interfaceController: UITypes.InterfaceController)
-	local self: Interface = setmetatable({}, Interface) :: any
+type InterfaceImpl = {
+	trove: Trove.Trove,
+	interfaceController: UITypes.InterfaceController,
+} & Interface
 
-	self.InterfaceController = interfaceController
+function Interface.new(interfaceController: UITypes.InterfaceController)
+	local self: InterfaceImpl = Component.new() :: any
 
 	self.Instance = ScreenGui:Clone()
+	self.Instance.Enabled = false
 	self.Instance.Parent = player.PlayerGui
+	self.Visible = false
 
-	self._trove = Trove.new()
-	self._trove:AttachToInstance(self.Instance)
+	self.interfaceController = interfaceController
+	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Instance)
 
 	Initialize(self)
+	setmetatable(self, Interface)
 
 	return self
 end
 
-function Initialize(self: Interface)
+function Interface.set.Visible(self: InterfaceImpl, visible: boolean)
+	self:RawSet("Visible", visible)
+	self.Instance.Enabled = visible
+end
+
+function Initialize(self: InterfaceImpl)
 	InitializeButtons(self)
 	InitializeFPSLabel(self)
 end
 
-function InitializeFPSLabel(self: Interface)
+function InitializeFPSLabel(self: InterfaceImpl)
 	local fps = 0
-	self._trove:Connect(RunService.Heartbeat, function(deltaTime: number)
+	self.trove:Connect(RunService.Heartbeat, function(deltaTime: number)
 		local fpsEnabled = SettingsController:GetSetting("ShowFPS")
 		self.Instance.FPS.Visible = fpsEnabled
 		if fpsEnabled then
@@ -49,9 +62,9 @@ function InitializeFPSLabel(self: Interface)
 	end)
 end
 
-function InitializeButtons(self: Interface)
+function InitializeButtons(self: InterfaceImpl)
 	local callbacks = {
-		Settings = function() self.InterfaceController:OpenSettings() end,
+		Settings = function() self.interfaceController:OpenSettings() end,
 		Store = function() end,
 		Garage = function() end,
 		Changelog = function() end,
@@ -60,14 +73,14 @@ function InitializeButtons(self: Interface)
 	for k, v in callbacks do
 		local button =
 			self.Instance.Buttons:FindFirstChild(k, true) :: TextButton
-		self._trove:Connect(button.Activated, v)
+		self.trove:Connect(button.Activated, v)
 	end
 end
 
-function Interface.Show(self: Interface) self.Instance.Enabled = true end
+function Interface.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == Interface
+end
 
-function Interface.Hide(self: Interface) self.Instance.Enabled = false end
-
-function Interface.Destroy(self: Interface) self.Instance:Destroy() end
+function Interface.Destroy(self: InterfaceImpl) self.Instance:Destroy() end
 
 return table.freeze({ new = Interface.new })

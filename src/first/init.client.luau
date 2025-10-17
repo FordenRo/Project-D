@@ -49,3 +49,8 @@ end
 task.wait(1)
 
 screen:Destroy()
+
+local InterfaceController =
+	require(ReplicatedStorage.Shared.Controllers.InterfaceController)
+
+InterfaceController.Visible = true

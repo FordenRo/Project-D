@@ -1,30 +1,26 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 
 export type InterfaceController = {
 	Interface: Interface,
 	MainWindow: MainWindow,
+	Visible: boolean,
 
-	Show: (self: InterfaceController) -> (),
-	Hide: (self: InterfaceController) -> (),
 	OpenWelcome: (self: InterfaceController) -> (),
 	OpenSettings: (self: InterfaceController) -> (),
-}
+} & Component.Component
 
 export type Interface = {
-	_trove: Trove.Trove,
-	InterfaceController: InterfaceController,
 	Instance: ScreenGui & {
 		Buttons: Frame,
 		Debug: Frame & { FPS: TextLabel },
 		FPS: TextLabel,
 	},
+	Visible: boolean,
 
-	Show: (self: Interface) -> (),
-	Hide: (self: Interface) -> (),
 	Destroy: (self: Interface) -> (),
-}
+} & Component.Component
 
 export type MainWindow = {
 	CurrentTab: string?,
