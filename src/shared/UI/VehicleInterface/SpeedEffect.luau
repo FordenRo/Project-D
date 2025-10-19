@@ -107,11 +107,14 @@ function Update(self: SpeedEffectImpl, deltaTime: number)
 		end
 	end
 
-	for _, effect in self.effects do
+	for k, effect in self.effects do
 		local position = effect.Position - effect.Force * deltaTime * 6
 		effect:Move(position)
 
-		if position < 0 then self.trove:Remove(effect) end
+		if position < 0 then
+			table.remove(self.effects, k)
+			self.trove:Remove(effect)
+		end
 	end
 end
 
