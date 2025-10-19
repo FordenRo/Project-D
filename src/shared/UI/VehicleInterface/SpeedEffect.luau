@@ -17,11 +17,8 @@ export type EffectFrame = {
 }
 
 export type SpeedEffect = {
-	_trove: Trove.Trove,
-	_LastSpawn: number,
 	Vehicle: VehicleTypes.ClientVehicle,
 	Parent: GuiObject,
-	Effects: { EffectFrame },
 
 	new: (
 		self: SpeedEffect,
@@ -30,21 +27,27 @@ export type SpeedEffect = {
 	) -> SpeedEffect,
 }
 
+type SpeedEffectImpl = {
+	trove: Trove.Trove,
+	lastSpawn: number,
+	effects: { EffectFrame },
+} & SpeedEffect
+
 function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
-	local self: SpeedEffect = setmetatable({}, SpeedEffect) :: any
+	local self: SpeedEffectImpl = setmetatable({}, SpeedEffect) :: any
 
 	self.Parent = parent
 	self.Vehicle = vehicle
-	self.Effects = {}
-	self._LastSpawn = 0
+	self.effects = {}
+	self.lastSpawn = 0
 
-	self._trove = Trove.new()
-	self._trove:BindToRenderStep(
+	self.trove = Trove.new()
+	self.trove:BindToRenderStep(
 		"SpeedEffect",
 		Enum.RenderPriority.Camera.Value - 1,
 		function(deltaTime) Update(self, deltaTime) end
 	)
-	self._trove:AttachToInstance(parent)
+	self.trove:AttachToInstance(parent)
 
 	return self
 end
@@ -85,7 +88,7 @@ function createEffect(rotation: number, force: number)
 	return effect
 end
 
-function Update(self: SpeedEffect, deltaTime: number)
+function Update(self: SpeedEffectImpl, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 60 then
 		local force = math.clamp(
 			MathUtil.Map(self.Vehicle.Velocity.Magnitude, 60, 200),
@@ -93,23 +96,30 @@ function Update(self: SpeedEffect, deltaTime: number)
 			1
 		)
 		local debounce = MathUtil.Lerp(1 / 3, 1 / 200, force ^ 0.8)
-		if tick() - self._LastSpawn > debounce then
+		if tick() - self.lastSpawn > debounce then
 			local effect = createEffect(math.random() * 360, force)
 			effect:Move(math.min(force, 0.5))
 			effect.Instance.Parent = self.Parent
-			self._trove:Add(effect)
+			self.trove:Add(effect)
 
-			self._LastSpawn = tick()
-			table.insert(self.Effects, effect)
+			self.lastSpawn = tick()
+			table.insert(self.effects, effect)
 		end
 	end
 
-	for _, effect in self.Effects do
+	for _, effect in self.effects do
 		local position = effect.Position - effect.Force * deltaTime * 6
 		effect:Move(position)
 
-		if position < 0 then self._trove:Remove(effect) end
+		if position < 0 then self.trove:Remove(effect) end
 	end
 end
 
-return table.freeze({ new = SpeedEffect.new })
+function SpeedEffect.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == SpeedEffect
+end
+
+return table.freeze({
+	new = SpeedEffect.new,
+	Is = SpeedEffect.Is,
+})
