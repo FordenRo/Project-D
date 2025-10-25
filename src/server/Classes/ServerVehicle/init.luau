@@ -2,7 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
-local DeformationHandler = require(script.DeformationHandler)
+-- local DeformationHandler = require(script.DeformationHandler)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local InteriorHandler = require(script.InteriorHandler)
@@ -32,7 +32,7 @@ function ServerVehicle.new(instance: Instance): ServerVehicle
 	trove:AttachToInstance(instance)
 
 	self.Engine = table.clone(EngineTable)
-	DeformationHandler.new(self)
+	-- DeformationHandler.new(self)
 	Lights.new(self)
 	InteriorHandler.new(self)
 

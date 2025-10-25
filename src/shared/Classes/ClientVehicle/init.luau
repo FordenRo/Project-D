@@ -7,7 +7,7 @@ local BaseVehicle = require(script.Parent.BaseVehicle)
 local CameraController = require(script.CameraController)
 local CreateEditableMesh =
 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
-local DeformationController = require(script.DeformationController)
+-- local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local InputController = require(script.InputController)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -93,7 +93,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	InitializeWheels(self)
 
 	self.SoundController = SoundController.new(self)
-	self.DeformationController = DeformationController.new(self)
+	-- self.DeformationController = DeformationController.new(self)
 
 	InitializeControllers(self)
 

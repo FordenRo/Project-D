@@ -160,7 +160,7 @@ export type ClientVehicle = {
 
 	InputController: InputController,
 	SoundController: SoundController,
-	DeformationController: DeformationController,
+	-- DeformationController: DeformationController,
 	CameraController: CameraController,
 	Transmission: Transmission,
 	BrakeForce: { Front: number, Rear: number },

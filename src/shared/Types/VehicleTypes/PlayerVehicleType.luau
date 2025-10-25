@@ -16,7 +16,7 @@ export type PlayerVehicleInfo = {
 		Wear: number,
 		Dirt: number,
 	} },
-	Deformation: { [number]: Vector3 },
+	-- Deformation: { [number]: Vector3 },
 	Texture: buffer,
 }
 

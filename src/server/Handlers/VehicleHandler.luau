@@ -97,7 +97,7 @@ function VehicleHandler.RegisterNewPlayerVehicle(
 		Fuel = tune.FuelCapacity,
 		Mileage = 0,
 		EngineHealth = 1,
-		Deformation = {},
+		-- Deformation = {},
 		Wheels = {},
 	} :: PlayerVehicleType.PlayerVehicleInfo
 

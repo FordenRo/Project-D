@@ -612,7 +612,7 @@ function UpdateHealth(self: EngineImpl, deltaTime: number)
 
 	if self.Health == 0 then
 		self.IsOn = false
-		self.Vehicle.DeformationController:BlowEngine()
+		-- self.Vehicle.DeformationController:BlowEngine()
 	end
 end
 
