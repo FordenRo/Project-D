@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local BrakeDisk = require(script.BrakeDisk)
@@ -14,11 +15,17 @@ ClientWheel.__index = ClientWheel
 
 type ClientWheel = VehicleTypes.ClientWheel
 
+type ClientWheelImpl = {
+	collisionPart: Part,
+	colliderPart: Part,
+	collisionRayParams: RaycastParams,
+} & ClientWheel
+
 function ClientWheel.new(
 	vehicle: VehicleTypes.ClientVehicle,
 	instance: BasePart
 ): ClientWheel
-	local self: ClientWheel =
+	local self: ClientWheelImpl =
 		setmetatable(BaseWheel.new(vehicle, instance), ClientWheel) :: any
 
 	self.OppositeWheel = (
@@ -39,6 +46,7 @@ function ClientWheel.new(
 	) :: BasePart
 
 	self.CanSteer = 0
+	self.Material = nil
 
 	-- Check if can steer
 	if
@@ -57,6 +65,28 @@ function ClientWheel.new(
 
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
 	self.BrakeDisk = BrakeDisk.new(self, self.Instance.Parts.BrakeDisk)
+
+	self.colliderPart = Instance.new("Part")
+	self.colliderPart.Transparency = 1
+	self.colliderPart.Anchored = true
+	self.colliderPart.CollisionGroup = "Wheel"
+	self.colliderPart.Size = Vector3.new(3, 1, 3)
+	self.colliderPart.Parent = game.Workspace
+
+	self.collisionPart = self.Instance.Collision:Clone()
+	self.collisionPart:ClearAllChildren()
+	self.collisionPart.Name = "CastCollision"
+	self.collisionPart.CanCollide = false
+	self.collisionPart.CanQuery = false
+	self.collisionPart.CanTouch = false
+	self.collisionPart.Parent = self.Instance.Collision
+
+	self.collisionRayParams = RaycastParams.new()
+	self.collisionRayParams.FilterType = Enum.RaycastFilterType.Exclude
+	self.collisionRayParams.FilterDescendantsInstances =
+		{ self.colliderPart, self.Vehicle.Instance }
+
+	self.Instance.Collision.CollisionGroup = "Wheel"
 
 	local trove = Trove.new()
 	trove:Add(function()
@@ -82,16 +112,43 @@ function ClientWheel.new(
 			end
 		end
 	end)
+	trove:Connect(RunService.Stepped, function() UpdateCollision(self) end)
 	trove:AttachToInstance(instance)
 
 	return self
 end
 
-function ClientWheel.Update(self: ClientWheel, deltaTime: number)
+function ClientWheel.Update(self: ClientWheelImpl, deltaTime: number)
 	ApplySteering(self, deltaTime)
 end
 
-function ApplySteering(self: ClientWheel, deltaTime: number)
+function UpdateCollision(self: ClientWheelImpl)
+	self.collisionPart.CFrame = self.Instance.Collision.CFrame
+		+ self.Vehicle.CFrame.UpVector
+
+	local ray = game.Workspace:Shapecast(
+		self.collisionPart,
+		-self.Vehicle.CFrame.UpVector :: Vector3 * 3,
+		self.collisionRayParams
+	)
+	if ray then
+		local lookVector = ray.Normal:Cross(self.Instance.CFrame.RightVector)
+		self.colliderPart.CFrame = CFrame.lookAlong(
+			ray.Position
+				- self.Vehicle.CFrame.UpVector :: Vector3
+					* self.colliderPart.Size.Y
+					/ 2,
+			lookVector,
+			ray.Normal
+		)
+		self.Material = (ray.Instance :: BasePart).Material
+	else
+		self.colliderPart.CFrame = CFrame.new()
+		self.Material = nil
+	end
+end
+
+function ApplySteering(self: ClientWheelImpl, deltaTime: number)
 	if self.CanSteer == 0 then return end
 
 	local angle = 0
@@ -177,7 +234,7 @@ function ApplySteering(self: ClientWheel, deltaTime: number)
 end
 
 function ClientWheel.UpdateForces(
-	self: ClientWheel,
+	self: ClientWheelImpl,
 	torque: number,
 	flywheelEnergy: number
 )
@@ -506,4 +563,11 @@ function ClientWheel.UpdateForces(
 	end
 end
 
-return table.freeze({ new = ClientWheel.new })
+function ClientWheel.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == ClientWheel
+end
+
+return table.freeze({
+	new = ClientWheel.new,
+	Is = ClientWheel.Is,
+})

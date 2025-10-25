@@ -237,9 +237,9 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		local speed = self.Vehicle.Velocity.Magnitude
 		local diff = math.abs(rotLinearSpeed - speed)
 
-		if ray then
+		if ray and self.Wheel.Material then
 			for k, v in MaterialGroups do
-				if not table.find(v, ray.Material.Name) then continue end
+				if not table.find(v, self.Wheel.Material.Name) then continue end
 
 				self.Material = k
 				break
