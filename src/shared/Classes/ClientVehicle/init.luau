@@ -362,8 +362,8 @@ end
 -- TODO: Drivetrain Initialize
 
 function UpdateWheels(self: ClientVehicleImpl, deltaTime: number)
-	for _, wheel in self.Wheels do
-		(wheel :: VehicleTypes.ClientWheel):Update(deltaTime)
+	for _, wheel: VehicleTypes.ClientWheel in self.Wheels :: any do
+		wheel:Update(deltaTime)
 	end
 
 	self.TCSActive = false
