@@ -1,62 +1,34 @@
---# selene: allow(shadowing)
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RunService = game:GetService("RunService")
 
+local GameConfigType = require(ReplicatedStorage.Shared.Types.GameConfigType)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
-local function i(s: string) return `<i>{s}</i>` end
-local function t(s: string, t: number)
-	return `<font transparency="{t}">{s}</font>`
-end
-local function s(s: string, sz: number) return `<font size="{sz}">{s}</font>` end
-local function b(s: string) return `<b>{s}</b>` end
-local function c(s: string, c: string) return `<font color="{c}">{s}</font>` end
-local function u(s: string) return `<u>{s}</u>` end
+local Config = {} :: GameConfigType.GameConfig
 
-local Config = {}
-
-Config.Version = `0.0.0`
+Config.Version = `0.0.1`
 	.. (
-		RunService:IsStudio() and "-PLAYTEST"
+		RunService:IsStudio() and `-STUDIO`
 		or `-prealpha ({game.PlaceVersion})`
 	)
 
 Config.Changelog = {}
 
-Config.Welcome = {
-	s(
-		`Welcome to {b(
-			`{c(`Project D:`, "#ffaaaa")} {s(i(`Driving Masters`), 22)}`
-		)}`,
-		24
-	),
-	``,
-	`This game is a {i(`racing simulator`)} that tries to replicate the behaviour of a {i(
-		`real`
-	)} car.`
-		.. ` Here you can customize your car for {`drifting`}, {`drag racing`}, {`touge`}, {t(
-			i(`or just keep it stock`),
-			0.1
-		)}`,
-	``,
-	b(`Features:`),
-	`- Vehicle deformation!`,
-	t(i(`   Vehicles can get deformed, scratched, and dirty.`), 0.1),
-	`- Tires wear system`,
-	t(
-		i(
-			`   Tires can become dirty and worn out, losing their original appearance and grip.`
-		),
-		0.1
-	),
-	`- Engine damage and wear system`,
-	t(i(`   Be careful, because your engine is not immortal!`), 0.1),
-	u(`These and other cool and realistic features are in this game!`),
-	``,
-	b(`Made with {c(`love`, "#ffaaaa")}, {i(`please enjoy!`)}`),
-	``,
-	`{t(`Current version: {i(Config.Version)}`, 0.1)}`,
-}
+Config.Welcome = `<font size="24">Welcome to <font color="#ffaaaa"><b>Project D:</b></font>`
+	.. ` <font size="22"><i>Driving Masters</i></font></font>`
+	.. `\n\n`
+	.. `This game is a <i>racing simulator</i> that tries to replicate the behaviour of a <i>real</i> car.`
+	.. ` Here you can customize your car for drifting, drag racing, touge, <font transparency="0.1"><i>or keep it stock</i></font>.`
+	.. `\n\n`
+	.. `<b>Features:</b>\n`
+	.. `	· Tires can wear\n`
+	.. `	· Engine health system\n`
+	.. `	· Realistic sound effects\n`
+	.. `	· First person view\n`
+	.. `	· Detailed cars\n`
+	.. `	and more!`
+	.. `\n\n`
+	.. `<font transparency="0.1">Current version: <i>{Config.Version}</i></font>`
 
 return TableUtil.DeepFreeze(Config)
