@@ -4,8 +4,8 @@ local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local SpeedEffect = {}
-SpeedEffect.__index = SpeedEffect
+local EffectFrame = {}
+EffectFrame.__index = EffectFrame
 
 export type EffectFrame = {
 	Instance: Frame,
@@ -14,17 +14,50 @@ export type EffectFrame = {
 	Position: number,
 
 	Move: (self: EffectFrame, delta: number) -> (),
+	Destroy: (self: EffectFrame) -> (),
 }
+
+function EffectFrame.new(rotation: number, force: number): EffectFrame
+	local self: EffectFrame = setmetatable({}, EffectFrame) :: any
+
+	self.Rotation = rotation
+	self.Force = force
+	self.Position = 0
+
+	self.Instance = Instance.new("Frame")
+	self.Instance.AnchorPoint = Vector2.new(0.5, 0.5)
+	self.Instance.BackgroundColor3 = Color3.new(1, 1, 1)
+	self.Instance.BorderSizePixel = 0
+	self.Instance.SizeConstraint = Enum.SizeConstraint.RelativeXX
+	self.Instance.Size = UDim2.fromScale(0.3, force ^ 0.8 * 0.001)
+	self.Instance.Rotation = rotation
+
+	local gradient = Instance.new("UIGradient")
+	gradient.Transparency = NumberSequence.new(1, 0)
+	gradient.Parent = self.Instance
+
+	return self
+end
+
+function EffectFrame.Move(self: EffectFrame, position: number)
+	local scrSize = game.Workspace.CurrentCamera.ViewportSize
+	local r = self.Instance.AbsoluteSize.X / 2
+	local x = math.cos(math.rad(self.Rotation)) * (1 - position)
+	local y = math.sin(math.rad(self.Rotation)) * (1 - position)
+	local dir = Vector2.new(x, y)
+	local pos = dir * scrSize.X / 2 + dir * r
+	self.Instance.Position = UDim2.new(0.5, pos.X, 0.5, pos.Y)
+	self.Position = position
+end
+
+function EffectFrame.Destroy(self: EffectFrame) self.Instance:Destroy() end
+
+local SpeedEffect = {}
+SpeedEffect.__index = SpeedEffect
 
 export type SpeedEffect = {
 	Vehicle: VehicleTypes.ClientVehicle,
 	Parent: GuiObject,
-
-	new: (
-		self: SpeedEffect,
-		vehicle: VehicleTypes.ClientVehicle,
-		parent: GuiObject
-	) -> SpeedEffect,
 }
 
 type SpeedEffectImpl = {
@@ -33,7 +66,10 @@ type SpeedEffectImpl = {
 	effects: { EffectFrame },
 } & SpeedEffect
 
-function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
+function SpeedEffect.new(
+	vehicle: VehicleTypes.ClientVehicle,
+	parent: GuiObject
+): SpeedEffect
 	local self: SpeedEffectImpl = setmetatable({}, SpeedEffect) :: any
 
 	self.Parent = parent
@@ -52,42 +88,6 @@ function SpeedEffect.new(vehicle: VehicleTypes.ClientVehicle, parent: GuiObject)
 	return self
 end
 
-function createEffect(rotation: number, force: number)
-	local effect = {} :: EffectFrame
-
-	local frame = Instance.new("Frame")
-	frame.AnchorPoint = Vector2.new(0.5, 0.5)
-	frame.BackgroundColor3 = Color3.new(1, 1, 1)
-	frame.BorderSizePixel = 0
-	frame.SizeConstraint = Enum.SizeConstraint.RelativeXX
-	frame.Size = UDim2.fromScale(0.3, force ^ 0.8 * 0.001)
-	frame.Rotation = rotation
-
-	local gradient = Instance.new("UIGradient")
-	gradient.Transparency = NumberSequence.new(1, 0)
-	gradient.Parent = frame
-
-	effect.Instance = frame
-	effect.Rotation = rotation
-	effect.Force = force
-	effect.Position = 0
-
-	function effect.Move(self: EffectFrame, position: number)
-		local scrSize = game.Workspace.CurrentCamera.ViewportSize
-		local r = effect.Instance.AbsoluteSize.X / 2
-		local x = math.cos(math.rad(self.Rotation)) * (1 - position)
-		local y = math.sin(math.rad(self.Rotation)) * (1 - position)
-		local dir = Vector2.new(x, y)
-		local pos = dir * scrSize.X / 2 + dir * r
-		self.Instance.Position = UDim2.new(0.5, pos.X, 0.5, pos.Y)
-		self.Position = position
-	end
-
-	function effect.Destroy(self: EffectFrame) self.Instance:Destroy() end
-
-	return effect
-end
-
 function Update(self: SpeedEffectImpl, deltaTime: number)
 	if self.Vehicle.Velocity.Magnitude > 60 then
 		local force = math.clamp(
@@ -97,17 +97,17 @@ function Update(self: SpeedEffectImpl, deltaTime: number)
 		)
 		local debounce = MathUtil.Lerp(1 / 3, 1 / 200, force ^ 0.8)
 		if tick() - self.lastSpawn > debounce then
-			local effect = createEffect(math.random() * 360, force)
+			local effect = EffectFrame.new(math.random() * 360, force)
 			effect:Move(math.min(force, 0.5))
 			effect.Instance.Parent = self.Parent
-			self.trove:Add(effect)
 
 			self.lastSpawn = tick()
+			self.trove:Add(effect)
 			table.insert(self.effects, effect)
 		end
 	end
 
-	for k, effect in self.effects do
+	for k, effect: EffectFrame in self.effects do
 		local position = effect.Position - effect.Force * deltaTime * 6
 		effect:Move(position)
 
