@@ -11,6 +11,11 @@ RF.Parent = ReplicatedStorage
 local playerJoinedTime: { [Player]: number } = {}
 local playerPlaytime: { [Player]: number } = {}
 
+local Actions = {
+	GetCash = 0,
+	GetLaps = 1,
+}
+
 local PlayerStatsHandler = {}
 PlayerStatsHandler.__index = PlayerStatsHandler
 
@@ -36,8 +41,12 @@ function PlayerStatsHandler.new(): PlayerStatsHandler
 	Players.PlayerRemoving:Connect(
 		function(player) OnPlayerRemoving(self, player) end
 	)
-	RF.OnServerInvoke = function(player: Player, event: string, ...)
-		return self[event](self, player, ...)
+	RF.OnServerInvoke = function(player: Player, action: number, ...)
+		local callbacks = {
+			[Actions.GetCash] = self.GetPlayerCash,
+			[Actions.GetLaps] = self.GetPlayerLaps,
+		}
+		return callbacks[action](self, player, ...)
 	end
 
 	return self

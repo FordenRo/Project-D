@@ -2,6 +2,11 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local RF = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
 
+local Actions = {
+	GetCash = 0,
+	GetLaps = 1,
+}
+
 local PlayerStatsController = {}
 PlayerStatsController.__index = PlayerStatsController
 
@@ -18,11 +23,11 @@ function PlayerStatsController.new(): PlayerStatsController
 end
 
 function PlayerStatsController.GetCash(self: PlayerStatsController): number
-	return RF:InvokeServer("GetPlayerCash")
+	return RF:InvokeServer(Actions.GetCash)
 end
 
 function PlayerStatsController.GetLaps(self: PlayerStatsController): number
-	return RF:InvokeServer("GetPlayerLaps")
+	return RF:InvokeServer(Actions.GetLaps)
 end
 
 return PlayerStatsController.new()
