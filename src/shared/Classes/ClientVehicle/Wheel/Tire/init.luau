@@ -142,7 +142,7 @@ function Initialize(self: ClientTireImpl)
 			self.audioPlayers[k] =
 				self.Vehicle.SoundController.Sounds[`{self.Wheel.Instance.Name}Tire{k}`].AudioPlayer
 
-			local emitter = ReplicatedStorage.Vehicle.Effects.Tires
+			local emitter = (ReplicatedStorage.Vehicle :: any).Effects.Tires
 				:FindFirstChild(k)
 				:Clone()
 			emitter.Parent = self.SmokePart

@@ -29,12 +29,14 @@ function SprintController.new(): SprintController
 		self.humanoid = player.Character:WaitForChild("Humanoid") :: Humanoid
 	end
 
-	ReplicatedStorage.Input.Player.Sprint.StateChanged:Connect(function(value)
-		if not self.humanoid then return end
+	(ReplicatedStorage.Input :: any).Player.Sprint.StateChanged:Connect(
+		function(value)
+			if not self.humanoid then return end
 
-		self.humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
-			* (value and SPRINT_MULTIPLIER or 1)
-	end)
+			self.humanoid.WalkSpeed = StarterPlayer.CharacterWalkSpeed
+				* (value and SPRINT_MULTIPLIER or 1)
+		end
+	)
 
 	return self
 end

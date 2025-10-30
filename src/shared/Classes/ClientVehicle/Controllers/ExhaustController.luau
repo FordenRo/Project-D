@@ -55,7 +55,7 @@ function ExhaustController.new(
 	self.startCFrame = self.Instance.CFrame
 
 	-- Create emitter
-	self.emitter = ReplicatedStorage.Vehicle.ExhaustEmitter:Clone()
+	self.emitter = (ReplicatedStorage.Vehicle :: any).ExhaustEmitter:Clone()
 	self.emitter.Parent = attachment
 	self.startEmitter = {
 		Color = self.emitter.Color,

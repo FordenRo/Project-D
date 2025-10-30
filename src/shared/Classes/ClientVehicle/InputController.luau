@@ -19,7 +19,7 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
 local mouse = player:GetMouse()
-local Context = ReplicatedStorage.Input.Vehicle
+local Context = (ReplicatedStorage.Input :: any).Vehicle
 
 local InputController = { set = {} }
 Component.Extend(InputController)

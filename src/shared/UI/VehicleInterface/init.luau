@@ -11,7 +11,7 @@ local Speedometer = require(script.Speedometer)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local UI = ReplicatedStorage.UI.VehicleInterface
+local UI = (ReplicatedStorage.UI :: any).VehicleInterface
 local player = Players.LocalPlayer
 
 local VehicleInterface = {}
@@ -55,7 +55,7 @@ function VehicleInterface.new(
 
 	self.Vehicle = vehicle
 
-	self.Instance = UI:Clone() :: any
+	self.Instance = UI:Clone()
 	self.Instance.Enabled = false
 	self.Instance.Parent = player.PlayerGui
 

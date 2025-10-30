@@ -2,6 +2,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Component = require(script.Parent.Component)
+local EngineTune =
+	require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
@@ -101,7 +103,8 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 		ReplicatedStorage.Shared.Vehicle.Engines:FindFirstChild(
 			self.Tune.Engine
 		)
-	)
+	) :: EngineTune.Engine
+
 	local x = self.RPM / 1000
 	self.Engine.Boost = self.Engine.BoostTurbo + self.Engine.BoostSuper
 

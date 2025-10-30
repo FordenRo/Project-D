@@ -74,17 +74,17 @@ function SettingsController.new(): SettingsController
 
 	do -- Initialize keybinds
 		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
-		for _, context in
-			ReplicatedStorage.Input:GetChildren() :: { InputContext }
+		for _, context: InputContext in
+			ReplicatedStorage.Input:GetChildren() :: any
 		do
-			for _, action in context:GetChildren() :: { InputAction } do
-				for _, binding in action:GetChildren() :: { InputBinding } do
+			for _, action: InputAction in context:GetChildren() :: any do
+				for _, binding: InputBinding in action:GetChildren() :: any do
 					if binding.Name == "Mobile" then continue end
 
 					binding:SetAttribute("Default", binding.KeyCode)
 					local path = context.Name .. action.Name .. binding.Name
 					if keybinds[path] then
-						binding.KeyCode = Enum.KeyCode[keybinds[path]]
+						binding.KeyCode = (Enum.KeyCode :: any)[keybinds[path]]
 					end
 				end
 			end
@@ -108,11 +108,11 @@ function SettingsController.new(): SettingsController
 
 		-- Save keybinds
 		local keybinds = {}
-		for _, context in
-			ReplicatedStorage.Input:GetChildren() :: { InputContext }
+		for _, context: InputContext in
+			ReplicatedStorage.Input:GetChildren() :: any
 		do
-			for _, action in context:GetChildren() :: { InputAction } do
-				for _, binding in action:GetChildren() :: { InputBinding } do
+			for _, action: InputAction in context:GetChildren() :: any do
+				for _, binding: InputBinding in action:GetChildren() :: any do
 					if binding.Name == "Mobile" then continue end
 
 					local path = context.Name .. action.Name .. binding.Name
@@ -154,6 +154,8 @@ function SettingsController.GetSettingInfo(
 		SettingsConfig.Settings,
 		function(a) return a.Name == name end
 	)
+	assert(found, `Setting {name} not found`)
+
 	local info = TableUtil.DeepCopy(found)
 	info.Value = self:GetSetting(name)
 	return info
@@ -167,6 +169,8 @@ function SettingsController.GetFolderInfo(
 		SettingsConfig.Folders,
 		function(a) return a.Name == name end
 	)
+	assert(found, `Folder {name} not found`)
+
 	return TableUtil.DeepCopy(found)
 end
 

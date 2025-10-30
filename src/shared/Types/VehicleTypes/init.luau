@@ -10,37 +10,37 @@ export type IgnitionState = "Off" | "Acc" | "On" | "Starting"
 
 export type BaseVehicle = {
 	_Remote: UnreliableRemoteEvent,
-	Instance: Model & {
-		Wheels: Model & any,
-		DriveSeat: VehicleSeat & {
+	Instance: {
+		Wheels: Model,
+		DriveSeat: {
 			Flip: AlignOrientation,
 			ProximityPrompt: ProximityPrompt,
-		},
+		} & VehicleSeat,
 		Seats: Model,
-		Body: Model & {
+		Body: {
 			WeightPart: Part,
 			Collider: MeshPart,
-			Aerodynamics: Model & {
+			Aerodynamics: {
 				Drag: Part,
 				FDownforce: Part,
 				RDownforce: Part,
-			},
-			Deformation: Model & {
+			} & Model,
+			Deformation: {
 				EngineBlow: Part,
 				BlowSmokeParts: Model,
-			},
+			} & Model,
 			Sounds: Model,
-			Lights: Model & {
+			Lights: {
 				Front: Model,
 				Rear: Model,
 				TurnRight: Model,
 				TurnLeft: Model,
 				Reverse: Model,
 				Brake: Model?,
-			},
-		},
+			} & Model,
+		} & Model,
 		Misc: Model,
-	},
+	} & Model,
 	Engine: EngineTable,
 	Tune: TuneType.Tune,
 	Driver: Player?,
@@ -120,7 +120,7 @@ export type VehicleControllerType = {
 }
 
 export type VehicleControllerImplType = {
-	new: (vehicle: ClientVehicle) -> VehicleControllerType,
+	new: (vehicle: ClientVehicle) -> VehicleControllerType?,
 	Is: (obj: any) -> boolean,
 }
 
@@ -247,29 +247,37 @@ export type ServerVehicle = {
 } & BaseVehicle
 
 export type BaseWheel = {
-	Instance: BasePart & {
-		Base: BasePart,
-		Arm: BasePart & {
+	Instance: {
+		Base: {
+			Rotate: HingeConstraint,
+		} & Part,
+		Arm: {
 			Steer: BodyGyro | AlignOrientation,
 			SteerAttach0: Attachment,
-		},
-		Parts: Model & {
+		} & BasePart,
+		Parts: {
 			Tire: BasePart,
 			BrakeDisk: BasePart,
-		},
+		} & Model,
 		Fixed: Model,
 		WheelFixed: Model,
 		AV: HingeConstraint,
 		BV: HingeConstraint,
-		AB: any,
+		AB: Attachment,
 		Collision: Part,
 		SuspensionFixed: Model,
 		SmokePart: Part,
 		TrailAttachmentPart: Part,
-		AxleP: Part & {
+		SuspensionGeometry: {
+			Hub: Part,
+			SpringTop: Part,
+			SpringBottom: Part,
+			Spring: SpringConstraint,
+		} & Model,
+		AxleP: {
 			AA: Attachment,
-		},
-	},
+		} & Part,
+	} & Part,
 	Vehicle: BaseVehicle,
 	BrakeDisk: ClientBrakeDisk | ServerBrakeDisk,
 	IsRight: boolean,
@@ -325,9 +333,9 @@ export type ClientBrakeDisk = {
 	Vehicle: ClientVehicle,
 	Wheel: ClientWheel,
 	Temperature: number,
-	Sound: Sound & {
+	Sound: {
 		PitchEffect: PitchShiftSoundEffect,
-	},
+	} & Sound,
 	Volume: number,
 }
 

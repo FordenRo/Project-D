@@ -4,12 +4,12 @@ local Slider = {}
 Slider.__index = Slider
 
 export type Slider = {
-	Instance: Frame & {
-		Content: Frame & {
+	Instance: {
+		Content: {
 			Fill: Frame,
-		},
+		} & Frame,
 		Progress: TextLabel,
-	},
+	} & Frame,
 	Progress: number,
 
 	SetProgress: (self: Slider, value: number) -> (),

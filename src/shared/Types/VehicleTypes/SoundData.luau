@@ -5,9 +5,9 @@ export type SoundData = {
 	Volume: number?,
 } & any
 
-export type CachedSoundData = SoundData & {
+export type CachedSoundData = {
 	AudioPlayer: AudioPlayer,
 	Played: boolean?,
-}
+} & SoundData
 
 return {}

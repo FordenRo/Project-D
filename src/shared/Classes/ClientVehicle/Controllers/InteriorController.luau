@@ -75,7 +75,10 @@ function InitializeHandbrake(self: InteriorControllerImpl)
 	local motor = handbrake:FindFirstChildOfClass("Motor6D")
 	if not motor then return end
 
-	local maxAngle = math.rad(handbrake:GetAttribute("MaxAngle"))
+	local maxAngle = handbrake:GetAttribute("MaxAngle")
+	assert(typeof(maxAngle) == "number")
+	maxAngle = math.rad(maxAngle)
+
 	self.trove:Connect(
 		RunService.Heartbeat,
 		function(deltaTime: number)
@@ -97,8 +100,11 @@ function InitializePedals(self: InteriorControllerImpl)
 	for _, pedal in pedals:GetChildren() do
 		if not pedal:IsA("BasePart") then continue end
 
-		angles[pedal.Name] = math.rad(pedal:GetAttribute("MaxAngle"))
-		motors[pedal.Name] = pedal:FindFirstChildOfClass("Motor6D")
+		local maxAngle = pedal:GetAttribute("MaxAngle")
+		assert(typeof(maxAngle) == "number")
+
+		angles[pedal.Name] = math.rad(maxAngle)
+		motors[pedal.Name] = assert(pedal:FindFirstChildOfClass("Motor6D"))
 	end
 
 	self.trove:Connect(RunService.Heartbeat, function()
@@ -115,10 +121,13 @@ function InitializeGearLever(self: InteriorControllerImpl)
 	local motor = gearLever:FindFirstChildOfClass("Motor6D")
 	if not motor then return end
 
-	local xAngle = math.rad(gearLever:GetAttribute("MaxXAngle"))
-	local yAngle = math.rad(gearLever:GetAttribute("MaxYAngle"))
+	local xAngle = gearLever:GetAttribute("MaxXAngle")
+	local yAngle = gearLever:GetAttribute("MaxYAngle")
+	assert(typeof(xAngle) == "number" and typeof(yAngle) == "number")
+	xAngle = math.rad(xAngle)
+	yAngle = math.rad(yAngle)
 
-	local function getPosition(gear)
+	local function getPosition(gear: number)
 		if gear == 0 then
 			return 0, 0
 		else

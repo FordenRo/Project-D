@@ -10,15 +10,15 @@ local LoadingScreen = {}
 LoadingScreen.__index = LoadingScreen
 
 export type LoadingScreen = {
-	Instance: ScreenGui & {
-		Content: Frame & {
+	Instance: {
+		Content: {
 			Slider: Frame,
 			Asset: TextLabel,
 			LoadingLabel: TextLabel,
 			Version: TextLabel,
 			Tip: TextLabel,
-		},
-	},
+		} & Frame,
+	} & ScreenGui,
 	Slider: Slider.Slider,
 
 	SetCurrentAsset: (self: LoadingScreen, asset: string) -> (),

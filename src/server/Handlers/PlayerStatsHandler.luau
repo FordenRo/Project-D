@@ -47,7 +47,7 @@ function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 	playerJoinedTime[player] = tick()
 	playerPlaytime[player] = DataStoreService
 		:GetOrderedDataStore("PlayerStats", "Playtime")
-		:GetAsync(player.UserId)
+		:GetAsync(tostring(player.UserId)) or 0
 
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -83,8 +83,10 @@ function OnPlayerAdded(self: PlayerStatsHandler, player: Player)
 end
 
 function OnPlayerRemoving(self: PlayerStatsHandler, player: Player)
-	DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime")
-		:SetAsync(player.UserId, math.floor(self:GetPlayerPlaytime(player)))
+	DataStoreService:GetOrderedDataStore("PlayerStats", "Playtime"):SetAsync(
+		tostring(player.UserId),
+		math.floor(self:GetPlayerPlaytime(player))
+	)
 	playerJoinedTime[player] = nil
 	playerPlaytime[player] = nil
 end
@@ -94,7 +96,7 @@ function PlayerStatsHandler.GetPlayerCash(
 	player: Player
 )
 	return DataStoreService:GetOrderedDataStore("PlayerStats", "Cash")
-		:GetAsync(player.UserId) or 5000000
+		:GetAsync(tostring(player.UserId)) or 5000000
 end
 
 function PlayerStatsHandler.SetPlayerCash(
@@ -103,9 +105,10 @@ function PlayerStatsHandler.SetPlayerCash(
 	cash: number
 )
 	DataStoreService:GetOrderedDataStore("PlayerStats", "Cash")
-		:SetAsync(player.UserId, cash)
+		:SetAsync(tostring(player.UserId), cash)
 
-	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
+	local leaderstats =
+		player:FindFirstChild("leaderstats") :: Folder & { Cash: StringValue }
 	leaderstats.Cash.Value = StringUtil.AbbreviateNumber(cash)
 end
 
@@ -115,7 +118,7 @@ function PlayerStatsHandler.GetPlayerLaps(
 )
 	return DataStoreService
 		:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
-		:GetAsync(player.UserId) or 0
+		:GetAsync(tostring(player.UserId)) or 0
 end
 
 function PlayerStatsHandler.AddPlayerLap(
@@ -124,9 +127,10 @@ function PlayerStatsHandler.AddPlayerLap(
 )
 	local laps = DataStoreService
 		:GetOrderedDataStore("PlayerStats", `Laps/{game.PlaceId}`)
-		:IncrementAsync(player.UserId)
+		:IncrementAsync(tostring(player.UserId))
 
-	local leaderstats = player:FindFirstChild("leaderstats") :: Folder
+	local leaderstats =
+		player:FindFirstChild("leaderstats") :: Folder & { Laps: StringValue }
 	leaderstats.Laps.Value = StringUtil.AbbreviateNumber(laps)
 
 	return laps

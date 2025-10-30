@@ -8,10 +8,10 @@ local GarageDoor = {}
 GarageDoor.__index = GarageDoor
 
 export type GarageDoor = {
-	Instance: Model & {
+	Instance: {
 		Hinge: BasePart,
 		Parts: Folder,
-	},
+	} & Model,
 	Length: number,
 	Position: number,
 	Speed: number,

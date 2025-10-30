@@ -14,10 +14,10 @@ function CarServiceController.new(): CarServiceController
 		setmetatable({}, CarServiceController) :: any
 
 	for _, v in CollectionService:GetTagged("CarService") do
-		CarServiceClient.new(v)
+		CarServiceClient.new(v :: Model)
 	end
 	CollectionService:GetInstanceAddedSignal("CarService")
-		:Connect(CarServiceClient.new)
+		:Connect(CarServiceClient.new :: any)
 
 	return self
 end

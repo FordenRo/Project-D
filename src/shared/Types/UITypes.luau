@@ -12,11 +12,11 @@ export type InterfaceController = {
 } & Component.Component
 
 export type Interface = {
-	Instance: ScreenGui & {
+	Instance: {
 		Buttons: Frame,
-		Debug: Frame & { FPS: TextLabel },
+		Debug: { FPS: TextLabel } & Frame,
 		FPS: TextLabel,
-	},
+	} & ScreenGui,
 	Visible: boolean,
 
 	Destroy: (self: Interface) -> (),
@@ -25,15 +25,15 @@ export type Interface = {
 export type MainWindow = {
 	CurrentTab: string?,
 	Visible: boolean,
-	Instance: ScreenGui & {
-		Window: Frame & {
+	Instance: {
+		Window: {
 			Content: Frame,
-			TabBar: Frame & {
+			TabBar: {
 				Container: Frame,
-			},
-		},
+			} & Frame,
+		} & Frame,
 		Background: TextButton,
-	},
+	} & ScreenGui,
 
 	Show: (self: MainWindow, tab: string?) -> (),
 	Hide: (self: MainWindow) -> (),

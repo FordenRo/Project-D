@@ -78,12 +78,12 @@ function MakeGravity(self: ServerVehicle)
 	for _, v in self.Instance:GetDescendants() do
 		if not v:IsA("BasePart") or v.Massless then continue end
 
-		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH")
+		local attachment = v:FindFirstChild("#GRAVCOMP_ATTACH") :: Attachment
 			or Instance.new("Attachment")
 		attachment.Name = "#GRAVCOMP_ATTACH"
 		attachment.Parent = v
 
-		local force = v:FindFirstChild("#GRAVCOMP")
+		local force = v:FindFirstChild("#GRAVCOMP") :: VectorForce
 			or Instance.new("VectorForce")
 		force.Name = "#GRAVCOMP"
 		force.RelativeTo = Enum.ActuatorRelativeTo.World
@@ -127,7 +127,7 @@ function InitializeWheels(self: ServerVehicle)
 			continue
 		end
 
-		table.insert(self.Wheels, Wheel.new(self, v))
+		table.insert(self.Wheels :: any, Wheel.new(self, v))
 	end
 end
 
@@ -167,12 +167,12 @@ function ApplyWeight(self: ServerVehicle)
 		local countF = 0
 		local countR = 0
 
-		for _, v in self.Instance.Wheels:GetChildren() do
-			if v.Name == "FL" or v.Name == "FR" or v.Name == "F" then
-				centerF = centerF + v.CFrame.Position
+		for _, v in self.Wheels do
+			if v.IsFront then
+				centerF = centerF + v.Instance.CFrame.Position
 				countF = countF + 1
 			else
-				centerR = centerR + v.CFrame.Position
+				centerR = centerR + v.Instance.CFrame.Position
 				countR = countR + 1
 			end
 		end
@@ -180,7 +180,7 @@ function ApplyWeight(self: ServerVehicle)
 		centerR = centerR / countR
 		local center = centerR:Lerp(centerF, self.Tune.WeightDist / 100)
 
-		--Create Weight Part
+		-- Create Weight Part
 		local weightPart = Instance.new("Part")
 		weightPart.Name = "WeightPart"
 		weightPart.Anchored = true
@@ -197,10 +197,11 @@ function ApplyWeight(self: ServerVehicle)
 
 		weightPart.Size = self.Tune.WeightPartSize / Units.Length_mm
 		local tdensity = (self.Tune.Weight * Units.Mass_kg - mass)
-			/ (weightPart.Size.X * weightPart.Size.Y * weightPart.Size.Z) --fixed by denkodin
+			/ (weightPart.Size.X * weightPart.Size.Y * weightPart.Size.Z) -- fixed by denkodin
+		-- Real life mass in pounds, converted to kg minus existing roblox mass converted to kg,
+		-- divided by volume of the weight brick in cubic meters, divided by the density of water
 		weightPart.CustomPhysicalProperties =
 			PhysicalProperties.new(math.clamp(tdensity, 0.01, 100), 0, 0, 0, 0)
-		--Real life mass in pounds, converted to kg minus existing roblox mass converted to kg, divided by volume of the weight brick in cubic meters, divided by the density of water
 		weightPart.CFrame = (
 			self.Instance.DriveSeat.CFrame
 			- self.Instance.DriveSeat.Position
@@ -208,7 +209,7 @@ function ApplyWeight(self: ServerVehicle)
 		) * CFrame.new(0, self.Tune.CGHeight, 0)
 		weightPart.Parent = self.Instance.Body
 
-		--Density Cap
+		-- Density Cap
 		if weightPart.CustomPhysicalProperties.Density >= 100 then
 			warn(
 				"\n\t [VEHICLE]: Density too high for specified volume."
@@ -222,12 +223,12 @@ function ApplyWeight(self: ServerVehicle)
 
 		self.WeightPart = weightPart
 	else
-		--Existing Weight Is Too Massive
+		-- Existing Weight Is Too Massive
 		warn(
 			"\n\t [VEHICLE]: Mass too high for specified weight."
-				.. "\n\t    Target Mass:\t"
+				.. "\n\t Target Mass:\t"
 				.. math.ceil(self.Tune.Weight * Units.Mass_kg)
-				.. "\n\t    Current Mass:\t"
+				.. "\n\t Current Mass:\t"
 				.. math.ceil(mass)
 				.. "\n\t Reduce part size or axle density to achieve desired weight."
 		)
@@ -316,14 +317,17 @@ function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
 
 			-- Readjust steering
 			if wheel.Instance.Arm:FindFirstChild("Steer") then
-				if self.Tune.PowerSteeringType == "New" then
-					wheel.Instance.Arm.Steer.Attachment0.Orientation =
+				if
+					typeof(wheel.Instance.Arm.Steer) == "AlignOrientation"
+					and self.Tune.PowerSteeringType == "New"
+				then
+					(wheel.Instance.Arm.Steer.Attachment0 :: Attachment).Orientation =
 						Vector3.new(
 							0,
 							-wheel.Instance.Base.Rotate.CurrentAngle,
 							0
 						)
-				else
+				elseif typeof(wheel.Instance.Arm.Steer) == "BodyGyro" then
 					wheel.Instance.Arm.Steer.CFrame = wheel.Instance.Base.CFrame
 						* CFrame.Angles(
 							0,
@@ -353,7 +357,7 @@ function InitializeSeats(self: ServerVehicle)
 		prompt.KeyboardKeyCode = Enum.KeyCode.F
 		prompt.MaxActivationDistance = 6
 		prompt.RequiresLineOfSight = false
-		prompt.Parent = seat.PromptAttachment
+		prompt.Parent = (seat :: any).PromptAttachment :: Attachment
 
 		prompt.Triggered:Connect(function(player: Player)
 			if seat.Occupant then return end
@@ -364,7 +368,7 @@ function InitializeSeats(self: ServerVehicle)
 			local humanoid = character:FindFirstChildOfClass("Humanoid")
 			if not humanoid then return end
 
-			seat:Sit(humanoid)
+			(seat :: Seat):Sit(humanoid)
 		end)
 
 		local RE = Instance.new("RemoteEvent")
@@ -375,11 +379,13 @@ function InitializeSeats(self: ServerVehicle)
 			if not player.Character then return end
 			local humanoid =
 				player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
+			local seatPart = humanoid.SeatPart
 
-			local seatWeld =
-				humanoid.SeatPart:FindFirstChild("SeatWeld") :: Weld
+			local seatWeld = seatPart
+				and seatPart:FindFirstChild("SeatWeld") :: Weld
+			if not seatPart or not seatWeld then return end
+
 			seatWeld:Destroy()
-
 			player.Character:PivotTo(
 				CFrame.new(
 					((seat :: any).LeavePosition :: Attachment).WorldPosition
@@ -396,7 +402,8 @@ function InitializeSeats(self: ServerVehicle)
 				local character = seat.Occupant.Parent
 				if not character then return end
 
-				local player = Players:GetPlayerFromCharacter(character)
+				local player =
+					Players:GetPlayerFromCharacter(character :: Model)
 				if not player then return end
 
 				Seated(self, player, seat)
@@ -418,5 +425,7 @@ function InitializeSeats(self: ServerVehicle)
 		end)
 	end
 end
+
+function ServerVehicle.Destroy(self: ServerVehicle) self.Instance:Destroy() end
 
 return table.freeze({ new = ServerVehicle.new })

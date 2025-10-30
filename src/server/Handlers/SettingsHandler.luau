@@ -30,10 +30,10 @@ function SettingsHandler.new(): SettingsHandler
 	RF.OnServerInvoke = function(player: Player, action: number)
 		local RFActions = {
 			[Actions.GetKeybinds] = function()
-				return KeybindsDataStore:GetAsync(player.UserId) or {}
+				return KeybindsDataStore:GetAsync(tostring(player.UserId)) or {}
 			end,
 			[Actions.GetSettings] = function()
-				return SettingsDataStore:GetAsync(player.UserId) or {}
+				return SettingsDataStore:GetAsync(tostring(player.UserId)) or {}
 			end,
 		}
 		return RFActions[action]()
@@ -43,10 +43,10 @@ function SettingsHandler.new(): SettingsHandler
 		function(player: Player, action: number, value: any)
 			local actions = {
 				[Actions.SaveKeybinds] = function()
-					KeybindsDataStore:SetAsync(player.UserId, value)
+					KeybindsDataStore:SetAsync(tostring(player.UserId), value)
 				end,
 				[Actions.SaveSettings] = function()
-					SettingsDataStore:SetAsync(player.UserId, value)
+					SettingsDataStore:SetAsync(tostring(player.UserId), value)
 				end,
 			}
 			actions[action]()

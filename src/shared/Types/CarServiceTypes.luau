@@ -1,8 +1,8 @@
 export type BaseCarService = {
-	Instance: Model & {
+	Instance: {
 		GarageDoors: Folder,
 		Triggers: Folder,
-	},
+	} & Model,
 	Occupants: { Player },
 }
 

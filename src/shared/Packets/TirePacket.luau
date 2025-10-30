@@ -6,7 +6,7 @@ local MaterialGroups = require(
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 
 local groups = {}
-for k, _ in MaterialGroups :: { [string]: { string } } do
+for k, _ in MaterialGroups do
 	table.insert(groups, k)
 end
 

@@ -43,10 +43,12 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 		folder.Instance.LayoutOrder = k
 		folder.Instance.Parent = v.Folder
 				and self.folders[v.Folder].Instance:FindFirstChild("Content")
-			or self.Instance:FindFirstChild(v.Category)
+			or self.Instance:FindFirstChild(assert(v.Category))
 
-		v.Instance = folder.Instance
-		self.folders[v.Name] = v
+		local folderInfo =
+			table.clone(v) :: SettingsConfig.FolderInfo & { Instance: Frame }
+		folderInfo.Instance = folder.Instance
+		self.folders[v.Name] = folderInfo
 	end
 
 	local settingInstance = self.Instance.Setting
@@ -60,12 +62,12 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 		setting.Instance.LayoutOrder = k
 		setting.Instance.Parent = v.Folder
 				and self.folders[v.Folder].Instance:FindFirstChild("Content")
-			or self.Instance:FindFirstChild(v.Category)
+			or self.Instance:FindFirstChild(assert(v.Category))
 	end
 
 	local contextInstance = self.Instance.ControlContext
-	for _, inputContext in
-		ReplicatedStorage.Input:GetChildren() :: { InputContext }
+	for _, inputContext: InputContext in
+		ReplicatedStorage.Input:GetChildren() :: any
 	do
 		local context = contextInstance:Clone()
 		context.Title.Text = StringUtil.SplitPascalCase(inputContext.Name)
@@ -73,7 +75,7 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 		local contextOrder, actionsOrder = getOrder(inputContext.Name)
 		context.LayoutOrder = contextOrder + 100
 
-		for _, inputAction in inputContext:GetChildren() :: { InputAction } do
+		for _, inputAction: InputAction in inputContext:GetChildren() :: any do
 			if string.match(inputAction.Name, "Mouse") then continue end
 
 			local properties = {
@@ -84,9 +86,11 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 				ActionTypes = {},
 			}
 
-			local inputActions = inputAction:GetChildren() :: { InputBinding }
-			local mouseAction =
-				inputContext:FindFirstChild("Mouse" .. inputAction.Name)
+			local inputActions: { InputBinding } =
+				inputAction:GetChildren() :: any
+			local mouseAction = inputContext:FindFirstChild(
+				"Mouse" .. inputAction.Name
+			) :: InputAction & { Mouse: InputBinding }
 			if mouseAction then
 				table.insert(inputActions, mouseAction.Mouse)
 			end
@@ -102,7 +106,8 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 
 			local setting =
 				Setting.new(settingInstance:Clone(), properties :: any)
-			local actionOrder = table.find(actionsOrder, inputAction.Name)
+			local actionOrder =
+				assert(table.find(actionsOrder, inputAction.Name))
 			setting.Instance.LayoutOrder = actionOrder
 
 			trove:Connect(
@@ -126,7 +131,7 @@ function getOrder(context: string)
 	for k, v in ControlsOrder do
 		if v.Context == context then return k, v.Actions end
 	end
-	return 0
+	error(`Order of an "{context}" context not found`)
 end
 
 return table.freeze({ new = SettingsTab.new })

@@ -13,9 +13,9 @@ end
 
 function FlagsUtil.FlagsToBools(flags: number, size: number?): ...boolean
 	size = size or 8
-	assert(size, "")
+	assert(size)
 
-	local array = table.create(size)
+	local array = {}
 	for i = 0, size - 1 do
 		table.insert(array, bit32.band(flags, math.pow(2, i)) ~= 0)
 	end

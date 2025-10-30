@@ -65,8 +65,8 @@ function VehicleHandler.GetPlayerVehicles(
 	player: Player
 ): { PlayerVehicleType.PlayerVehicle }
 	return HttpService:JSONDecode(
-		DataStoreService:GetDataStore("PlayerVehicles"):GetAsync(player.UserId)
-			or "{}"
+		DataStoreService:GetDataStore("PlayerVehicles")
+			:GetAsync(tostring(player.UserId)) or "{}"
 	)
 end
 
@@ -76,8 +76,10 @@ function VehicleHandler.GetPlayerVehicleInfo(
 	id: number
 ): PlayerVehicleType.PlayerVehicleInfo
 	return HttpService:JSONDecode(
-		DataStoreService:GetDataStore("PlayerVehicles", `info/{id}`)
-			:GetAsync(player.UserId)
+		(
+			DataStoreService:GetDataStore("PlayerVehicles", `info/{id}`)
+				:GetAsync(tostring(player.UserId))
+		)
 	)
 end
 
@@ -107,13 +109,19 @@ function VehicleHandler.RegisterNewPlayerVehicle(
 	} :: PlayerVehicleType.PlayerVehicle
 
 	DataStoreService:GetDataStore("PlayerVehicles", `info/{id}`)
-		:SetAsync(player.UserId, HttpService:JSONEncode(playerVehInfo))
+		:SetAsync(
+			tostring(player.UserId),
+			HttpService:JSONEncode(playerVehInfo)
+		)
 
 	local playerVehicles = self:GetPlayerVehicles(player)
 	table.insert(playerVehicles, playerVeh)
 
 	DataStoreService:GetDataStore("PlayerVehicle")
-		:SetAsync(player.UserId, HttpService:JSONEncode(playerVehicles))
+		:SetAsync(
+			tostring(player.UserId),
+			HttpService:JSONEncode(playerVehicles)
+		)
 
 	return id
 end
@@ -129,7 +137,7 @@ function VehicleHandler.UpdatePlayerVehicleInfo(
 	playerVehInfo.Mileage = vehicle.Mileage
 
 	local baseTune = require(
-		ReplicatedStorage.Shared.Vehicle.Tunes[vehicle.Instance.Name]
+		(ReplicatedStorage.Shared.Vehicle.Tunes :: any)[vehicle.Instance.Name]
 	) :: TuneType.Tune
 	local tune = {}
 	for k, v in vehicle.Tune :: any do
@@ -138,7 +146,10 @@ function VehicleHandler.UpdatePlayerVehicleInfo(
 	playerVehInfo.Tune = tune
 
 	DataStoreService:GetDataStore("PlayerVehicles", `info/{playerVehInfo.ID}`)
-		:SetAsync(player.UserId, HttpService:JSONEncode(playerVehInfo))
+		:SetAsync(
+			tostring(player.UserId),
+			HttpService:JSONEncode(playerVehInfo)
+		)
 end
 
 return VehicleHandler.new()

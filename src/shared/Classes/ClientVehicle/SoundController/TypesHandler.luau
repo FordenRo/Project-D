@@ -168,9 +168,10 @@ function Handlers.Fan(
 		sound.AudioPlayer.Volume = self.Vehicle.RPM
 			/ self.Vehicle.Engine.Tune.Redline ^ 0.5
 			* sound.Volume
-		sound.AudioPlayer.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed
-			/ 10
-			* sound.PlaybackSpeed
+		-- TODO
+		-- sound.AudioPlayer.PlaybackSpeed = self.Vehicle.Tune.FanAirSpeed
+		-- 	/ 10
+		-- 	* sound.PlaybackSpeed
 	else
 		if sound.AudioPlayer.IsPlaying then sound.AudioPlayer:Stop() end
 	end

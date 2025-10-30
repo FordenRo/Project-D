@@ -9,7 +9,6 @@ local SettingsController =
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local UITypes = require(ReplicatedStorage.Shared.Types.UITypes)
 
-local ScreenGui = ReplicatedStorage.UI.Interface
 local player = Players.LocalPlayer
 
 local Interface = { set = {} }
@@ -25,7 +24,7 @@ type InterfaceImpl = {
 function Interface.new(interfaceController: UITypes.InterfaceController)
 	local self: InterfaceImpl = Component.new() :: any
 
-	self.Instance = ScreenGui:Clone()
+	self.Instance = (ReplicatedStorage.UI :: any).Interface:Clone()
 	self.Instance.Enabled = false
 	self.Instance.Parent = player.PlayerGui
 	self.Visible = false

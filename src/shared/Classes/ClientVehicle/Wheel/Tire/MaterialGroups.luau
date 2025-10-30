@@ -1,8 +1,4 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
-
-return TableUtil.DeepFreeze({
+local groups = {
 	Road = {
 		"Plastic",
 		"Slate",
@@ -33,4 +29,7 @@ return TableUtil.DeepFreeze({
 		"Glacier",
 		"Snow",
 	},
-})
+}
+
+return (groups :: any) :: typeof(setmetatable({} :: typeof(groups), {} :: { __iter: (any) -> () -> (string, string) }))
+
