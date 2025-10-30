@@ -46,7 +46,7 @@ function Initialize(self: ServerWheel)
 	local rSLY = self.Vehicle.Tune.RSusLength
 		* math.sin(math.rad(self.Vehicle.Tune.RSusAngle))
 
-	--Apply Wheel Density
+	-- Apply Wheel Density
 	local physProps = self.Instance.CurrentPhysicalProperties
 	local wdensity = 0
 	if self.IsFront then
@@ -65,41 +65,37 @@ function Initialize(self: ServerWheel)
 	)
 	self.Instance.Massless = false
 
-	--Save wheel part positions
-	local WParts = {}
-	for _, a in self.Instance.Parts:GetDescendants() do
-		if not a:IsA("BasePart") then continue end
-		table.insert(
-			WParts,
-			{ a, self.Instance.CFrame:ToObjectSpace(a.CFrame) }
-		)
-	end
-	for _, a in self.Instance.WheelFixed:GetDescendants() do
-		if not a:IsA("BasePart") then continue end
-		table.insert(
-			WParts,
-			{ a, self.Instance.CFrame:ToObjectSpace(a.CFrame) }
-		)
+	-- Save wheel part positions
+	local wheelParts = {}
+	for _, collection in
+		{ self.Instance.Parts, self.Instance.WheelFixed } :: { Model }
+	do
+		for _, part in collection:GetDescendants() do
+			if not part:IsA("BasePart") then continue end
+
+			wheelParts[part] = self.Instance.CFrame:ToObjectSpace(part.CFrame)
+		end
 	end
 
-	--Align Wheels
-	local isLeft = string.sub(self.Instance.Name, 2, 2) == "L"
+	-- Align Wheels
 	local posChar = string.sub(self.Instance.Name, 1, 1)
 	self.Instance.CFrame = self.Instance.CFrame
 		* CFrame.Angles(
 			math.rad(
-				self.Vehicle.Tune[posChar .. "Caster"] * (isLeft and 1 or -1)
+				self.Vehicle.Tune[posChar .. "Caster"]
+					* (self.IsRight and -1 or 1)
 			),
-			math.rad(self.Vehicle.Tune[posChar .. "Toe"] * (isLeft and -1 or 1)),
+			math.rad(
+				self.Vehicle.Tune[posChar .. "Toe"] * (self.IsRight and 1 or -1)
+			),
 			math.rad(self.Vehicle.Tune[posChar .. "Camber"] :: number)
 		)
 
-	for _, a in WParts do
-		a[1].CFrame = self.Instance.CFrame * a[2]
+	for part, cframe in wheelParts do
+		part.CFrame = self.Instance.CFrame * cframe
 	end
 
-	--[[Chassis Assembly]]
-	--Create Steering Axle
+	-- Create Steering Axle
 	local arm = Instance.new("Part")
 	arm.Name = "Arm"
 	arm.Anchored = true
@@ -122,7 +118,7 @@ function Initialize(self: ServerWheel)
 	arm.Transparency = 1
 	arm.Parent = self.Instance
 
-	--Create Wheel Spindle
+	-- Create Wheel Spindle
 	local base = arm:Clone()
 	base.Name = "Base"
 	base.CFrame = arm.CFrame * CFrame.new(0, self.Vehicle.Tune.AxleSize, 0)
@@ -139,7 +135,7 @@ function Initialize(self: ServerWheel)
 		steerInner = self.Vehicle.Tune.RSteerInner
 	end
 
-	--Create Steering Anchor
+	-- Create Steering Anchor
 	local axle = arm:Clone()
 	axle.Name = "Axle"
 	axle.CFrame = self.Instance.CFrame
@@ -150,14 +146,14 @@ function Initialize(self: ServerWheel)
 		)
 	axle.Parent = self.Instance
 
-	--Create Powered Axle (LuaInt)
+	-- Create Powered Axle (LuaInt)
 	local axlep = arm:Clone()
 	axlep.Name = "AxleP"
 	axlep.CFrame = self.Instance.CFrame
 	axlep.Parent = self.Instance
 	MakeUtil.Weld(axlep, axle)
 
-	--Create Suspension
+	-- Create Suspension
 	if self.Vehicle.Tune.SuspensionEnabled == true then
 		local SuspensionGeometry =
 			self.Instance:FindFirstChild("SuspensionGeometry")
@@ -416,7 +412,7 @@ function Initialize(self: ServerWheel)
 		MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, base)
 	end
 
-	--Lock Rear Steering Axle
+	-- Lock Rear Steering Axle
 	if
 		(
 			self.Vehicle.Tune.FWSteer == "Static"
@@ -429,7 +425,7 @@ function Initialize(self: ServerWheel)
 
 	MakeUtil.Weld(arm, axle)
 
-	--Weld Miscelaneous Parts
+	-- Weld Miscelaneous Parts
 	if self.Instance:FindFirstChild("SuspensionFixed") ~= nil then
 		MakeUtil.ModelWeld(
 			self.Instance.SuspensionFixed,
@@ -443,12 +439,12 @@ function Initialize(self: ServerWheel)
 		MakeUtil.ModelWeld(self.Instance.Fixed, arm)
 	end
 
-	--Weld Wheel Parts
+	-- Weld Wheel Parts
 	if self.Instance:FindFirstChild("Parts") ~= nil then
 		MakeUtil.ModelWeld(self.Instance.Parts, self.Instance)
 	end
 
-	--Add Steering Gyro
+	-- Add Steering Gyro
 	if self.Instance:FindFirstChild("Steer") then
 		(self.Instance:FindFirstChild("Steer") :: Instance):Destroy()
 	end
@@ -461,41 +457,44 @@ function Initialize(self: ServerWheel)
 			or self.Vehicle.Tune.FWSteer == "Both"
 		)
 	then
-		local steer
 		if self.Vehicle.Tune.PowerSteeringType == "New" then
-			local steerAttach0 = Instance.new("Attachment")
-			steerAttach0.Name = "SteerAttach0"
-			steerAttach0.Parent = arm
-			local steerAttach1 = Instance.new("Attachment")
-			steerAttach1.Name = "SteerAttach1"
-			steerAttach1.Parent = base
-			steer = Instance.new("AlignOrientation")
+			local steer = Instance.new("AlignOrientation")
 			steer.Name = "Steer"
+			steer.CFrame = self.Instance.CFrame
 			steer.Mode = Enum.OrientationAlignmentMode.TwoAttachment
 			steer.ReactionTorqueEnabled = true
 			steer.RigidityEnabled = true
-			steer.Attachment0 = steerAttach0
-			steer.Attachment1 = steerAttach1
+
+			local attach0 = Instance.new("Attachment")
+			attach0.Name = "SteerAttach0"
+			attach0.Parent = arm
+			steer.Attachment0 = attach0
+
+			local attach1 = Instance.new("Attachment")
+			attach1.Name = "SteerAttach1"
+			attach1.Parent = base
+			steer.Attachment1 = attach1
+
+			steer.Parent = self.Instance.Arm
 		else
-			steer = Instance.new("BodyGyro")
-			if self.IsFront then
-				steer.P = self.Vehicle.Tune.SteerP
-				steer.D = self.Vehicle.Tune.SteerD
-				steer.MaxTorque =
-					Vector3.new(0, self.Vehicle.Tune.SteerMaxTorque, 0)
-			else
-				steer.P = self.Vehicle.Tune.RSteerP
-				steer.D = self.Vehicle.Tune.RSteerD
-				steer.MaxTorque =
-					Vector3.new(0, self.Vehicle.Tune.RSteerMaxTorque, 0)
-			end
+			local steer = Instance.new("BodyGyro")
+			steer.Name = "Steer"
+			steer.CFrame = self.Instance.CFrame
+			steer.P = self.IsFront and self.Vehicle.Tune.SteerP
+				or self.Vehicle.Tune.RSteerP
+			steer.D = self.IsFront and self.Vehicle.Tune.SteerD
+				or self.Vehicle.Tune.RSteerD
+			steer.MaxTorque = Vector3.new(
+				0,
+				self.IsFront and self.Vehicle.Tune.SteerMaxTorque
+					or self.Vehicle.Tune.RSteerMaxTorque,
+				0
+			)
+			steer.Parent = self.Instance.Arm
 		end
-		steer.Name = "Steer"
-		steer.CFrame = self.Instance.CFrame
-		steer.Parent = self.Instance.Arm
 	end
 
-	--Add rotation constraint (Detomiks)
+	-- Add rotation constraint (Detomiks)
 	local rotationAttachment0 = Instance.new("Attachment")
 	rotationAttachment0.Name = "RotationAttachment0"
 	rotationAttachment0.Position =
@@ -519,62 +518,69 @@ function Initialize(self: ServerWheel)
 	rotationHinge.Attachment1 = rotationAttachment1
 	rotationHinge.Parent = base
 
-	--Add Motors (LuaInt)
+	--- Fix wheel alignment issue
+	local function fixAlignment(attach: Attachment)
+		if
+			not (
+				string.find(self.Instance.Name, "L")
+				or self.Instance.Name == "R"
+				or self.Instance.Name == "F"
+			)
+		then
+			return
+		end
+
+		attach.Orientation = Vector3.new(0, 180, 0)
+	end
+
+	-- Add Motors (LuaInt)
 	local AV = Instance.new("HingeConstraint")
-	AV.ActuatorType = "Motor"
-	AV.Parent = self.Instance
-	AV.Attachment0 = Instance.new("Attachment")
-	AV.Attachment0.Name = "AA"
-	AV.Attachment0.Parent = (self.Instance :: any).AxleP
-	AV.Attachment1 = Instance.new("Attachment")
-	AV.Attachment1.Name = "AB"
-	AV.Attachment1.Parent = self.Instance
 	AV.Name = "AV"
+	AV.ActuatorType = Enum.ActuatorType.Motor
 	AV.AngularVelocity = 0
 	AV.MotorMaxTorque = 0
+	AV.Parent = self.Instance
 
 	local BV = Instance.new("HingeConstraint")
-	BV.ActuatorType = "Motor"
-	BV.Parent = self.Instance
-	BV.Attachment0 = Instance.new("Attachment")
-	BV.Attachment0.Parent = (self.Instance :: any).AxleP
-	BV.Attachment0.Name = "BA"
-	BV.Attachment1 = Instance.new("Attachment")
-	BV.Attachment1.Name = "BB"
-	BV.Attachment1.Parent = self.Instance
 	BV.Name = "BV"
+	BV.ActuatorType = Enum.ActuatorType.Motor
 	BV.AngularVelocity = 0
-	if self.IsFront then
-		BV.MotorMaxTorque = (
-			self.Vehicle.Tune.PBrakeForce
-			* 9.80665
-			* Units.Force_N
-		) * self.Vehicle.Tune.PBrakeBias
-	else
-		BV.MotorMaxTorque = (
-			self.Vehicle.Tune.PBrakeForce
-			* 9.80665
-			* Units.Force_N
-		) * (1 - self.Vehicle.Tune.PBrakeBias)
+	BV.MotorMaxTorque = (
+		self.Vehicle.Tune.PBrakeForce
+		* 9.80665
+		* Units.Force_N
+	)
+		* (
+			self.IsFront and self.Vehicle.Tune.PBrakeBias
+			or (1 - self.Vehicle.Tune.PBrakeBias)
+		)
+	BV.Parent = self.Instance
+
+	do
+		local attach0 = Instance.new("Attachment")
+		attach0.Name = "AA"
+		attach0.Parent = self.Instance.AxleP
+
+		local attach1 = Instance.new("Attachment")
+		attach1.Name = "AB"
+		attach1.Parent = self.Instance
+
+		fixAlignment(attach0)
+		fixAlignment(attach1)
+
+		AV.Attachment0 = attach0
+		BV.Attachment0 = attach0
+
+		AV.Attachment1 = attach1
+		BV.Attachment1 = attach1
 	end
 
-	-- Attempt to fix wheel alignment issues
-	if
-		string.find(self.Instance.Name, "L")
-		or self.Instance.Name == "R"
-		or self.Instance.Name == "F"
-	then
-		AV.Attachment0.Orientation = Vector3.new(0, 180, 0)
-		BV.Attachment0.Orientation = Vector3.new(0, 180, 0)
-		AV.Attachment1.Orientation = Vector3.new(0, 180, 0)
-		BV.Attachment1.Orientation = Vector3.new(0, 180, 0)
-	end
-
-	--Realign Caster
+	-- Realign Caster
+	-- TODO: I think i can move it upper
 	self.Instance.CFrame = self.Instance.CFrame
 		* CFrame.Angles(
 			math.rad(self.Vehicle.Tune[posChar .. "Caster"] :: number)
-				* (isLeft and -1 or 1),
+				* (self.IsRight and 1 or -1),
 			0,
 			0
 		)
