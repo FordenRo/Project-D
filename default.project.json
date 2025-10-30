@@ -5,11 +5,26 @@
     "ReplicatedFirst": {
       "First": {
         "$path": "src/first"
+      },
+      "LoadingScreen": {
+        "$className": "ScreenGui"
       }
     },
     "ReplicatedStorage": {
       "Shared": {
         "$path": "src/shared"
+      },
+      "Input": {
+        "$className": "Folder"
+      },
+      "Vehicles": {
+        "$className": "Folder"
+      },
+      "Vehicle": {
+        "$className": "Folder"
+      },
+      "UI": {
+        "$className": "Folder"
       }
     },
     "ServerScriptService": {
