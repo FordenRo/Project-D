@@ -1,8 +1,6 @@
 type SmokeEffects = "All" | "Local" | "Off"
 
 export type Type = {
-	--- Aggresiveness of artificial bumps in dirt-, sand-, and snow-type surfaces
-	TireDirtBumps: number,
 	--- Sand force, more means going over sand slows down the car more
 	TireSandForce: number,
 	--- Turns smoke effects on or off, "All" for viewable by everyone, "Local" for only viewable by you, "Off" for none.

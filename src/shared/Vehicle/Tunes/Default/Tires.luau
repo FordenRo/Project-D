@@ -4,7 +4,6 @@ local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
 local Tune = {} :: TuneType.Tune
 
-Tune.TireDirtBumps = 70
 Tune.TireSandForce = 20
 
 Tune.TireSmokeEffects = "All"

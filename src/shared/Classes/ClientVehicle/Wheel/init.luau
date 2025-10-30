@@ -3,6 +3,7 @@ local RunService = game:GetService("RunService")
 
 local BaseWheel = require(ReplicatedStorage.Shared.Classes.BaseWheel)
 local BrakeDisk = require(script.BrakeDisk)
+local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Tire = require(script.Tire)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -142,6 +143,11 @@ function UpdateCollision(self: ClientWheelImpl)
 			ray.Normal
 		)
 		self.Material = (ray.Instance :: BasePart).Material
+		if self.Tire.Material ~= "Road" then
+			self.colliderPart.CFrame += ray.Normal * MathUtil.Noise(
+				self.Instance.Position * 0.2
+			) * 0.3
+		end
 	else
 		self.colliderPart.CFrame = CFrame.new()
 		self.Material = nil

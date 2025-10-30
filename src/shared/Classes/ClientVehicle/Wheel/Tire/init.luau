@@ -263,17 +263,6 @@ function Update(self: ClientTireImpl, deltaTime: number)
 				* (rotLinearSpeed / (Units.Velocity_mdivs / 3.6) / 100)
 		)
 
-		if ray and self.Material ~= "Road" and self.Material ~= "" then
-			local random = Random.new():NextNumber() * speed
-			if random > 20 then
-				self.Wheel.Instance.AssemblyLinearVelocity += Vector3.new(
-					0,
-					math.random(0, self.Vehicle.Tune.TireDirtBumps),
-					0
-				) * math.min(speed / 100, 5)
-			end
-		end
-
 		if
 			vstress > 0.05 * (60 / (1 / deltaTime))
 			and vstress > self.Stress

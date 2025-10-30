@@ -292,6 +292,7 @@ export type ClientWheel = {
 	Tire: ClientWheelTire,
 	BrakeDisk: ClientBrakeDisk,
 	CanSteer: number,
+	Material: Enum.Material?,
 	OppositeWheel: BasePart,
 
 	Update: (self: ClientWheel, deltaTime: number) -> (),
