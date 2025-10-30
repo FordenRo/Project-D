@@ -140,9 +140,9 @@ export type ClientVehicle = {
 	IsSitting: boolean,
 	--- Is the vehicle owned by a local player
 	IsOwned: boolean,
-	MeshParts: { MeshPart },
-	Meshes: { [MeshPart]: EditableMesh },
-	Textures: { [MeshPart]: EditableImage },
+	-- MeshParts: { MeshPart },
+	-- Meshes: { [MeshPart]: EditableMesh },
+	-- Textures: { [MeshPart]: EditableImage },
 	Acceleration: Vector3,
 	Wheels: { ClientWheel },
 

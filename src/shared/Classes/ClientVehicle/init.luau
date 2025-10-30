@@ -1,12 +1,12 @@
-local AssetService = game:GetService("AssetService")
+-- local AssetService = game:GetService("AssetService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local CameraController = require(script.CameraController)
-local CreateEditableMesh =
-	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
+-- local CreateEditableMesh =
+-- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
 local Engine = require(script.Engine)
 local InputController = require(script.InputController)
@@ -45,9 +45,9 @@ type ClientVehicleImpl = {
 function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
 
-	self.MeshParts = {}
-	self.Meshes = {}
-	self.Textures = {}
+	-- self.MeshParts = {}
+	-- self.Meshes = {}
+	-- self.Textures = {}
 	self.Wheels = {}
 
 	self.IsSitting = false
@@ -84,7 +84,7 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	self.PlayerLeaved = trove:Construct(Signal)
 
 	InitializeSeats(self)
-	InitializeBody(self)
+	-- InitializeBody(self)
 
 	setmetatable(self, ClientVehicle)
 
@@ -223,38 +223,38 @@ function togglePrompts(self: ClientVehicleImpl, enabled: boolean)
 	end
 end
 
-function InitializeBody(self: ClientVehicleImpl)
-	local taskCount = 0
-	for _, v in self.Instance.Body:GetDescendants() do
-		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
+-- function InitializeBody(self: ClientVehicleImpl)
+-- 	local taskCount = 0
+-- 	for _, v in self.Instance.Body:GetDescendants() do
+-- 		if not v:IsA("MeshPart") or not v:HasTag("Deformable") then continue end
 
-		task.spawn(function()
-			local texture
-			if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
-				texture =
-					AssetService:CreateEditableImageAsync(v.TextureContent)
-			end
+-- 		task.spawn(function()
+-- 			local texture
+-- 			if v.TextureContent.SourceType ~= Enum.ContentSourceType.None then
+-- 				texture =
+-- 					AssetService:CreateEditableImageAsync(v.TextureContent)
+-- 			end
 
-			local mesh = CreateEditableMesh(v)
-			if texture then
-				v.TextureContent = Content.fromObject(texture)
-				self.Textures[v] = texture
-			end
+-- 			local mesh = CreateEditableMesh(v)
+-- 			if texture then
+-- 				v.TextureContent = Content.fromObject(texture)
+-- 				self.Textures[v] = texture
+-- 			end
 
-			self.Meshes[v] = mesh
+-- 			self.Meshes[v] = mesh
 
-			local index = assert(tonumber(string.match(v.Name, "%.(%d+)$")))
-			self.MeshParts[index] = v
+-- 			local index = assert(tonumber(string.match(v.Name, "%.(%d+)$")))
+-- 			self.MeshParts[index] = v
 
-			taskCount -= 1
-		end)
-		taskCount += 1
-	end
+-- 			taskCount -= 1
+-- 		end)
+-- 		taskCount += 1
+-- 	end
 
-	repeat
-		task.wait()
-	until taskCount == 0
-end
+-- 	repeat
+-- 		task.wait()
+-- 	until taskCount == 0
+-- end
 
 function InitializeSeats(self: ClientVehicleImpl)
 	local seats = self.Instance.Seats:GetChildren()
