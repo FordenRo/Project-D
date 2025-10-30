@@ -31,7 +31,6 @@ type SpeedometerImpl = {
 		},
 	},
 	enabled: boolean,
-	glowing: boolean,
 } & Speedometer
 
 function Speedometer.new(
@@ -44,7 +43,6 @@ function Speedometer.new(
 	self.Instance = instance
 	self.currentUnit = 1
 	self.enabled = false
-	self.glowing = false
 	self.units = {
 		{
 			Unit = "KM",
@@ -121,7 +119,6 @@ end
 function Update(self: SpeedometerImpl)
 	self.enabled = self.Vehicle.IgnitionState == "On"
 		or self.Vehicle.IgnitionState == "Starting"
-	self.glowing = self.enabled and not self.Vehicle.Engine.IsOn
 
 	GearUpdate(self)
 	TachUpdate(self)
@@ -327,13 +324,12 @@ function InitializeIcons(self: SpeedometerImpl)
 				return (self.Vehicle.Engine.Health :: number) < 0.3
 			end,
 			Color = function(state)
-				return state
-						and (self.Vehicle.Engine.Health == 0 and Color3.new(
-							1,
-							0,
-							0
-						) or Color3.new(1, 0.5, 0))
-					or Color3.new()
+				if not state then return Color3.new() end
+				if self.Vehicle.Engine.IsBroken then
+					return Color3.new(1, 0, 0)
+				end
+
+				return Color3.new(1, 0.5, 0)
 			end,
 		},
 		[self.Instance.LowBeam] = {
@@ -366,13 +362,10 @@ function InitializeIcons(self: SpeedometerImpl)
 				return not self.Vehicle.ABS or self.Vehicle.ABSActive
 			end,
 			Color = function(state)
-				return state
-						and ((not self.Vehicle.ABS or self.glowing) and Color3.new(
-							1,
-							0,
-							0
-						) or Color3.new(1, 1, 1))
-					or Color3.new()
+				if not state then return Color3.new() end
+				if not self.Vehicle.ABS then return Color3.new(1, 0, 0) end
+
+				return Color3.new(1, 1, 1)
 			end,
 		},
 		[self.Instance.TCS] = {
@@ -380,13 +373,10 @@ function InitializeIcons(self: SpeedometerImpl)
 				return not self.Vehicle.TCS or self.Vehicle.TCSActive
 			end,
 			Color = function(state)
-				return state
-						and ((not self.Vehicle.TCS or self.glowing) and Color3.new(
-							1,
-							0,
-							0
-						) or Color3.new(1, 1, 1))
-					or Color3.new()
+				if not state then return Color3.new() end
+				if not self.Vehicle.TCS then return Color3.new(1, 0, 0) end
+
+				return Color3.new(1, 1, 1)
 			end,
 		},
 	}
@@ -394,7 +384,7 @@ end
 
 function UpdateIcons(self: SpeedometerImpl)
 	for instance, config in self.icons do
-		local condition = (config.Condition() or self.glowing) and self.enabled
+		local condition = config.Condition() and self.enabled
 		instance.ImageTransparency = condition and 0.2 or 0.8
 
 		if typeof(config.Color) == "function" then
@@ -405,4 +395,11 @@ function UpdateIcons(self: SpeedometerImpl)
 	end
 end
 
-return table.freeze({ new = Speedometer.new })
+function Speedometer.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == Speedometer
+end
+
+return table.freeze({
+	new = Speedometer.new,
+	Is = Speedometer.Is,
+})
