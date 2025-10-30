@@ -78,7 +78,7 @@ function Component.new(): Component
 	local self: ComponentImpl = {} :: any
 
 	self.Changed = Signal.new()
-	self.propChangedSignals = {}
+	self.propChangedSignals = setmetatable({}, { __mode = "v" }) :: any
 
 	return setmetatable({ _t = self }, getMeta(Component)) :: any
 end
@@ -90,7 +90,7 @@ function Component.Wrap<T>(source: T): Component & T
 	) :: any
 
 	self.Changed = Signal.new()
-	self.propChangedSignals = {}
+	self.propChangedSignals = setmetatable({}, { __mode = "v" }) :: any
 
 	return setmetatable({ _t = self }, getMeta(Component)) :: any
 end
