@@ -73,12 +73,14 @@ function getMeta(base: any)
 	}
 end
 
+-- TODO: Fix changed signals table memory leak
+
 --- Constructs a new component
 function Component.new(): Component
 	local self: ComponentImpl = {} :: any
 
 	self.Changed = Signal.new()
-	self.propChangedSignals = setmetatable({}, { __mode = "v" }) :: any
+	self.propChangedSignals = {}
 
 	return setmetatable({ _t = self }, getMeta(Component)) :: any
 end
@@ -90,7 +92,7 @@ function Component.Wrap<T>(source: T): Component & T
 	) :: any
 
 	self.Changed = Signal.new()
-	self.propChangedSignals = setmetatable({}, { __mode = "v" }) :: any
+	self.propChangedSignals = {}
 
 	return setmetatable({ _t = self }, getMeta(Component)) :: any
 end
