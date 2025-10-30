@@ -26,7 +26,7 @@ local Wheel = require(script.Wheel)
 
 local player = Players.LocalPlayer
 
-local ClientVehicle = { set = {} }
+local ClientVehicle = { set = {}, get = {} }
 BaseVehicle.Extend(ClientVehicle)
 
 type ClientVehicle = VehicleTypes.ClientVehicle
@@ -52,6 +52,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.Textures = {}
 	self.Wheels = {}
 
+	self.IsSitting = false
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
 			* 9.80665
@@ -79,7 +80,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	self.DriverChanged = trove:Construct(Signal)
 	self.IgnitionStateChanged = trove:Construct(Signal)
-	self.SittingChanged = trove:Construct(Signal)
+	self.SittingChanged = self:GetPropertyChangedSignal("IsSitting")
 	self.PlayerSeated = trove:Construct(Signal)
 	self.PlayerLeaved = trove:Construct(Signal)
 
@@ -97,10 +98,20 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	InitializeControllers(self)
 
-	trove:Connect(
+	trove:Connect( -- Driver changed signal
+		self:GetPropertyChangedSignal("Driver"),
+		function() self.DriverChanged:FireDeferred(self.Driver) end
+	)
+	trove:Connect( -- Ignition state changed signal
+		self:GetPropertyChangedSignal("IgnitionState"),
+		function() self.IgnitionStateChanged:FireDeferred(self.IgnitionState) end
+	)
+	trove:Connect( -- Update connection
 		RunService.Heartbeat,
 		function(deltaTime) Update(self, deltaTime) end
 	)
+
+	-- Replication
 	trove:Connect(
 		self._Remote.OnClientEvent,
 		function(buf) Replicate(self, buf) end
@@ -110,6 +121,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 			Replicate(self)
 		end
 	end))
+
 	trove:Add(function()
 		--Remove Flip Force
 		if self.Instance.DriveSeat:FindFirstChild("Flip") then
@@ -124,19 +136,8 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	return self
 end
 
-function ClientVehicle.set.IsSitting(self: ClientVehicle, sitting: boolean)
-	self:RawSet("IsSitting", sitting)
-	self.SittingChanged:FireDeferred()
-end
-
-function ClientVehicle.set.Driver(self: ClientVehicleImpl, driver: Player?)
-	self:RawSet("Driver", driver)
-	self.DriverChanged:FireDeferred(driver)
-end
-
-function ClientVehicle.set.IgnitionState(self: ClientVehicleImpl, state: string)
-	self:RawSet("IgnitionState", state)
-	self.IgnitionStateChanged:Fire(state :: any)
+function ClientVehicle.get.IsDriven(self: ClientVehicleImpl)
+	return self.Driver == player
 end
 
 function Seated(
@@ -156,7 +157,6 @@ function Seated(
 	self.IsSitting = true
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
-	self.IsDriven = true
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
@@ -180,7 +180,6 @@ function Leaved(
 	self.IsSitting = false
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
-	self.IsDriven = false
 
 	self.InputController:Destroy()
 	self.CameraController:Destroy()
@@ -188,12 +187,17 @@ function Leaved(
 end
 
 function ClientVehicle.Leave(self: ClientVehicleImpl)
+	assert(
+		player.Character,
+		"Error when leaving the vehicle: player's character is nil"
+	)
+
 	local humanoid =
 		player.Character:FindFirstChildOfClass("Humanoid") :: Humanoid
 	local seat = humanoid.SeatPart
 	if not seat then return end
 
-	local RE = seat._SeatRE :: RemoteEvent
+	local RE = (seat :: any)._SeatRE :: RemoteEvent
 	RE:FireServer()
 
 	RE.OnClientEvent:Wait()
@@ -211,7 +215,7 @@ function togglePrompts(self: ClientVehicleImpl, enabled: boolean)
 			continue
 		end
 
-		local prompt = seat.PromptAttachment.ProximityPrompt :: ProximityPrompt
+		local prompt = (seat :: any).PromptAttachment.ProximityPrompt :: ProximityPrompt
 		if seat.Occupant then
 			prompt.Enabled = false
 		else
@@ -240,7 +244,7 @@ function InitializeBody(self: ClientVehicleImpl)
 
 			self.Meshes[v] = mesh
 
-			local index = tonumber(string.match(v.Name, "%.(%d+)$"))
+			local index = assert(tonumber(string.match(v.Name, "%.(%d+)$")))
 			self.MeshParts[index] = v
 
 			taskCount -= 1
@@ -267,12 +271,13 @@ function InitializeSeats(self: ClientVehicleImpl)
 				local character = seat.Occupant.Parent
 				if not character then return end
 
-				local seatedPlayer = Players:GetPlayerFromCharacter(character)
+				local seatedPlayer =
+					Players:GetPlayerFromCharacter(character :: Model)
 				if not seatedPlayer then return end
 
 				Seated(self, seatedPlayer, seat)
 			else
-				local leavedPlayer = seat == self.Instance.DriveSeat
+				local leavedPlayer = seat == self.Instance.DriveSeat :: any
 						and self.Driver
 					or self.Passengers[seat]
 				Leaved(self, leavedPlayer, seat)
@@ -301,7 +306,9 @@ function InitializeControllers(self: ClientVehicleImpl)
 
 	local function onDataReceived(name: string, ...)
 		local controller = self:GetController(name)
-		if controller.DataReceived then controller:DataReceived(...) end
+		if controller and controller.DataReceived then
+			(controller :: any):DataReceived(...)
+		end
 	end
 
 	self.controllersRE.OnClientEvent:Connect(onDataReceived)
@@ -311,11 +318,21 @@ function InitializeControllers(self: ClientVehicleImpl)
 		if not v:IsA("ModuleScript") then continue end
 
 		local module = require(v) :: VehicleTypes.VehicleControllerImplType
-		table.insert(
-			self.controllers,
-			{ Name = v.Name, Module = module, Object = module.new(self) }
-		)
+		AddController(self, v.Name, module, module.new(self))
 	end
+end
+
+function AddController(
+	self: ClientVehicleImpl,
+	name: string,
+	module: any,
+	object: any
+)
+	table.insert(
+		self.controllers,
+		{ Name = name, Module = module, Object = object }
+	)
+	return object
 end
 
 function ClientVehicle.GetController(self: ClientVehicleImpl, name: string)
@@ -323,7 +340,7 @@ function ClientVehicle.GetController(self: ClientVehicleImpl, name: string)
 		self.controllers,
 		function(v) return v.Name == name end
 	)
-	return value.Object
+	return value and value.Object
 end
 
 function ClientVehicle.SendData(
@@ -335,14 +352,19 @@ function ClientVehicle.SendData(
 		self.controllers,
 		function(v) return v.Module.Is(controller) end
 	)
+	if not value then
+		warn("Controller not found")
+		return
+	end
+
 	self.controllersRE:FireServer(value.Name, ...)
 end
 
 -- TODO: Drivetrain Initialize
 
 function UpdateWheels(self: ClientVehicleImpl, deltaTime: number)
-	for _, wheel in self.Wheels :: { VehicleTypes.ClientWheel } do
-		wheel:Update(deltaTime)
+	for _, wheel in self.Wheels do
+		(wheel :: VehicleTypes.ClientWheel):Update(deltaTime)
 	end
 
 	self.TCSActive = false
@@ -389,4 +411,11 @@ function Update(self: ClientVehicleImpl, deltaTime: number)
 	UpdateMileage(self, deltaTime)
 end
 
-return table.freeze({ new = ClientVehicle.new })
+function ClientVehicle.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == ClientVehicle
+end
+
+return table.freeze({
+	new = ClientVehicle.new,
+	Is = ClientVehicle.Is,
+})
