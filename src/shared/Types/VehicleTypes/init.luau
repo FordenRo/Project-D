@@ -197,11 +197,11 @@ export type Engine = {
 	Tune: EngineTune.Engine,
 	Vehicle: ClientVehicle,
 	IsOn: boolean,
+	IsBroken: boolean,
 
 	Update: (self: Engine, deltaTime: number) -> (),
 	AsTable: (self: Engine) -> EngineTable,
-	Destroy: (self: Engine) -> (),
-} & EngineTable
+} & EngineTable & Component.Component
 
 type CameraMode = "FirstPerson" | "ThirdPerson"
 export type InputController = {

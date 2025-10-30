@@ -11,7 +11,7 @@ local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local Engine = {}
+local Engine = { get = {} }
 Component.Extend(Engine)
 
 type Engine = VehicleTypes.Engine
@@ -49,6 +49,8 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	setmetatable(self, Engine)
 	return self
 end
+
+function Engine.get.IsBroken(self: EngineImpl) return self.Health == 0 end
 
 function calcPower(
 	m: number,
@@ -655,8 +657,5 @@ function UpdateFuel(self: EngineImpl, deltaTime: number)
 
 	if self.Vehicle.Fuel == 0 then self.IsOn = false end
 end
-
---- TODO: Destroy method
-function Engine.Destroy(self: EngineImpl) end
 
 return table.freeze({ new = Engine.new })

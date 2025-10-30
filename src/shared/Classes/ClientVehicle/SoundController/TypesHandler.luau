@@ -150,7 +150,7 @@ function Handlers.EngineBlow(
 	self: SoundTypesHandlerImpl,
 	sound: SoundData.CachedSoundData
 )
-	if self.Vehicle.Engine.Health == 0 then
+	if self.Vehicle.Engine.IsBroken then
 		if sound.Played then return end
 
 		sound.Played = true
