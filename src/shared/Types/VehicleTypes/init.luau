@@ -44,6 +44,7 @@ export type BaseVehicle = {
 	Engine: EngineTable,
 	Tune: TuneType.Tune,
 	Driver: Player?,
+	Owner: Player,
 	Passengers: { [VehicleSeat | Seat]: Player },
 	Dirt: number,
 	Fuel: number,
@@ -244,6 +245,7 @@ export type EngineTable = {
 
 export type ServerVehicle = {
 	Wheels: { ServerWheel },
+	Destroy: (self: ServerVehicle) -> (),
 } & BaseVehicle
 
 export type BaseWheel = {

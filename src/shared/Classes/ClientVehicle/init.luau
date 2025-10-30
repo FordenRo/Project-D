@@ -17,8 +17,6 @@ local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Transmission = require(script.Transmission)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
-local VehicleConstants =
-	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
 local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -44,7 +42,7 @@ type ClientVehicleImpl = {
 	controllersURE: UnreliableRemoteEvent,
 } & ClientVehicle
 
-function ClientVehicle.new(instance: Instance): ClientVehicle
+function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
 
 	self.MeshParts = {}
@@ -53,6 +51,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	self.Wheels = {}
 
 	self.IsSitting = false
+	self.Owner = owner
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
 			* 9.80665
@@ -130,6 +129,10 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	end)
 
 	return self
+end
+
+function ClientVehicle.get.IsOwned(self: ClientVehicleImpl)
+	return self.Owner == player
 end
 
 function ClientVehicle.get.IsDriven(self: ClientVehicleImpl)

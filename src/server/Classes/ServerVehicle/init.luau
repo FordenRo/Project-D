@@ -20,11 +20,12 @@ BaseVehicle.Extend(ServerVehicle)
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
-function ServerVehicle.new(instance: Instance): ServerVehicle
+function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	local self: ServerVehicle =
 		setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
 
 	self.Wheels = {}
+	self.Owner = owner
 
 	Initialize(self)
 

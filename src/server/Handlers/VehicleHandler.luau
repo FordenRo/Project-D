@@ -1,6 +1,6 @@
-local CollectionService = game:GetService("CollectionService")
 local DataStoreService = game:GetService("DataStoreService")
 local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -14,11 +14,38 @@ local RF = Instance.new("RemoteFunction")
 RF.Name = "VehicleRF"
 RF.Parent = ReplicatedStorage
 
+local RE = Instance.new("RemoteEvent")
+RE.Name = "VehicleRE"
+RE.Parent = ReplicatedStorage
+
+local Actions = {
+	SpawnVehicle = 0,
+	RemoveVehicle = 1,
+}
+
+--- All spawned vehicles in the workspace
+local SpawnedVehicles = {} :: { [Player]: VehicleTypes.ServerVehicle }
+
 local VehicleHandler = {}
 VehicleHandler.__index = VehicleHandler
 
 export type VehicleHandler = {
-	GetPlayerVehicles: (self: VehicleHandler, player: Player) -> (),
+	--- Spawn vehicle
+	SpawnVehicle: (
+		self: VehicleHandler,
+		player: Player
+	) -> VehicleTypes.ServerVehicle,
+	--- Remove player's spawned vehicle
+	RemoveSpawnedVehicle: (self: VehicleHandler, player: Player) -> (),
+	--- Returns player's spawned vehicle
+	GetPlayerSpawnedVehicle: (
+		self: VehicleHandler,
+		player: Player
+	) -> VehicleTypes.ServerVehicle?,
+	GetPlayerVehicles: (
+		self: VehicleHandler,
+		player: Player
+	) -> { PlayerVehicleType.PlayerVehicle },
 	GetPlayerVehicleInfo: (
 		self: VehicleHandler,
 		player: Player,
@@ -40,24 +67,79 @@ export type VehicleHandler = {
 function VehicleHandler.new(): VehicleHandler
 	local self: VehicleHandler = setmetatable({}, VehicleHandler) :: any
 
-	for _, vehicle in CollectionService:GetTagged("Vehicle") do
-		if not vehicle:IsDescendantOf(game.Workspace) then continue end
-
-		ServerVehicle.new(vehicle)
-	end
-
-	CollectionService:GetInstanceAddedSignal("Vehicle")
-		:Connect(function(vehicle)
-			if not vehicle:IsDescendantOf(game.Workspace) then return end
-
-			ServerVehicle.new(vehicle)
+	Players.PlayerAdded:Connect(function(player)
+		player.CharacterAdded:Once(function()
+			for _, vehicle in SpawnedVehicles do
+				RE:FireClient(
+					player,
+					Actions.SpawnVehicle,
+					vehicle.Instance,
+					vehicle.Owner
+				)
+			end
 		end)
+	end)
 
-	RF.OnServerInvoke = function(player: Player, event: string, ...)
-		return self[event](self, player, ...)
-	end
+	RE.OnServerEvent:Connect(function(player: Player, action: number, ...)
+		local callbacks = {
+			[Actions.SpawnVehicle] = self.SpawnVehicle,
+			[Actions.RemoveVehicle] = self.RemoveSpawnedVehicle,
+		} :: { (...any) -> () }
+		callbacks[action](self, player, ...)
+	end)
 
 	return self
+end
+
+function VehicleHandler.SpawnVehicle(self: VehicleHandler, player: Player)
+	if not player.Character then return end
+	if self:GetPlayerSpawnedVehicle(player) then return end
+
+	local characterCF = player.Character:GetPivot()
+
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = { player.Character }
+
+	local ray = game.Workspace:Raycast(
+		characterCF.Position + characterCF.LookVector * 8 + Vector3.yAxis * 10,
+		-Vector3.yAxis * 20,
+		params
+	)
+	if not ray then return end
+
+	local instance = (
+		ReplicatedStorage.Vehicles:FindFirstChild("AE-86 Trueno") :: Model
+	):Clone()
+	instance:PivotTo(
+		CFrame.new(ray.Position + Vector3.yAxis * 2, characterCF.LookVector)
+	)
+	instance.Parent = game.Workspace
+
+	local vehicle = ServerVehicle.new(instance, player)
+	SpawnedVehicles[player] = vehicle
+
+	instance.Destroying:Once(function() SpawnedVehicles[player] = nil end)
+
+	RE:FireAllClients(Actions.SpawnVehicle, instance, player)
+	return vehicle
+end
+
+function VehicleHandler.RemoveSpawnedVehicle(
+	self: VehicleHandler,
+	player: Player
+)
+	local vehicle = self:GetPlayerSpawnedVehicle(player)
+	if not vehicle then return end
+
+	vehicle:Destroy()
+end
+
+function VehicleHandler.GetPlayerSpawnedVehicle(
+	self: VehicleHandler,
+	player: Player
+): VehicleTypes.ServerVehicle?
+	return SpawnedVehicles[player]
 end
 
 function VehicleHandler.GetPlayerVehicles(
@@ -90,7 +172,7 @@ function VehicleHandler.RegisterNewPlayerVehicle(
 )
 	local id = HttpService:GenerateGUID()
 	local tune =
-		require(ReplicatedStorage.Shared.Vehicle.Tunes[name]) :: TuneType.Tune
+		require((ReplicatedStorage.Shared.Vehicle.Tunes :: any)[name]) :: TuneType.Tune
 
 	local playerVehInfo = {
 		Name = name,
