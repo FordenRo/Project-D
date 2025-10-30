@@ -1,4 +1,3 @@
---!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)

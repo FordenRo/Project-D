@@ -1,4 +1,3 @@
---!strict
 export type SettingType = "Slider" | "Binding" | "Checkbox"
 type SettingCategory = "Controls" | "Gameplay" | "Graphics"
 type ActionType = "Mouse" | "Controller" | "Keyboard"

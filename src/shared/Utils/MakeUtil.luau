@@ -1,4 +1,3 @@
---!strict
 local MakeUtil = {}
 
 function MakeUtil.Motor(part0: BasePart, part1: BasePart): Motor6D

@@ -1,4 +1,3 @@
---!strict
 return {
 	"Even the tire pressure affects the car's handling.",
 	"Be careful, the engine is vulnerable!",

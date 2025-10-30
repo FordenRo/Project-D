@@ -1,5 +1,3 @@
---!strict
-
 local RunService = game:GetService("RunService")
 
 local Signal = require(script.Parent.Signal)

@@ -1,4 +1,3 @@
---!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local SoundData = require(ReplicatedStorage.Shared.Types.VehicleTypes.SoundData)

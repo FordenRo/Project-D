@@ -1,4 +1,3 @@
---!strict
 local Players = game:GetService("Players")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 

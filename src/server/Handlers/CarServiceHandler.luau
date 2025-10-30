@@ -1,4 +1,3 @@
---!strict
 local CollectionService = game:GetService("CollectionService")
 local ServerScriptService = game:GetService("ServerScriptService")
 

@@ -1,4 +1,3 @@
---!strict
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local CarServiceTypes = require(ReplicatedStorage.Shared.Types.CarServiceTypes)

@@ -1,5 +1,3 @@
---!strict
-
 --- The currently idle thread to run the next handler on
 local freeRunnerThread: thread? = nil
 
