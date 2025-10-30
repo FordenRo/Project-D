@@ -1,7 +1,4 @@
 export type Type = {
-	--- Enables the suspension
-	SuspensionEnabled: boolean,
-
 	--- Spring Force in kgf/mm. (To convert from Roblox stiffness, divide Roblox stiffness by 447.18324)
 	FSusStiffness: number,
 	--- Spring Damping in thousands of kg/s. (To convert from Roblox damping, divide Roblox damping by 45.6)

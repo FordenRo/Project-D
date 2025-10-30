@@ -28,24 +28,6 @@ function ServerWheel.new(
 end
 
 function Initialize(self: ServerWheel)
-	local fDistX = self.Vehicle.Tune.FWsBoneLen
-		* math.cos(math.rad(self.Vehicle.Tune.FWsBoneAngle))
-	local fDistY = self.Vehicle.Tune.FWsBoneLen
-		* math.sin(math.rad(self.Vehicle.Tune.FWsBoneAngle))
-	local rDistX = self.Vehicle.Tune.RWsBoneLen
-		* math.cos(math.rad(self.Vehicle.Tune.RWsBoneAngle))
-	local rDistY = self.Vehicle.Tune.RWsBoneLen
-		* math.sin(math.rad(self.Vehicle.Tune.RWsBoneAngle))
-
-	local fSLX = self.Vehicle.Tune.FSusLength
-		* math.cos(math.rad(self.Vehicle.Tune.FSusAngle))
-	local fSLY = self.Vehicle.Tune.FSusLength
-		* math.sin(math.rad(self.Vehicle.Tune.FSusAngle))
-	local rSLX = self.Vehicle.Tune.RSusLength
-		* math.cos(math.rad(self.Vehicle.Tune.RSusAngle))
-	local rSLY = self.Vehicle.Tune.RSusLength
-		* math.sin(math.rad(self.Vehicle.Tune.RSusAngle))
-
 	-- Apply Wheel Density
 	local physProps = self.Instance.CurrentPhysicalProperties
 	local wdensity = 0
@@ -154,262 +136,106 @@ function Initialize(self: ServerWheel)
 	MakeUtil.Weld(axlep, axle)
 
 	-- Create Suspension
-	if self.Vehicle.Tune.SuspensionEnabled == true then
-		local SuspensionGeometry =
-			self.Instance:FindFirstChild("SuspensionGeometry")
-		if SuspensionGeometry then
-			for _, a in SuspensionGeometry:GetDescendants() do
-				if a.Name == "Weld" then
-					if a:IsA("BasePart") then
-						MakeUtil.Weld(a, self.Vehicle.Instance.DriveSeat)
-					elseif a:IsA("Model") then
-						MakeUtil.ModelWeld(a, self.Vehicle.Instance.DriveSeat)
-					end
-				end
+	for _, v in self.Instance.SuspensionGeometry:GetDescendants() do
+		if v.Name == "Weld" then
+			if v:IsA("BasePart") then
+				MakeUtil.Weld(v, self.Vehicle.Instance.DriveSeat)
+			elseif v:IsA("Model") then
+				MakeUtil.ModelWeld(v, self.Vehicle.Instance.DriveSeat)
 			end
-			MakeUtil.Weld(SuspensionGeometry.Hub, base)
-			if SuspensionGeometry:FindFirstChild("SpringTop") then
-				MakeUtil.Weld(
-					SuspensionGeometry.SpringTop,
-					self.Vehicle.Instance.DriveSeat
-				)
-			end
+		end
+	end
+	MakeUtil.Weld(self.Instance.SuspensionGeometry.Hub, base)
+	if self.Instance.SuspensionGeometry:FindFirstChild("SpringTop") then
+		MakeUtil.Weld(
+			self.Instance.SuspensionGeometry.SpringTop,
+			self.Vehicle.Instance.DriveSeat
+		)
+	end
 
-			local susparts = SuspensionGeometry:GetDescendants()
-			for _, p in susparts do
-				if p:IsA("Part") then
-					p.CustomPhysicalProperties = PhysicalProperties.new(
-						math.clamp(
-							self.Vehicle.Tune.CustomSuspensionDensity,
-							0.01,
-							100
-						),
-						0,
-						0,
-						0,
-						0
-					)
-					p.Massless = (
-						self.Vehicle.Tune.CustomSuspensionDensity :: number
-					) <= 0
-					p.Transparency = self.Vehicle.Tune.SusVisible and 0.5 or 1
-				end
-				if p:IsA("Constraint") then
-					p.Visible = self.Vehicle.Tune.SusVisible
-				end
-			end
+	local susparts = self.Instance.SuspensionGeometry:GetDescendants()
+	for _, p in susparts do
+		if p:IsA("Part") then
+			p.CustomPhysicalProperties = PhysicalProperties.new(
+				math.clamp(self.Vehicle.Tune.CustomSuspensionDensity, 0.01, 100),
+				0,
+				0,
+				0,
+				0
+			)
+			p.Massless = (self.Vehicle.Tune.CustomSuspensionDensity :: number)
+				<= 0
+			p.Transparency = self.Vehicle.Tune.SusVisible and 0.5 or 1
+		end
+		if p:IsA("Constraint") then p.Visible = self.Vehicle.Tune.SusVisible end
+	end
 
-			local sp = SuspensionGeometry:FindFirstChild("Spring")
-			sp.LimitsEnabled = true
-			sp.Visible = self.Vehicle.Tune.SpringsVisible
-			sp.Radius = self.Vehicle.Tune.SusRadius
-			sp.Thickness = self.Vehicle.Tune.SusThickness
-			sp.Color = self.Vehicle.Tune.SusColor
-			sp.Coils = self.Vehicle.Tune.SusCoilCount
+	local sp = self.Instance.SuspensionGeometry.Spring
+	sp.LimitsEnabled = true
+	sp.Visible = self.Vehicle.Tune.SpringsVisible
+	sp.Radius = self.Vehicle.Tune.SusRadius
+	sp.Thickness = self.Vehicle.Tune.SusThickness
+	sp.Color = self.Vehicle.Tune.SusColor
+	sp.Coils = self.Vehicle.Tune.SusCoilCount
 
-			local swayBar = SuspensionGeometry:FindFirstChild("SwayBar")
-			if swayBar and swayBar.Attachment0 and swayBar.Attachment1 then
-				swayBar.Attachment0.Position = Vector3.new(
-					swayBar.Attachment0.Parent.CFrame:ToObjectSpace(
-						self.Vehicle.Center
-					).Position.X - 0.05,
-					0,
-					0
-				)
-				swayBar.Attachment1.Position = Vector3.new(
-					swayBar.Attachment1.Parent.CFrame:ToObjectSpace(
-						self.Vehicle.Center
-					).Position.X - 0.05,
-					0,
-					0
-				)
-				swayBar.Damping = 20
-				swayBar.FreeLength = 0.1
-			end
-			if self.IsFront then
-				sp.Damping = self.Vehicle.Tune.FSusDamping
-					* 1000
-					* Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.FSusStiffness
-					* 9806.65
-					* Units.Stiffness_Ndivm -- 9806.65 converts kgf/mm to N/m
-				sp.FreeLength = self.Vehicle.Tune.FSusLength
-					+ self.Vehicle.Tune.FPreCompress
-				sp.MaxLength = self.Vehicle.Tune.FSusLength
-					+ self.Vehicle.Tune.FExtensionLim
-				sp.MinLength = self.Vehicle.Tune.FSusLength
-					- self.Vehicle.Tune.FCompressLim
-				if swayBar then
-					swayBar.Stiffness = self.Vehicle.Tune.FSwayBar
-						* 9806.65
-						* Units.Stiffness_Ndivm
-				end
-			else
-				sp.Damping = self.Vehicle.Tune.RSusDamping
-					* 1000
-					* Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.RSusStiffness
-					* 9806.65
-					* Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.RSusLength
-					+ self.Vehicle.Tune.RPreCompress
-				sp.MaxLength = self.Vehicle.Tune.RSusLength
-					+ self.Vehicle.Tune.RExtensionLim
-				sp.MinLength = self.Vehicle.Tune.RSusLength
-					- self.Vehicle.Tune.RCompressLim
-				if swayBar then
-					swayBar.Stiffness = self.Vehicle.Tune.RSwayBar
-						* 9806.65
-						* Units.Stiffness_Ndivm
-				end
-			end
-		else
-			local legacyCFrame = self.Instance.CFrame
-				* CFrame.Angles(math.rad(90), 0, math.rad(90)) -- not gonna bother fixing the entire thing so i just put this because it works
-
-			local sa = arm:Clone()
-			sa.Parent = self.Instance
-			sa.Name = "#SA"
-			sa.CFrame = legacyCFrame
-				* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
-			if self.IsFront then
-				local aOff = self.Vehicle.Tune.FAnchorOffset
-				sa.CFrame = legacyCFrame
-					* CFrame.new(
-						self.Vehicle.Tune.AxleSize / 2,
-						-fDistX,
-						-fDistY
-					)
-					* CFrame.new(aOff[3], aOff[1], -aOff[2])
-					* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
-			else
-				local aOff = self.Vehicle.Tune.RAnchorOffset
-				sa.CFrame = legacyCFrame
-					* CFrame.new(
-						self.Vehicle.Tune.AxleSize / 2,
-						-rDistX,
-						-rDistY
-					)
-					* CFrame.new(aOff[3], aOff[1], -aOff[2])
-					* CFrame.Angles(-math.pi / 2, -math.pi / 2, 0)
-			end
-
-			local sb = sa:Clone()
-			sb.Parent = self.Instance
-			sb.Name = "#SB"
-			sb.CFrame = sa.CFrame * CFrame.new(0, 0, self.Vehicle.Tune.AxleSize)
-			sb.FrontSurface = Enum.SurfaceType.Hinge
-
-			local sf1 = Instance.new("Attachment")
-			sf1.Name = "SAtt"
-			sf1.Parent = sa
-
-			local sf2 = sf1:Clone()
-			sf2.Parent = sb
-
-			--(Avxnturador) adds spring offset
-			if self.IsFront then
-				local aOff = self.Vehicle.Tune.FSpringOffset
-				if not self.IsRight then
-					sf1.Position = Vector3.new(
-						fDistX - fSLX + aOff[1],
-						-fDistY + fSLY + aOff[2],
-						self.Vehicle.Tune.AxleSize / 2 + aOff[3]
-					)
-					sf2.Position = Vector3.new(
-						fDistX + aOff[1],
-						-fDistY + aOff[2],
-						-self.Vehicle.Tune.AxleSize / 2 + aOff[3]
-					)
-				else
-					sf1.Position = Vector3.new(
-						fDistX - fSLX + aOff[1],
-						-fDistY + fSLY + aOff[2],
-						self.Vehicle.Tune.AxleSize / 2 - aOff[3]
-					)
-					sf2.Position = Vector3.new(
-						fDistX + aOff[1],
-						-fDistY + aOff[2],
-						-self.Vehicle.Tune.AxleSize / 2 - aOff[3]
-					)
-				end
-			else
-				local aOff = self.Vehicle.Tune.RSpringOffset
-				if self.IsRight then
-					sf1.Position = Vector3.new(
-						rDistX - rSLX + aOff[1],
-						-rDistY + rSLY + aOff[2],
-						self.Vehicle.Tune.AxleSize / 2 + aOff[3]
-					)
-					sf2.Position = Vector3.new(
-						rDistX + aOff[1],
-						-rDistY + aOff[2],
-						-self.Vehicle.Tune.AxleSize / 2 + aOff[3]
-					)
-				else
-					sf1.Position = Vector3.new(
-						rDistX - rSLX + aOff[1],
-						-rDistY + rSLY + aOff[2],
-						self.Vehicle.Tune.AxleSize / 2 - aOff[3]
-					)
-					sf2.Position = Vector3.new(
-						rDistX + aOff[1],
-						-rDistY + aOff[2],
-						-self.Vehicle.Tune.AxleSize / 2 - aOff[3]
-					)
-				end
-			end
-
-			sb:MakeJoints()
-			--(LuaInt) there was axle:makejoints here I believe, but the new powered axle manually welds itself so I ditched it
-
-			local sp = Instance.new("SpringConstraint")
-			sp.Name = "Spring"
-			sp.Attachment0 = sf1
-			sp.Attachment1 = sf2
-			sp.LimitsEnabled = true
-
-			sp.Visible = self.Vehicle.Tune.SpringsVisible
-			sp.Radius = self.Vehicle.Tune.SusRadius
-			sp.Thickness = self.Vehicle.Tune.SusThickness
-			sp.Color = self.Vehicle.Tune.SusColor
-			sp.Coils = self.Vehicle.Tune.SusCoilCount
-
-			sp.Parent = self.Instance
-
-			if self.IsFront then
-				sp.Damping = self.Vehicle.Tune.FSusDamping
-					* 1000
-					* Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.FSusStiffness
-					* 9806.65
-					* Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.FSusLength
-					+ self.Vehicle.Tune.FPreCompress
-				sp.MaxLength = self.Vehicle.Tune.FSusLength
-					+ self.Vehicle.Tune.FExtensionLim
-				sp.MinLength = self.Vehicle.Tune.FSusLength
-					- self.Vehicle.Tune.FCompressLim
-			else
-				sp.Damping = self.Vehicle.Tune.RSusDamping
-					* 1000
-					* Units.Damping_N_sdivm
-				sp.Stiffness = self.Vehicle.Tune.RSusStiffness
-					* 9806.65
-					* Units.Stiffness_Ndivm
-				sp.FreeLength = self.Vehicle.Tune.RSusLength
-					+ self.Vehicle.Tune.RPreCompress
-				sp.MaxLength = self.Vehicle.Tune.RSusLength
-					+ self.Vehicle.Tune.RExtensionLim
-				sp.MinLength = self.Vehicle.Tune.RSusLength
-					- self.Vehicle.Tune.RCompressLim
-			end
-
-			MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, sa)
-			MakeUtil.Weld(sb, base)
+	local swayBar =
+		self.Instance.SuspensionGeometry:FindFirstChild("SwayBar") :: SpringConstraint?
+	if swayBar then
+		local attach0 = swayBar.Attachment0 :: Attachment
+		local attach1 = swayBar.Attachment1 :: Attachment
+		attach0.Position = Vector3.new(
+			(attach0.Parent :: BasePart).CFrame:ToObjectSpace(
+				self.Vehicle.Center
+			).Position.X - 0.05,
+			0,
+			0
+		)
+		attach1.Position = Vector3.new(
+			(attach1.Parent :: BasePart).CFrame:ToObjectSpace(
+				self.Vehicle.Center
+			).Position.X - 0.05,
+			0,
+			0
+		)
+		swayBar.Damping = 20
+		swayBar.FreeLength = 0.1
+	end
+	if self.IsFront then
+		sp.Damping = self.Vehicle.Tune.FSusDamping
+			* 1000
+			* Units.Damping_N_sdivm
+		sp.Stiffness = self.Vehicle.Tune.FSusStiffness
+			* 9806.65
+			* Units.Stiffness_Ndivm -- 9806.65 converts kgf/mm to N/m
+		sp.FreeLength = self.Vehicle.Tune.FSusLength
+			+ self.Vehicle.Tune.FPreCompress
+		sp.MaxLength = self.Vehicle.Tune.FSusLength
+			+ self.Vehicle.Tune.FExtensionLim
+		sp.MinLength = self.Vehicle.Tune.FSusLength
+			- self.Vehicle.Tune.FCompressLim
+		if swayBar then
+			swayBar.Stiffness = self.Vehicle.Tune.FSwayBar
+				* 9806.65
+				* Units.Stiffness_Ndivm
 		end
 	else
-		MakeUtil.Weld(self.Vehicle.Instance.DriveSeat, base)
+		sp.Damping = self.Vehicle.Tune.RSusDamping
+			* 1000
+			* Units.Damping_N_sdivm
+		sp.Stiffness = self.Vehicle.Tune.RSusStiffness
+			* 9806.65
+			* Units.Stiffness_Ndivm
+		sp.FreeLength = self.Vehicle.Tune.RSusLength
+			+ self.Vehicle.Tune.RPreCompress
+		sp.MaxLength = self.Vehicle.Tune.RSusLength
+			+ self.Vehicle.Tune.RExtensionLim
+		sp.MinLength = self.Vehicle.Tune.RSusLength
+			- self.Vehicle.Tune.RCompressLim
+		if swayBar then
+			swayBar.Stiffness = self.Vehicle.Tune.RSwayBar
+				* 9806.65
+				* Units.Stiffness_Ndivm
+		end
 	end
 
 	-- Lock Rear Steering Axle

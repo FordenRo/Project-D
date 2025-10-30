@@ -4,7 +4,6 @@ local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
 local Tune = {} :: TuneType.Tune
 
-Tune.SuspensionEnabled = true
 
 Tune.FSusStiffness = 3.4
 Tune.FSusDamping = 1.2
