@@ -383,6 +383,14 @@ function InitializeIcons(self: SpeedometerImpl)
 end
 
 function UpdateIcons(self: SpeedometerImpl)
+	local lightController =
+		self.Vehicle:GetController("LightController") :: LightController.LightController
+
+	self.Instance.HighBeam.Visible = lightController.State == "High"
+		and self.enabled
+	self.Instance.LowBeam.Visible = lightController.State ~= "High"
+		or not self.enabled
+
 	for instance, config in self.icons do
 		local condition = config.Condition() and self.enabled
 		instance.ImageTransparency = condition and 0.2 or 0.8
