@@ -236,29 +236,20 @@ function ApplyWeight(self: ServerVehicle)
 end
 
 function CreateFlip(self: ServerVehicle)
-	local flipG
-	if VehicleConstants.FlipType == "New" then
-		local flipAttach = Instance.new("Attachment")
-		flipAttach.Axis = Vector3.new(0, 1, 0)
-		flipAttach.Parent = self.Instance.DriveSeat
+	local flip = Instance.new("AlignOrientation")
+	flip.Name = "Flip"
+	flip.AlignType = Enum.AlignType.PrimaryAxisParallel
+	flip.RigidityEnabled = true
+	flip.Enabled = false
+	flip.Mode = Enum.OrientationAlignmentMode.OneAttachment
+	flip.PrimaryAxis = Vector3.new(0, 1, 0)
 
-		flipG = Instance.new("AlignOrientation")
-		flipG.Name = "Flip"
-		flipG.Attachment0 = flipAttach
-		flipG.AlignType = Enum.AlignType.PrimaryAxisParallel
-		flipG.RigidityEnabled = true
-		flipG.Enabled = false
-		flipG.Mode = Enum.OrientationAlignmentMode.OneAttachment
-		flipG.PrimaryAxis = Vector3.new(0, 1, 0)
-		flipG.Parent = self.Instance.DriveSeat
-	elseif VehicleConstants.FlipType == "Old" then
-		flipG = Instance.new("BodyGyro")
-		flipG.Name = "Flip"
-		flipG.D = 0
-		flipG.MaxTorque = Vector3.new(0, 0, 0)
-		flipG.P = 0
-		flipG.Parent = self.Instance.DriveSeat
-	end
+	local attach = Instance.new("Attachment")
+	attach.Axis = Vector3.new(0, 1, 0)
+	attach.Parent = self.Instance.DriveSeat
+	flip.Attachment0 = attach
+
+	flip.Parent = self.Instance.DriveSeat
 end
 
 function Finalize(self: ServerVehicle)
@@ -286,11 +277,7 @@ function Leaved(self: ServerVehicle, seat: VehicleSeat | Seat)
 
 		-- Remove Flip Force
 		if self.Instance.DriveSeat:FindFirstChild("Flip") then
-			if VehicleConstants.FlipType == "New" then
-				self.Instance.DriveSeat.Flip.Enabled = false
-			else
-				self.Instance.DriveSeat.Flip.MaxTorque = 0
-			end
+			self.Instance.DriveSeat.Flip.Enabled = false
 		end
 
 		for _, wheel in self.Wheels do

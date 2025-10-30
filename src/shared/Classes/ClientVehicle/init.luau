@@ -125,11 +125,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	trove:Add(function()
 		--Remove Flip Force
 		if self.Instance.DriveSeat:FindFirstChild("Flip") then
-			if VehicleConstants.FlipType == "New" then
-				self.Instance.DriveSeat.Flip.Enabled = false
-			else
-				self.Instance.DriveSeat.Flip.MaxTorque = 0
-			end
+			self.Instance.DriveSeat.Flip.Enabled = false
 		end
 	end)
 

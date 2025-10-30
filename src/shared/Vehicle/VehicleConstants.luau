@@ -5,7 +5,6 @@ local VehicleConstantsType =
 
 local VehicleConstants = {} :: VehicleConstantsType.VehicleConstants
 
-VehicleConstants.FlipType = "New" -- implement this
 VehicleConstants.Haptics = "Controller" -- implement this
 VehicleConstants.GravComp = 35
 VehicleConstants.WBVisible = false
