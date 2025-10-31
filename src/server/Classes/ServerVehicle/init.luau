@@ -6,7 +6,6 @@ local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local InteriorHandler = require(script.InteriorHandler)
-local Lights = require(script.Lights)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -34,7 +33,6 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 
 	self.Engine = table.clone(EngineTable)
 	-- DeformationHandler.new(self)
-	Lights.new(self)
 	InteriorHandler.new(self)
 
 	trove:Connect(

@@ -14,15 +14,6 @@ local LIGHT_POWER = {
 	High = 1,
 }
 
-local LIGHT_TYPES = {
-	"Front",
-	"Rear",
-	"TurnRight",
-	"TurnLeft",
-	"Reverse",
-	"Brake",
-}
-
 local LightController = { set = {} }
 Component.Extend(LightController)
 
