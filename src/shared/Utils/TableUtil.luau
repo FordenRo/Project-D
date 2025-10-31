@@ -11,8 +11,6 @@
 ]]
 local TableUtil = {}
 
-local HttpService = game:GetService("HttpService")
-
 --[[
 	Creates a deep copy of the given table.
 
@@ -226,18 +224,18 @@ end
 	print(t2) --> {B = 40, C = 60}
 	```
 ]]
-function TableUtil.Filter<T>(
-	t: { T },
-	predicate: (T, any, { T }) -> boolean
-): { T }
+function TableUtil.Filter<K, V>(
+	t: { [K]: V },
+	predicate: (V, K, { [K]: V }) -> boolean
+): { [K]: V }
 	assert(typeof(t) == "table", "First argument must be a table")
 	assert(
 		typeof(predicate) == "function",
 		"Second argument must be a function"
 	)
 
-	local newT = table.create(#t)
 	if #t > 0 then
+		local newT = {} :: { V }
 		local n = 0
 		for i, v in t do
 			if predicate(v, i, t) then
@@ -245,13 +243,14 @@ function TableUtil.Filter<T>(
 				newT[n] = v
 			end
 		end
+		return newT :: any
 	else
+		local newT = {}
 		for k, v in t do
 			if predicate(v, k, t) then newT[k] = v end
 		end
+		return newT
 	end
-
-	return newT
 end
 
 --[[
@@ -269,9 +268,9 @@ end
 	print(result) --> 100
 	```
 ]]
-function TableUtil.Reduce<T, R>(
-	t: { T },
-	predicate: (R, T, any, { T }) -> R,
+function TableUtil.Reduce<K, V, R>(
+	t: { [K]: V },
+	predicate: (R, V, K, { [K]: V }) -> R,
 	init: R
 ): R
 	assert(typeof(t) == "table", "First argument must be a table")
@@ -280,16 +279,16 @@ function TableUtil.Reduce<T, R>(
 		"Second argument must be a function"
 	)
 
-	local result = init :: R
+	local result = init
 	if #t > 0 then
 		local start = 1
 		if init == nil then
-			result = (t[1] :: any) :: R
-			start = 2
+			result = (t[1 :: any] :: any) :: R
+			start += 1
 		end
 
 		for i = start, #t do
-			result = predicate(result, t[i], i, t)
+			result = predicate(result, t[i :: any], i :: any, t)
 		end
 	else
 		local start = nil
@@ -317,14 +316,14 @@ end
 	print(newT) --> {A = 10, B = 20, C = 30, D = 40}
 	```
 ]]
-function TableUtil.Assign<T>(target: { T }, ...: { any }): { T } & { any }
+function TableUtil.Assign<K, V>(target: { [K]: V }, ...: {}): { [K]: V } & any
 	local tbl = table.clone(target)
 	for _, src in { ... } do
-		for k, v in src do
+		for k, v in src :: any do
 			tbl[k] = v
 		end
 	end
-	return tbl
+	return tbl :: any
 end
 
 --[[
@@ -339,7 +338,7 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.Extend<T, E>(target: { T }, extension: { E }): { T } & { E }
+function TableUtil.Extend<V, E>(target: { V }, extension: { E }): { V } & { E }
 	local tbl = table.clone(target) :: { any }
 	for _, v in extension do
 		table.insert(tbl, v)
@@ -378,7 +377,7 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.Shuffle<T>(tbl: { T }, seed: number?): { T }
+function TableUtil.Shuffle<V>(tbl: { V }, seed: number?): { V }
 	assert(typeof(tbl) == "table", "First argument must be a table")
 
 	local shuffled = table.clone(tbl)
@@ -400,7 +399,7 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.Sample<T>(tbl: { T }, size: number, seed: number?): { T }
+function TableUtil.Sample<V>(tbl: { V }, size: number, seed: number?): { V }
 	assert(typeof(tbl) == "table", "First argument must be a table")
 	assert(typeof(size) == "number", "Second argument must be a number")
 
@@ -437,7 +436,7 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.Flat<T>(tbl: { T }, depth: number?): { T }
+function TableUtil.Flat<V>(tbl: { V }, depth: number?): { V }
 	local maxDepth: number = if typeof(depth) == "number" then depth else 1
 	local flatTbl = table.create(#tbl)
 
@@ -469,9 +468,9 @@ end
 
 	This function works on arrays, but not dictionaries.
 ]]
-function TableUtil.FlatMap<T, M>(
-	tbl: { T },
-	callback: (T, number, { T }) -> M
+function TableUtil.FlatMap<V, M>(
+	tbl: { V },
+	callback: (V, number, { V }) -> M
 ): { M }
 	return TableUtil.Flat(TableUtil.Map(tbl, callback))
 end
@@ -493,7 +492,7 @@ end
 	```
 ]]
 function TableUtil.Keys<K, V>(tbl: { [K]: V }): { K }
-	local keys = table.create(#tbl)
+	local keys = {}
 	for k in tbl do
 		table.insert(keys, k)
 	end
@@ -517,7 +516,7 @@ end
 	```
 ]]
 function TableUtil.Values<K, V>(tbl: { [K]: V }): { V }
-	local values = table.create(#tbl)
+	local values = {}
 	for _, v in tbl do
 		table.insert(values, v)
 	end
@@ -607,7 +606,7 @@ function TableUtil.Some<K, V>(
 end
 
 --[[
-	Returns a new table truncated to the length of `length`. Any length
+	Returns a new table truncated to the length of `len`. Any length
 	equal or greater than the current length will simply return a
 	shallow copy of the table.
 
@@ -617,12 +616,15 @@ end
 	print(tTruncated) --> {10, 20, 30}
 	```
 ]]
-function TableUtil.Truncate<T>(tbl: { T }, len: number): { T }
+function TableUtil.Truncate<T, V>(
+	tbl: T & { [number]: V },
+	len: number
+): T & { [number]: V }
 	local n = #tbl
 	len = math.clamp(len, 1, n)
 	return if len == n
 		then table.clone(tbl)
-		else table.move(tbl, 1, len, 1, table.create(len))
+		else table.move(tbl, 1, len, 1, table.create(len)) :: any
 end
 
 --[=[
@@ -729,15 +731,5 @@ end
 	```
 ]]
 function TableUtil.IsEmpty(tbl: any): boolean return next(tbl) == nil end
-
---- Proxy for [`HttpService:JSONEncode`](https://developer.roblox.com/en-us/api-reference/function/HttpService/JSONEncode).
-function TableUtil.EncodeJSON(value: any): string
-	return HttpService:JSONEncode(value)
-end
-
---- Proxy for [`HttpService:JSONDecode`](https://developer.roblox.com/en-us/api-reference/function/HttpService/JSONDecode).
-function TableUtil.DecodeJSON(str: string): any
-	return HttpService:JSONDecode(str)
-end
 
 return TableUtil
