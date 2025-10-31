@@ -1,6 +1,8 @@
 local DataStoreService = game:GetService("DataStoreService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Enums = require(ReplicatedStorage.Shared.Enums)
+
 local SettingsDataStore = DataStoreService:GetDataStore("PlayerSettings")
 local KeybindsDataStore = DataStoreService:GetDataStore("PlayerKeybinds")
 
@@ -12,13 +14,6 @@ local RF = Instance.new("RemoteFunction")
 RF.Name = "_SettingsRF"
 RF.Parent = ReplicatedStorage
 
-local Actions = {
-	GetKeybinds = 0,
-	GetSettings = 1,
-	SaveKeybinds = 2,
-	SaveSettings = 3,
-}
-
 local SettingsHandler = {}
 SettingsHandler.__index = SettingsHandler
 
@@ -28,24 +23,24 @@ function SettingsHandler.new(): SettingsHandler
 	local self: SettingsHandler = setmetatable({}, SettingsHandler) :: any
 
 	RF.OnServerInvoke = function(player: Player, action: number)
-		local RFActions = {
-			[Actions.GetKeybinds] = function()
+		local actions = {
+			[Enums.SettingsAction.GetKeybinds] = function()
 				return KeybindsDataStore:GetAsync(tostring(player.UserId)) or {}
 			end,
-			[Actions.GetSettings] = function()
+			[Enums.SettingsAction.GetSettings] = function()
 				return SettingsDataStore:GetAsync(tostring(player.UserId)) or {}
 			end,
 		}
-		return RFActions[action]()
+		return actions[action]()
 	end
 
 	RE.OnServerEvent:Connect(
 		function(player: Player, action: number, value: any)
 			local actions = {
-				[Actions.SaveKeybinds] = function()
+				[Enums.SettingsAction.SaveKeybinds] = function()
 					KeybindsDataStore:SetAsync(tostring(player.UserId), value)
 				end,
-				[Actions.SaveSettings] = function()
+				[Enums.SettingsAction.SaveSettings] = function()
 					SettingsDataStore:SetAsync(tostring(player.UserId), value)
 				end,
 			}

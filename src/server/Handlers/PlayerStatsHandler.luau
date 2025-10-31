@@ -2,6 +2,7 @@ local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Enums = require(ReplicatedStorage.Shared.Enums)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 
 local RF = Instance.new("RemoteFunction")
@@ -10,11 +11,6 @@ RF.Parent = ReplicatedStorage
 
 local playerJoinedTime: { [Player]: number } = {}
 local playerPlaytime: { [Player]: number } = {}
-
-local Actions = {
-	GetCash = 0,
-	GetLaps = 1,
-}
 
 local PlayerStatsHandler = {}
 PlayerStatsHandler.__index = PlayerStatsHandler
@@ -43,8 +39,8 @@ function PlayerStatsHandler.new(): PlayerStatsHandler
 	)
 	RF.OnServerInvoke = function(player: Player, action: number, ...)
 		local callbacks = {
-			[Actions.GetCash] = self.GetPlayerCash,
-			[Actions.GetLaps] = self.GetPlayerLaps,
+			[Enums.PlayerStatsAction.GetCash] = self.GetPlayerCash,
+			[Enums.PlayerStatsAction.GetLaps] = self.GetPlayerLaps,
 		}
 		return callbacks[action](self, player, ...)
 	end

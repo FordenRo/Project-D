@@ -1,11 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RF = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
+local Enums = require(ReplicatedStorage.Shared.Enums)
 
-local Actions = {
-	GetCash = 0,
-	GetLaps = 1,
-}
+local RF = ReplicatedStorage:WaitForChild("PlayerStatsRF") :: RemoteFunction
 
 local PlayerStatsController = {}
 PlayerStatsController.__index = PlayerStatsController
@@ -23,11 +20,11 @@ function PlayerStatsController.new(): PlayerStatsController
 end
 
 function PlayerStatsController.GetCash(self: PlayerStatsController): number
-	return RF:InvokeServer(Actions.GetCash)
+	return RF:InvokeServer(Enums.PlayerStatsAction.GetCash)
 end
 
 function PlayerStatsController.GetLaps(self: PlayerStatsController): number
-	return RF:InvokeServer(Actions.GetLaps)
+	return RF:InvokeServer(Enums.PlayerStatsAction.GetLaps)
 end
 
 return PlayerStatsController.new()

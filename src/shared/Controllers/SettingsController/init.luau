@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
+local Enums = require(ReplicatedStorage.Shared.Enums)
 local SettingsConfig = require(script.SettingsConfig)
 local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
@@ -44,13 +45,6 @@ type SettingsControllerImpl = {
 local RE = ReplicatedStorage:WaitForChild("_SettingsRE") :: RemoteEvent
 local RF = ReplicatedStorage:WaitForChild("_SettingsRF") :: RemoteFunction
 
-local Actions = {
-	GetKeybinds = 0,
-	GetSettings = 1,
-	SaveKeybinds = 2,
-	SaveSettings = 3,
-}
-
 function SettingsController.new(): SettingsController
 	local self: SettingsControllerImpl =
 		setmetatable({}, SettingsController) :: any
@@ -63,7 +57,7 @@ function SettingsController.new(): SettingsController
 	end
 
 	-- Load saved settings
-	for k, v in RF:InvokeServer(Actions.GetSettings) do
+	for k, v in RF:InvokeServer(Enums.SettingsAction.GetSettings) do
 		config[k] = v
 	end
 
@@ -74,7 +68,7 @@ function SettingsController.new(): SettingsController
 	self.SettingChanged:Connect(function(k) self.raw[k] = self.settings[k] end)
 
 	do -- Initialize keybinds
-		local keybinds = RF:InvokeServer(Actions.GetKeybinds)
+		local keybinds = RF:InvokeServer(Enums.SettingsAction.GetKeybinds)
 		for _, context: InputContext in
 			ReplicatedStorage.Input:GetChildren() :: any
 		do
@@ -105,7 +99,7 @@ function SettingsController.new(): SettingsController
 
 			settings[k] = v
 		end
-		RE:FireServer(Actions.SaveSettings, settings)
+		RE:FireServer(Enums.SettingsAction.SaveSettings, settings)
 
 		-- Save keybinds
 		local keybinds = {}
@@ -123,7 +117,7 @@ function SettingsController.new(): SettingsController
 				end
 			end
 		end
-		RE:FireServer(Actions.SaveKeybinds, keybinds)
+		RE:FireServer(Enums.SettingsAction.SaveKeybinds, keybinds)
 	end)
 
 	return self
