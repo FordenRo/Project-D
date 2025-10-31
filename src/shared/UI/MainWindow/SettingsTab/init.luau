@@ -8,6 +8,7 @@ local SettingsConfig = require(
 )
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
@@ -25,7 +26,7 @@ export type SettingsTab = {
 }
 
 type SettingsTabImpl = {
-	folders: { [string]: SettingsConfig.FolderInfo & { Instance: Frame } },
+	folders: { [string]: SettingsTypes.FolderInfo & { Instance: Frame } },
 } & SettingsTab
 
 function SettingsTab.new(instance: ScrollingFrame): SettingsTab
@@ -46,7 +47,7 @@ function SettingsTab.new(instance: ScrollingFrame): SettingsTab
 			or self.Instance:FindFirstChild(assert(v.Category))
 
 		local folderInfo =
-			table.clone(v) :: SettingsConfig.FolderInfo & { Instance: Frame }
+			table.clone(v) :: SettingsTypes.FolderInfo & { Instance: Frame }
 		folderInfo.Instance = folder.Instance
 		self.folders[v.Name] = folderInfo
 	end

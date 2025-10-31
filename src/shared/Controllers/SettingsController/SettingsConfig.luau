@@ -1,30 +1,6 @@
-export type SettingType = "Slider" | "Binding" | "Checkbox"
-type SettingCategory = "Controls" | "Gameplay" | "Graphics"
-type ActionType = "Mouse" | "Controller" | "Keyboard"
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-export type SettingInfo = {
-	Name: string,
-	Title: string,
-	Description: string?,
-	Category: SettingCategory?,
-	Folder: string?,
-	Type: SettingType,
-	Value: any,
-	Default: any,
-	Max: number?,
-	Min: number?,
-	Step: number?,
-	ActionTypes: { ActionType }?,
-}
-
-export type FolderInfo = {
-	Name: string,
-	Title: string,
-	Description: string?,
-	Category: SettingCategory?,
-	Folder: string?,
-}
-
+local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Folders = {
 	{
 		Name = "MSteer",
@@ -36,7 +12,7 @@ local Folders = {
 		Title = "Keyboard Pedals Settings",
 		Category = "Controls",
 	},
-} :: { FolderInfo }
+} :: { SettingsTypes.FolderInfo }
 
 local Settings = {
 	{
@@ -185,7 +161,7 @@ local Settings = {
 		Max = 1000,
 		Step = 25,
 	},
-} :: { SettingInfo }
+} :: { SettingsTypes.SettingInfo }
 
 return {
 	Settings = Settings,

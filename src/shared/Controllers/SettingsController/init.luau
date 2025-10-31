@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local SettingsConfig = require(script.SettingsConfig)
+local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
@@ -23,15 +24,15 @@ export type SettingsController = {
 	GetSettingInfo: (
 		self: SettingsController,
 		name: string
-	) -> SettingsConfig.SettingInfo,
+	) -> SettingsTypes.SettingInfo,
 	GetFolderInfo: (
 		self: SettingsController,
 		name: string
-	) -> SettingsConfig.FolderInfo,
+	) -> SettingsTypes.FolderInfo,
 	GetSettingInfos: (
 		self: SettingsController
-	) -> { SettingsConfig.SettingInfo },
-	GetFolderInfos: (self: SettingsController) -> { SettingsConfig.FolderInfo },
+	) -> { SettingsTypes.SettingInfo },
+	GetFolderInfos: (self: SettingsController) -> { SettingsTypes.FolderInfo },
 	SetSetting: (self: SettingsController, name: string, value: any) -> (),
 }
 
@@ -149,7 +150,7 @@ end
 function SettingsController.GetSettingInfo(
 	self: SettingsControllerImpl,
 	name: string
-): SettingsConfig.SettingInfo
+): SettingsTypes.SettingInfo
 	local found = TableUtil.Find(
 		SettingsConfig.Settings,
 		function(a) return a.Name == name end
@@ -164,7 +165,7 @@ end
 function SettingsController.GetFolderInfo(
 	self: SettingsControllerImpl,
 	name: string
-): SettingsConfig.FolderInfo
+): SettingsTypes.FolderInfo
 	local found = TableUtil.Find(
 		SettingsConfig.Folders,
 		function(a) return a.Name == name end
@@ -176,7 +177,7 @@ end
 
 function SettingsController.GetSettingInfos(
 	self: SettingsControllerImpl
-): { SettingsConfig.SettingInfo }
+): { SettingsTypes.SettingInfo }
 	local t = TableUtil.DeepCopy(SettingsConfig.Settings)
 	for _, v in t do
 		v.Value = self:GetSetting(v.Name)
@@ -186,7 +187,7 @@ end
 
 function SettingsController.GetFolderInfos(
 	self: SettingsControllerImpl
-): { SettingsConfig.FolderInfo }
+): { SettingsTypes.FolderInfo }
 	return TableUtil.DeepCopy(SettingsConfig.Folders)
 end
 

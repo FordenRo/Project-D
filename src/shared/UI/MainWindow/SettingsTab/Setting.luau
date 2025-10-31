@@ -2,9 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
 
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
-local SettingsConfig = require(
-	ReplicatedStorage.Shared.Controllers.SettingsController.SettingsConfig
-)
+local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
@@ -42,8 +40,8 @@ export type Setting = {
 			Keyboard: BindingButton,
 		},
 	},
-	Type: SettingsConfig.SettingType,
-	Properties: SettingsConfig.SettingInfo,
+	Type: SettingsTypes.SettingType,
+	Properties: SettingsTypes.SettingInfo,
 	Changed: Signal.Signal<...any>,
 	Value: any,
 }
@@ -54,7 +52,7 @@ export type SettingImpl = {
 
 function Setting.new(
 	instance: Frame,
-	properties: SettingsConfig.SettingInfo
+	properties: SettingsTypes.SettingInfo
 ): Setting
 	local self: SettingImpl = setmetatable({}, Setting) :: any
 
