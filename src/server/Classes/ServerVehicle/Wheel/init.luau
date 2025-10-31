@@ -402,7 +402,6 @@ function Initialize(self: ServerWheel)
 	end
 
 	-- Realign Caster
-	-- TODO: I think i can move it upper
 	self.Instance.CFrame = self.Instance.CFrame
 		* CFrame.Angles(
 			math.rad(self.Vehicle.Tune[posChar .. "Caster"] :: number)

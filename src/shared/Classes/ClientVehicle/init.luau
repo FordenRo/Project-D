@@ -75,7 +75,7 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	self.lastVelocity = Vector3.new()
 
 	local trove = Trove.new()
-	trove:AttachToInstance(instance)
+	trove:AttachToInstance(self.Instance.DriveSeat)
 
 	self.DriverChanged = trove:Construct(Signal)
 	self.IgnitionStateChanged = trove:Construct(Signal)

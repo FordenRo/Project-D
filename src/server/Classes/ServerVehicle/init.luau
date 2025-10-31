@@ -48,6 +48,8 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 		end
 	)
 
+	task.delay(1, function() InitializeSeats(self) end)
+
 	return self
 end
 
@@ -60,7 +62,6 @@ function Initialize(self: ServerVehicle)
 	MakeGravity(self)
 	CreateFlip(self)
 	Finalize(self)
-	InitializeSeats(self)
 	InitializeControllersReplication(self)
 end
 
@@ -339,7 +340,7 @@ function InitializeSeats(self: ServerVehicle)
 
 		local prompt = Instance.new("ProximityPrompt")
 		prompt.ObjectText = "Vehicle"
-		prompt.ActionText = "Enter"
+		prompt.ActionText = seat:IsA("VehicleSeat") and "Drive" or "Seat"
 		prompt.KeyboardKeyCode = Enum.KeyCode.F
 		prompt.MaxActivationDistance = 6
 		prompt.RequiresLineOfSight = false
