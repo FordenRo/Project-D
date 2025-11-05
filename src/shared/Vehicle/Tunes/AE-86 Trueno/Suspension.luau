@@ -21,19 +21,7 @@ Tune.RSwayBar = 4.0
 Tune.RSusLength = 1.15
 Tune.RPreCompress = 0.2
 Tune.RExtensionLim = 0.5
-Tune.RCompressLim = 0.3
-
-Tune.FSusAngle = 80
-Tune.FWsBoneLen = 4
-Tune.FWsBoneAngle = 0
-Tune.FAnchorOffset = { -0.4, -0.5, 0 }
-Tune.FSpringOffset = { -0.4, 0, 0 }
-
-Tune.RSusAngle = 80
-Tune.RWsBoneLen = 4
-Tune.RWsBoneAngle = 0
-Tune.RAnchorOffset = { -0.4, -0.5, 0 }
-Tune.RSpringOffset = { -0.4, 0, 0 }
+Tune.RCompressLim = 0.8
 
 Tune.SusVisible = false
 Tune.SpringsVisible = true
