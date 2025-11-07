@@ -9,21 +9,24 @@ local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Vector3Spring = require(ReplicatedStorage.Shared.Utils.Vector3Spring)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
-local BodyController = {}
-BodyController.__index = BodyController
+local CharacterController = {}
+CharacterController.__index = CharacterController
 
-export type BodyController = {
+export type CharacterController = {
 	Player: Player,
 	Vehicle: VehicleTypes.ClientVehicle,
 }
 
-type BodyControllerImpl = {
+type CharacterControllerImpl = {
 	trove: Trove.Trove,
 	IKControls: { [string]: IKControl },
-} & BodyController
+} & CharacterController
 
-function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
-	local self: BodyControllerImpl = setmetatable({}, BodyController) :: any
+function CharacterController.new(
+	vehicle: VehicleTypes.ClientVehicle
+): CharacterController
+	local self: CharacterControllerImpl =
+		setmetatable({}, CharacterController) :: any
 
 	self.Vehicle = vehicle
 	self.IKControls = {}
@@ -39,7 +42,7 @@ function BodyController.new(vehicle: VehicleTypes.ClientVehicle): BodyController
 	return self
 end
 
-function Initialize(self: BodyControllerImpl, player: Player)
+function Initialize(self: CharacterControllerImpl, player: Player)
 	self.Player = player
 
 	InitializeIKControls(self)
@@ -52,7 +55,7 @@ function Initialize(self: BodyControllerImpl, player: Player)
 	IgnitionHandler(self)
 end
 
-function InitializeIKControls(self: BodyControllerImpl)
+function InitializeIKControls(self: CharacterControllerImpl)
 	local function make(
 		name: string,
 		chainRoot: string,
@@ -187,7 +190,7 @@ function InitializeIKControls(self: BodyControllerImpl)
 	end
 end
 
-function TorsoHandler(self: BodyControllerImpl)
+function TorsoHandler(self: CharacterControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -242,7 +245,7 @@ function TorsoHandler(self: BodyControllerImpl)
 	end)
 end
 
-function NeckHandler(self: BodyControllerImpl)
+function NeckHandler(self: CharacterControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local humanoid =
@@ -404,7 +407,7 @@ function NeckHandler(self: BodyControllerImpl)
 	end)
 end
 
-function SteeringWheelHandler(self: BodyControllerImpl)
+function SteeringWheelHandler(self: CharacterControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local rightIK = self.IKControls.RightHandWheel
@@ -434,7 +437,7 @@ function SteeringWheelHandler(self: BodyControllerImpl)
 	leftIK.Weight = 1
 end
 
-function HandbrakeHandler(self: BodyControllerImpl)
+function HandbrakeHandler(self: CharacterControllerImpl)
 	local IKControl = self.IKControls.Handbrake
 	if not IKControl then return end
 
@@ -453,7 +456,7 @@ function HandbrakeHandler(self: BodyControllerImpl)
 	)
 end
 
-function GearLeverHandler(self: BodyControllerImpl)
+function GearLeverHandler(self: CharacterControllerImpl)
 	local IKControl = self.IKControls.GearLever
 	if not IKControl then return end
 
@@ -486,7 +489,7 @@ function GearLeverHandler(self: BodyControllerImpl)
 	end)
 end
 
-function PedalsHandler(self: BodyControllerImpl)
+function PedalsHandler(self: CharacterControllerImpl)
 	if not self.Player or not self.Player.Character then return end
 
 	local throttleIK = self.IKControls.Throttle
@@ -525,7 +528,7 @@ function PedalsHandler(self: BodyControllerImpl)
 	end)
 end
 
-function IgnitionHandler(self: BodyControllerImpl)
+function IgnitionHandler(self: CharacterControllerImpl)
 	local IKControl = self.IKControls.Ignition
 
 	local thread
@@ -543,11 +546,11 @@ function IgnitionHandler(self: BodyControllerImpl)
 	end))
 end
 
-function BodyController.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == BodyController
+function CharacterController.Is(obj: any)
+	return typeof(obj) == "table" and getmetatable(obj) == CharacterController
 end
 
 return table.freeze({
-	new = BodyController.new,
-	Is = BodyController.Is,
+	new = CharacterController.new,
+	Is = CharacterController.Is,
 })
