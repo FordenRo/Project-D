@@ -262,6 +262,7 @@ function NeckHandler(self: BodyControllerImpl)
 	local spring = Vector3Spring.new(5, 50, 500)
 
 	local acceleration = Vector3.zero
+	local velocity = Vector3.zero
 	local angularVelocity = Vector3.zero
 	local freeRotation = Vector3.zero
 
@@ -351,6 +352,7 @@ function NeckHandler(self: BodyControllerImpl)
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
 			deltaTime * 20
 		)
+		velocity = velocity:Lerp(self.Vehicle.Velocity, deltaTime * 20)
 		angularVelocity = angularVelocity:Lerp(
 			rootPart.CFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
 			deltaTime * 20
@@ -358,13 +360,11 @@ function NeckHandler(self: BodyControllerImpl)
 
 		-- Calculate look direction
 		local direction = self.Vehicle.CFrame.LookVector
-		if self.Vehicle.Velocity.Magnitude > 0 then
+		if velocity.Magnitude > 0 then
 			direction = direction:Lerp(
-				self.Vehicle.Velocity.Unit,
-				math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
-					* self.Vehicle.CFrame.LookVector:Dot(
-						self.Vehicle.Velocity.Unit
-					)
+				velocity.Unit,
+				math.min(velocity.Magnitude / 10, 1)
+					* self.Vehicle.CFrame.LookVector:Dot(velocity.Unit)
 					* 0.2
 			)
 		end
@@ -383,7 +383,7 @@ function NeckHandler(self: BodyControllerImpl)
 		) * 0.025 * deltaTime
 
 		-- Apply angular velocity
-		spring.Offset += angularVelocity * Vector3.new(1, 0, 1) * 1 * deltaTime
+		spring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * deltaTime
 
 		spring:Update(deltaTime)
 
