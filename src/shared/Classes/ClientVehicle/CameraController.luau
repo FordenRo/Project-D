@@ -11,7 +11,7 @@ local Vector3Spring = require(ReplicatedStorage.Shared.Utils.Vector3Spring)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local player = Players.LocalPlayer
-local Camera = game.Workspace.CurrentCamera
+local Camera = workspace.CurrentCamera
 
 local FOV = Camera.FieldOfView
 

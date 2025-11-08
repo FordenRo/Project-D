@@ -204,7 +204,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 	local materialChanged = false
 
 	-- Inner
-	local ray = game.Workspace:Raycast(
+	local ray = workspace:Raycast(
 		self.Wheel.Instance.Position,
 		(
 			(self.Wheel.Instance.Arm.CFrame * CFrame.new(
@@ -215,7 +215,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		) * 1.1,
 		self.rayParams
 	) -- Outer
-		or game.Workspace:Raycast(
+		or workspace:Raycast(
 			self.Wheel.Instance.Position,
 			(
 				(self.Wheel.Instance.Arm.CFrame * CFrame.new(
@@ -412,7 +412,7 @@ function Update(self: ClientTireImpl, deltaTime: number)
 		self.Collision["#GRAVCOMP"].Force = Vector3.new(
 			0,
 			VehicleConstants.GravComp > 0
-					and self.Collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp)
+					and self.Collision.Mass * (workspace.Gravity - VehicleConstants.GravComp)
 				or 0,
 			0
 		)

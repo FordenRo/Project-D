@@ -128,9 +128,7 @@ function InitializeDeformation(self: DeformationControllerImpl)
 
 			local found
 			for _, position in positions do
-				for _, part in
-					game.Workspace:GetPartBoundsInRadius(position, 0.2)
-				do
+				for _, part in workspace:GetPartBoundsInRadius(position, 0.2) do
 					if part == touchingPart then
 						table.insert(touchingPoints, position)
 						found = true
@@ -173,7 +171,7 @@ function InitializeDeformation(self: DeformationControllerImpl)
 
 			-- Play sound
 			local attachment = Instance.new("Attachment")
-			attachment.Parent = game.Workspace
+			attachment.Parent = workspace
 			attachment.Position = worldHitCenter
 
 			local emitter = Instance.new("AudioEmitter")

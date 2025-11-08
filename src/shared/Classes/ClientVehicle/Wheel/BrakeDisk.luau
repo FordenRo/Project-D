@@ -28,8 +28,7 @@ function ClientBrakeDisk.new(
 	self.Wheel = wheel
 	self.Vehicle = self.Wheel.Vehicle
 	self.Volume = 0
-	self.Temperature =
-		game.Workspace:GetAttribute("GlobalTemperature") :: number
+	self.Temperature = workspace:GetAttribute("GlobalTemperature") :: number
 	self.startColor = self.Instance.Color
 
 	self.Sound = Instance.new("Sound") :: any
@@ -76,7 +75,7 @@ function Update(self: ClientBrakeDiskImpl, deltaTime: number)
 	if not self.Vehicle.IsDriven then return end
 
 	local GlobalTemperature =
-		game.Workspace:GetAttribute("GlobalTemperature") :: number
+		workspace:GetAttribute("GlobalTemperature") :: number
 
 	local inBrake = self.Wheel.Vehicle.Brake :: number > 0
 		or self.Wheel.Vehicle.PBrake

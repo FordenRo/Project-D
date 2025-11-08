@@ -92,7 +92,7 @@ function Initialize(self: AerodynamicsImpl)
 end
 
 function Update(self: AerodynamicsImpl)
-	if (self.Vehicle.Velocity - game.Workspace.GlobalWind).Magnitude < 1 then
+	if (self.Vehicle.Velocity - workspace.GlobalWind).Magnitude < 1 then
 		return
 	end
 
@@ -105,11 +105,11 @@ function Update(self: AerodynamicsImpl)
 			/ (
 				8.3142
 				* (
-					(game.Workspace:GetAttribute("GlobalTemperature") :: number)
+					(workspace:GetAttribute("GlobalTemperature") :: number)
 					+ 273.15
 				)
 			)
-	) * (game.Workspace.AirDensity / 0.001)
+	) * (workspace.AirDensity / 0.001)
 
 	-- Slipstream
 	local dragFactor = 1
@@ -119,7 +119,7 @@ function Update(self: AerodynamicsImpl)
 	toRayParams.FilterDescendantsInstances =
 		{ self.Vehicle.Instance, player.Character :: Model }
 
-	local toRay = game.Workspace:Raycast(
+	local toRay = workspace:Raycast(
 		self.Vehicle.CFrame.Position,
 		self.Vehicle.CFrame.LookVector * 1000,
 		toRayParams
@@ -131,7 +131,7 @@ function Update(self: AerodynamicsImpl)
 				toRay.Instance :: BasePart
 			):GetConnectedParts() :: any
 
-		local fromRay = game.Workspace:Raycast(
+		local fromRay = workspace:Raycast(
 			toRay.Position,
 			-(toRay.Instance :: BasePart).AssemblyLinearVelocity
 				* self.Vehicle.Tune.AeroSlipstreamTime,
@@ -154,7 +154,7 @@ function Update(self: AerodynamicsImpl)
 
 	-- Apply forces
 	local carVel = self.Vehicle.Velocity * (Units.Length_mm / 1000) * 3.6
-	local windVel = game.Workspace.GlobalWind * (Units.Length_mm / 1000) * 3.6
+	local windVel = workspace.GlobalWind * (Units.Length_mm / 1000) * 3.6
 	local diff = carVel - windVel
 	local objectVel = self.Vehicle.CFrame:VectorToObjectSpace(carVel - windVel)
 

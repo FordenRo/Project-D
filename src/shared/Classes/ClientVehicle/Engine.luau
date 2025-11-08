@@ -435,7 +435,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 				)
 			or 0
 		local globalTemperature =
-			game.Workspace:GetAttribute("GlobalTemperature") :: number
+			workspace:GetAttribute("GlobalTemperature") :: number
 		local AirPressurePercent = math.exp(
 			(
 				-9.80665
@@ -567,7 +567,7 @@ function Engine.Update(self: EngineImpl, deltaTime: number)
 		* self.Vehicle.FinalDrive
 	local cGrav = (
 		VehicleConstants.GravComp > 0 and VehicleConstants.GravComp
-		or game.Workspace.Gravity
+		or workspace.Gravity
 	)
 		* self.Tune.InclineComp
 		/ 35
@@ -622,7 +622,7 @@ function UpdateTemperature(self: EngineImpl, deltaTime: number)
 		* MathUtil.Lerp(1, 2, self.Vehicle.RPM / self.Tune.Redline)
 		/ 120
 	local tDelta = self.Temperature
-		- game.Workspace:GetAttribute("GlobalTemperature") :: number
+		- workspace:GetAttribute("GlobalTemperature") :: number
 	local cooling = tDelta * 0.015
 	cooling += (self.Vehicle.Velocity.Magnitude / Units.Velocity_mdivs) ^ 2 * tDelta / 100000 * 0.8
 	self.Temperature += (heat - cooling) * deltaTime

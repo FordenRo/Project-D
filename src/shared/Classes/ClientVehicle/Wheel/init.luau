@@ -72,7 +72,7 @@ function ClientWheel.new(
 	self.colliderPart.Anchored = true
 	self.colliderPart.CollisionGroup = "Wheel"
 	self.colliderPart.Size = Vector3.new(3, 1, 3)
-	self.colliderPart.Parent = game.Workspace
+	self.colliderPart.Parent = workspace
 
 	self.collisionPart = self.Instance.Collision:Clone()
 	self.collisionPart:ClearAllChildren()
@@ -127,7 +127,7 @@ function UpdateCollision(self: ClientWheelImpl)
 	self.collisionPart.CFrame = self.Instance.Collision.CFrame
 		+ self.Vehicle.CFrame.UpVector
 
-	local ray = game.Workspace:Shapecast(
+	local ray = workspace:Shapecast(
 		self.collisionPart,
 		-self.Vehicle.CFrame.UpVector :: Vector3 * 3,
 		self.collisionRayParams
@@ -271,7 +271,7 @@ function ClientWheel.UpdateForces(
 					(
 						VehicleConstants.GravComp > 0
 							and VehicleConstants.GravComp
-						or game.Workspace.Gravity
+						or workspace.Gravity
 					) * (Units.Length_mm / 1000)
 				)
 		)

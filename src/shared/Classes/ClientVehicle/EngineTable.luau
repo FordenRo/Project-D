@@ -5,7 +5,7 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local EngineTable: VehicleTypes.EngineTable = {
 	IsOn = false,
 	Health = 1,
-	Temperature = game.Workspace:GetAttribute("GlobalTemperature") :: number,
+	Temperature = workspace:GetAttribute("GlobalTemperature") :: number,
 	DriveshaftStress = 0,
 
 	Boost = 0,

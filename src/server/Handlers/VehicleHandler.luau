@@ -101,7 +101,7 @@ function VehicleHandler.SpawnVehicle(self: VehicleHandler, player: Player)
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { player.Character }
 
-	local ray = game.Workspace:Raycast(
+	local ray = workspace:Raycast(
 		characterCF.Position + characterCF.LookVector * 8 + Vector3.yAxis * 10,
 		-Vector3.yAxis * 20,
 		params

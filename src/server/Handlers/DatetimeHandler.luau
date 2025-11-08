@@ -19,7 +19,7 @@ function DatetimeHandler.new(): DatetimeHandler
 
 	Lighting.ClockTime = 12
 	Lighting.Brightness = 3
-	game.Workspace:SetAttribute("GlobalTemperature", DAY_TEMPERATURE)
+	workspace:SetAttribute("GlobalTemperature", DAY_TEMPERATURE)
 
 	task.spawn(function()
 		while true do
@@ -34,7 +34,7 @@ function DatetimeHandler.new(): DatetimeHandler
 			local t = (1 - math.abs(Lighting.ClockTime - 12) / 12) ^ 2
 			Lighting.Brightness =
 				MathUtil.Lerp(NIGHT_BRIGHTNESS, DAY_BRIGHTNESS, t)
-			game.Workspace:SetAttribute(
+			workspace:SetAttribute(
 				"GlobalTemperature",
 				MathUtil.Lerp(DAY_TEMPERATURE, NIGHT_TEMPERATURE, t)
 			)

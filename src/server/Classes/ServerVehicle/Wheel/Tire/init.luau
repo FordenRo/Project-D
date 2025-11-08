@@ -146,7 +146,7 @@ function Initialize(self: ServerTireImpl)
 		force.Force = Vector3.new(
 			0,
 			VehicleConstants.GravComp > 0
-					and collision.Mass * (game.Workspace.Gravity - VehicleConstants.GravComp)
+					and collision.Mass * (workspace.Gravity - VehicleConstants.GravComp)
 				or 0,
 			0
 		)
