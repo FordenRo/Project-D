@@ -28,12 +28,22 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 	InitializeVariables(self)
 
 	if RunService:IsServer() then
-		self._Remote = Instance.new("UnreliableRemoteEvent")
-		self._Remote.Name = "_VehicleRemote"
-		self._Remote.Parent = self.Instance
+		self.URE = Instance.new("UnreliableRemoteEvent")
+		self.URE.Name = "VehicleURE"
+		self.URE.Parent = self.Instance
+
+		self.RE = Instance.new("RemoteEvent")
+		self.RE.Name = "VehicleRE"
+		self.RE.Parent = self.Instance
+
+		self.RF = Instance.new("RemoteFunction")
+		self.RF.Name = "VehicleRF"
+		self.RF.Parent = self.Instance
 	else
-		self._Remote =
-			self.Instance:WaitForChild("_VehicleRemote") :: UnreliableRemoteEvent
+		self.URE =
+			self.Instance:WaitForChild("VehicleURE") :: UnreliableRemoteEvent
+		self.RE = self.Instance:WaitForChild("VehicleRE") :: RemoteEvent
+		self.RF = self.Instance:WaitForChild("VehicleRF") :: RemoteFunction
 	end
 
 	setmetatable(self, BaseVehicle)
@@ -86,7 +96,7 @@ function InitializeVariables(self: BaseVehicle)
 end
 
 function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
-	for k, v in Serialization.Deserialize(VehiclePacket, buf) do
+	for k, v in Serialization.Deserialize(VehiclePacket.Update, buf) do
 		if k == "Engine" then
 			for ek, ev in v do
 				self[k][ek] = ev
@@ -94,6 +104,7 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 			continue
 		elseif k == "Fuel" then
 			self[k] = v * self.Tune.FuelCapacity
+			continue
 		end
 
 		self[k] = v

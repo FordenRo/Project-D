@@ -9,7 +9,9 @@ local TuneType = require(script.TuneType)
 export type IgnitionState = "Off" | "Acc" | "On" | "Starting"
 
 export type BaseVehicle = {
-	_Remote: UnreliableRemoteEvent,
+	URE: UnreliableRemoteEvent,
+	RE: RemoteEvent,
+	RF: RemoteFunction,
 	Instance: {
 		Wheels: Model,
 		DriveSeat: {

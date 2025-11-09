@@ -9,6 +9,9 @@ local Enums = {
 		SaveKeybinds = 2,
 		SaveSettings = 3,
 	},
+	VehicleAction = {
+		InvokeInitPacket = 0,
+	},
 }
 
 return Enums

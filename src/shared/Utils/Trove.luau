@@ -433,7 +433,11 @@ function Trove.AttachToInstance(self: TroveImpl, instance: Instance)
 		error("cannot call trove:AttachToInstance() while cleaning", 2)
 	end
 
-	return self:Connect(instance.Destroying, function() self:Destroy() end)
+	return self:Connect(instance.AncestryChanged, function()
+		if instance:IsDescendantOf(game) then return end
+
+		self:Destroy()
+	end)
 end
 
 function Trove.Destroy(self: TroveImpl) self:Clean() end

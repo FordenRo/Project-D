@@ -1,4 +1,4 @@
-local Players = game:GetService("Players")
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local ClientVehicle = require(ReplicatedStorage.Shared.Classes.ClientVehicle)
@@ -7,8 +7,6 @@ local PlayerVehicleType =
 	require(ReplicatedStorage.Shared.Types.VehicleTypes.PlayerVehicleType)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-
-local player = Players.LocalPlayer
 
 local RF = ReplicatedStorage:WaitForChild("VehicleRF") :: RemoteFunction
 local RE = ReplicatedStorage:WaitForChild("VehicleRE") :: RemoteEvent
@@ -60,32 +58,41 @@ function VehicleController.new(): VehicleController
 
 	setmetatable(self, VehicleController)
 
-	RE.OnClientEvent:Connect(function(action: number, ...)
-		local callbacks = {
-			[Actions.SpawnVehicle] = SpawnVehicle,
-		}
-		callbacks[action](self, ...)
-	end)
+	CollectionService:GetInstanceAddedSignal("Vehicle")
+		:Connect(
+			function(instance: Instance) RegisterVehicle(self, instance) end
+		)
+	for k, v in CollectionService:GetTagged("Vehicle") do
+		RegisterVehicle(self, v)
+	end
 
 	return self
 end
 
-function SpawnVehicle(
-	self: VehicleController,
-	instance: Instance,
-	owner: Player
-)
-	local vehicle = ClientVehicle.new(instance, owner)
+function RegisterVehicle(self: VehicleController, instance: Instance)
+	if not instance:IsDescendantOf(workspace) then return end
+
+	local vehicle = ClientVehicle.new(instance)
 	vehicle.DriverChanged:Connect(function(driver)
-		if player ~= driver then return end
+		if not vehicle.IsDriven then return end
 
 		self.DrivenVehicle = vehicle
-		vehicle
-			:GetPropertyChangedSignal("IsDriven")
-			:Once(function() self.DrivenVehicle = nil end)
+		vehicle.DriverChanged:Once(function() self.DrivenVehicle = nil end)
 	end)
-	vehicle.Instance.Destroying:Once(function() self.SpawnedVehicle = nil end)
-	if owner == player then self.SpawnedVehicle = vehicle end
+
+	if vehicle.IsOwned then
+		self.SpawnedVehicle = vehicle
+		self.VehicleSpawned:Fire(vehicle)
+
+		-- TODO: Test
+		local conn
+		conn = vehicle.Instance.AncestryChanged:Connect(function()
+			if game:IsDescendantOf(workspace) then return end
+
+			self.SpawnedVehicle = nil
+			conn:Disconnect()
+		end)
+	end
 end
 
 function VehicleController.SpawnVehicle(self: VehicleController)

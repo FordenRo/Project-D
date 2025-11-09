@@ -4,23 +4,22 @@ local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 
 local Tune = {} :: TuneType.Tune
 
-
-Tune.FSusStiffness = 3.4
-Tune.FSusDamping = 1.2
-Tune.FSwayBar = 4.0
+Tune.FSusStiffness = 1.7
+Tune.FSusDamping = 1.3
+Tune.FSwayBar = 2.0
 
 Tune.FSusLength = 1.25
-Tune.FPreCompress = 0.2
-Tune.FExtensionLim = 0.5
-Tune.FCompressLim = 0.3
+Tune.FPreCompress = 0
+Tune.FExtensionLim = 0.4
+Tune.FCompressLim = 0.8
 
-Tune.RSusStiffness = 3.4
+Tune.RSusStiffness = 1.6
 Tune.RSusDamping = 1.2
-Tune.RSwayBar = 4.0
+Tune.RSwayBar = 2.0
 
 Tune.RSusLength = 1.15
-Tune.RPreCompress = 0.2
-Tune.RExtensionLim = 0.5
+Tune.RPreCompress = 0
+Tune.RExtensionLim = 0.4
 Tune.RCompressLim = 0.8
 
 Tune.SusVisible = false
