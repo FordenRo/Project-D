@@ -6,13 +6,11 @@ local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local SettingsController = require(script.Parent.SettingsController)
 local SettingsWindow = require(ReplicatedStorage.Shared.UI.SettingsWindow)
+local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local VehicleController = require(script.Parent.VehicleController)
 local Window = require(ReplicatedStorage.Shared.UI.Window)
 
 local player = Players.LocalPlayer
-local Windows = {
-	Settings = SettingsWindow,
-} :: { [string]: { new: () -> Window.Window } }
 
 local InterfaceController = { set = {} }
 Component.Extend(InterfaceController)
@@ -26,11 +24,17 @@ export type InterfaceController = {
 	Visible: boolean,
 	ActiveWindow: Window.Window?,
 
-	OpenWindow: (self: InterfaceController, name: string) -> (),
+	OpenWindow: (
+		self: InterfaceController,
+		windowConstructor: {
+			new: () -> Window.Window,
+			Is: (obj: any) -> boolean,
+		}
+	) -> (),
 } & Component.Component
 
 type InterfaceControllerImpl = {
-	spawnedWindows: { [string]: Window.Window },
+	spawnedWindows: { Window.Window },
 } & InterfaceController
 
 function InterfaceController.new(): InterfaceController
@@ -65,18 +69,47 @@ end
 
 function InterfaceController.OpenWindow(
 	self: InterfaceControllerImpl,
-	name: string
+	windowConstructor: {
+		new: () -> Window.Window,
+		Is: (obj: any) -> boolean,
+	}
 )
 	if not self.Visible then return end
 	if self.ActiveWindow then self.ActiveWindow.Visible = false end
 
-	if self.spawnedWindows[name] then
-		self.spawnedWindows[name].Visible = true
+	local spawnedWindow, k = TableUtil.Find(
+		self.spawnedWindows,
+		function(v) return windowConstructor.Is(v) end
+	)
+	if spawnedWindow then
+		spawnedWindow.Visible = true
 	else
-		local window = Windows[name].new()
-		self.spawnedWindows[name] = window
+		local window = windowConstructor.new()
 		window.Instance.Parent = player.PlayerGui
 		window.Visible = true
+		table.insert(self.spawnedWindows, window)
+
+		local visiblilityConn
+
+		local function createDestroyTask()
+			return task.delay(60, function()
+				visiblilityConn:Disconnect()
+				window:Destroy()
+
+				table.remove(self.spawnedWindows, k)
+				print("Window freed")
+			end)
+		end
+		local destroyTask = createDestroyTask()
+
+		visiblilityConn = window
+			:GetPropertyChangedSignal("Visible")
+			:Connect(function()
+				task.cancel(destroyTask)
+				if window.Visible then return end
+
+				destroyTask = createDestroyTask()
+			end)
 	end
 end
 
@@ -94,7 +127,7 @@ end
 
 function SideButtonsHandler(self: InterfaceControllerImpl)
 	local callbacks = {
-		Settings = function() self:OpenWindow("Settings") end,
+		Settings = function() self:OpenWindow(SettingsWindow) end,
 		Spawn = function()
 			if VehicleController.SpawnedVehicle then
 				VehicleController:RemoveVehicle()

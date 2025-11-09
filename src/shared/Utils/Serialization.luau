@@ -1,4 +1,5 @@
 --!native
+local Players = game:GetService("Players")
 
 --[[
 	Low-level serialization library
@@ -408,6 +409,23 @@ Serialization.String = function(maxLength: number)
 	})
 end
 
+--- Serializes a player
+---
+--- Resulting size is 4 bytes / 32 bits
+Serialization.Player = table.freeze({
+	Name = "Player",
+	Ser = function(b: buffer, offset: number, value: Player): number
+		buffer.writebits(b, offset, 32, value.UserId)
+		return offset + 32
+	end,
+	Des = function(b: buffer, offset: number): (Player, number)
+		return Players:GetPlayerByUserId(
+				buffer.readbits(b, offset, 32)
+			) :: Player,
+			offset + 32
+	end,
+})
+
 --- Serializes a CFrame with high precision
 ---
 --- Resulting size is 48 bytes / 384 bits
@@ -581,6 +599,24 @@ do
 			return DegDecodeLookup[buffer.readbits(b, offset, 8)], offset + 8
 		end,
 	})
+end
+
+--- Will apply the packet to the table
+---
+--- This is deep operation, so all nested tables will also be applied
+function Serialization.ApplyPacket(packet: Packet, b: buffer, to: any)
+	local function assign(t, data)
+		for k, v in data do
+			if typeof(v) == "table" then
+				assign(t[k], v)
+				continue
+			end
+			t[k] = v
+		end
+	end
+
+	local data = Serialization.Deserialize(packet, b)
+	assign(to, data)
 end
 
 local function SerializeUnsafe(packet: Packet, t: { [string]: any }): number

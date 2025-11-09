@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local CameraController = require(script.CameraController)
+local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
 -- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
@@ -42,7 +43,7 @@ type ClientVehicleImpl = {
 	controllersURE: UnreliableRemoteEvent,
 } & ClientVehicle
 
-function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
+function ClientVehicle.new(instance: Instance): ClientVehicle
 	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
 
 	-- self.MeshParts = {}
@@ -51,7 +52,6 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	self.Wheels = {}
 
 	self.IsSitting = false
-	self.Owner = owner
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
 			* 9.80665
@@ -75,7 +75,7 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	self.lastVelocity = Vector3.new()
 
 	local trove = Trove.new()
-	trove:AttachToInstance(self.Instance.DriveSeat)
+	trove:AttachToInstance(self.Instance.Body.WeightPart)
 
 	self.DriverChanged = trove:Construct(Signal)
 	self.IgnitionStateChanged = trove:Construct(Signal)
@@ -90,8 +90,16 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 
 	self.Engine = Engine.new(self)
 	self.Transmission = Transmission.new(self)
-	InitializeWheels(self)
 
+	-- Get server data
+	Serialization.ApplyPacket(
+		VehiclePacket.Init,
+		self.RF:InvokeServer(Enums.VehicleAction.InvokeInitPacket),
+		self
+	)
+	self.Fuel *= self.Tune.FuelCapacity
+
+	InitializeWheels(self)
 	self.SoundController = SoundController.new(self)
 	-- self.DeformationController = DeformationController.new(self)
 
@@ -112,7 +120,7 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 
 	-- Replication
 	trove:Connect(
-		self._Remote.OnClientEvent,
+		self.URE.OnClientEvent,
 		function(buf) Replicate(self, buf) end
 	)
 	trove:Add(task.spawn(function()
@@ -120,13 +128,6 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 			Replicate(self)
 		end
 	end))
-
-	trove:Add(function()
-		--Remove Flip Force
-		if self.Instance.DriveSeat:FindFirstChild("Flip") then
-			self.Instance.DriveSeat.Flip.Enabled = false
-		end
-	end)
 
 	return self
 end
@@ -156,6 +157,11 @@ function Seated(
 	self.IsSitting = true
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
+
+	--Remove Flip Force
+	if self.Instance.DriveSeat:FindFirstChild("Flip") then
+		self.Instance.DriveSeat.Flip.Enabled = false
+	end
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
@@ -391,7 +397,7 @@ end
 
 function Replicate(self: ClientVehicleImpl, buf: buffer?)
 	if self.IsDriven then
-		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, self))
+		self.URE:FireServer(Serialization.Serialize(VehiclePacket.Update, self))
 	elseif buf then
 		self:_Replicate(buf)
 	end

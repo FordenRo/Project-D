@@ -4,7 +4,6 @@ local RunService = game:GetService("RunService")
 local HittableService = {}
 HittableService.__index = HittableService
 
---- TODO: Rewrite
 export type HittableService = typeof(setmetatable({} :: {}, HittableService))
 
 export type HitResult = {
