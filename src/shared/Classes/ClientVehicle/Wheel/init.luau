@@ -67,30 +67,6 @@ function ClientWheel.new(
 	self.Tire = Tire.new(self, self.Instance.Parts.Tire)
 	self.BrakeDisk = BrakeDisk.new(self, self.Instance.Parts.BrakeDisk)
 
-	InitializeCollision(self)
-
-	local trove = Trove.new()
-	trove:AttachToInstance(instance)
-
-	local collisionConn: RBXScriptConnection?
-	trove:Connect(self.Vehicle.DriverChanged, function()
-		if self.Vehicle.IsDriven then
-			collisionConn = trove:Connect(
-				RunService.Stepped,
-				function() UpdateCollision(self) end
-			) :: any
-		elseif collisionConn then
-			collisionConn = collisionConn:Disconnect()
-		end
-	end)
-	trove:Add(function()
-		if collisionConn then collisionConn:Disconnect() end
-	end)
-
-	return self
-end
-
-function InitializeCollision(self: ClientWheelImpl)
 	self.colliderPart = Instance.new("Part")
 	self.colliderPart.Transparency = 1
 	self.colliderPart.Anchored = true
@@ -112,6 +88,35 @@ function InitializeCollision(self: ClientWheelImpl)
 		{ self.colliderPart, self.Vehicle.Instance }
 
 	self.Instance.Collision.CollisionGroup = "Wheel"
+
+	local trove = Trove.new()
+	trove:Add(function()
+		if self.Instance.AV then
+			self.Instance.AV.MotorMaxTorque = 0
+			self.Instance.AV.AngularVelocity = 0
+		end
+		if self.Instance.BV then
+			local ParkingGearEnabled = self.Vehicle.Tune.Ratios[1] == 0
+			if ParkingGearEnabled then
+				self.Vehicle.Gear = -2
+			else
+				self.Vehicle.PBrake = true
+			end
+			if self.IsFront then
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake
+						and self.Vehicle.PBrakeForce.Front
+					or 0
+			else
+				self.Instance.BV.MotorMaxTorque = self.Vehicle.Tune.ExitBrake
+						and self.Vehicle.PBrakeForce.Rear
+					or 0
+			end
+		end
+	end)
+	trove:Connect(RunService.Stepped, function() UpdateCollision(self) end)
+	trove:AttachToInstance(instance)
+
+	return self
 end
 
 function ClientWheel.Update(self: ClientWheelImpl, deltaTime: number)

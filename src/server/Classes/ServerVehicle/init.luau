@@ -5,15 +5,12 @@ local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 -- local DeformationHandler = require(script.DeformationHandler)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
-local Enums = require(ReplicatedStorage.Shared.Enums)
 local InteriorHandler = require(script.InteriorHandler)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
-local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
-local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -32,30 +29,24 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	Initialize(self)
 
 	local trove = Trove.new()
-	trove:AttachToInstance(self.WeightPart)
+	trove:AttachToInstance(instance)
 
 	self.Engine = table.clone(EngineTable)
 	-- DeformationHandler.new(self)
 	InteriorHandler.new(self)
 
-	trove:Connect(self.URE.OnServerEvent, function(sender: Player, buf: buffer)
-		self:_Replicate(buf)
+	trove:Connect(
+		self._Remote.OnServerEvent,
+		function(sender: Player, buf: buffer)
+			self:_Replicate(buf)
 
-		for _, player in Players:GetPlayers() do
-			if player == sender then continue end
+			for _, player in Players:GetPlayers() do
+				if player == sender then continue end
 
-			self.URE:FireClient(player, buf)
+				self._Remote:FireClient(player, buf)
+			end
 		end
-	end)
-
-	self.RF.OnServerInvoke = function(player, action: number, ...)
-		local callbacks = {
-			[Enums.VehicleAction.InvokeInitPacket] = function()
-				return (Serialization.Serialize(VehiclePacket.Init, self))
-			end,
-		}
-		return callbacks[action](...)
-	end
+	)
 
 	task.delay(1, function() InitializeSeats(self) end)
 

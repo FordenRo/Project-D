@@ -47,8 +47,8 @@ function InputController.new(
 	self.rawClutch = 0
 	self.rawSteering = 0
 	self.ignitionNext = false
-
 	self.trove = Trove.new()
+	self.trove:AttachToInstance(self.Vehicle.Instance)
 
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))

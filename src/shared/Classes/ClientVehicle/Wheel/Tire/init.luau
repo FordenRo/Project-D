@@ -201,11 +201,6 @@ function FlexPhysicsUpdate(self: ClientTireImpl, deltaTime: number)
 end
 
 function Update(self: ClientTireImpl, deltaTime: number)
-	if not self.Instance:IsDescendantOf(workspace) then
-		print("no parent")
-		return
-	end
-
 	local materialChanged = false
 
 	-- Inner

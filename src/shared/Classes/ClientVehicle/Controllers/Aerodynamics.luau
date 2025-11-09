@@ -182,18 +182,17 @@ function Update(self: AerodynamicsImpl)
 	self.forces.drag.Force = combinedForce * 9.81 * Units.Force_N
 
 	-- Apply sounds
-	-- TODO: Wind sound
-	-- local wind =
-	-- 	self.Vehicle.SoundController.Sounds.Wind.AudioPlayer :: AudioPlayer
+	local wind =
+		self.Vehicle.SoundController.Sounds.Wind.AudioPlayer :: AudioPlayer
 	local body =
 		self.Vehicle.SoundController.Sounds.Body.AudioPlayer :: AudioPlayer
-	if not body.IsPlaying then
-		-- wind:Play()
+	if not wind.IsPlaying or not body.IsPlaying then
+		wind:Play()
 		body:Play()
 	end
-	-- wind.Volume = diff.Magnitude ^ 2
-	-- 	* self.Vehicle.Tune.AeroWindVolume
-	-- 	/ 200 ^ 2
+	wind.Volume = diff.Magnitude ^ 2
+		* self.Vehicle.Tune.AeroWindVolume
+		/ 200 ^ 2
 	body.Volume = diff.Magnitude ^ 2
 		* self.Vehicle.Tune.AeroBodyVolume
 		/ 200 ^ 2

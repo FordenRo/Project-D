@@ -111,26 +111,17 @@ function VehicleHandler.SpawnVehicle(self: VehicleHandler, player: Player)
 	local instance = (
 		ReplicatedStorage.Vehicles:FindFirstChild("AE-86 Trueno") :: Model
 	):Clone()
-	instance.Parent = workspace
-
-	task.defer(
-		instance.PivotTo,
-		instance,
+	instance:PivotTo(
 		CFrame.new(ray.Position + Vector3.yAxis * 2, characterCF.LookVector)
 	)
+	instance.Parent = game.Workspace
 
 	local vehicle = ServerVehicle.new(instance, player)
 	SpawnedVehicles[player] = vehicle
 
-	-- TODO: Test
-	local conn
-	conn = instance.AncestryChanged:Connect(function()
-		if instance:IsDescendantOf(workspace) then return end
+	instance.Destroying:Once(function() SpawnedVehicles[player] = nil end)
 
-		SpawnedVehicles[player] = nil
-		conn:Disconnect()
-	end)
-
+	RE:FireAllClients(Actions.SpawnVehicle, instance, player)
 	return vehicle
 end
 

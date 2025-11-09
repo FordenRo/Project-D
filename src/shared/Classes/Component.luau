@@ -29,36 +29,36 @@ type ComponentImpl = {
 	set: { [string]: (self: any, value: any) -> any }?,
 } & Component
 
-function getExtendedGetter(obj, k)
-	if obj.get and obj.get[k] then return obj.get[k] end
-	return obj.__extend and getExtendedGetter(obj.__extend, k)
-end
-
-function getExtendedValue(obj, k)
-	return obj[k] or obj.__extend and getExtendedValue(obj.__extend, k)
-end
-
-function getExtendedSetter(obj, k)
-	if obj.set and obj.set[k] then return obj.set[k] end
-	return obj.__extend and getExtendedSetter(obj.__extend, k)
-end
-
 function getMeta(base: any)
 	return {
 		__index = function(t, k)
-			local self = rawget(t, "_t") :: ComponentImpl
+			local self = assert(rawget(t, "_t")) :: ComponentImpl
 
-			local get = getExtendedGetter(base, k)
+			local function getExtendedGetter(obj)
+				if obj.get and obj.get[k] then return obj.get[k] end
+				return obj.__extend and getExtendedGetter(obj.__extend)
+			end
+
+			local get = getExtendedGetter(base)
 			if get then return get(t) end
 
-			return self[k] or getExtendedValue(base, k)
+			local function getExtendedValue(obj)
+				return obj[k] or obj.__extend and getExtendedValue(obj.__extend)
+			end
+
+			return self[k] or getExtendedValue(base)
 		end,
 		__newindex = function(t, k, v)
-			local self = rawget(t, "_t") :: ComponentImpl
+			local self = assert(rawget(t, "_t")) :: ComponentImpl
 
-			local set = getExtendedSetter(base, k)
+			local function getExtendedSetter(obj)
+				if obj.set and obj.set[k] then return obj.set[k] end
+				return obj.__extend and getExtendedSetter(obj.__extend)
+			end
+
+			local set = getExtendedSetter(base)
 			if set then
-				if not set(t, v) then return end
+				set(t, v)
 			else
 				if self[k] == v then return end
 
@@ -73,7 +73,7 @@ function getMeta(base: any)
 	}
 end
 
--- TODO: #2 Fix changed signals table memory leak
+-- TODO: Fix changed signals table memory leak
 
 --- Constructs a new component
 function Component.new(): Component

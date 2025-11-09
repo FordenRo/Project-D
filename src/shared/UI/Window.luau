@@ -88,7 +88,6 @@ export type Window = {
 		self: Window,
 		name: string
 	) -> RBXScriptSignal<InputObject, number>,
-	Destroy: (self: Window) -> (),
 } & Component.Component
 
 type WindowImpl = { trove: Trove.Trove } & Window

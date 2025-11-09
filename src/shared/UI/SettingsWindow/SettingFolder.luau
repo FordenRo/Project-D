@@ -2,13 +2,10 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local TweenService = game:GetService("TweenService")
 
-local Component = require(ReplicatedStorage.Shared.Classes.Component)
-local Setting = require(script.Parent.Setting)
 local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
-
-local SettingFolder = { set = {} }
-Component.Extend(SettingFolder)
+local SettingFolder = {}
+SettingFolder.__index = SettingFolder
 
 export type SettingFolder = {
 	Instance: Frame & {
@@ -24,15 +21,13 @@ export type SettingFolder = {
 		},
 	},
 	Expanded: boolean,
-
-	Add: (self: SettingFolder, object: Setting.Setting | SettingFolder) -> (),
-} & Component.Component
+}
 
 function SettingFolder.new(
 	instance: Frame,
 	properties: SettingsTypes.FolderInfo
 ): SettingFolder
-	local self: SettingFolder = Component.new() :: any
+	local self: SettingFolder = setmetatable({}, SettingFolder) :: any
 
 	self.Instance = instance :: any
 
@@ -41,8 +36,6 @@ function SettingFolder.new(
 	self.Instance.Button.Info.Description.Visible = properties.Description
 		~= nil
 	self.Instance.Visible = true
-
-	setmetatable(self, SettingFolder)
 
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
@@ -66,39 +59,20 @@ function SettingFolder.new(
 	)
 
 	-- On press
-	trove:Connect(
-		self.Instance.Button.Activated,
-		function() self.Expanded = not self.Expanded end
-	)
+	trove:Connect(self.Instance.Button.Activated, function()
+		self.Expanded = not self.Expanded
+		self.Instance.Button.BackgroundTransparency = 0
+		self.Instance.BackgroundTransparency = self.Expanded and 0.5 or 1
+		self.Instance.Content.Visible = self.Expanded
+
+		TweenService:Create(
+			self.Instance.Button.Expand.Image,
+			TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+			{ Rotation = self.Expanded and 180 or 0 }
+		):Play()
+	end)
 
 	return self
 end
 
-function SettingFolder.set.Expanded(self: SettingFolder, expanded: boolean)
-	self:RawSet("Expanded", expanded)
-	self.Instance.Button.BackgroundTransparency = 0
-	self.Instance.BackgroundTransparency = self.Expanded and 0.5 or 1
-	self.Instance.Content.Visible = self.Expanded
-
-	TweenService:Create(
-		self.Instance.Button.Expand.Image,
-		TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
-		{ Rotation = self.Expanded and 180 or 0 }
-	):Play()
-end
-
-function SettingFolder.Add(
-	self: SettingFolder,
-	object: (Setting.Setting | SettingFolder) & { Instance: Instance }
-)
-	object.Instance.Parent = self.Instance.Content
-end
-
-function SettingFolder.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == SettingFolder
-end
-
-return table.freeze({
-	new = SettingFolder.new,
-	Is = SettingFolder.Is,
-})
+return table.freeze({ new = SettingFolder.new })

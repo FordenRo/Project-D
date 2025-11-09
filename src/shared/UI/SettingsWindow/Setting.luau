@@ -44,8 +44,6 @@ export type Setting = {
 	Properties: SettingsTypes.SettingInfo,
 	Changed: Signal.Signal<...any>,
 	Value: any,
-
-	Reset: (self: Setting) -> (),
 }
 
 export type SettingImpl = {
@@ -71,12 +69,13 @@ function Setting.new(
 	self.Instance.Info.Description.Text = self.Properties.Description or ""
 	self.Instance.Info.Description.Visible = self.Properties.Description ~= nil
 
-	local types = {
-		Slider = InitSlider,
-		Binding = InitBinding,
-		Checkbox = InitCheckbox,
-	}
-	types[self.Type](self)
+	if self.Type == "Slider" then
+		InitSlider(self)
+	elseif self.Type == "Binding" then
+		InitBinding(self)
+	elseif self.Type == "Checkbox" then
+		InitCheckbox(self)
+	end
 
 	self.trove:Connect(
 		self.Instance.MouseEnter,
@@ -169,10 +168,10 @@ function InitSlider(self: SettingImpl)
 			end
 		end
 	)
-
-	self.Reset = function(self) updateValue(self.Properties.Default, true, true) end
-
-	self.trove:Connect(valueFrame.Revert.Activated, function() self:Reset() end)
+	self.trove:Connect(
+		valueFrame.Revert.Activated,
+		function() updateValue(self.Properties.Default, true, true) end
+	)
 
 	updateValue(self.Value, true)
 	self.Instance.Slider.Visible = true
@@ -197,7 +196,6 @@ function InitBinding(self: SettingImpl)
 	for _, v in self.Properties.ActionTypes do
 		local binding = self.Instance.Binding:FindFirstChild(v) :: BindingButton
 		local function updateBinding(value: Enum.KeyCode, fireEvent: boolean?)
-			local changed = self.Value[v] ~= value
 			self.Value[v] = value
 			binding.Text = self.Value[v] ~= Enum.KeyCode.Unknown
 					and string
@@ -207,9 +205,7 @@ function InitBinding(self: SettingImpl)
 						:gsub("DPad", "D")
 				or "-"
 			binding.Revert.Visible = self.Value[v] ~= self.Properties.Default[v]
-			if fireEvent and changed then
-				self.Changed:Fire(v, self.Value[v])
-			end
+			if fireEvent then self.Changed:Fire(v, self.Value[v]) end
 		end
 
 		self.trove:Connect(binding.Activated, function()
@@ -239,14 +235,9 @@ function InitBinding(self: SettingImpl)
 
 			updateBinding(input.KeyCode, true)
 		end)
-
-		self.Reset = function(self)
-			updateBinding(self.Properties.Default[v], true)
-		end
-
 		self.trove:Connect(
 			binding.Revert.Activated,
-			function() self:Reset() end
+			function() updateBinding(self.Properties.Default[v], true) end
 		)
 
 		updateBinding(self.Value[v])
@@ -258,12 +249,11 @@ end
 
 function InitCheckbox(self: SettingImpl)
 	local function updateCheckbox(value: boolean)
-		local changed = self.Value ~= value
 		self.Value = value
 		self.Instance.Checkbox.Button.Box.Enabled.Visible = self.Value
 		self.Instance.Checkbox.Button.Text = self.Value and "Enabled"
 			or "Disabled"
-		if changed then self.Changed:Fire(self.Value) end
+		self.Changed:Fire(self.Value)
 	end
 
 	self.trove:Connect(
@@ -271,17 +261,8 @@ function InitCheckbox(self: SettingImpl)
 		function() updateCheckbox(not self.Value) end
 	)
 
-	self.Reset = function(self) updateCheckbox(self.Properties.Default) end
-
 	updateCheckbox(self.Value)
 	self.Instance.Checkbox.Visible = true
 end
 
-function Setting.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == Setting
-end
-
-return table.freeze({
-	new = Setting.new,
-	Is = Setting.Is,
-})
+return table.freeze({ new = Setting.new })

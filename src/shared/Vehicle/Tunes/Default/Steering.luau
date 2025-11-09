@@ -10,14 +10,14 @@ Tune.ContlrSteerSpeed = 0.08
 Tune.ContlrReturnSpeed = 0.08
 Tune.MSteerUsesContlr = true
 
-Tune.SteerDecay = 200
+Tune.SteerDecay = 220
 Tune.SteerSpeedDecay = 240
-Tune.MinSteer = 60
-Tune.MinSteerSpeed = 60
+Tune.MinSteer = 40
+Tune.MinSteerSpeed = 50
 
 Tune.CSEnabled = false
 Tune.CSAmt = 30
-Tune.CSSteerThresh = 0
+Tune.CSSteerThresh = 10
 Tune.CSSpeedThresh = 10
 
 Tune.SteerSmoothing = 2

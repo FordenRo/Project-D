@@ -6,7 +6,6 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
-local MathUtil = require(ReplicatedStorage.Shared.Utils.MathUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Vector3Spring = require(ReplicatedStorage.Shared.Utils.Vector3Spring)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
@@ -57,7 +56,6 @@ function CameraController.new(
 	self.blur = Instance.new("BlurEffect")
 	self.blur.Size = 0
 	self.blur.Parent = Lighting
-	self.trove:Add(self.blur)
 
 	FirstPersonHandler(self)
 	ThirdPersonHandler(self)
@@ -105,16 +103,11 @@ function FirstPersonHandler(self: CameraControllerImpl)
 				return
 			end
 
-			local bumping = MathUtil.Noise(self.Vehicle.CFrame.Position * 0.04)
-				* (self.Vehicle.Velocity.Magnitude / 100) ^ 0.8
-				* 0.03
-
 			-- Update camera
 			Camera.CFrame = CFrame.lookAlong(
 				head.Position
 					+ Vector3.new(0, 0.2, 0)
-					- self.Vehicle.CFrame.LookVector * 0.4
-					+ self.Vehicle.CFrame.UpVector * bumping,
+					- self.Vehicle.CFrame.LookVector * 0.4,
 				head.CFrame.LookVector,
 				head.CFrame.UpVector
 			)
@@ -138,10 +131,9 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 
 	-- Springs
 	local positionSpring = Vector3Spring.new(30, 200, 1000)
-	local rotationSpring = Vector3Spring.new(5, 50, 500)
+	local rotationSpring = positionSpring:Clone()
 
 	local acceleration = Vector3.zero
-	local velocity = Vector3.zero
 	local angularVelocity = Vector3.zero
 	local freeRotation = Vector3.zero
 
@@ -238,7 +230,6 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 				WPCFrame:VectorToObjectSpace(self.Vehicle.Acceleration),
 				deltaTime * 20
 			)
-			velocity = velocity:Lerp(self.Vehicle.Velocity, deltaTime * 20)
 			angularVelocity = angularVelocity:Lerp(
 				WPCFrame:VectorToObjectSpace(self.Vehicle.AngularVelocity),
 				deltaTime * 20
@@ -246,11 +237,13 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 
 			-- Calculate look direction
 			local direction = WPCFrame.LookVector
-			if velocity.Magnitude > 0 then
+			if self.Vehicle.Velocity.Magnitude > 0 then
 				direction = direction:Lerp(
-					velocity.Unit,
-					math.min(velocity.Magnitude / 10, 1)
-						* WPCFrame.LookVector:Dot(velocity.Unit)
+					self.Vehicle.Velocity.Unit,
+					math.min(self.Vehicle.Velocity.Magnitude / 10, 1)
+						* self.Vehicle.WeightPart.CFrame.LookVector:Dot(
+							self.Vehicle.Velocity.Unit
+						)
 						* 0.8
 				)
 			end
@@ -263,14 +256,9 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 
 			-- Apply acceleration
 			positionSpring.Offset += acceleration * 0.025 * deltaTime
-			rotationSpring.Offset += Vector3.new(
-				acceleration.Z / 2 + acceleration.Y,
-				0,
-				acceleration.X / 2
-			) * 0.025 * deltaTime
 
 			-- Apply angular velocity
-			rotationSpring.Offset += angularVelocity * Vector3.new(1, 0.5, 1) * deltaTime
+			rotationSpring.Offset += angularVelocity * 0.5 * deltaTime
 
 			-- Update springs
 			positionSpring:Update(deltaTime)
@@ -280,7 +268,7 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 			local springOffset = WPCFrame:VectorToWorldSpace(
 				positionSpring.Offset * Vector3.new(2, 2, 4)
 			)
-			local rot = -rotationSpring.Offset * Vector3.new(1, 1, 1) * 0.5
+			local rot = -rotationSpring.Offset * Vector3.new(1, 0.3, 1) * 3
 			Camera.CFrame = CFrame.lookAt(
 				WPCFrame.Position
 					- direction.Unit * distance
@@ -289,7 +277,7 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 				WPCFrame.Position + WPCFrame.UpVector * 4 - springOffset,
 				WPCFrame.UpVector
 			) * CFrame.fromOrientation(rot.X, rot.Y, rot.Z)
-			Camera.FieldOfView = FOV - positionSpring.Offset.Z * 5
+			Camera.FieldOfView = FOV + acceleration.Z * 0.05
 
 			-- Update blur
 			local multiplier = (self.Vehicle.Acceleration.Magnitude / 700) ^ 2

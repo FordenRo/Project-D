@@ -40,7 +40,7 @@ function EffectFrame.new(rotation: number, force: number): EffectFrame
 end
 
 function EffectFrame.Move(self: EffectFrame, position: number)
-	local scrSize = workspace.CurrentCamera.ViewportSize
+	local scrSize = game.Workspace.CurrentCamera.ViewportSize
 	local r = self.Instance.AbsoluteSize.X / 2
 	local x = math.cos(math.rad(self.Rotation)) * (1 - position)
 	local y = math.sin(math.rad(self.Rotation)) * (1 - position)

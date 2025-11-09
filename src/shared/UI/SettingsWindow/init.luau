@@ -5,6 +5,7 @@ local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
 local SettingsController =
 	require(ReplicatedStorage.Shared.Controllers.SettingsController)
+local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local StringUtil = require(ReplicatedStorage.Shared.Utils.StringUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Window = require(script.Parent.Window)
@@ -15,86 +16,47 @@ Window.Extend(SettingsWindow)
 export type SettingsWindow = {} & Window.Window
 
 type SettingsWindowImpl = {
-	trove: Trove.Trove,
-	folders: { [string]: SettingFolder.SettingFolder },
-	settings: { [string]: Setting.Setting },
-	bindings: { Setting.Setting },
+	folders: { [string]: SettingsTypes.FolderInfo & { Instance: Frame } },
 } & SettingsWindow
 
 function SettingsWindow.new(): SettingsWindow
 	local self: SettingsWindowImpl =
 		Window.new((ReplicatedStorage.UI :: any).SettingsWindow:Clone()) :: any
 
-	self.trove = Trove.new()
-	self.trove:AttachToInstance(self.Instance)
-
-	setmetatable(self, SettingsWindow)
-
-	InitializeFolders(self)
-	InitializeSettings(self)
-	InitializeBindings(self)
-
-	self.trove:Connect(
-		self:GetButtonPressedSignal("Close"),
-		function() self.Visible = false end
-	)
-
-	self.trove:Connect(self:GetButtonPressedSignal("Reset"), function()
-		for _, setting in self.settings do
-			setting:Reset()
-		end
-		for _, binding in self.bindings do
-			binding:Reset()
-		end
-	end)
-
-	return self
-end
-
-function InitializeFolders(self: SettingsWindowImpl)
 	self.folders = {}
 
-	local folderInstance = (self.Instance :: any).SettingFolder
+	local trove = Trove.new()
+	trove:AttachToInstance(self.Instance)
+
+	local folderInstance = self.Instance.SettingFolder
 	for k, v in SettingsController:GetFolderInfos() do
 		local folder = SettingFolder.new(folderInstance:Clone(), v)
 		folder.Instance.LayoutOrder = k
+		folder.Instance.Parent = v.Folder
+				and self.folders[v.Folder].Instance:FindFirstChild("Content")
+			or self:GetTab(assert(v.Category)).Content
 
-		if v.Folder then
-			self.folders[v.Folder]:Add(folder)
-		else
-			folder.Instance.Parent = self:GetTab(assert(v.Category)).Content
-		end
-		self.folders[v.Name] = folder
+		local folderInfo =
+			table.clone(v) :: SettingsTypes.FolderInfo & { Instance: Frame }
+		folderInfo.Instance = folder.Instance
+		self.folders[v.Name] = folderInfo
 	end
-end
 
-function InitializeSettings(self: SettingsWindowImpl)
-	self.settings = {}
-
-	local settingInstance = (self.Instance :: any).Setting
+	local settingInstance = self.Instance.Setting
 	for k, v in SettingsController:GetSettingInfos() do
 		local setting = Setting.new(settingInstance:Clone(), v)
-		setting.Instance.LayoutOrder = k
-
-		self.trove:Connect(
+		trove:Connect(
 			setting.Changed,
 			function(value) SettingsController:SetSetting(v.Name, value) end
 		)
 
-		if v.Folder then
-			self.folders[v.Folder]:Add(setting)
-		else
-			setting.Instance.Parent = self:GetTab(assert(v.Category)).Content
-		end
-		self.settings[v.Name] = setting
+		setting.Instance.LayoutOrder = k
+		setting.Instance.Parent = v.Folder
+				and self.folders[v.Folder].Instance:FindFirstChild("Content")
+			or self:GetTab(assert(v.Category)).Content
 	end
-end
 
-function InitializeBindings(self: SettingsWindowImpl)
-	self.bindings = {}
-
-	local settingInstance = (self.Instance :: any).Setting
-	local contextInstance = (self.Instance :: any).ControlContext
+	local contextInstance = self.Instance.ControlContext
 	for _, inputContext: InputContext in
 		ReplicatedStorage.Input:GetChildren() :: any
 	do
@@ -140,7 +102,7 @@ function InitializeBindings(self: SettingsWindowImpl)
 				assert(table.find(actionsOrder, inputAction.Name))
 			setting.Instance.LayoutOrder = actionOrder
 
-			self.trove:Connect(
+			trove:Connect(
 				setting.Changed,
 				function(actionType: string, keyCode: Enum.KeyCode)
 					local binding =
@@ -149,11 +111,19 @@ function InitializeBindings(self: SettingsWindowImpl)
 				end
 			)
 			setting.Instance.Parent = context
-			table.insert(self.bindings, setting)
 		end
 
 		context.Parent = self:GetTab("Controls").Content
 	end
+
+	trove:Connect(
+		self:GetButtonPressedSignal("Close"),
+		function() self.Visible = false end
+	)
+
+	-- TODO: Reset button
+
+	return self
 end
 
 function getOrder(context: string)
@@ -167,9 +137,7 @@ function SettingsWindow.Is(obj: any)
 	return typeof(obj) == "table" and getmetatable(obj) == SettingsWindow
 end
 
-function SettingsWindow.Destroy(self: SettingsWindowImpl)
-	self.Instance:Destroy()
-end
+function SettingsWindow.Destroy(self: SettingsWindowImpl) end
 
 return table.freeze({
 	new = SettingsWindow.new,

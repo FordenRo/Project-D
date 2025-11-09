@@ -13,34 +13,9 @@ Config.Version = `0.0.1`
 		or `-prealpha ({game.PlaceVersion})`
 	)
 
-Config.Changelog = {
-	{
-		Type = "Patch",
-		Version = "0.0.2-prealpha",
-		Description = ``
-			.. `Added:\n`
-			.. `	· "Updates" window with "Changelog" and "Roadmap" tabs\n`
-			.. `\n`
-			.. `Changed:\n`
-			.. `	· \n`
-			.. `\n`
-			.. `Fixed:\n`
-			.. `	· \n`
-			.. ``,
-	},
-}
+Config.Changelog = {}
 
-Config.Roadmap = {
-	{
-		Type = "Update",
-		Version = "0.1.0-prealpha",
-		Title = "",
-		Description = ``,
-	},
-}
-
-Config.Welcome = ``
-	.. `<font size="24">Welcome to <font color="#ffaaaa"><b>Project D:</b></font>`
+Config.Welcome = `<font size="24">Welcome to <font color="#ffaaaa"><b>Project D:</b></font>`
 	.. ` <font size="22"><i>Driving Masters</i></font></font>`
 	.. `\n\n`
 	.. `This game is a <i>racing simulator</i> that tries to replicate the behaviour of a <i>real</i> car.`
@@ -52,8 +27,8 @@ Config.Welcome = ``
 	.. `	· Realistic sound effects\n`
 	.. `	· First person view\n`
 	.. `	· Detailed cars\n`
-	.. `	and more!\n`
-	.. `\n`
+	.. `	and more!`
+	.. `\n\n`
 	.. `<font transparency="0.1">Current version: <i>{Config.Version}</i></font>`
 
 return TableUtil.DeepFreeze(Config)
