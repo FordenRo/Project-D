@@ -46,7 +46,7 @@ end
 function getMeta(base: any)
 	return {
 		__index = function(t, k)
-			local self = rawget(t, "_t") :: ComponentImpl
+			local self = rawget(t, "__component") :: ComponentImpl
 
 			local get = getExtendedGetter(base, k)
 			if get then return get(t) end
@@ -54,7 +54,7 @@ function getMeta(base: any)
 			return self[k] or getExtendedValue(base, k)
 		end,
 		__newindex = function(t, k, v)
-			local self = rawget(t, "_t") :: ComponentImpl
+			local self = rawget(t, "__component") :: ComponentImpl
 
 			local set = getExtendedSetter(base, k)
 			if set then
@@ -82,7 +82,7 @@ function Component.new(): Component
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
 
-	return setmetatable({ _t = self }, getMeta(Component)) :: any
+	return setmetatable({ __component = self }, getMeta(Component)) :: any
 end
 
 --- Constructs a new component that wraps the source
@@ -94,7 +94,7 @@ function Component.Wrap<T>(source: T): Component & T
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
 
-	return setmetatable({ _t = self }, getMeta(Component)) :: any
+	return setmetatable({ __component = self }, getMeta(Component)) :: any
 end
 
 function Component.GetPropertyChangedSignal(
@@ -111,10 +111,10 @@ function Component.GetPropertyChangedSignal(
 end
 
 function Component.Clone(self: ComponentImpl)
-	local t = assert(rawget(self, "_t"))
+	local t = assert(rawget(self, "__component"))
 	t = TableUtil.DeepCopy(t)
 
-	return setmetatable({ _t = t }, getmetatable(self :: any))
+	return setmetatable({ __component = t }, getmetatable(self :: any))
 end
 
 function Component.Is(obj: any): boolean
@@ -122,12 +122,12 @@ function Component.Is(obj: any): boolean
 end
 
 function Component.RawGet(self: any, key: string): any?
-	local t = assert(rawget(self, "_t"))
+	local t = assert(rawget(self, "__component"))
 	return t[key]
 end
 
 function Component.RawSet(self: any, key: string, value: any)
-	local t = assert(rawget(self, "_t"))
+	local t = assert(rawget(self, "__component"))
 	t[key] = value
 end
 
