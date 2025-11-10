@@ -73,7 +73,7 @@ function getMeta(base: any)
 	}
 end
 
--- TODO: Fix changed signals table memory leak
+-- TODO: #2 Fix changed signals table memory leak
 
 --- Constructs a new component
 function Component.new(): Component
