@@ -121,7 +121,6 @@ function VehicleHandler.SpawnVehicle(self: VehicleHandler, player: Player)
 
 	instance.Destroying:Once(function() SpawnedVehicles[player] = nil end)
 
-	RE:FireAllClients(Actions.SpawnVehicle, instance, player)
 	return vehicle
 end
 

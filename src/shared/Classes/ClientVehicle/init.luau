@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 
 local BaseVehicle = require(script.Parent.BaseVehicle)
 local CameraController = require(script.CameraController)
+local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
 -- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
@@ -18,7 +19,7 @@ local Transmission = require(script.Transmission)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
-local VehiclePacket = require(ReplicatedStorage.Shared.Packets.VehiclePacket)
+local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -42,7 +43,7 @@ type ClientVehicleImpl = {
 	controllersURE: UnreliableRemoteEvent,
 } & ClientVehicle
 
-function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
+function ClientVehicle.new(instance: Instance): ClientVehicle
 	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
 
 	-- self.MeshParts = {}
@@ -51,7 +52,6 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 	self.Wheels = {}
 
 	self.IsSitting = false
-	self.Owner = owner
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
 			* 9.80665
@@ -90,8 +90,16 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 
 	self.Engine = Engine.new(self)
 	self.Transmission = Transmission.new(self)
-	InitializeWheels(self)
 
+	-- Get server data
+	Serialization.ApplyPacket(
+		VehiclePackets.Init,
+		self.RF:InvokeServer(Enums.VehicleAction.InvokeInitPacket),
+		self
+	)
+	self.Fuel *= self.Tune.FuelCapacity
+
+	InitializeWheels(self)
 	self.SoundController = SoundController.new(self)
 	-- self.DeformationController = DeformationController.new(self)
 
@@ -112,7 +120,7 @@ function ClientVehicle.new(instance: Instance, owner: Player): ClientVehicle
 
 	-- Replication
 	trove:Connect(
-		self._Remote.OnClientEvent,
+		self.URE.OnClientEvent,
 		function(buf) Replicate(self, buf) end
 	)
 	trove:Add(task.spawn(function()
@@ -391,7 +399,9 @@ end
 
 function Replicate(self: ClientVehicleImpl, buf: buffer?)
 	if self.IsDriven then
-		self._Remote:FireServer(Serialization.Serialize(VehiclePacket, self))
+		self.URE:FireServer(
+			Serialization.Serialize(VehiclePackets.Update, self)
+		)
 	elseif buf then
 		self:_Replicate(buf)
 	end

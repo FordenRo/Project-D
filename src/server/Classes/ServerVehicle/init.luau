@@ -5,12 +5,15 @@ local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 -- local DeformationHandler = require(script.DeformationHandler)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
+local Enums = require(ReplicatedStorage.Shared.Enums)
 local InteriorHandler = require(script.InteriorHandler)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
+local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
+local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
@@ -35,18 +38,24 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	-- DeformationHandler.new(self)
 	InteriorHandler.new(self)
 
-	trove:Connect(
-		self._Remote.OnServerEvent,
-		function(sender: Player, buf: buffer)
-			self:_Replicate(buf)
+	trove:Connect(self.URE.OnServerEvent, function(sender: Player, buf: buffer)
+		self:_Replicate(buf)
 
-			for _, player in Players:GetPlayers() do
-				if player == sender then continue end
+		for _, player in Players:GetPlayers() do
+			if player == sender then continue end
 
-				self._Remote:FireClient(player, buf)
-			end
+			self.URE:FireClient(player, buf)
 		end
-	)
+	end)
+
+	self.RF.OnServerInvoke = function(player, action: number, ...)
+		local callbacks = {
+			[Enums.VehicleAction.InvokeInitPacket] = function()
+				return (Serialization.Serialize(VehiclePackets.Init, self))
+			end,
+		}
+		return callbacks[action](...)
+	end
 
 	task.delay(1, function() InitializeSeats(self) end)
 
