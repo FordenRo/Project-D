@@ -35,6 +35,7 @@ export type SettingsController = {
 	) -> { SettingsTypes.SettingInfo },
 	GetFolderInfos: (self: SettingsController) -> { SettingsTypes.FolderInfo },
 	SetSetting: (self: SettingsController, name: string, value: any) -> (),
+	ResetSettings: (self: SettingsController) -> (),
 }
 
 type SettingsControllerImpl = {
@@ -191,6 +192,12 @@ function SettingsController.SetSetting(
 	value: any
 )
 	self.settings[name] = value
+end
+
+function SettingsController.ResetSettings(self: SettingsControllerImpl)
+	for k, v in SettingsConfig.Settings do
+		self:SetSetting(v.Name, v.Default)
+	end
 end
 
 return SettingsController.new()
