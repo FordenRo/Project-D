@@ -7,19 +7,37 @@ local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Component = {}
 
 export type Component = {
-	--- Fired immediately after a property of the component changes.
-	Changed: Signal.Signal<string>,
+	--[[
+		Fired immediately after a property of the component changes.
 
-	--- Fires immediately after a given property of the component changes.
+		```luau
+		local component = Component.Wrap({ test = 5 })
+		component.Changed:Connect(function(property: string)
+			print(`Fired "{property}"!`)
+		end)
+		component.test = 6 -- Fired "test"!
+	]]
+	Changed: Signal.Signal<string>,
+	--[[
+		Fires immediately after the given property of the component changes.
+		
+		```luau
+		local component = Component.Wrap({ test = 5, name = "st" })
+		component:GetPropertyChangedSignal("test"):Connect(function()
+			print("Fired!")
+		end)
+		component.test = 6 -- Fired!
+		component.name = "test" -- will not fire
+	]]
 	GetPropertyChangedSignal: (
 		self: Component,
 		property: string
 	) -> Signal.Signal<>,
-	--- Gets the value, bypassing any getters.
+	--- Gets the value of the component bypassing any getters.
 	RawGet: (self: Component, key: string) -> any?,
-	--- Sets the value, bypassing any setters.
+	--- Sets the value of the component bypassing any setters and `Changed` signals.
 	RawSet: (self: Component, key: string, value: any) -> (),
-	--- Create a deep copy of an component.
+	--- Creates a deep copy of an component.
 	Clone: <Component>(self: Component) -> Component,
 }
 
@@ -131,6 +149,36 @@ function Component.RawSet(self: any, key: string, value: any)
 	t[key] = value
 end
 
+--[[
+	Extends component
+
+	```luau
+	local Class = {}
+	Component.Extend(Class)
+
+	function Class.new()
+		local self = Component.new()
+		setmetatable(self, Class)
+		return self
+	end
+
+	return Class
+	```
+
+	To extend a `Class`, use
+	```luau
+	local SubClass = {}
+	Component.Extend(SubClass, Class)
+
+	function SubClass.new()
+		local self = Class.new()
+		setmetatable(self, SubClass)
+		return self
+	end
+
+	return SubClass
+	```
+]]
 function Component.Extend(to: any, from: any?)
 	for k, v in getMeta(to) do
 		to[k] = v
