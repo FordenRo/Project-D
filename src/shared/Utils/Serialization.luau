@@ -1,4 +1,5 @@
 --!native
+local Players = game:GetService("Players")
 
 --[[
 	Low-level serialization library
@@ -407,6 +408,23 @@ Serialization.String = function(maxLength: number)
 		end,
 	})
 end
+
+--- Serializes a player
+---
+--- Resulting size is 4 bytes / 32 bits
+Serialization.Player = table.freeze({
+	Name = "Player",
+	Ser = function(b: buffer, offset: number, value: Player): number
+		buffer.writebits(b, offset, 32, value.UserId)
+		return offset + 32
+	end,
+	Des = function(b: buffer, offset: number): (Player, number)
+		return Players:GetPlayerByUserId(
+				buffer.readbits(b, offset, 32)
+			) :: Player,
+			offset + 32
+	end,
+})
 
 --- Serializes a CFrame with high precision
 ---
