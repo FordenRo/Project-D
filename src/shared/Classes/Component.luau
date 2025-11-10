@@ -29,36 +29,36 @@ type ComponentImpl = {
 	set: { [string]: (self: any, value: any) -> any }?,
 } & Component
 
+function getExtendedGetter(obj, k)
+	if obj.get and obj.get[k] then return obj.get[k] end
+	return obj.__extend and getExtendedGetter(obj.__extend, k)
+end
+
+function getExtendedValue(obj, k)
+	return obj[k] or obj.__extend and getExtendedValue(obj.__extend, k)
+end
+
+function getExtendedSetter(obj, k)
+	if obj.set and obj.set[k] then return obj.set[k] end
+	return obj.__extend and getExtendedSetter(obj.__extend, k)
+end
+
 function getMeta(base: any)
 	return {
 		__index = function(t, k)
-			local self = assert(rawget(t, "_t")) :: ComponentImpl
+			local self = rawget(t, "_t") :: ComponentImpl
 
-			local function getExtendedGetter(obj)
-				if obj.get and obj.get[k] then return obj.get[k] end
-				return obj.__extend and getExtendedGetter(obj.__extend)
-			end
-
-			local get = getExtendedGetter(base)
+			local get = getExtendedGetter(base, k)
 			if get then return get(t) end
 
-			local function getExtendedValue(obj)
-				return obj[k] or obj.__extend and getExtendedValue(obj.__extend)
-			end
-
-			return self[k] or getExtendedValue(base)
+			return self[k] or getExtendedValue(base, k)
 		end,
 		__newindex = function(t, k, v)
-			local self = assert(rawget(t, "_t")) :: ComponentImpl
+			local self = rawget(t, "_t") :: ComponentImpl
 
-			local function getExtendedSetter(obj)
-				if obj.set and obj.set[k] then return obj.set[k] end
-				return obj.__extend and getExtendedSetter(obj.__extend)
-			end
-
-			local set = getExtendedSetter(base)
+			local set = getExtendedSetter(base, k)
 			if set then
-				set(t, v)
+				if not set(t, v) then return end
 			else
 				if self[k] == v then return end
 
