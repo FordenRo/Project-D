@@ -601,6 +601,24 @@ do
 	})
 end
 
+--- Will apply the packet to the table
+---
+--- This is deep operation, so all nested tables will also be applied
+function Serialization.ApplyPacket(packet: Packet, b: buffer, to: any)
+	local function assign(t, data)
+		for k, v in data do
+			if typeof(v) == "table" then
+				assign(t[k], v)
+				continue
+			end
+			t[k] = v
+		end
+	end
+
+	local data = Serialization.Deserialize(packet, b)
+	assign(to, data)
+end
+
 local function SerializeUnsafe(packet: Packet, t: { [string]: any }): number
 	local offset = 0
 
