@@ -17,7 +17,7 @@ local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
-local ServerVehicle = {}
+local ServerVehicle = { get = {}, set = {} }
 ServerVehicle.__extends = Component
 
 type ServerVehicle = VehicleTypes.ServerVehicle
@@ -419,6 +419,26 @@ function InitializeSeats(self: ServerVehicle)
 			end
 		end)
 	end
+end
+
+function ServerVehicle.get.CFrame(self: ServerVehicle)
+	return self.WeightPart.CFrame
+end
+
+function ServerVehicle.get.Velocity(self: ServerVehicle)
+	return self.WeightPart.AssemblyLinearVelocity
+end
+
+function ServerVehicle.get.AngularVelocity(self: ServerVehicle)
+	return self.WeightPart.AssemblyAngularVelocity
+end
+
+function ServerVehicle.get.Center(self: ServerVehicle)
+	return VehicleUtil.GetCenter(self)
+end
+
+function ServerVehicle.set.CFrame(self: ServerVehicle, cframe: CFrame)
+	self.Instance:PivotTo(cframe)
 end
 
 function ServerVehicle.Destroy(self: ServerVehicle) self.Instance:Destroy() end

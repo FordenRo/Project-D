@@ -417,6 +417,26 @@ function Update(self: ClientVehicleImpl, deltaTime: number)
 	UpdateMileage(self, deltaTime)
 end
 
+function ClientVehicle.get.CFrame(self: ClientVehicle)
+	return self.WeightPart.CFrame
+end
+
+function ClientVehicle.get.Velocity(self: ClientVehicle)
+	return self.WeightPart.AssemblyLinearVelocity
+end
+
+function ClientVehicle.get.AngularVelocity(self: ClientVehicle)
+	return self.WeightPart.AssemblyAngularVelocity
+end
+
+function ClientVehicle.get.Center(self: ClientVehicle)
+	return VehicleUtil.GetCenter(self)
+end
+
+function ClientVehicle.set.CFrame(self: ClientVehicle, cframe: CFrame)
+	self.Instance:PivotTo(cframe)
+end
+
 return table.freeze(ClientVehicle :: any) :: {
 	new: (instance: Instance) -> ClientVehicle,
 }
