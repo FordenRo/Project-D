@@ -8,7 +8,7 @@ BaseWheel.__index = BaseWheel
 type BaseWheel = VehicleTypes.BaseWheel
 
 function BaseWheel.new(
-	vehicle: VehicleTypes.BaseVehicle,
+	vehicle: VehicleTypes.VehicleTable,
 	instance: BasePart
 ): BaseWheel
 	local self: BaseWheel = setmetatable({}, BaseWheel) :: any

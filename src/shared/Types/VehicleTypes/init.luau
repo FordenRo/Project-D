@@ -8,7 +8,7 @@ local TuneType = require(script.TuneType)
 
 export type IgnitionState = "Off" | "Acc" | "On" | "Starting"
 
-export type BaseVehicle = {
+export type VehicleTable = {
 	URE: UnreliableRemoteEvent,
 	RE: RemoteEvent,
 	RF: RemoteFunction,
@@ -87,9 +87,7 @@ export type BaseVehicle = {
 	CSActive: boolean,
 	--- Current ignition state
 	IgnitionState: IgnitionState,
-
-	_Replicate: (self: BaseVehicle, buf: buffer) -> (),
-} & Component.Component
+}
 
 export type DeformationController = {
 	Vehicle: ClientVehicle,
@@ -184,7 +182,7 @@ export type ClientVehicle = {
 	-- 	message: string
 	-- ) -> any,
 	Leave: (self: ClientVehicle) -> (),
-} & BaseVehicle
+} & VehicleTable & Component.Component
 
 export type CameraController = {
 	Vehicle: ClientVehicle,
@@ -248,7 +246,7 @@ export type EngineTable = {
 export type ServerVehicle = {
 	Wheels: { ServerWheel },
 	Destroy: (self: ServerVehicle) -> (),
-} & BaseVehicle
+} & VehicleTable & Component.Component
 
 export type BaseWheel = {
 	Instance: {
@@ -282,7 +280,7 @@ export type BaseWheel = {
 			AA: Attachment,
 		} & Part,
 	} & Part,
-	Vehicle: BaseVehicle,
+	Vehicle: VehicleTable,
 	BrakeDisk: ClientBrakeDisk | ServerBrakeDisk,
 	IsRight: boolean,
 	IsFront: boolean,
