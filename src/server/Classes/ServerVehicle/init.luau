@@ -15,7 +15,7 @@ local VehicleConstants =
 	require(ReplicatedStorage.Shared.Vehicle.VehicleConstants)
 local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-local Wheel = require(script.Wheel)
+local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 
 local ServerVehicle = { get = {}, set = {} }
 ServerVehicle.__extends = Component
@@ -25,9 +25,9 @@ type ServerVehicle = VehicleTypes.ServerVehicle
 function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	local self: ServerVehicle = Component(ServerVehicle) :: any
 
-	self.Wheels = {}
 	self.Owner = owner
 
+	VehicleUtil.Setup(self, instance)
 	Initialize(self)
 
 	local trove = Trove.new()
@@ -38,7 +38,7 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	InteriorHandler.new(self)
 
 	trove:Connect(self.URE.OnServerEvent, function(sender: Player, buf: buffer)
-		self:_Replicate(buf)
+		VehicleUtil.Replicate(self, buf)
 
 		for _, player in Players:GetPlayers() do
 			if player == sender then continue end
@@ -64,12 +64,13 @@ end
 function Initialize(self: ServerVehicle)
 	RemoveMassAndForces(self)
 	MakeCollider(self)
-	InitializeWheels(self)
+	VehicleUtil.InitializeWheels(self)
 	InitializeBody(self)
 	ApplyWeight(self)
 	MakeGravity(self)
 	CreateFlip(self)
 	Finalize(self)
+	CreateRemotes(self)
 	InitializeControllersReplication(self)
 end
 
@@ -128,15 +129,18 @@ function MakeCollider(self: ServerVehicle)
 	end
 end
 
-function InitializeWheels(self: ServerVehicle)
-	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
-	for _, v in self.Instance.Wheels:GetChildren() do
-		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
-			continue
-		end
+function CreateRemotes(self: ServerVehicle)
+	self.URE = Instance.new("UnreliableRemoteEvent")
+	self.URE.Name = "VehicleURE"
+	self.URE.Parent = self.Instance
 
-		table.insert(self.Wheels :: any, Wheel.new(self, v))
-	end
+	self.RE = Instance.new("RemoteEvent")
+	self.RE.Name = "VehicleRE"
+	self.RE.Parent = self.Instance
+
+	self.RF = Instance.new("RemoteFunction")
+	self.RF.Name = "VehicleRF"
+	self.RF.Parent = self.Instance
 end
 
 function InitializeControllersReplication(self: ServerVehicle)

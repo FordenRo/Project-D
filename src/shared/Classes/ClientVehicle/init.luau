@@ -21,7 +21,7 @@ local Units = require(ReplicatedStorage.Shared.Utils.Units)
 local VehicleInterface = require(ReplicatedStorage.Shared.UI.VehicleInterface)
 local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
-local Wheel = require(script.Wheel)
+local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 
 local player = Players.LocalPlayer
 
@@ -46,11 +46,10 @@ type ClientVehicleImpl = {
 function ClientVehicle.new(instance: Instance): ClientVehicle
 	local self: ClientVehicleImpl = Component(ClientVehicle) :: any
 
+	VehicleUtil.Setup(self, instance)
 	-- self.MeshParts = {}
 	-- self.Meshes = {}
 	-- self.Textures = {}
-	self.Wheels = {}
-
 	self.IsSitting = false
 	self.BrakeForce = {
 		Front = self.Tune.BrakeForce
@@ -72,6 +71,9 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 			* Units.Force_N
 			* (1 - self.Tune.PBrakeBias),
 	}
+	self.URE = self.Instance:WaitForChild("VehicleURE") :: UnreliableRemoteEvent
+	self.RE = self.Instance:WaitForChild("VehicleRE") :: RemoteEvent
+	self.RF = self.Instance:WaitForChild("VehicleRF") :: RemoteFunction
 	self.WeightPart = self.Instance.Body:WaitForChild("WeightPart") :: Part
 	self.lastVelocity = Vector3.new()
 
@@ -98,7 +100,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	)
 	self.Fuel *= self.Tune.FuelCapacity
 
-	InitializeWheels(self)
+	VehicleUtil.InitializeWheels(self)
 	self.SoundController = SoundController.new(self)
 	-- self.DeformationController = DeformationController.new(self)
 
@@ -290,17 +292,6 @@ function InitializeSeats(self: ClientVehicleImpl)
 	end
 end
 
-function InitializeWheels(self: ClientVehicleImpl)
-	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
-	for _, v in self.Instance.Wheels:GetChildren() do
-		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
-			continue
-		end
-
-		table.insert(self.Wheels, Wheel.new(self, v))
-	end
-end
-
 function InitializeControllers(self: ClientVehicleImpl)
 	self.controllers = {}
 	self.controllersRE =
@@ -400,7 +391,7 @@ function Replicate(self: ClientVehicleImpl, buf: buffer?)
 			Serialization.Serialize(VehiclePackets.Update, self)
 		)
 	elseif buf then
-		self:_Replicate(buf)
+		VehicleUtil.Replicate(self, buf)
 	end
 end
 
