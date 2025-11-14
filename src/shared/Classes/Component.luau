@@ -41,6 +41,9 @@ export type Component = {
 	--- Sets the value of the component bypassing any setters and `Changed` signals.
 	RawSet: (self: Component, key: string, value: any) -> (),
 
+	--- Returns a metatable of the component's parent that this component extends.
+	Super: <Component>(self: Component) -> Component,
+
 	--- Creates a deep copy of an component.
 	Clone: <Component>(self: Component) -> Component,
 }
@@ -160,6 +163,16 @@ end
 function Component.RawSet(self: ComponentImpl, key: string, value: any)
 	local t = assert(rawget(self, "__component"))
 	t[key] = value
+end
+
+function Component.Super(self: ComponentImpl)
+	local base = assert(rawget(self, "__base"))
+
+	return setmetatable({
+		Super = Component.Super,
+		__component = rawget(self, "__component"),
+		__base = rawget(base, "__extend"),
+	}, ComponentMeta)
 end
 
 return (Component :: any) :: {
