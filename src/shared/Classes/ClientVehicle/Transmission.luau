@@ -11,7 +11,7 @@ type Transmission = VehicleTypes.Transmission
 type TransmissionImpl = {} & Transmission
 
 function Transmission.new(vehicle: VehicleTypes.ClientVehicle): Transmission
-	local self: TransmissionImpl = Component.new(Transmission) :: any
+	local self: TransmissionImpl = Component(Transmission) :: any
 
 	self.Vehicle = vehicle
 	self.ShiftingUp = false
