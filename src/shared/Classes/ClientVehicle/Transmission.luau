@@ -4,20 +4,19 @@ local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Transmission = {}
-Component.Extend(Transmission)
+Transmission.__extends = Component
 
 type Transmission = VehicleTypes.Transmission
 
 type TransmissionImpl = {} & Transmission
 
 function Transmission.new(vehicle: VehicleTypes.ClientVehicle): Transmission
-	local self: TransmissionImpl = Component.new() :: any
+	local self: TransmissionImpl = Component.new(Transmission) :: any
 
 	self.Vehicle = vehicle
 	self.ShiftingUp = false
 	self.ShiftingDown = false
 
-	setmetatable(self, Transmission)
 	return self
 end
 
@@ -170,11 +169,6 @@ function Transmission.Update(self: TransmissionImpl)
 	end)
 end
 
-function Transmission.Is(obj: any): boolean
-	return typeof(obj) == "table" and getmetatable(obj) == Transmission
-end
-
-return table.freeze({
-	new = Transmission.new,
-	Is = Transmission.Is,
-})
+return table.freeze(Transmission :: any) :: {
+	new: (vehicle: VehicleTypes.ClientVehicle) -> Transmission,
+}

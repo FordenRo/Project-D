@@ -10,7 +10,7 @@ local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local BaseVehicle = { get = {}, set = {} }
-Component.Extend(BaseVehicle)
+BaseVehicle.__extends = Component
 
 type BaseVehicle = VehicleTypes.BaseVehicle
 
@@ -46,7 +46,6 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 		self.RF = self.Instance:WaitForChild("VehicleRF") :: RemoteFunction
 	end
 
-	setmetatable(self, BaseVehicle)
 	return self
 end
 
@@ -168,6 +167,6 @@ function BaseVehicle.set.CFrame(self: BaseVehicle, cframe: CFrame)
 	self.Instance:PivotTo(cframe)
 end
 
-function BaseVehicle.Extend(to: any) Component.Extend(to, BaseVehicle) end
-
-return BaseVehicle
+return table.freeze(BaseVehicle :: any) :: {
+	new: (instance: Instance) -> BaseVehicle,
+}

@@ -15,7 +15,7 @@ local LIGHT_POWER = {
 }
 
 local LightController = { set = {} }
-Component.Extend(LightController)
+LightController.__extends = Component
 
 export type LightController = {
 	Vehicle: VehicleTypes.ClientVehicle,
@@ -41,11 +41,11 @@ type Side = "Right" | "Left" | "Both"
 function LightController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): LightController
-	local self: LightControllerImpl = Component.new() :: any
+	local self: LightControllerImpl = Component(LightController) :: any
 
 	self.Vehicle = vehicle
-	self.State = "Off"
-	self.TurnState = "Off"
+	self:RawSet("State", "Off")
+	self:RawSet("TurnState", "Off")
 
 	self.lastToggleTime = tick()
 	self.typesBrightness = {}
@@ -68,8 +68,6 @@ function LightController.new(
 
 		table.insert(typeHeadlights, Headlight.new(lightPart))
 	end
-
-	setmetatable(self, LightController)
 
 	local trove = Trove.new()
 	trove:Connect(RunService.Heartbeat, function() Update(self) end)
@@ -164,11 +162,6 @@ function Update(self: LightControllerImpl)
 	)
 end
 
-function LightController.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == LightController
-end
-
-return table.freeze({
-	new = LightController.new,
-	Is = LightController.Is,
-})
+return table.freeze(LightController :: any) :: {
+	new: (vehicle: VehicleTypes.ClientVehicle) -> LightController,
+}

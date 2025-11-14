@@ -15,7 +15,7 @@ local Windows = {
 } :: { [string]: { new: () -> Window.Window } }
 
 local InterfaceController = { set = {} }
-Component.Extend(InterfaceController)
+InterfaceController.__extends = Component
 
 export type InterfaceController = {
 	Instance: {
@@ -34,7 +34,7 @@ type InterfaceControllerImpl = {
 } & InterfaceController
 
 function InterfaceController.new(): InterfaceController
-	local self: InterfaceControllerImpl = Component.new() :: any
+	local self: InterfaceControllerImpl = Component(InterfaceController) :: any
 
 	self.Instance = (ReplicatedStorage.UI :: any).Interface:Clone()
 	self.Instance.Enabled = false
@@ -43,8 +43,6 @@ function InterfaceController.new(): InterfaceController
 	self.Visible = false
 	self.ActiveWindow = nil
 	self.spawnedWindows = {}
-
-	setmetatable(self, InterfaceController)
 
 	SideButtonsHandler(self)
 	FPSLabelHandler(self)

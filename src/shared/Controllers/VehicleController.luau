@@ -17,7 +17,7 @@ local Actions = {
 }
 
 local VehicleController = {}
-Component.Extend(VehicleController)
+VehicleController.__extends = Component
 
 export type VehicleController = {
 	--- Currently driven vehicle
@@ -48,15 +48,13 @@ export type VehicleController = {
 } & Component.Component
 
 function VehicleController.new(): VehicleController
-	local self: VehicleController = Component.new() :: any
+	local self: VehicleController = Component(VehicleController) :: any
 
 	self.DrivenVehicle = nil
 	self.SpawnedVehicle = nil
 	self.WorldVehicles = {}
 
 	self.VehicleSpawned = Signal.new()
-
-	setmetatable(self, VehicleController)
 
 	CollectionService:GetInstanceAddedSignal("Vehicle")
 		:Connect(
@@ -140,4 +138,4 @@ function VehicleController.GetVehiclesByName(
 	return list
 end
 
-return VehicleController.new()
+return VehicleController.new() :: VehicleController

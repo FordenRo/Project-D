@@ -22,7 +22,7 @@ local mouse = player:GetMouse()
 local Context = (ReplicatedStorage.Input :: any).Vehicle
 
 local InputController = { set = {} }
-Component.Extend(InputController)
+InputController.__extends = Component
 
 type InputController = VehicleTypes.InputController
 
@@ -38,7 +38,7 @@ type InputControllerImpl = {
 function InputController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): InputController
-	local self: InputControllerImpl = Component.new() :: any
+	local self: InputControllerImpl = Component(InputController) :: any
 
 	self.Vehicle = vehicle
 
@@ -53,10 +53,8 @@ function InputController.new(
 	self.MousePosition =
 		Vector2.new(0.5, 1 - SettingsController:GetSetting("MSteerCursorY"))
 	self.IsMouseSteerOn = false
-	self.CameraMode = "ThirdPerson"
+	self:RawSet("CameraMode", "ThirdPerson")
 	self.CameraModeChanged = Signal.new()
-
-	setmetatable(self, InputController)
 
 	Context.TCS.Enabled = self.Vehicle.Tune.TCSEnabled
 	Context.ABS.Enabled = self.Vehicle.Tune.ABSEnabled
@@ -488,4 +486,6 @@ end
 
 function InputController.Destroy(self: InputControllerImpl) self.trove:Destroy() end
 
-return table.freeze({ new = InputController.new })
+return table.freeze(InputController :: any) :: {
+	new: (vehicle: VehicleTypes.ClientVehicle) -> InputController,
+}

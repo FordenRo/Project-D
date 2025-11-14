@@ -31,7 +31,7 @@ local VISIBLE_BODY_PARTS = {
 }
 
 local CameraController = {}
-Component.Extend(CameraController)
+CameraController.__extends = Component
 
 type CameraController = VehicleTypes.CameraController
 
@@ -43,11 +43,9 @@ type CameraControllerImpl = {
 function CameraController.new(
 	vehicle: VehicleTypes.ClientVehicle
 ): CameraController
-	local self: CameraControllerImpl = Component.new() :: any
+	local self: CameraControllerImpl = Component(CameraController) :: any
 
 	self.Vehicle = vehicle
-
-	setmetatable(self, CameraController)
 
 	Camera.CameraType = Enum.CameraType.Scriptable
 
@@ -290,15 +288,10 @@ function ThirdPersonHandler(self: CameraControllerImpl)
 	)
 end
 
-function CameraController.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == CameraController
-end
-
 function CameraController.Destroy(self: CameraControllerImpl)
 	self.trove:Destroy()
 end
 
-return table.freeze({
-	new = CameraController.new,
-	Is = CameraController.Is,
-})
+return table.freeze(CameraController :: any) :: {
+	new: (vehicle: VehicleTypes.ClientVehicle) -> CameraController,
+}
