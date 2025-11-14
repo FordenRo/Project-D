@@ -44,6 +44,12 @@ export type Component = {
 	--- Returns a metatable of the component's parent that this component extends.
 	Super: <Component>(self: Component) -> Component,
 
+	--- Returns true if an component's base matches or inherits from a given base.
+	IsA: (self: Component, base: any) -> boolean,
+
+	--- Returns true if an component's base equals a given base.
+	TypeOf: (self: Component, base: any) -> boolean,
+
 	--- Creates a deep copy of an component.
 	Clone: <Component>(self: Component) -> Component,
 }
@@ -173,6 +179,16 @@ function Component.Super(self: ComponentImpl)
 		__component = rawget(self, "__component"),
 		__base = rawget(base, "__extend"),
 	}, ComponentMeta)
+end
+
+function Component.IsA(self: ComponentImpl, base: any)
+	if not base then return false end
+
+	return self:TypeOf(base) or self:IsA(rawget(base, "__extend"))
+end
+
+function Component.TypeOf(self: ComponentImpl, base: any)
+	return assert(rawget(self, "__base")) == base
 end
 
 return (Component :: any) :: {
