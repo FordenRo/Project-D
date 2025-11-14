@@ -3,7 +3,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local BaseVehicle = require(script.Parent.BaseVehicle)
 local CameraController = require(script.CameraController)
 local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
@@ -27,7 +26,7 @@ local Wheel = require(script.Wheel)
 local player = Players.LocalPlayer
 
 local ClientVehicle = { set = {}, get = {} }
-ClientVehicle.__extends = BaseVehicle
+ClientVehicle.__extends = Component
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
@@ -45,8 +44,7 @@ type ClientVehicleImpl = {
 } & ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: ClientVehicleImpl =
-		Component(ClientVehicle, BaseVehicle.new(instance)) :: any
+	local self: ClientVehicleImpl = Component(ClientVehicle) :: any
 
 	-- self.MeshParts = {}
 	-- self.Meshes = {}

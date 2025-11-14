@@ -1,7 +1,6 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 -- local DeformationHandler = require(script.DeformationHandler)
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTable =
@@ -19,13 +18,12 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
 local ServerVehicle = {}
-ServerVehicle.__extends = BaseVehicle
+ServerVehicle.__extends = Component
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
-	local self: ServerVehicle =
-		Component(ServerVehicle, BaseVehicle.new(instance)) :: any
+	local self: ServerVehicle = Component(ServerVehicle) :: any
 
 	self.Wheels = {}
 	self.Owner = owner
