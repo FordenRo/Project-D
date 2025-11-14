@@ -103,6 +103,31 @@ local ComponentMeta = {
 	end,
 }
 
+-- Set meta methods
+local metamethods = {
+	"__call",
+	"__concat",
+	"__unm",
+	"__add",
+	"__sub",
+	"__mul",
+	"__div",
+	"__idiv",
+	"__mod",
+	"__pow",
+	"__tostring",
+	"__eq",
+	"__lt",
+	"__le",
+	"__len",
+	"__iter",
+}
+for _, v in metamethods do
+	ComponentMeta[v] = function(t, ...)
+		return getExtendedValue(rawget(t, "__base"), v)(t, ...)
+	end
+end
+
 -- TODO: #2 Fix changed signals table memory leak
 
 function Meta.__call(base: any, source: any?)
