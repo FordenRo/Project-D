@@ -15,7 +15,7 @@ BaseVehicle.__extends = Component
 type BaseVehicle = VehicleTypes.BaseVehicle
 
 function BaseVehicle.new(instance: Instance): BaseVehicle
-	local self: BaseVehicle = Component.new() :: any
+	local self: BaseVehicle = Component(BaseVehicle) :: any
 
 	self.Instance = instance :: any
 	self.Tune = require(
@@ -85,13 +85,6 @@ function InitializeVariables(self: BaseVehicle)
 	self.CS = self.Tune.CSEnabled
 	self.CSActive = false
 	self.IgnitionState = "Off"
-
-	task.defer(
-		function()
-			self.WeightPart =
-				self.Instance.Body:WaitForChild("WeightPart") :: Part
-		end
-	)
 end
 
 function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)

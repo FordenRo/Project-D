@@ -74,6 +74,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 			* Units.Force_N
 			* (1 - self.Tune.PBrakeBias),
 	}
+	self.WeightPart = self.Instance.Body:WaitForChild("WeightPart") :: Part
 	self.lastVelocity = Vector3.new()
 
 	local trove = Trove.new()

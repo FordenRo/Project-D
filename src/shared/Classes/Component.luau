@@ -130,7 +130,7 @@ end
 
 -- TODO: #2 Fix changed signals table memory leak
 
-function Meta.__call(base: any, source: any?)
+function Meta.__call(_, base: any, source: any?)
 	if source and rawget(source, "__component") then
 		source = source.__component
 	end
@@ -167,9 +167,13 @@ end
 
 function Component.Clone(self: ComponentImpl)
 	local t = assert(rawget(self, "__component"))
+	local base = assert(rawget(self, "__base"))
 	t = TableUtil.DeepCopy(t)
 
-	return setmetatable({ __component = t }, getmetatable(self :: any))
+	return setmetatable({
+		__component = t,
+		__base = base,
+	}, ComponentMeta)
 end
 
 function Component.RawGet(self: ComponentImpl, key: string): any?
