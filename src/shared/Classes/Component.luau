@@ -5,6 +5,7 @@ local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 
 local Component = {}
+local Meta = {}
 
 export type Component = {
 	--[[
@@ -60,16 +61,16 @@ type ComponentImpl = {
 	set: { [string]: (self: any, value: any) -> any }?,
 } & Component
 
-function getExtendedGetter(base, k)
+function getExtendedGetter(base, k: string): any
 	if base.get and base.get[k] then return base.get[k] end
 	return base.__extends and getExtendedGetter(base.__extends, k)
 end
 
-function getExtendedValue(base, k)
+function getExtendedValue(base, k: string): any
 	return base[k] or base.__extends and getExtendedValue(base.__extends, k)
 end
 
-function getExtendedSetter(base, k)
+function getExtendedSetter(base, k: string): any
 	if base.set and base.set[k] then return base.set[k] end
 	return base.__extends and getExtendedSetter(base.__extends, k)
 end
@@ -104,12 +105,7 @@ local ComponentMeta = {
 
 -- TODO: #2 Fix changed signals table memory leak
 
-function Component.new(source: any, base: any)
-	if source and not base then
-		base = source
-		source = nil
-	end
-
+function Meta.__call(base: any, source: any?)
 	if source and rawget(source, "__component") then
 		source = source.__component
 	end
@@ -127,18 +123,8 @@ function Component.new(source: any, base: any)
 	}, ComponentMeta)
 end
 
-function Component.Wrap(source: any)
-	local self: ComponentImpl = (
-		source and TableUtil.DeepCopy(source) or {}
-	) :: any
-
-	self.Changed = Signal.new()
-	self.propChangedSignals = {}
-
-	return setmetatable({
-		__component = self,
-		__base = { __extends = Component },
-	}, ComponentMeta)
+function Component.new(source: any?)
+	return (Component :: any)({ __extends = Component }, source)
 end
 
 function Component.GetPropertyChangedSignal(
@@ -191,8 +177,14 @@ function Component.TypeOf(self: ComponentImpl, base: any)
 	return assert(rawget(self, "__base")) == base
 end
 
-return (Component :: any) :: {
-	--- Constructs a new component
-	new: (<S, B>(source: S, base: B) -> Component & S & B)
-		& (<B>(base: B) -> Component & B),
-}
+setmetatable(Component, Meta)
+
+return (Component :: any) :: typeof(setmetatable(
+	{} :: {
+		--- Constructs a new component
+		new: <S>(source: S?) -> Component & S,
+	},
+	{} :: {
+		__call: <A, B, S>(self: A, base: B, source: S?) -> Component & B & S,
+	}
+))
