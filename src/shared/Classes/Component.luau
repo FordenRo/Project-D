@@ -167,9 +167,13 @@ end
 
 function Component.Clone(self: ComponentImpl)
 	local t = assert(rawget(self, "__component"))
+	local base = assert(rawget(self, "__base"))
 	t = TableUtil.DeepCopy(t)
 
-	return setmetatable({ __component = t }, getmetatable(self :: any))
+	return setmetatable({
+		__component = t,
+		__base = base,
+	}, ComponentMeta)
 end
 
 function Component.RawGet(self: ComponentImpl, key: string): any?
