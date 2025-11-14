@@ -202,6 +202,18 @@ function Component.TypeOf(self: ComponentImpl, base: any)
 	return assert(rawget(self, "__base")) == base
 end
 
+function Component.__tostring(self: ComponentImpl)
+	local t = rawget(self, "__component") :: any
+
+	local str = "Component(\n"
+	for k, v in t do
+		str ..= `\t{k} = {tostring(v)}\n`
+	end
+	str ..= ")"
+
+	return str
+end
+
 setmetatable(Component, Meta)
 
 return (Component :: any) :: typeof(setmetatable(
