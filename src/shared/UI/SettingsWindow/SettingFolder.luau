@@ -8,7 +8,7 @@ local SettingsTypes = require(ReplicatedStorage.Shared.Types.SettingsTypes)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local SettingFolder = { set = {} }
-Component.Extend(SettingFolder)
+SettingFolder.__extends = Component
 
 export type SettingFolder = {
 	Instance: Frame & {
@@ -32,7 +32,7 @@ function SettingFolder.new(
 	instance: Frame,
 	properties: SettingsTypes.FolderInfo
 ): SettingFolder
-	local self: SettingFolder = Component.new() :: any
+	local self: SettingFolder = Component(SettingFolder) :: any
 
 	self.Instance = instance :: any
 
@@ -41,8 +41,6 @@ function SettingFolder.new(
 	self.Instance.Button.Info.Description.Visible = properties.Description
 		~= nil
 	self.Instance.Visible = true
-
-	setmetatable(self, SettingFolder)
 
 	local trove = Trove.new()
 	trove:AttachToInstance(instance)
@@ -94,11 +92,9 @@ function SettingFolder.Add(
 	object.Instance.Parent = self.Instance.Content
 end
 
-function SettingFolder.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == SettingFolder
-end
-
-return table.freeze({
-	new = SettingFolder.new,
-	Is = SettingFolder.Is,
-})
+return table.freeze(SettingFolder :: any) :: {
+	new: (
+		instance: Frame,
+		properties: SettingsTypes.FolderInfo
+	) -> SettingFolder,
+}

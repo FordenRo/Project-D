@@ -9,6 +9,7 @@ local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
 -- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
+local Component = require(script.Parent.Component)
 local Engine = require(script.Engine)
 local InputController = require(script.InputController)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
@@ -26,7 +27,7 @@ local Wheel = require(script.Wheel)
 local player = Players.LocalPlayer
 
 local ClientVehicle = { set = {}, get = {} }
-BaseVehicle.Extend(ClientVehicle)
+ClientVehicle.__extends = BaseVehicle
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
@@ -44,7 +45,8 @@ type ClientVehicleImpl = {
 } & ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: ClientVehicleImpl = BaseVehicle.new(instance) :: any
+	local self: ClientVehicleImpl =
+		Component(ClientVehicle, BaseVehicle.new(instance)) :: any
 
 	-- self.MeshParts = {}
 	-- self.Meshes = {}
@@ -85,8 +87,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	InitializeSeats(self)
 	-- InitializeBody(self)
-
-	setmetatable(self, ClientVehicle)
 
 	self.Engine = Engine.new(self)
 	self.Transmission = Transmission.new(self)
@@ -418,11 +418,6 @@ function Update(self: ClientVehicleImpl, deltaTime: number)
 	UpdateMileage(self, deltaTime)
 end
 
-function ClientVehicle.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == ClientVehicle
-end
-
-return table.freeze({
-	new = ClientVehicle.new,
-	Is = ClientVehicle.Is,
-})
+return table.freeze(ClientVehicle :: any) :: {
+	new: (instance: Instance) -> ClientVehicle,
+}

@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local ControlsOrder = require(script.ControlsOrder)
 local Setting = require(script.Setting)
 local SettingFolder = require(script.SettingFolder)
@@ -10,7 +11,7 @@ local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Window = require(script.Parent.Window)
 
 local SettingsWindow = {}
-Window.Extend(SettingsWindow)
+SettingsWindow.__extends = Window
 
 export type SettingsWindow = {} & Window.Window
 
@@ -22,13 +23,13 @@ type SettingsWindowImpl = {
 } & SettingsWindow
 
 function SettingsWindow.new(): SettingsWindow
-	local self: SettingsWindowImpl =
-		Window.new((ReplicatedStorage.UI :: any).SettingsWindow:Clone()) :: any
+	local self: SettingsWindowImpl = Component(
+		SettingsWindow,
+		Window.new((ReplicatedStorage.UI :: any).SettingsWindow:Clone())
+	) :: any
 
 	self.trove = Trove.new()
 	self.trove:AttachToInstance(self.Instance)
-
-	setmetatable(self, SettingsWindow)
 
 	InitializeFolders(self)
 	InitializeSettings(self)
@@ -163,15 +164,10 @@ function getOrder(context: string)
 	error(`Order of an "{context}" context not found`)
 end
 
-function SettingsWindow.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == SettingsWindow
-end
-
 function SettingsWindow.Destroy(self: SettingsWindowImpl)
 	self.Instance:Destroy()
 end
 
-return table.freeze({
-	new = SettingsWindow.new,
-	Is = SettingsWindow.Is,
-})
+return table.freeze(SettingsWindow :: any) :: {
+	new: () -> SettingsWindow,
+}

@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local BaseVehicle = require(ReplicatedStorage.Shared.Classes.BaseVehicle)
 -- local DeformationHandler = require(script.DeformationHandler)
+local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
 local Enums = require(ReplicatedStorage.Shared.Enums)
@@ -18,13 +19,13 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local Wheel = require(script.Wheel)
 
 local ServerVehicle = {}
-BaseVehicle.Extend(ServerVehicle)
+ServerVehicle.__extends = BaseVehicle
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	local self: ServerVehicle =
-		setmetatable(BaseVehicle.new(instance), ServerVehicle) :: any
+		Component(ServerVehicle, BaseVehicle.new(instance)) :: any
 
 	self.Wheels = {}
 	self.Owner = owner
@@ -424,4 +425,6 @@ end
 
 function ServerVehicle.Destroy(self: ServerVehicle) self.Instance:Destroy() end
 
-return table.freeze({ new = ServerVehicle.new })
+return table.freeze(ServerVehicle :: any) :: {
+	new: (instance: Instance, owner: Player) -> ServerVehicle,
+}

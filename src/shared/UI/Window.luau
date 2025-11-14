@@ -6,7 +6,7 @@ local TableUtil = require(ReplicatedStorage.Shared.Utils.TableUtil)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 
 local Tab = { set = {} }
-Component.Extend(Tab)
+Tab.__extends = Component
 
 export type Tab = {
 	Name: string,
@@ -23,7 +23,7 @@ export type Tab = {
 type TabImpl = { trove: Trove.Trove } & Tab
 
 function Tab.new(content: Frame, button: TextButton, parent: Window): Tab
-	local self: TabImpl = Component.new() :: any
+	local self: TabImpl = Component(Tab) :: any
 
 	self.Parent = parent
 	self.Content = content
@@ -37,7 +37,6 @@ function Tab.new(content: Frame, button: TextButton, parent: Window): Tab
 	self.trove = Trove.new()
 	self.trove:Connect(self.Button.Activated, function() self.Active = true end)
 
-	setmetatable(self, Tab)
 	return self
 end
 
@@ -58,7 +57,7 @@ end
 function Tab.Destroy(self: TabImpl) self.trove:Destroy() end
 
 local Window = { get = {}, set = {} }
-Component.Extend(Window)
+Window.__extends = Component
 
 export type Window = {
 	Instance: {
@@ -94,15 +93,13 @@ export type Window = {
 type WindowImpl = { trove: Trove.Trove } & Window
 
 function Window.new(instance: ScreenGui): Window
-	local self: WindowImpl = Component.new() :: any
+	local self: WindowImpl = Component(Window) :: any
 
 	self.Instance = instance :: any
 	self.TabChanged = Signal.new()
 
 	self.trove = Trove.new()
 	self.trove:AttachToInstance(self.Instance)
-
-	setmetatable(self, Window)
 
 	InitializeTabs(self)
 	InitializeButtons(self)
@@ -202,16 +199,8 @@ function Window.GetButtonPressedSignal(self: WindowImpl, name: string)
 	return button.Activated
 end
 
-function Window.Extend(to: any) Component.Extend(to, Window) end
-
-function Window.Is(obj: any)
-	return typeof(obj) == "table" and getmetatable(obj) == Window
-end
-
 function Window.Destroy(self: WindowImpl) self.Instance:Destroy() end
 
-return table.freeze({
-	new = Window.new,
-	Is = Window.Is,
-	Extend = Window.Extend,
-})
+return table.freeze(Window :: any) :: {
+	new: (instance: ScreenGui) -> Window,
+}

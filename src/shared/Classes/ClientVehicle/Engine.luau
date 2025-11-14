@@ -12,7 +12,7 @@ local VehicleConstants =
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 
 local Engine = { get = {} }
-Component.Extend(Engine)
+Engine.__extends = Component
 
 type Engine = VehicleTypes.Engine
 
@@ -26,7 +26,7 @@ type EngineImpl = {
 
 function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	local self: EngineImpl =
-		Component.Wrap(TableUtil.DeepCopy(EngineTable)) :: any
+		Component(Engine, TableUtil.DeepCopy(EngineTable)) :: any
 
 	self.Vehicle = vehicle
 	self.Tune = require(
@@ -46,7 +46,6 @@ function Engine.new(vehicle: VehicleTypes.ClientVehicle): Engine
 	self.lastOffTime = 0
 	self.revLimiting = false
 
-	setmetatable(self, Engine)
 	return self
 end
 
@@ -655,4 +654,6 @@ function UpdateFuel(self: EngineImpl, deltaTime: number)
 	if self.Vehicle.Fuel == 0 then self.IsOn = false end
 end
 
-return table.freeze({ new = Engine.new })
+return table.freeze(Engine :: any) :: {
+	new: (vehicle: VehicleTypes.ClientVehicle) -> Engine,
+}
