@@ -129,13 +129,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 		end
 	end))
 
-	trove:Add(function()
-		--Remove Flip Force
-		if self.Instance.DriveSeat:FindFirstChild("Flip") then
-			self.Instance.DriveSeat.Flip.Enabled = false
-		end
-	end)
-
 	return self
 end
 
@@ -164,6 +157,11 @@ function Seated(
 	self.IsSitting = true
 
 	if seat :: any ~= self.Instance.DriveSeat then return end
+
+	-- Remove Flip Force
+	if self.Instance.DriveSeat:FindFirstChild("Flip") then
+		self.Instance.DriveSeat.Flip.Enabled = false
+	end
 
 	self.InputController = InputController.new(self)
 	self.CameraController = CameraController.new(self)
