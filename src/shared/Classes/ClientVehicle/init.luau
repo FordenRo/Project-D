@@ -75,9 +75,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 			* Units.Force_N
 			* (1 - self.Tune.PBrakeBias),
 	}
-	self.URE = self.Instance:WaitForChild("VehicleURE") :: UnreliableRemoteEvent
-	self.RE = self.Instance:WaitForChild("VehicleRE") :: RemoteEvent
-	self.RF = self.Instance:WaitForChild("VehicleRF") :: RemoteFunction
 	self.WeightPart = self.Instance.Body:WaitForChild("WeightPart") :: Part
 	self.lastVelocity = Vector3.new()
 

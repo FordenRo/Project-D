@@ -74,7 +74,6 @@ function Initialize(self: ServerVehicle)
 	MakeGravity(self)
 	CreateFlip(self)
 	Finalize(self)
-	CreateRemotes(self)
 	InitializeControllersReplication(self)
 end
 
@@ -131,20 +130,6 @@ function MakeCollider(self: ServerVehicle)
 		constraint.Part1 = wheel
 		constraint.Parent = wheel
 	end
-end
-
-function CreateRemotes(self: ServerVehicle)
-	self.URE = Instance.new("UnreliableRemoteEvent")
-	self.URE.Name = "VehicleURE"
-	self.URE.Parent = self.Instance
-
-	self.RE = Instance.new("RemoteEvent")
-	self.RE.Name = "VehicleRE"
-	self.RE.Parent = self.Instance
-
-	self.RF = Instance.new("RemoteFunction")
-	self.RF.Name = "VehicleRF"
-	self.RF.Parent = self.Instance
 end
 
 function InitializeControllersReplication(self: ServerVehicle)
