@@ -122,8 +122,6 @@ function VehicleUtil.GetCenter(
 	for _, wheel: VehicleTypes.ClientWheel | VehicleTypes.ServerWheel in
 		self.Wheels :: any
 	do
-		if not wheel.Instance:IsA("BasePart") then continue end
-
 		if wheel.IsFront then
 			centerF = centerF + wheel.Instance.CFrame.Position
 			countF = countF + 1

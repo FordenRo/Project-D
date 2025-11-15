@@ -133,14 +133,6 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	return self
 end
 
-function ClientVehicle.get.IsOwned(self: ClientVehicleImpl)
-	return self.Owner == player
-end
-
-function ClientVehicle.get.IsDriven(self: ClientVehicleImpl)
-	return self.Driver == player
-end
-
 function Seated(
 	self: ClientVehicleImpl,
 	seatedPlayer: Player,
@@ -406,6 +398,14 @@ function Update(self: ClientVehicleImpl, deltaTime: number)
 	self.Transmission:Update()
 	self.Engine:Update(deltaTime)
 	UpdateMileage(self, deltaTime)
+end
+
+function ClientVehicle.get.IsOwned(self: ClientVehicleImpl)
+	return self.Owner == player
+end
+
+function ClientVehicle.get.IsDriven(self: ClientVehicleImpl)
+	return self.Driver == player
 end
 
 function ClientVehicle.get.CFrame(self: ClientVehicle)
