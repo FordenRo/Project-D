@@ -381,6 +381,8 @@ function IdentifiedServerComponent.new(id: string): IdentifiedServer
 	self.Id = id
 	self.dataReceivedSignals = {}
 	self.dataPlayerReceivedSignals = {}
+	self.dataInvokationCallbacks = {}
+	self.dataPlayerInvokationCallbacks = {}
 
 	local function eventFunc(
 		player: Player,
@@ -412,7 +414,7 @@ function IdentifiedServerComponent.new(id: string): IdentifiedServer
 	)
 		if self.dataInvokationCallbacks[context] then
 			for _, v in self.dataInvokationCallbacks[context] do
-				return v(...)
+				return v(player, ...)
 			end
 		end
 
@@ -541,6 +543,8 @@ function InstancedServerComponent.new(instance: Instance): InstancedServer
 	self.Instance = instance
 	self.dataReceivedSignals = {}
 	self.dataPlayerReceivedSignals = {}
+	self.dataInvokationCallbacks = {}
+	self.dataPlayerInvokationCallbacks = {}
 
 	self.RE = Instance.new("RemoteEvent")
 	self.RE.Name = "RComponentRE"
@@ -573,7 +577,7 @@ function InstancedServerComponent.new(instance: Instance): InstancedServer
 	self.RF.OnServerInvoke = function(player: Player, context: string, ...)
 		if self.dataInvokationCallbacks[context] then
 			for _, v in self.dataInvokationCallbacks[context] do
-				return v(...)
+				return v(player, ...)
 			end
 		end
 
@@ -621,7 +625,7 @@ function InstancedServerComponent.invoke(
 	context: string,
 	...
 )
-	return self:invoke(player, context)
+	return self.RF:InvokeClient(player, context, ...)
 end
 
 function InstancedServerComponent.Is(obj: any)
