@@ -111,22 +111,20 @@ function VehicleUtil.Replicate(self: VehicleTypes.VehicleTable, buf: buffer)
 	self.Engine.Horsepower = self.Engine.Torque * x / 5.252
 end
 
-function VehicleUtil.GetCenter(
-	self: VehicleTypes.ClientVehicle | VehicleTypes.ServerVehicle
-)
+function VehicleUtil.GetCenter(self: VehicleTypes.VehicleTable)
 	local centerF = Vector3.new()
 	local centerR = Vector3.new()
 	local countF = 0
 	local countR = 0
 
-	for _, wheel: VehicleTypes.ClientWheel | VehicleTypes.ServerWheel in
-		self.Wheels :: any
-	do
-		if wheel.IsFront then
-			centerF = centerF + wheel.Instance.CFrame.Position
+	for _, v in self.Instance.Wheels:GetChildren() do
+		if not v:IsA("BasePart") then continue end
+
+		if table.find({ "F", "FR", "FL" }, v.Name) then
+			centerF = centerF + v.CFrame.Position
 			countF = countF + 1
-		else
-			centerR = centerR + wheel.Instance.CFrame.Position
+		elseif table.find({ "R", "RR", "RL" }, v.Name) then
+			centerR = centerR + v.CFrame.Position
 			countR = countR + 1
 		end
 	end
