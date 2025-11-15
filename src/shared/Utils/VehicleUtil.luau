@@ -1,22 +1,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 
-local Component = require(script.Parent.Component)
 local EngineTune =
 	require(ReplicatedStorage.Shared.Types.VehicleTypes.EngineTune)
-local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
+local Serialization = require(script.Parent.Serialization)
 local TuneType = require(ReplicatedStorage.Shared.Types.VehicleTypes.TuneType)
 local VehiclePackets = require(ReplicatedStorage.Shared.Packets.VehiclePackets)
 local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
+local VehicleUtil = {}
 
-local BaseVehicle = { get = {}, set = {} }
-BaseVehicle.__extends = Component
-
-type BaseVehicle = VehicleTypes.BaseVehicle
-
-function BaseVehicle.new(instance: Instance): BaseVehicle
-	local self: BaseVehicle = Component(BaseVehicle) :: any
-
+function VehicleUtil.Setup(self: VehicleTypes.VehicleTable, instance: Instance)
 	self.Instance = instance :: any
 	self.Tune = require(
 		assert(
@@ -25,34 +19,6 @@ function BaseVehicle.new(instance: Instance): BaseVehicle
 		) :: any
 	) :: TuneType.Tune
 
-	InitializeVariables(self)
-
-	if RunService:IsServer() then
-		self.URE = Instance.new("UnreliableRemoteEvent")
-		self.URE.Name = "VehicleURE"
-		self.URE.Parent = self.Instance
-
-		self.RE = Instance.new("RemoteEvent")
-		self.RE.Name = "VehicleRE"
-		self.RE.Parent = self.Instance
-
-		self.RF = Instance.new("RemoteFunction")
-		self.RF.Name = "VehicleRF"
-		self.RF.Parent = self.Instance
-	else
-		self.URE =
-			self.Instance:WaitForChild("VehicleURE") :: UnreliableRemoteEvent
-		self.RE = self.Instance:WaitForChild("VehicleRE") :: RemoteEvent
-		self.RF = self.Instance:WaitForChild("VehicleRF") :: RemoteFunction
-	end
-
-	return self
-end
-
-function InitializeVariables(self: BaseVehicle)
-	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
-
-	self.Driver = nil
 	self.Passengers = {}
 	self.Fuel = self.Tune.FuelCapacity
 	self.FanSpeed = 0
@@ -60,6 +26,7 @@ function InitializeVariables(self: BaseVehicle)
 	self.Horning = false
 	self.Mileage = 0
 	-- Transmission
+	local ParkingGearEnabled = self.Tune.Ratios[1] == 0
 	self.Clutch = 0
 	self.Gear = ParkingGearEnabled and -2 or 0
 	self.FinalDrive = self.Tune.FinalDrive * self.Tune.FDMult
@@ -87,7 +54,26 @@ function InitializeVariables(self: BaseVehicle)
 	self.IgnitionState = "Off"
 end
 
-function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
+function VehicleUtil.InitializeWheels(
+	self: VehicleTypes.ClientVehicle | VehicleTypes.ServerVehicle
+)
+	local wheelBase: any = RunService:IsServer()
+			and require(ServerScriptService.Server.Classes.ServerVehicle.Wheel)
+		or require(ReplicatedStorage.Shared.Classes.ClientVehicle.Wheel)
+
+	self:RawSet("Wheels", {})
+
+	local wheelNames = { "F", "FL", "FR", "R", "RL", "RR" }
+	for _, v in self.Instance.Wheels:GetChildren() do
+		if not v:IsA("BasePart") or not table.find(wheelNames, v.Name) then
+			continue
+		end
+
+		table.insert(self.Wheels, wheelBase.new(self, v))
+	end
+end
+
+function VehicleUtil.Replicate(self: VehicleTypes.VehicleTable, buf: buffer)
 	for k, v in Serialization.Deserialize(VehiclePackets.Update, buf) do
 		if k == "Engine" then
 			for ek, ev in v do
@@ -125,41 +111,27 @@ function BaseVehicle._Replicate(self: BaseVehicle, buf: buffer)
 	self.Engine.Horsepower = self.Engine.Torque * x / 5.252
 end
 
-function BaseVehicle.get.Center(self: BaseVehicle)
+function VehicleUtil.GetCenter(self: VehicleTypes.VehicleTable)
 	local centerF = Vector3.new()
 	local centerR = Vector3.new()
 	local countF = 0
 	local countR = 0
+
 	for _, v in self.Instance.Wheels:GetChildren() do
 		if not v:IsA("BasePart") then continue end
-		if v.Name == "FL" or v.Name == "FR" or v.Name == "F" then
+
+		if table.find({ "F", "FR", "FL" }, v.Name) then
 			centerF = centerF + v.CFrame.Position
 			countF = countF + 1
-		else
+		elseif table.find({ "R", "RR", "RL" }, v.Name) then
 			centerR = centerR + v.CFrame.Position
 			countR = countR + 1
 		end
 	end
 	centerF = centerF / countF
 	centerR = centerR / countR
-	local center = CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
-	return center
+
+	return CFrame.lookAt(centerR:Lerp(centerF, 0.5), centerF)
 end
 
-function BaseVehicle.get.CFrame(self: BaseVehicle) return self.WeightPart.CFrame end
-
-function BaseVehicle.get.Velocity(self: BaseVehicle)
-	return self.WeightPart.AssemblyLinearVelocity
-end
-
-function BaseVehicle.get.AngularVelocity(self: BaseVehicle)
-	return self.WeightPart.AssemblyAngularVelocity
-end
-
-function BaseVehicle.set.CFrame(self: BaseVehicle, cframe: CFrame)
-	self.Instance:PivotTo(cframe)
-end
-
-return table.freeze(BaseVehicle :: any) :: {
-	new: (instance: Instance) -> BaseVehicle,
-}
+return table.freeze(VehicleUtil)

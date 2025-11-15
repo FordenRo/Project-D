@@ -60,7 +60,7 @@ export type VehicleHandler = {
 	UpdatePlayerVehicleInfo: (
 		self: VehicleHandler,
 		player: Player,
-		vehicle: VehicleTypes.BaseVehicle
+		vehicle: VehicleTypes.VehicleTable
 	) -> (),
 }
 
@@ -210,7 +210,7 @@ end
 function VehicleHandler.UpdatePlayerVehicleInfo(
 	self: VehicleHandler,
 	player: Player,
-	vehicle: VehicleTypes.BaseVehicle
+	vehicle: VehicleTypes.VehicleTable
 )
 	local playerVehInfo = self:GetPlayerVehicleInfo(player, vehicle.ID)
 	playerVehInfo.Fuel = vehicle.Fuel
