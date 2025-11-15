@@ -2,6 +2,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTune = require(script.EngineTune)
+local RComponent = require(ReplicatedStorage.Shared.Classes.RComponent)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundData = require(script.SoundData)
 local TuneType = require(script.TuneType)
@@ -182,7 +183,7 @@ export type ClientVehicle = {
 	-- 	message: string
 	-- ) -> any,
 	Leave: (self: ClientVehicle) -> (),
-} & VehicleTable & Component.Component
+} & VehicleTable & RComponent.InstancedClient
 
 export type CameraController = {
 	Vehicle: ClientVehicle,
@@ -246,7 +247,7 @@ export type EngineTable = {
 export type ServerVehicle = {
 	Wheels: { ServerWheel },
 	Destroy: (self: ServerVehicle) -> (),
-} & VehicleTable & Component.Component
+} & VehicleTable & RComponent.InstancedServer
 
 export type BaseWheel = {
 	Instance: {

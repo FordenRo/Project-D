@@ -8,6 +8,7 @@ local EngineTable =
 local Enums = require(ReplicatedStorage.Shared.Enums)
 local InteriorHandler = require(script.InteriorHandler)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
+local RComponent = require(ReplicatedStorage.Shared.Classes.RComponent)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -18,12 +19,15 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 
 local ServerVehicle = { get = {}, set = {} }
-ServerVehicle.__extends = Component
+ServerVehicle.__extends = RComponent.Instanced.Server
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
-	local self: ServerVehicle = Component(ServerVehicle) :: any
+	local self: ServerVehicle = Component(
+		ServerVehicle,
+		RComponent.Instanced.Server.new(instance)
+	) :: any
 
 	self.Owner = owner
 

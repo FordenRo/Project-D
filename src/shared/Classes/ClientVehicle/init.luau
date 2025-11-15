@@ -11,6 +11,7 @@ local Enums = require(ReplicatedStorage.Shared.Enums)
 local Component = require(script.Parent.Component)
 local Engine = require(script.Engine)
 local InputController = require(script.InputController)
+local RComponent = require(script.Parent.RComponent)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundController = require(script.SoundController)
@@ -26,7 +27,7 @@ local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 local player = Players.LocalPlayer
 
 local ClientVehicle = { set = {}, get = {} }
-ClientVehicle.__extends = Component
+ClientVehicle.__extends = RComponent.Instanced.Client
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
@@ -44,7 +45,10 @@ type ClientVehicleImpl = {
 } & ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: ClientVehicleImpl = Component(ClientVehicle) :: any
+	local self: ClientVehicleImpl = Component(
+		ClientVehicle,
+		RComponent.Instanced.Client.new(instance)
+	) :: any
 
 	VehicleUtil.Setup(self, instance)
 	-- self.MeshParts = {}
