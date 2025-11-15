@@ -4,7 +4,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local CameraController = require(script.CameraController)
-local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
 -- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
@@ -96,7 +95,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	-- Get server data
 	Serialization.ApplyPacket(
 		VehiclePackets.Init,
-		self.RF:InvokeServer(Enums.VehicleAction.InvokeInitPacket),
+		self:InvokeData("Init"),
 		self
 	)
 	self.Fuel *= self.Tune.FuelCapacity
@@ -122,7 +121,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	-- Replication
 	trove:Connect(
-		self.URE.OnClientEvent,
+		self:GetDataReceivedSignal("Update"),
 		function(buf) Replicate(self, buf) end
 	)
 	trove:Add(task.spawn(function()
@@ -380,8 +379,10 @@ end
 
 function Replicate(self: ClientVehicleImpl, buf: buffer?)
 	if self.IsDriven then
-		self.URE:FireServer(
-			Serialization.Serialize(VehiclePackets.Update, self)
+		self:SendData(
+			"Update",
+			(Serialization.Serialize(VehiclePackets.Update, self)),
+			true
 		)
 	elseif buf then
 		VehicleUtil.Replicate(self, buf)

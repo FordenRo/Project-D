@@ -5,7 +5,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
-local Enums = require(ReplicatedStorage.Shared.Enums)
 local InteriorHandler = require(script.InteriorHandler)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
 local RComponent = require(ReplicatedStorage.Shared.Classes.RComponent)
@@ -41,24 +40,23 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	-- DeformationHandler.new(self)
 	InteriorHandler.new(self)
 
-	trove:Connect(self.URE.OnServerEvent, function(sender: Player, buf: buffer)
-		VehicleUtil.Replicate(self, buf)
+	trove:Connect(
+		self:GetDataReceivedSignal("Update"),
+		function(sender: Player, buf: buffer)
+			VehicleUtil.Replicate(self, buf)
 
-		for _, player in Players:GetPlayers() do
-			if player == sender then continue end
+			for _, player in Players:GetPlayers() do
+				if player == sender then continue end
 
-			self.URE:FireClient(player, buf)
+				self:SendData(player, "Update", buf, true)
+			end
 		end
-	end)
+	)
 
-	self.RF.OnServerInvoke = function(player, action: number, ...)
-		local callbacks = {
-			[Enums.VehicleAction.InvokeInitPacket] = function()
-				return (Serialization.Serialize(VehiclePackets.Init, self))
-			end,
-		}
-		return callbacks[action](...)
-	end
+	self:RegisterDataInvokation(
+		"Init",
+		function() return (Serialization.Serialize(VehiclePackets.Init, self)) end
+	)
 
 	task.delay(1, function() InitializeSeats(self) end)
 
