@@ -135,9 +135,7 @@ function Meta.__call(_, base: any, source: any?)
 		source = source.__component
 	end
 
-	local self: ComponentImpl = (
-		source and TableUtil.DeepCopy(source) or {}
-	) :: any
+	local self: ComponentImpl = source or {}
 
 	self.Changed = Signal.new()
 	self.propChangedSignals = {}
