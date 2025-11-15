@@ -44,7 +44,12 @@ end
 -- BASE TYPES
 
 type Client = {
-	SendData: (self: Client, context: string, data: any) -> (),
+	SendData: (
+		self: Client,
+		context: string,
+		data: any,
+		unreliable: boolean?
+	) -> (),
 	GetDataReceivedSignal: (
 		self: Client,
 		context: string
@@ -58,16 +63,23 @@ type Client = {
 } & Component.Component
 
 type Server = {
-	SendData: ((self: Server, context: string, data: any) -> ()) & ((
+	SendData: ((
+		self: Server,
+		context: string,
+		data: any,
+		unreliable: boolean?
+	) -> ()) & ((
 		self: Server,
 		player: Player,
 		context: string,
-		data: any
+		data: any,
+		unreliable: boolean?
 	) -> ()) & ((
 		self: Server,
 		players: { Player },
 		context: string,
-		data: any
+		data: any,
+		unreliable: boolean?
 	) -> ()),
 	GetDataReceivedSignal: ((
 		self: Server,
