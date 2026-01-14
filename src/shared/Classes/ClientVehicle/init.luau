@@ -4,13 +4,13 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local CameraController = require(script.CameraController)
-local Enums = require(ReplicatedStorage.Shared.Enums)
 -- local CreateEditableMesh =
 -- 	require(ReplicatedStorage.Shared.Utils.CreateEditableMesh)
 -- local DeformationController = require(script.DeformationController)
 local Component = require(script.Parent.Component)
 local Engine = require(script.Engine)
 local InputController = require(script.InputController)
+local RComponent = require(script.Parent.RComponent)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Signal = require(ReplicatedStorage.Shared.Utils.Signal)
 local SoundController = require(script.SoundController)
@@ -26,7 +26,7 @@ local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 local player = Players.LocalPlayer
 
 local ClientVehicle = { set = {}, get = {} }
-ClientVehicle.__extends = Component
+ClientVehicle.__extends = RComponent.Instanced.Client
 
 type ClientVehicle = VehicleTypes.ClientVehicle
 
@@ -44,7 +44,10 @@ type ClientVehicleImpl = {
 } & ClientVehicle
 
 function ClientVehicle.new(instance: Instance): ClientVehicle
-	local self: ClientVehicleImpl = Component(ClientVehicle) :: any
+	local self: ClientVehicleImpl = Component(
+		ClientVehicle,
+		RComponent.Instanced.Client.new(instance)
+	) :: any
 
 	VehicleUtil.Setup(self, instance)
 	-- self.MeshParts = {}
@@ -95,7 +98,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 	-- Get server data
 	Serialization.ApplyPacket(
 		VehiclePackets.Init,
-		self.RF:InvokeServer(Enums.VehicleAction.InvokeInitPacket),
+		self:InvokeData("Init"),
 		self
 	)
 	self.Fuel *= self.Tune.FuelCapacity
@@ -121,7 +124,7 @@ function ClientVehicle.new(instance: Instance): ClientVehicle
 
 	-- Replication
 	trove:Connect(
-		self.URE.OnClientEvent,
+		self:GetDataReceivedSignal("Update"),
 		function(buf) Replicate(self, buf) end
 	)
 	trove:Add(task.spawn(function()
@@ -379,8 +382,10 @@ end
 
 function Replicate(self: ClientVehicleImpl, buf: buffer?)
 	if self.IsDriven then
-		self.URE:FireServer(
-			Serialization.Serialize(VehiclePackets.Update, self)
+		self:SendData(
+			"Update",
+			(Serialization.Serialize(VehiclePackets.Update, self)),
+			true
 		)
 	elseif buf then
 		VehicleUtil.Replicate(self, buf)

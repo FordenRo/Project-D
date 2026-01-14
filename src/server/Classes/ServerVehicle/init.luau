@@ -5,9 +5,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Component = require(ReplicatedStorage.Shared.Classes.Component)
 local EngineTable =
 	require(ReplicatedStorage.Shared.Classes.ClientVehicle.EngineTable)
-local Enums = require(ReplicatedStorage.Shared.Enums)
 local InteriorHandler = require(script.InteriorHandler)
 local MakeUtil = require(ReplicatedStorage.Shared.Utils.MakeUtil)
+local RComponent = require(ReplicatedStorage.Shared.Classes.RComponent)
 local Serialization = require(ReplicatedStorage.Shared.Utils.Serialization)
 local Trove = require(ReplicatedStorage.Shared.Utils.Trove)
 local Units = require(ReplicatedStorage.Shared.Utils.Units)
@@ -18,12 +18,15 @@ local VehicleTypes = require(ReplicatedStorage.Shared.Types.VehicleTypes)
 local VehicleUtil = require(ReplicatedStorage.Shared.Utils.VehicleUtil)
 
 local ServerVehicle = { get = {}, set = {} }
-ServerVehicle.__extends = Component
+ServerVehicle.__extends = RComponent.Instanced.Server
 
 type ServerVehicle = VehicleTypes.ServerVehicle
 
 function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
-	local self: ServerVehicle = Component(ServerVehicle) :: any
+	local self: ServerVehicle = Component(
+		ServerVehicle,
+		RComponent.Instanced.Server.new(instance)
+	) :: any
 
 	self.Owner = owner
 
@@ -37,24 +40,23 @@ function ServerVehicle.new(instance: Instance, owner: Player): ServerVehicle
 	-- DeformationHandler.new(self)
 	InteriorHandler.new(self)
 
-	trove:Connect(self.URE.OnServerEvent, function(sender: Player, buf: buffer)
-		VehicleUtil.Replicate(self, buf)
+	trove:Connect(
+		self:GetDataReceivedSignal("Update"),
+		function(sender: Player, buf: buffer)
+			VehicleUtil.Replicate(self, buf)
 
-		for _, player in Players:GetPlayers() do
-			if player == sender then continue end
+			for _, player in Players:GetPlayers() do
+				if player == sender then continue end
 
-			self.URE:FireClient(player, buf)
+				self:SendData(player, "Update", buf, true)
+			end
 		end
-	end)
+	)
 
-	self.RF.OnServerInvoke = function(player, action: number, ...)
-		local callbacks = {
-			[Enums.VehicleAction.InvokeInitPacket] = function()
-				return (Serialization.Serialize(VehiclePackets.Init, self))
-			end,
-		}
-		return callbacks[action](...)
-	end
+	self:RegisterDataInvokation(
+		"Init",
+		function() return (Serialization.Serialize(VehiclePackets.Init, self)) end
+	)
 
 	task.delay(1, function() InitializeSeats(self) end)
 
@@ -70,7 +72,6 @@ function Initialize(self: ServerVehicle)
 	MakeGravity(self)
 	CreateFlip(self)
 	Finalize(self)
-	CreateRemotes(self)
 	InitializeControllersReplication(self)
 end
 
@@ -127,20 +128,6 @@ function MakeCollider(self: ServerVehicle)
 		constraint.Part1 = wheel
 		constraint.Parent = wheel
 	end
-end
-
-function CreateRemotes(self: ServerVehicle)
-	self.URE = Instance.new("UnreliableRemoteEvent")
-	self.URE.Name = "VehicleURE"
-	self.URE.Parent = self.Instance
-
-	self.RE = Instance.new("RemoteEvent")
-	self.RE.Name = "VehicleRE"
-	self.RE.Parent = self.Instance
-
-	self.RF = Instance.new("RemoteFunction")
-	self.RF.Name = "VehicleRF"
-	self.RF.Parent = self.Instance
 end
 
 function InitializeControllersReplication(self: ServerVehicle)
